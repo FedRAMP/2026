@@ -4,63 +4,71 @@ nav = [
     { "Overview" = [
         "index.md",
         { "Changelog" = "changelog.md" },
-        { "Source Data" = "source-data.md" }
+        { "Source Data" = "source-data.md" },
     ] },
-    { "Certification" = [
-        "certification/index.md",
-        { "Process" = "certification/process.md" },
-        { "Classes" = "certification/classes.md" },
-        { "Types" = "certification/types.md" },
-        { "Paths" = "certification/paths.md" },
-    ] },
-    { "Getting Started" = [
-        "getting-started/index.md",
-        { "Agencies" = [
-            "getting-started/agency/index.md",
-            { "Something" = "getting-started/agency/something.md" },
+    { "Agencies" = [
+        "agency/index.md",
+        { "Getting Started" = "agency/getting-started.md" },
+        { "Certification" = [
+            "agency/certification/index.md",
+            { "Process" = "agency/certification/process.md" },
+            { "Classes" = "agency/certification/classes.md" },
+            { "Types" = "agency/certification/types.md" },
+            { "Paths" = "agency/certification/paths.md" },
         ] },
-        { "Services" = [
-            "getting-started/services/index.md",
-            { "Something" = "getting-started/services/something.md" },
+        { "Rev5 Rules" = [
+            "agency/rev5/index.md",
+            { "Something" = "agency/rev5/something.md" },
         ] },
-        { "Assessors" = [
-            "getting-started/assessor/index.md",
-            { "Something" = "getting-started/assessor/something.md" },
-        ] },
-        { "Advisors" = [
-            "getting-started/advisor/index.md",
-            { "Something" = "getting-started/advisor/something.md" },
+        { "20x Rules" = [
+            "agency/20x/index.md",
+            { "Something" = "agency/20x/something.md" },
         ] },
     ] },
-    { "20x Rules" = [
-        "20x/index.md",
-        { "Agencies" = [
-            "20x/agency/index.md",
-            { "Something" = "20x/agency/something.md" },
+    { "Cloud Services" = [
+        "service/index.md",
+        { "Getting Started" = "service/getting-started.md" },
+        { "Marketplace Listing" = "service/marketplace-listing.md" },
+        { "Certification" = [
+            "service/certification/index.md",
+            { "Process" = "service/certification/process.md" },
+            { "Classes" = "service/certification/classes.md" },
+            { "Types" = "service/certification/types.md" },
+            { "Paths" = "service/certification/paths.md" },
         ] },
-        { "Services" = [
-            "20x/services/index.md",
-            { "Something" = "20x/services/something.md" },
+        { "Rev5 Rules" = [
+            "service/rev5/index.md",
+            { "Something" = "service/rev5/something.md" },
         ] },
-        { "Assessors" = [
-            "20x/assessor/index.md",
-            { "Something" = "20x/assessor/something.md" },
+        { "20x Rules" = [
+            "service/20x/index.md",
+            { "Something" = "service/20x/something.md" },
         ] },
     ] },
-    { "Rev5 Rules" = [
-        "rev5/index.md",
-        { "Agencies" = [
-            "rev5/agency/index.md",
-            { "Something" = "rev5/agency/something.md" },
+    { "Assessors" = [
+        "assessor/index.md",
+        { "Getting Started" = "assessor/getting-started.md" },
+        { "Marketplace Listing" = "assessor/marketplace-listing.md" },
+        { "Certification" = [
+            "assessor/certification/index.md",
+            { "Process" = "assessor/certification/process.md" },
+            { "Classes" = "assessor/certification/classes.md" },
+            { "Types" = "assessor/certification/types.md" },
+            { "Paths" = "assessor/certification/paths.md" },
         ] },
-        { "Services" = [
-            "rev5/services/index.md",
-            { "Something" = "rev5/services/something.md" },
+        { "Rev5 Rules" = [
+            "assessor/rev5/index.md",
+            { "Something" = "assessor/rev5/something.md" },
         ] },
-        { "Assessors" = [
-            "rev5/assessor/index.md",
-            { "Something" = "rev5/assessor/something.md" },
+        { "20x Rules" = [
+            "assessor/20x/index.md",
+            { "Something" = "assessor/20x/something.md" },
         ] },
+    ] },
+    { "Advisors" = [
+        "advisor/index.md",
+        { "Getting Started" = "advisor/getting-started.md" },
+        { "Marketplace Listing" = "advisor/marketplace-listing.md" },
     ] },
     { "--> return to FedRAMP.gov" = "/" },
 ]
