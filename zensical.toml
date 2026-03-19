@@ -25,24 +25,24 @@ nav = [
             { "Something" = "agency/20x/something.md" },
         ] },
     ] },
-    { "Cloud Services" = [
-        "service/index.md",
-        { "Getting Started" = "service/getting-started.md" },
-        { "Marketplace Listing" = "service/marketplace-listing.md" },
+    { "Cloud Service Providers" = [
+        "provider/index.md",
+        { "Getting Started" = "provider/getting-started.md" },
+        { "Marketplace Listing" = "provider/marketplace-listing.md" },
         { "Certification" = [
-            "service/certification/index.md",
-            { "Process" = "service/certification/process.md" },
-            { "Classes" = "service/certification/classes.md" },
-            { "Types" = "service/certification/types.md" },
-            { "Paths" = "service/certification/paths.md" },
+            "provider/certification/index.md",
+            { "Process" = "provider/certification/process.md" },
+            { "Classes" = "provider/certification/classes.md" },
+            { "Types" = "provider/certification/types.md" },
+            { "Paths" = "provider/certification/paths.md" },
         ] },
         { "Rev5 Rules" = [
-            "service/rev5/index.md",
-            { "Something" = "service/rev5/something.md" },
+            "provider/rev5/index.md",
+            { "Something" = "provider/rev5/something.md" },
         ] },
         { "20x Rules" = [
-            "service/20x/index.md",
-            { "Something" = "service/20x/something.md" },
+            "provider/20x/index.md",
+            { "Something" = "provider/20x/something.md" },
         ] },
     ] },
     { "Assessors" = [
