@@ -3,42 +3,39 @@
 nav = [
     { "Overview" = [
         "index.md",
-        { "Where to Start" = "start.md" },
-        { "Important Changes in CR26" = "changes.md" },
-        { "Critical Timelines" = "timeline.md" },
-        { "Certification Types and Paths" = "types.md"},
-        { "Scope of FedRAMP" = "scope.md" },
+        { "Changelog" = "changelog.md" },
+        { "Source Data" = "source-data.md" },
     ] },
-    { "Certification Classes" = [
-            "class/index.md",
-            { "Overview & Comparison" = "class/overview.md"},
-            { "Class A (Test)" = "class/a.md"},
-            { "Class B (Low)" = "class/b.md"},
-            { "Class C (Moderate)" = "class/c.md"},
-            { "Class D (High)" = "class/d.md"},
-        ] },
     { "Agencies" = [
         "agency/index.md",
         { "Getting Started" = "agency/getting-started.md" },
-        { "Agency Responsibilities" = "agency/responsibilities.md" },
-        { "Sponsoring Rev5 Certification" = "agency/sponsoring-certification.md" },
-        { "Using Rev5 Certifications" = [
+        { "Certification" = [
+            "agency/certification/index.md",
+            { "Process" = "agency/certification/process.md" },
+            { "Classes" = "agency/certification/classes.md" },
+            { "Types" = "agency/certification/types.md" },
+            { "Paths" = "agency/certification/paths.md" },
+        ] },
+        { "Rev5 Rules" = [
             "agency/rev5/index.md",
-            { "Initial Use" = "agency/rev5/initial.md" },
-            { "Ongoing Use" = "agency/rev5/ongoing.md" },
-
+            { "Something" = "agency/rev5/something.md" },
         ] },
-        { "Using 20x Certifications" = [
+        { "20x Rules" = [
             "agency/20x/index.md",
-            { "Initial Use" = "agency/20x/initial.md" },
-            { "Ongoing Use" = "agency/20x/ongoing.md" },
+            { "Something" = "agency/20x/something.md" },
         ] },
-
     ] },
     { "Cloud Service Providers" = [
         "provider/index.md",
         { "Getting Started" = "provider/getting-started.md" },
         { "Marketplace Listing" = "provider/marketplace-listing.md" },
+        { "Certification" = [
+            "provider/certification/index.md",
+            { "Process" = "provider/certification/process.md" },
+            { "Classes" = "provider/certification/classes.md" },
+            { "Types" = "provider/certification/types.md" },
+            { "Paths" = "provider/certification/paths.md" },
+        ] },
         { "Rev5 Rules" = [
             "provider/rev5/index.md",
             { "Something" = "provider/rev5/something.md" },
@@ -52,6 +49,13 @@ nav = [
         "assessor/index.md",
         { "Getting Started" = "assessor/getting-started.md" },
         { "Marketplace Listing" = "assessor/marketplace-listing.md" },
+        { "Certification" = [
+            "assessor/certification/index.md",
+            { "Process" = "assessor/certification/process.md" },
+            { "Classes" = "assessor/certification/classes.md" },
+            { "Types" = "assessor/certification/types.md" },
+            { "Paths" = "assessor/certification/paths.md" },
+        ] },
         { "Rev5 Rules" = [
             "assessor/rev5/index.md",
             { "Something" = "assessor/rev5/something.md" },
@@ -66,13 +70,6 @@ nav = [
         { "Getting Started" = "advisor/getting-started.md" },
         { "Marketplace Listing" = "advisor/marketplace-listing.md" },
     ] },
-    { "About CR26" = [
-        "about/index.md",
-                { "Changelog" = "about/changelog.md" },
-        { "Discussions" = "about/discussions.md" },
-        { "Reporting Bugs, Typos, etc." = "about/bugs.md" },
-        { "Source Data" = "about/source-data.md" },
-    ] },
     { "--> return to FedRAMP.gov" = "/" },
 ]
 site_name = "FedRAMP Consolidated Rules for 2026"
@@ -80,7 +77,7 @@ site_description = "A description."
 site_author = "pete@fedramp.gov"
 site_dir = "html/"
 docs_dir = "markdown/"
-site_url = "https://fedramp.gov/26/"
+site_url = "https://fedramp.gov/2026/"
 repo_url = "https://github.com/fedramp/consolidated-rules-2026"
 repo_name = "FedRAMP/consolidated-rules-2026"
 extra_css = ["stylesheets/custom.css"]
