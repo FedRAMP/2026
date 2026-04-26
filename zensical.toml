@@ -1,22 +1,159 @@
 
 [project]
 nav = [
-  { Overview = [
+  { FedRAMP = [
     { "CR26 Overview" = "index.md" },
-  ]},
-  { Agencies = [
-    { "Agency Home" = "agencies/index.md" },
 
-  ]},
+    { "Certification" = "certification.md" },
+    { "Shared Responsibility Model" = "shared-responsibilities.md" },
+    { "FedRAMP Marketplace" = "marketplace.md" },
+    { "Changelog" = "changelog.md" },
+    { "Source Data" = "sources.md" },
+    { "FedRAMP's Responsibilities" = [
+      "responsibilities/index.md",
+    ] },
+
+    { "FedRAMP's Authority" = [
+      { "FedRAMP Authorization Act" = [
+        "authority/law/index.md",
+        { "Definitions" = "authority/law/definitions.md" },
+        { "GSA" = "authority/law/gsa.md" },
+        { "FedRAMP Board" = "authority/law/board.md" },
+        { "Independent Assessment" = "authority/law/assessment.md" },
+        { "Agencies" = "authority/law/agencies.md" },
+        { "OMB" = "authority/law/omb.md" },
+        { "Reports to Congress" = "authority/law/reports.md" },
+        { "FSCAC" = "authority/law/fscac.md" },
+      ] },
+      { "M-24-15" = [
+        "authority/m-24-15/index.md",
+        { "Background" = "authority/m-24-15/background.md" },
+        { "Vision" = "authority/m-24-15/vision.md" },
+        { "Scope of FedRAMP" = "authority/m-24-15/scope.md" },
+        { "The FedRAMP Authorization Process" = "authority/m-24-15/process.md" },
+        { "Automation and Efficiency" = "authority/m-24-15/automation.md" },
+        { "Continuous Monitoring" = "authority/m-24-15/monitoring.md" },
+        { "Roles and Responsibilities" = "authority/m-24-15/roles.md" },
+        { "Industry Engagement" = "authority/m-24-15/industry.md" },
+        { "Implementation" = "authority/m-24-15/implementation.md" },
+        { "Rescissions" = "authority/m-24-15/rescissions.md" },
+        { "Policy and Program Implementation Assistance" = "authority/m-24-15/assistance.md" },
+      ] },
+    ] },
+    { "Historical" = [
+      { "Rescinded 2011 Memo" = "authority/rescinded-2011-fedramp-memo.md" },
+    ] },
+  ] },
+  { Agencies = [
+    "agencies/index.md",
+    { "Getting Started" = "agencies/start.md" },
+    { "Scope of FedRAMP" = "agencies/scope.md" },
+    { "Getting Support" = [
+      "agencies/support/index.md",
+      { "Liaisons Program" = "agencies/support/liaisons.md" },
+      { "Support Groups" = "agencies/support/groups.md" },
+      { "Reporting Concerns" = "agencies/support/concerns.md" },
+      { "CISA Directives" = "agencies/support/cisa-directives.md" },
+
+    ] },
+    { "Using a FedRAMP Certified Cloud Service" = [
+      "agencies/use/index.md",
+      { "Initial Authorization" = [
+        "agencies/use/initial/index.md",
+        { "Managing Your SSP" = "agencies/use/initial/ssp.md" },
+      ] },
+      { "Ongoing Authorization" = [
+        "agencies/use/ongoing/index.md",
+        { "Managing POA&Ms" = "agencies/use/ongoing/poams.md" },
+      ] },
+      { "FedRAMP Marketplace" = "agencies/use/marketplace.md" },
+      { "Certification Classes" = "agencies/use/classes.md" },
+      { "Certification Packages" = [
+        "agencies/use/packages/index.md",
+        { "20x Certification Packages" = "agencies/use/packages/20x.md" },
+        { "Rev5 Certification Packages" = "agencies/use/packages/rev5.md" },
+      ] },
+    ] },
+    { "Sponsoring a Cloud Service for FedRAMP Certification" = [
+      "agencies/sponsoring/index.md",
+      { "Initial Certification" = "agencies/sponsoring/initial.md" },
+      { "Ongoing Certification" = "agencies/sponsoring/ongoing.md" },
+    ] },
+    { "Legacy Agency Materials" = [
+      "agencies/legacy/index.md",
+    ] },
+
+  ] },
   { "Cloud Service Providers" = [
-    { "Provider Home" = "providers/index.md" },
-    ]},
-  { Assessors = [
-    { "Assessor Home" = "assessors/index.md" },
-  ]},
-  { Advisors = [
-    { "Advisor Home" = "advisors/index.md" },
-  ]},
+    "providers/index.md",
+    { "Getting Started" = [
+      "providers/start/index.md",
+      { "Getting Support" = "providers/support.md" },
+      { "Finding an Advisor" = "providers/start/advisor.md" },
+      { "Choosing a Certification..." = [
+        { "Type" = "providers/start/type.md" },
+        { "Path" = "providers/start/path.md" },
+        { "Class" = "providers/start/class.md" },
+      ] },
+      { "Preparing" = "providers/start/prepare.md" },
+      { "Getting Listed" = "providers/start/get-listed.md" },
+      { "Finding an Assessor" = "providers/start/assessor.md" },
+      { "Getting Certified" = "providers/start/get-certified.md" },
+    ] },
+    { "FedRAMP 20x Certification Rules" = [
+      "providers/20x/index.md",
+      { "Initial Certification" = [
+        "providers/20x/initial/index.md",
+      ] },
+      { "Ongoing Certification" = [
+        "providers/20x/ongoing/index.md",
+      ] },
+
+    ] },
+    { "FedRAMP Rev5 Certification Rules" = [
+      "providers/rev5/index.md",
+      { "Initial Certification" = [
+        "providers/rev5/initial/index.md",
+      ] },
+      { "Ongoing Certification" = [
+        "providers/rev5/ongoing/index.md",
+      ] },
+    ] },
+  ] },
+  { "Independent Assessors" = [
+    "assessors/index.md",
+    { "Getting Started" = "assessors/start.md" },
+    { "Getting Support" = "assessors/support.md" },
+    { "FedRAMP Recognition" = [
+      "assessors/recognition/index.md",
+      { "Rules" = "assessors/recognition/rules.md" },
+    ] },
+    { "Performing FedRAMP 20x Assessments" = [
+      "assessors/20x/index.md",
+      { "Initial Assessment" = [
+        "assessors/20x/initial/index.md",
+        { "Class B" = "assessors/20x/initial/b.md" },
+        { "Class C" = "assessors/20x/initial/c.md" },
+      ] },
+      { "Ongoing Assessment" = "assessors/20x/ongoing.md" },
+    ] },
+    { "Performing FedRAMP Rev5 Assessments" = [
+      "assessors/rev5/index.md",
+      { "Initial Assessment" = [
+        "assessors/rev5/initial/index.md",
+        { "Class A" = "assessors/rev5/initial/a.md" },
+        { "Class B" = "assessors/rev5/initial/b.md" },
+        { "Class C" = "assessors/rev5/initial/c.md" },
+        { "Class D" = "assessors/rev5/initial/d.md" },
+      ] },
+      { "Ongoing Assessment" = "assessors/rev5/ongoing/index.md" },
+    ] },
+
+  ] },
+  { "Advisors" = [
+    "advisors/index.md",
+    { "Getting Started" = "advisors/start.md" },
+  ] },
   { "--> return to FedRAMP.gov" = "/" },
 ]
 
@@ -24,7 +161,7 @@ site_name = "FedRAMP Consolidated Rules for 2026"
 site_description = "A description."
 site_author = "pete@fedramp.gov"
 site_dir = "docs/"
-docs_dir = "markdown/"
+docs_dir = "src/"
 site_url = "https://fedramp.gov/2026/"
 repo_url = "https://github.com/fedramp/consolidated-rules-2026"
 repo_name = "FedRAMP/consolidated-rules-2026"
@@ -44,26 +181,28 @@ custom_dir = "overrides"
 logo = "assets/fr-only-logo-black.png"
 language = "en"
 features = [
-    "announce.dismiss",
-    "content.code.annotate",
-    "content.code.copy",
-    "content.code.select",
-    "content.footnote.tooltips",
-    "content.tabs.link",
-    "content.tooltips",
-    "navigation.footer",
-    "navigation.indexes",
-    "navigation.instant",
-    "navigation.instant.prefetch",
-    "navigation.instant.progress",
-    "navigation.top",
-    "navigation.tracking",
-    # "navigation.tabs",
-    #"navigation.expand",
-    "navigation.path",
-    "search.highlight",
-    "toc.follow",
-    "toc.integrate",
+  "announce.dismiss",
+  "content.code.annotate",
+  "content.code.copy",
+  "content.code.select",
+  "content.footnote.tooltips",
+  "content.tabs.link",
+  "content.tooltips",
+  "header.autohide",
+  "navigation.footer",
+  "navigation.indexes",
+  "navigation.instant",
+  "navigation.instant.prefetch",
+  "navigation.instant.progress",
+  "navigation.path",
+  "navigation.sections",
+  "navigation.tabs",
+  "navigation.top",
+  "navigation.tracking",
+  "navigation.expand",
+  "search.highlight",
+  "toc.follow",
+  #"toc.integrate",
 ]
 
 [project.theme.icon]
