@@ -1,0 +1,144 @@
+### {{title}}
+
+{{#if changelog.length}}
+??? abstract "{{id}}"
+{{#if formerId}}
+
+    **Former ID:** {{formerId}}
+
+{{/if}}
+    **Changelog:**
+
+{{#each changelog}}
+
+    - **{{date}}:** {{comment}}
+
+{{/each}}
+{{else}}
+!!! abstract "{{id}}"
+{{/if}}
+
+{{#if notifications.length}}
+!!! warning "This FRR includes a notification requirement!"
+{{#each notifications}}
+    - Notify {{party}} by {{method}} using {{target}}.
+{{/each}}
+{{/if}}
+
+!!! quote ""
+{{#each statementParagraphs}}
+    {{this}}
+
+{{/each}}
+{{#if timeframe}}
+    **Timeframe:** {{timeframe}}
+
+{{/if}}
+{{#if effectiveDateLines.length}}
+    **Effective Date(s):**
+{{#each effectiveDateLines}}
+    - **{{label}}:** {{value}}
+{{/each}}
+
+{{/if}}
+{{#each variantSections}}
+    === "{{title}}"
+{{#each statementParagraphs}}
+        {{this}}
+
+{{/each}}
+{{#if timeframe}}
+        **Timeframe:** {{timeframe}}
+
+{{/if}}
+{{#if effectiveDateLines.length}}
+        **Effective Date(s):**
+{{#each effectiveDateLines}}
+        - **{{label}}:** {{value}}
+{{/each}}
+
+{{/if}}
+{{#if painTimeframeRows.length}}
+        | Potential Adverse Impact |{{#each painTimeframeColumns}} {{label}} |{{/each}}
+        |--------------------------|{{#each painTimeframeColumns}}---|{{/each}}
+{{#each painTimeframeRows}}
+        | N{{pain}} |{{#each cells}} {{this}} |{{/each}}
+{{/each}}
+
+{{/if}}
+{{/each}}
+{{#if numberedItems.length}}
+{{#each numberedItems}}
+    1. {{this}}
+{{/each}}
+
+{{/if}}
+{{#if bulletItems.length}}
+{{#each bulletItems}}
+    - {{this}}
+{{/each}}
+
+{{/if}}
+{{#if correctiveActions.length}}
+    !!! warning "Corrective Actions"
+{{#each correctiveActions}}
+        - {{this}}
+{{/each}}
+
+{{/if}}
+{{#if dangerParagraphs.length}}
+    ---
+
+    !!! danger "{{#each dangerParagraphs}}{{this}}{{#unless @last}} {{/unless}}{{/each}}"
+{{/if}}
+
+{{#if noteParagraphs.length}}
+    ---
+
+    _**Note:** {{#each noteParagraphs}}{{this}}{{#unless @last}} {{/unless}}{{/each}}_
+
+{{/if}}
+{{#if notes.length}}
+    ---
+
+    _**Notes:**_
+
+{{#each notes}}
+    - _{{this}}_
+{{/each}}
+{{/if}}
+{{#if controlLinks.length}}
+
+    **Related SP 800-53 Controls:** {{#each controlLinks}}[{{label}}]({{url}}){{#unless @last}}, {{/unless}}{{/each}}
+
+{{/if}}
+{{#if reference}}
+
+    **Reference:** [{{reference.label}}]({{reference.url}})
+
+{{/if}}
+{{#if examples.length}}
+{{#each examples}}
+
+    ??? tip "{{title}}"
+
+        **Key Tests:**
+{{#each keyTests}}
+
+        - {{this}}
+
+{{/each}}
+
+        **Examples:**
+{{#each examples}}
+
+        - {{this}}
+
+{{/each}}
+
+{{/each}}
+{{/if}}
+{{#if terms.length}}
+    ---
+    **Terms:** {{#each terms}}[{{label}}]({{href}}){ data-preview }{{#unless @last}}, {{/unless}}{{/each}}
+{{/if}}

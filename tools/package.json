@@ -2,6 +2,9 @@
   "name": "cr26-site-tools",
   "type": "module",
   "private": true,
+  "scripts": {
+    "deploy": "bun run ./scripts/deploy.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },

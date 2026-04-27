@@ -1,0 +1,63 @@
+# {{title}}
+
+{{#if effectiveEntries.length}}
+{{#each effectiveEntries}}
+!!! info "Effective Date(s) & Overall Applicability for {{audienceLabel}}"
+    - **{{statusLabel}}**{{#if currentStatus}} ({{currentStatus}}){{/if}}
+{{#each dateLines}}
+    - **{{label}}:** {{value}}
+{{/each}}
+{{#if classLines.length}}
+    - **Class Applicability:**
+{{#each classLines}}
+        - **{{label}}:** {{value}}
+{{/each}}
+{{/if}}
+{{#if signupUrl}}
+    - **Sign-up Form:** [{{signupUrl}}]({{signupUrl}})
+{{/if}}
+{{#each comments}}
+    - {{this}}
+{{/each}}
+
+{{#if warnings.length}}
+!!! danger "Mandatory Adoption for {{audienceLabel}}"
+{{#each warnings}}
+    - {{this}}
+{{/each}}
+
+{{/if}}
+{{/each}}
+{{/if}}
+
+{{#unless isKsiDocument}}
+---
+{{/unless}}
+
+{{#if isDefinitionDocument}}
+{{#each definitionSections}}
+## {{title}}
+
+{{#each definitions}}
+{{> definition}}
+{{/each}}
+{{/each}}
+{{/if}}
+
+{{#if isRequirementsDocument}}
+{{#each sections}}
+{{> section}}
+{{/each}}
+{{/if}}
+
+{{#if isKsiDocument}}
+!!! info ""
+{{#each themeParagraphs}}
+    {{this}}
+    
+{{/each}}
+
+{{#each indicators}}
+{{> requirement}}
+{{/each}}
+{{/if}}
