@@ -13,7 +13,7 @@ export const RULES_FILE = path.join(
 );
 const TEMPLATE_FILE = path.join(ROOT_DIR, "templates", "template.hbs");
 const PARTIALS_DIR = path.join(ROOT_DIR, "templates", "partials");
-export const OUTPUT_DIR = path.join(ROOT_DIR, "output");
+export const OUTPUT_DIR = path.join(ROOT_DIR, "../output");
 
 type Version = "20x" | "rev5";
 type EffectiveAudience = Version | "both";

@@ -3,10 +3,15 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "deploy": "bun run ./scripts/deploy.ts"
+    "deploy": "bun run ./scripts/deploy.ts",
+    "build": "bun run ./scripts/build-markdown.ts && zensical build --clean",
+    "dev": "bun run ./scripts/dev.ts",
+    "sync": "./scripts/sync-rules-submodule.sh",
+    "test": "bun test"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "handlebars": "^4.7.9"
   },
   "peerDependencies": {
     "typescript": "^5"
