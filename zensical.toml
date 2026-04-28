@@ -166,7 +166,10 @@ nav = [
     { "Getting Support" = "assessors/support.md" },
     { "FedRAMP Recognition" = [
       "assessors/recognition/index.md",
-      { "Rules" = "assessors/recognition/rules.md" },
+      { "Applicable Rules" = [
+        "assessors/recognition/rules/index.md",
+        { "Marketplace Listing" = "assessors/recognition/rules/mkt.md" },
+      ] },
     ] },
     { "Performing FedRAMP 20x Assessments" = [
       "assessors/20x/index.md",
@@ -176,6 +179,10 @@ nav = [
         { "Class C" = "assessors/20x/initial/c.md" },
       ] },
       { "Ongoing Assessment" = "assessors/20x/ongoing.md" },
+      { "Applicable Rules" = [
+        "assessors/20x/rules/index.md",
+        { "FedRAMP Certification" = "assessors/20x/rules/frc.md" },
+      ] },
     ] },
     { "Performing FedRAMP Rev5 Assessments" = [
       "assessors/rev5/index.md",
@@ -187,12 +194,20 @@ nav = [
         { "Class D" = "assessors/rev5/initial/d.md" },
       ] },
       { "Ongoing Assessment" = "assessors/rev5/ongoing/index.md" },
+      { "Applicable Rules" = [
+        "assessors/rev5/rules/index.md",
+        { "FedRAMP Certification" = "assessors/rev5/rules/frc.md" },
+      ] },
     ] },
 
   ] },
   { "Advisors" = [
     "advisors/index.md",
     { "Getting Started" = "advisors/start.md" },
+      { "Applicable Rules" = [
+        "advisors/rules/index.md",
+        { "Marketplace Listing" = "advisors/rules/mkt.md" },
+      ] },
   ] },
   { "--> return to FedRAMP.gov" = "/" },
 ]

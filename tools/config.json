@@ -26,7 +26,7 @@
         "includeEffectiveDates": false,
         "source": {
           "collection": "FRR",
-          "documents": ["FSI", "ICP", "MKT", "SCN", "VDR"],
+          "documents": "ALL",
           "types": ["20x", "rev5"],
           "affects": ["FedRAMP"],
           "includeBoth": true,
@@ -80,6 +80,74 @@
           "documents": "ALL",
           "types": ["rev5"],
           "affects": ["Providers"],
+          "includeBoth": true,
+          "bothPosition": "first"
+        }
+      },
+      {
+        "id": "assessor-specific-initial-rules-20x",
+        "output": "assessors/20x/rules/{FRR}.md",
+        "outputMode": "documents",
+        "definitionsHref": "../../../definitions/",
+        "rulesHref": "../../../",
+        "emptyBehavior": "skip",
+        "includeEffectiveDates": false,
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x"],
+          "affects": ["Assessors"],
+          "includeBoth": true,
+          "bothPosition": "first"
+        }
+      },
+      {
+        "id": "assessor-specific-initial-rules-rev5",
+        "output": "assessors/rev5/rules/{FRR}.md",
+        "outputMode": "documents",
+        "definitionsHref": "../../../definitions/",
+        "rulesHref": "../../../",
+        "emptyBehavior": "skip",
+        "includeEffectiveDates": false,
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["rev5"],
+          "affects": ["Assessors"],
+          "includeBoth": true,
+          "bothPosition": "first"
+        }
+      },
+      {
+        "id": "assessor-recognition",
+        "output": "assessors/recognition/rules/{FRR}.md",
+        "outputMode": "documents",
+        "definitionsHref": "../../../definitions/",
+        "rulesHref": "../",
+        "emptyBehavior": "skip",
+        "includeEffectiveDates": false,
+        "source": {
+          "collection": "FRR",
+          "documents": ["MKT"],
+          "types": ["20x", "rev5"],
+          "affects": ["Assessors"],
+          "includeBoth": true,
+          "bothPosition": "first"
+        }
+      },
+      {
+        "id": "advisors-marketplace",
+        "output": "advisors/rules/{FRR}.md",
+        "outputMode": "documents",
+        "definitionsHref": "../../definitions/",
+        "rulesHref": "../",
+        "emptyBehavior": "skip",
+        "includeEffectiveDates": false,
+        "source": {
+          "collection": "FRR",
+          "documents": ["MKT"],
+          "types": ["20x", "rev5"],
+          "affects": ["Advisors"],
           "includeBoth": true,
           "bothPosition": "first"
         }
