@@ -3,80 +3,141 @@ import { watch } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildMarkdown } from "./build-markdown";
+import {
+  CONFIG_FILE,
+  REPO_ROOT,
+  loadToolConfig,
+  resolveToolPath,
+} from "./config";
+import { deploy } from "./deploy";
 
-const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
-const ROOT_DIR = path.resolve(SCRIPT_DIR, "..");
-const TEMPLATES_DIR = path.join(ROOT_DIR, "templates");
-const BUILD_SCRIPT = path.join(SCRIPT_DIR, "build-markdown.ts");
-const ZENSICAL_CONFIG = path.join(ROOT_DIR, "zensical.toml");
+const BUILD_SCRIPT = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "build-markdown.ts",
+);
 
 let isBuilding = false;
 let buildQueued = false;
 let buildTimer: ReturnType<typeof setTimeout> | null = null;
+let queuedDeploy = false;
 
-async function runBuild(reason: string): Promise<void> {
+async function runPipeline(reason: string, shouldDeploy: boolean): Promise<void> {
   if (isBuilding) {
     buildQueued = true;
+    queuedDeploy = queuedDeploy || shouldDeploy;
     return;
   }
 
   isBuilding = true;
-  console.log(`[dev] rebuilding markdown (${reason})`);
+  console.log(`[dev] rebuilding site inputs (${reason})`);
 
   try {
+    if (shouldDeploy) {
+      const deploySummary = await deploy();
+      console.log(`[dev] copied ${deploySummary.copiedFiles} content files`);
+    }
+
     const summary = await buildMarkdown();
     console.log(`[dev] generated ${summary.artifactCount} markdown files`);
   } catch (error) {
-    console.error("[dev] markdown build failed");
+    console.error("[dev] site input build failed");
     console.error(error);
   } finally {
     isBuilding = false;
 
     if (buildQueued) {
+      const nextShouldDeploy = queuedDeploy;
       buildQueued = false;
-      await runBuild("queued change");
+      queuedDeploy = false;
+      await runPipeline("queued change", nextShouldDeploy);
     }
   }
 }
 
-function scheduleBuild(reason: string): void {
+function schedulePipeline(reason: string, shouldDeploy = false): void {
   if (buildTimer) {
     clearTimeout(buildTimer);
   }
 
   buildTimer = setTimeout(() => {
     buildTimer = null;
-    void runBuild(reason);
-  }, 150);
+    void runPipeline(reason, shouldDeploy);
+  }, currentWatchDebounceMs);
 }
 
-async function main(): Promise<void> {
-  await runBuild("initial build");
+let currentWatchDebounceMs = 150;
 
-  const zensical = spawn("zensical", ["serve", "-f", ZENSICAL_CONFIG], {
-    cwd: ROOT_DIR,
+async function main(): Promise<void> {
+  const config = await loadToolConfig();
+  currentWatchDebounceMs = config.dev?.watchDebounceMs ?? 150;
+
+  const contentDir = resolveToolPath(config.paths.content);
+  const templatesDir = path.dirname(resolveToolPath(config.paths.template));
+  const partialsDir = resolveToolPath(config.paths.partials);
+  const rulesFile = resolveToolPath(config.paths.rulesFile);
+  const zensicalConfig = resolveToolPath(config.paths.zensicalConfig);
+
+  await runPipeline("initial build", true);
+
+  const zensical = spawn("zensical", ["serve", "-f", zensicalConfig], {
+    cwd: REPO_ROOT,
     stdio: "inherit",
   });
 
   const templateWatcher = watch(
-    TEMPLATES_DIR,
+    templatesDir,
     { recursive: true },
     (_eventType, fileName) => {
       if (!fileName || !fileName.endsWith(".hbs")) {
         return;
       }
 
-      scheduleBuild(`template change: ${fileName}`);
+      schedulePipeline(`template change: ${fileName}`);
+    },
+  );
+
+  const partialsWatcher =
+    partialsDir === templatesDir
+      ? null
+      : watch(partialsDir, { recursive: true }, (_eventType, fileName) => {
+          if (!fileName || !fileName.endsWith(".hbs")) {
+            return;
+          }
+
+          schedulePipeline(`partial change: ${fileName}`);
+        });
+
+  const contentWatcher = watch(
+    contentDir,
+    { recursive: true },
+    (_eventType, fileName) => {
+      if (!fileName) {
+        return;
+      }
+
+      schedulePipeline(`content change: ${fileName}`, true);
     },
   );
 
   const buildWatcher = watch(BUILD_SCRIPT, () => {
-    scheduleBuild("generator change");
+    schedulePipeline("generator change");
+  });
+
+  const configWatcher = watch(CONFIG_FILE, () => {
+    schedulePipeline("config change", true);
+  });
+
+  const rulesWatcher = watch(rulesFile, () => {
+    schedulePipeline("rules source change");
   });
 
   const cleanup = () => {
     templateWatcher.close();
+    partialsWatcher?.close();
+    contentWatcher.close();
     buildWatcher.close();
+    configWatcher.close();
+    rulesWatcher.close();
 
     if (!zensical.killed) {
       zensical.kill("SIGTERM");

@@ -1,21 +1,21 @@
-import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import Handlebars from "handlebars";
+import {
+  DEFAULT_CONFIG,
+  assertPathInside,
+  loadToolConfig,
+  resolveToolPath,
+  toPosixPath,
+  type RuleDocumentMappingConfig,
+  type RuleType,
+  type ToolConfig,
+} from "./config";
 
-const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
-const ROOT_DIR = path.resolve(SCRIPT_DIR, "..");
+export const RULES_FILE = resolveToolPath(DEFAULT_CONFIG.paths.rulesFile);
+export const OUTPUT_DIR = resolveToolPath(DEFAULT_CONFIG.paths.src);
 
-export const RULES_FILE = path.join(
-  ROOT_DIR,
-  "rules",
-  "fedramp-consolidated-rules.json",
-);
-const TEMPLATE_FILE = path.join(ROOT_DIR, "templates", "template.hbs");
-const PARTIALS_DIR = path.join(ROOT_DIR, "templates", "partials");
-export const OUTPUT_DIR = path.join(ROOT_DIR, "../output");
-
-type Version = "20x" | "rev5";
+type Version = RuleType;
 type EffectiveAudience = Version | "both";
 
 interface RulesDocument {
@@ -279,6 +279,8 @@ interface DocumentViewModel {
 export interface BuildArtifact {
   relativePath: string;
   outputPath: string;
+  templatePath: string;
+  mappingId: string;
   title: string;
   documentType: "FRD" | "FRR" | "KSI";
   context: DocumentViewModel;
@@ -763,6 +765,226 @@ function buildSectionViewModels(
   return Array.from(sections.values());
 }
 
+function normalizeGeneratedPath(relativePath: string): string {
+  if (path.isAbsolute(relativePath)) {
+    throw new Error(`Generated output must be relative: ${relativePath}`);
+  }
+
+  const normalizedPath = path.normalize(relativePath);
+  if (
+    normalizedPath === "." ||
+    normalizedPath.startsWith("..") ||
+    path.isAbsolute(normalizedPath)
+  ) {
+    throw new Error(`Generated output must stay inside src: ${relativePath}`);
+  }
+
+  return toPosixPath(normalizedPath);
+}
+
+function resolveGeneratedOutputPath(
+  config: ToolConfig,
+  relativePath: string,
+): string {
+  const srcPath = resolveToolPath(config.paths.src);
+  const outputPath = path.resolve(srcPath, relativePath);
+  assertPathInside(srcPath, outputPath, "Generated output");
+  return outputPath;
+}
+
+function configuredBuckets(
+  mapping: RuleDocumentMappingConfig,
+): Array<Version | "both"> {
+  const types = mapping.source.types;
+  const includeBoth = mapping.source.includeBoth ?? true;
+
+  if (!includeBoth) {
+    return types;
+  }
+
+  const bothPosition = mapping.source.bothPosition ?? "last";
+  return bothPosition === "first" ? ["both", ...types] : [...types, "both"];
+}
+
+function matchesAny(value: string, allowedValues: string[]): boolean {
+  return allowedValues.some(
+    (allowedValue) => allowedValue.toLowerCase() === value.toLowerCase(),
+  );
+}
+
+function requirementMatchesMapping(
+  requirement: RequirementEntrySource,
+  mapping: RuleDocumentMappingConfig,
+): boolean {
+  const affects = mapping.source.affects ?? [];
+  if (!affects.length) {
+    return true;
+  }
+
+  return (requirement.affects ?? []).some((affectedParty) =>
+    matchesAny(affectedParty, affects),
+  );
+}
+
+function buildConfiguredSectionViewModels(
+  document: RequirementDocumentSource,
+  mapping: RuleDocumentMappingConfig,
+): SectionViewModel[] {
+  const sections = new Map<string, SectionViewModel>();
+  const allowedSections = mapping.source.sections;
+  const definitionsHref = mapping.definitionsHref ?? "definitions/";
+  const rulesHref = mapping.rulesHref ?? "";
+
+  for (const bucketName of configuredBuckets(mapping)) {
+    const bucket = document.data[bucketName];
+    if (!bucket) {
+      continue;
+    }
+
+    for (const [labelKey, requirements] of Object.entries(bucket)) {
+      if (allowedSections && !allowedSections.includes(labelKey)) {
+        continue;
+      }
+
+      const label = document.info.labels?.[labelKey];
+      const section = sections.get(labelKey) ?? {
+        title: label?.name ?? labelKey,
+        descriptionParagraphs: splitParagraphs(label?.description),
+        requirements: [],
+      };
+
+      for (const [id, requirement] of Object.entries(requirements)) {
+        if (!requirementMatchesMapping(requirement, mapping)) {
+          continue;
+        }
+
+        section.requirements.push(
+          buildRequirementViewModel(id, requirement, definitionsHref, rulesHref),
+        );
+      }
+
+      if (section.requirements.length) {
+        sections.set(labelKey, section);
+      }
+    }
+  }
+
+  return Array.from(sections.values());
+}
+
+function buildDocumentGroupedSectionViewModel(
+  document: RequirementDocumentSource,
+  mapping: RuleDocumentMappingConfig,
+): SectionViewModel | null {
+  const requirements: RequirementViewModel[] = [];
+  const allowedSections = mapping.source.sections;
+  const definitionsHref = mapping.definitionsHref ?? "definitions/";
+  const rulesHref = mapping.rulesHref ?? "";
+
+  for (const bucketName of configuredBuckets(mapping)) {
+    const bucket = document.data[bucketName];
+    if (!bucket) {
+      continue;
+    }
+
+    for (const [labelKey, sectionRequirements] of Object.entries(bucket)) {
+      if (allowedSections && !allowedSections.includes(labelKey)) {
+        continue;
+      }
+
+      for (const [id, requirement] of Object.entries(sectionRequirements)) {
+        if (!requirementMatchesMapping(requirement, mapping)) {
+          continue;
+        }
+
+        requirements.push(
+          buildRequirementViewModel(id, requirement, definitionsHref, rulesHref),
+        );
+      }
+    }
+  }
+
+  if (!requirements.length) {
+    return null;
+  }
+
+  return {
+    title: document.info.name,
+    descriptionParagraphs: [],
+    requirements,
+  };
+}
+
+function sourceDocumentKeys(
+  rules: RulesDocument,
+  mapping: RuleDocumentMappingConfig,
+): string[] {
+  const { document, documents } = mapping.source;
+
+  if (documents === "ALL") {
+    return Object.keys(rules.FRR);
+  }
+
+  if (Array.isArray(documents)) {
+    if (!documents.length) {
+      throw new Error(
+        `Rule document mapping "${mapping.id}" must specify at least one source document.`,
+      );
+    }
+
+    return documents;
+  }
+
+  if (document) {
+    return [document];
+  }
+
+  throw new Error(
+    `Rule document mapping "${mapping.id}" must specify source.document, source.documents, or source.documents: "ALL".`,
+  );
+}
+
+function sourceDocuments(
+  rules: RulesDocument,
+  mapping: RuleDocumentMappingConfig,
+): RequirementDocumentSource[] {
+  return sourceDocumentKeys(rules, mapping).map((documentKey) => {
+    const document = rules.FRR[documentKey];
+    if (!document) {
+      throw new Error(`Unknown FRR document: ${documentKey}`);
+    }
+
+    return document;
+  });
+}
+
+function buildConfiguredSections(
+  documents: RequirementDocumentSource[],
+  mapping: RuleDocumentMappingConfig,
+): SectionViewModel[] {
+  if (documents.length === 1) {
+    const [document] = documents;
+    if (!document) {
+      throw new Error(`Rule document mapping "${mapping.id}" matched no FRR documents.`);
+    }
+
+    return buildConfiguredSectionViewModels(document, mapping);
+  }
+
+  const groupBy =
+    mapping.source.groupBy ?? "document";
+
+  if (groupBy === "document") {
+    return documents
+      .map((document) => buildDocumentGroupedSectionViewModel(document, mapping))
+      .filter((section): section is SectionViewModel => section !== null);
+  }
+
+  return documents.flatMap((document) =>
+    buildConfiguredSectionViewModels(document, mapping),
+  );
+}
+
 function buildDocumentContext(
   title: string,
   options: Partial<DocumentViewModel>,
@@ -838,41 +1060,56 @@ function buildPreviewIndex(artifacts: BuildArtifact[]): string {
   return `${lines.join("\n").trim()}\n`;
 }
 
-async function loadTemplate(): Promise<(context: DocumentViewModel) => string> {
+async function loadTemplate(
+  templatePath: string,
+  partialsDir: string,
+): Promise<(context: DocumentViewModel) => string> {
   const engine = Handlebars.create();
-  const partialFiles = (await readdir(PARTIALS_DIR)).filter((fileName) =>
+  const partialFiles = (await readdir(partialsDir)).filter((fileName) =>
     fileName.endsWith(".hbs"),
   );
 
   for (const partialFile of partialFiles) {
     const partialName = path.basename(partialFile, ".hbs");
     const partialSource = await readFile(
-      path.join(PARTIALS_DIR, partialFile),
+      path.join(partialsDir, partialFile),
       "utf8",
     );
     engine.registerPartial(partialName, partialSource);
   }
 
-  const templateSource = await readFile(TEMPLATE_FILE, "utf8");
+  const templateSource = await readFile(templatePath, "utf8");
   return engine.compile(templateSource, {
     noEscape: true,
   });
 }
 
-export async function loadRules(): Promise<RulesDocument> {
-  const source = await readFile(RULES_FILE, "utf8");
+export async function loadRules(
+  config: ToolConfig = DEFAULT_CONFIG,
+): Promise<RulesDocument> {
+  const source = await readFile(resolveToolPath(config.paths.rulesFile), "utf8");
   return JSON.parse(source) as RulesDocument;
 }
 
-export function collectArtifacts(rules: RulesDocument): BuildArtifact[] {
-  const artifacts: BuildArtifact[] = [];
+function collectDefinitionsArtifact(
+  rules: RulesDocument,
+  config: ToolConfig,
+): BuildArtifact | null {
+  const mapping = config.generated.definitions;
+  if (!mapping?.enabled) {
+    return null;
+  }
 
-  artifacts.push({
-    relativePath: "definitions.md",
-    outputPath: path.join(OUTPUT_DIR, "definitions.md"),
-    title: rules.FRD.info.name,
+  const relativePath = normalizeGeneratedPath(mapping.output);
+
+  return {
+    relativePath,
+    outputPath: resolveGeneratedOutputPath(config, relativePath),
+    templatePath: resolveToolPath(mapping.template ?? config.paths.template),
+    mappingId: "definitions",
+    title: mapping.title ?? rules.FRD.info.name,
     documentType: "FRD",
-    context: buildDocumentContext(rules.FRD.info.name, {
+    context: buildDocumentContext(mapping.title ?? rules.FRD.info.name, {
       effectiveEntries: toEffectiveEntries(rules.FRD.info.effective, [
         "20x",
         "rev5",
@@ -882,92 +1119,171 @@ export function collectArtifacts(rules: RulesDocument): BuildArtifact[] {
         rules.FRD.data.both,
       ),
     }),
-  });
+  };
+}
 
-  for (const document of Object.values(rules.FRR)) {
-    for (const version of ["20x", "rev5"] as const) {
-      const effectiveEntry = effectiveEntryForVersion(
-        document.info.effective,
-        version,
-      );
-      if (!isApplicable(effectiveEntry)) {
-        continue;
-      }
-
-      artifacts.push({
-        relativePath: path.join(version, `${document.info.web_name}.md`),
-        outputPath: path.join(
-          OUTPUT_DIR,
-          version,
-          `${document.info.web_name}.md`,
-        ),
-        title: document.info.name,
-        documentType: "FRR",
-        context: buildDocumentContext(document.info.name, {
-          effectiveEntries: toEffectiveEntries(document.info.effective, [
-            version,
-          ]),
-          isRequirementsDocument: true,
-          sections: buildSectionViewModels(
-            document,
-            version,
-            "../definitions/",
-            "",
-          ),
-        }),
-      });
-    }
+function collectRuleDocumentArtifact(
+  rules: RulesDocument,
+  config: ToolConfig,
+  mapping: RuleDocumentMappingConfig,
+): BuildArtifact | null {
+  if (mapping.source.collection !== "FRR") {
+    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
   }
 
-  for (const theme of Object.values(rules.KSI)) {
-    artifacts.push({
-      relativePath: path.join(
-        "20x",
-        "key-security-indicators",
-        `${theme.web_name}.md`,
-      ),
-      outputPath: path.join(
-        OUTPUT_DIR,
-        "20x",
-        "key-security-indicators",
-        `${theme.web_name}.md`,
-      ),
-      title: theme.name,
-      documentType: "KSI",
-      context: buildDocumentContext(theme.name, {
-        isKsiDocument: true,
-        themeParagraphs: splitParagraphs(theme.theme),
-        indicators: Object.entries(theme.indicators).map(([id, entry]) =>
-          buildRequirementViewModel(id, entry, "../../definitions/", "../"),
-        ),
-      }),
-    });
+  const documents = sourceDocuments(rules, mapping);
+  const firstDocument = documents[0];
+  if (!firstDocument) {
+    throw new Error(`Rule document mapping "${mapping.id}" matched no FRR documents.`);
+  }
+
+  const sections = buildConfiguredSections(documents, mapping);
+  if (!sections.length && mapping.emptyBehavior === "skip") {
+    return null;
+  }
+
+  const relativePath = normalizeGeneratedPath(mapping.output);
+  const title = mapping.title ?? firstDocument.info.name;
+  const effectiveEntries =
+    mapping.includeEffectiveDates === false || documents.length !== 1
+      ? []
+      : toEffectiveEntries(firstDocument.info.effective, mapping.source.types);
+
+  return {
+    relativePath,
+    outputPath: resolveGeneratedOutputPath(config, relativePath),
+    templatePath: resolveToolPath(mapping.template ?? config.paths.template),
+    mappingId: mapping.id,
+    title,
+    documentType: "FRR",
+    context: buildDocumentContext(title, {
+      effectiveEntries,
+      isRequirementsDocument: true,
+      sections,
+    }),
+  };
+}
+
+export function collectArtifacts(
+  rules: RulesDocument,
+  config: ToolConfig = DEFAULT_CONFIG,
+): BuildArtifact[] {
+  const artifacts: BuildArtifact[] = [];
+  const definitionsArtifact = collectDefinitionsArtifact(rules, config);
+
+  if (definitionsArtifact) {
+    artifacts.push(definitionsArtifact);
+  }
+
+  for (const mapping of config.generated.ruleDocuments) {
+    const artifact = collectRuleDocumentArtifact(rules, config, mapping);
+    if (artifact) {
+      artifacts.push(artifact);
+    }
   }
 
   return artifacts;
 }
 
-export async function buildMarkdown(): Promise<BuildSummary> {
-  const rules = await loadRules();
-  const template = await loadTemplate();
-  const artifacts = collectArtifacts(rules);
+interface GeneratedManifest {
+  files: string[];
+}
 
-  await rm(OUTPUT_DIR, { recursive: true, force: true });
-  await mkdir(path.join(OUTPUT_DIR, "20x", "key-security-indicators"), {
-    recursive: true,
-  });
-  await mkdir(path.join(OUTPUT_DIR, "rev5"), { recursive: true });
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function generatedManifestPath(config: ToolConfig): string {
+  return resolveGeneratedOutputPath(config, config.generated.manifest);
+}
+
+async function readGeneratedManifest(
+  config: ToolConfig,
+): Promise<GeneratedManifest> {
+  const manifestPath = generatedManifestPath(config);
+  if (!(await fileExists(manifestPath))) {
+    return { files: [] };
+  }
+
+  const source = await readFile(manifestPath, "utf8");
+  return JSON.parse(source) as GeneratedManifest;
+}
+
+async function contentFileExists(
+  config: ToolConfig,
+  relativePath: string,
+): Promise<boolean> {
+  const contentPath = path.resolve(resolveToolPath(config.paths.content), relativePath);
+  assertPathInside(resolveToolPath(config.paths.content), contentPath, "Content path");
+  return fileExists(contentPath);
+}
+
+async function assertNoContentCollisions(
+  config: ToolConfig,
+  artifacts: BuildArtifact[],
+): Promise<void> {
+  for (const artifact of artifacts) {
+    if (await contentFileExists(config, artifact.relativePath)) {
+      throw new Error(
+        `Generated output "${artifact.relativePath}" would shadow content/${artifact.relativePath}. Move the mapping in tools/config.json before building.`,
+      );
+    }
+  }
+}
+
+async function cleanupGeneratedFiles(config: ToolConfig): Promise<void> {
+  const manifest = await readGeneratedManifest(config);
+
+  for (const relativePath of manifest.files) {
+    if (await contentFileExists(config, relativePath)) {
+      continue;
+    }
+
+    const outputPath = resolveGeneratedOutputPath(config, relativePath);
+    await rm(outputPath, { force: true });
+  }
+}
+
+async function writeGeneratedManifest(
+  config: ToolConfig,
+  artifacts: BuildArtifact[],
+): Promise<void> {
+  const manifestPath = generatedManifestPath(config);
+  const manifest: GeneratedManifest = {
+    files: artifacts.map((artifact) => artifact.relativePath).sort(),
+  };
+
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+}
+
+export async function buildMarkdown(config?: ToolConfig): Promise<BuildSummary> {
+  const toolConfig = config ?? (await loadToolConfig());
+  const rules = await loadRules(toolConfig);
+  const artifacts = collectArtifacts(rules, toolConfig);
+  const partialsDir = resolveToolPath(toolConfig.paths.partials);
+  const templates = new Map<string, (context: DocumentViewModel) => string>();
+
+  await assertNoContentCollisions(toolConfig, artifacts);
+  await cleanupGeneratedFiles(toolConfig);
 
   for (const artifact of artifacts) {
+    const template =
+      templates.get(artifact.templatePath) ??
+      (await loadTemplate(artifact.templatePath, partialsDir));
+    templates.set(artifact.templatePath, template);
+
     const rendered = `${template(artifact.context).trim()}\n`;
+    await mkdir(path.dirname(artifact.outputPath), { recursive: true });
     await writeFile(artifact.outputPath, rendered, "utf8");
   }
 
-  await writeFile(
-    path.join(OUTPUT_DIR, "index.md"),
-    buildPreviewIndex(artifacts),
-    "utf8",
-  );
+  await writeGeneratedManifest(toolConfig, artifacts);
 
   return {
     artifactCount: artifacts.length,

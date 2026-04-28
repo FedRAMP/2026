@@ -11,8 +11,13 @@ nav = [
     { "Source Data" = "sources.md" },
     { "FedRAMP's Responsibilities" = [
       "responsibilities/index.md",
-    ] },
+      { "FedRAMP Security Inbox" = "responsibilities/fsi.md" },
+      { "Incident Communications Procedures" = "responsibilities/icp.md" },
+      { "Marketplace Listing" = "responsibilities/mkt.md" },
+      { "Significant Change Notifications" = "responsibilities/scn.md" },
+      { "Vulnerability Detection and Response" = "responsibilities/vdr.md" },
 
+    ] },
     { "FedRAMP's Authority" = [
       { "FedRAMP Authorization Act" = [
         "authority/law/index.md",
@@ -104,6 +109,7 @@ nav = [
       "providers/20x/index.md",
       { "Initial Certification" = [
         "providers/20x/initial/index.md",
+        { "Certification" = "providers/20x/initial/certification.md" },
       ] },
       { "Ongoing Certification" = [
         "providers/20x/ongoing/index.md",
@@ -114,6 +120,7 @@ nav = [
       "providers/rev5/index.md",
       { "Initial Certification" = [
         "providers/rev5/initial/index.md",
+        { "Certification" = "providers/rev5/initial/certification.md" },
       ] },
       { "Ongoing Certification" = [
         "providers/rev5/ongoing/index.md",

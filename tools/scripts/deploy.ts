@@ -1,18 +1,25 @@
-import fs from "fs";
-import path from "path";
-import config from "./config.json";
+import fs from "node:fs";
+import path from "node:path";
+import { loadToolConfig, resolveToolPath } from "./config";
 
 interface CopyStats {
   count: number;
 }
 
-async function ensureDirectory(dirPath: string): Promise<void> {
+export interface DeploySummary {
+  copiedFiles: number;
+  executionTimeMs: number;
+  srcPath: string;
+  htmlPath: string;
+}
+
+function ensureDirectory(dirPath: string): void {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
   }
 }
 
-async function clearDirectory(dirPath: string): Promise<void> {
+function clearDirectory(dirPath: string): void {
   if (fs.existsSync(dirPath)) {
     const files = fs.readdirSync(dirPath);
     if (files.length > 0) {
@@ -29,11 +36,11 @@ async function clearDirectory(dirPath: string): Promise<void> {
   }
 }
 
-async function copyRecursive(
+function copyRecursive(
   src: string,
   dest: string,
-  stats: CopyStats
-): Promise<void> {
+  stats: CopyStats,
+): void {
   const files = fs.readdirSync(src);
 
   for (const file of files) {
@@ -45,7 +52,7 @@ async function copyRecursive(
       if (!fs.existsSync(destPath)) {
         fs.mkdirSync(destPath, { recursive: true });
       }
-      await copyRecursive(srcPath, destPath, stats);
+      copyRecursive(srcPath, destPath, stats);
     } else {
       fs.copyFileSync(srcPath, destPath);
       stats.count++;
@@ -53,33 +60,42 @@ async function copyRecursive(
   }
 }
 
-async function deploy(): Promise<void> {
+export async function deploy(): Promise<DeploySummary> {
+  const config = await loadToolConfig();
   const startTime = Date.now();
   const stats: CopyStats = { count: 0 };
 
-  const srcPath = path.resolve(__dirname, config.src);
-  const contentPath = path.resolve(__dirname, config.content);
-  const htmlPath = path.resolve(__dirname, config.html);
+  const srcPath = resolveToolPath(config.paths.src);
+  const contentPath = resolveToolPath(config.paths.content);
+  const htmlPath = resolveToolPath(config.paths.html);
 
-  // Ensure and clear src directory
-  await ensureDirectory(srcPath);
-  await clearDirectory(srcPath);
+  ensureDirectory(srcPath);
+  clearDirectory(srcPath);
 
-  // Ensure and clear html directory
-  await ensureDirectory(htmlPath);
-  await clearDirectory(htmlPath);
+  ensureDirectory(htmlPath);
+  clearDirectory(htmlPath);
 
-  // Copy files from content to src
-  await copyRecursive(contentPath, srcPath, stats);
+  copyRecursive(contentPath, srcPath, stats);
 
   const endTime = Date.now();
   const executionTime = endTime - startTime;
 
-  console.log(`Files copied: ${stats.count}`);
-  console.log(`Execution time: ${executionTime}ms`);
+  return {
+    copiedFiles: stats.count,
+    executionTimeMs: executionTime,
+    srcPath,
+    htmlPath,
+  };
 }
 
-deploy().catch((error) => {
-  console.error("Deploy failed:", error);
-  process.exit(1);
-});
+if (import.meta.main) {
+  deploy()
+    .then((summary) => {
+      console.log(`Files copied: ${summary.copiedFiles}`);
+      console.log(`Execution time: ${summary.executionTimeMs}ms`);
+    })
+    .catch((error) => {
+      console.error("Deploy failed:", error);
+      process.exit(1);
+    });
+}

@@ -1,8 +1,5 @@
-[submodule "fedramp-rules"]
-        path = rules
-        url = https://github.com/FedRAMP/rules.git
-        branch = pwx
-        shallow = true
 [submodule "tools/rules"]
 	path = tools/rules
 	url = https://github.com/FedRAMP/rules.git
+	branch = pwx
+	shallow = true

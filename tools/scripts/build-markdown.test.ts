@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { access, readFile, readdir } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import {
   buildMarkdown,
@@ -8,45 +9,36 @@ import {
   OUTPUT_DIR,
   RULES_FILE,
 } from "./build-markdown";
-
-async function listMarkdownFiles(directory: string): Promise<string[]> {
-  const entries = await readdir(directory, { withFileTypes: true });
-  const filePaths = await Promise.all(
-    entries.map(async (entry) => {
-      const fullPath = path.join(directory, entry.name);
-      if (entry.isDirectory()) {
-        return listMarkdownFiles(fullPath);
-      }
-
-      return entry.name.endsWith(".md") ? [fullPath] : [];
-    }),
-  );
-
-  return filePaths.flat();
-}
+import { loadToolConfig, resolveToolPath } from "./config";
+import { deploy } from "./deploy";
 
 describe("build-markdown", () => {
   test("the consolidated rules source exists", async () => {
     await access(RULES_FILE);
   });
 
-  test("builds the expected markdown files from the JSON source", async () => {
-    const rules = await loadRules();
-    const expectedArtifacts = collectArtifacts(rules);
+  test("builds configured markdown files from the JSON source", async () => {
+    const config = await loadToolConfig();
+    const rules = await loadRules(config);
+    const expectedArtifacts = collectArtifacts(rules, config);
 
+    await deploy();
     const summary = await buildMarkdown();
     expect(summary.artifactCount).toBe(expectedArtifacts.length);
 
-    const actualFiles = (await listMarkdownFiles(OUTPUT_DIR))
-      .map((filePath) => path.relative(OUTPUT_DIR, filePath))
-      .sort();
-    const expectedFiles = [
-      ...expectedArtifacts.map((artifact) => artifact.relativePath),
-      "index.md",
-    ]
-      .sort();
-
-    expect(actualFiles).toEqual(expectedFiles);
+    expect(summary.artifacts.map((artifact) => artifact.relativePath).sort()).toEqual(
+      [
+        "definitions.md",
+        "providers/20x/initial/certification.md",
+        "providers/rev5/initial/certification.md",
+        "responsibilities/fsi.md",
+        "responsibilities/icp.md",
+        "responsibilities/index.md",
+        "responsibilities/mkt.md",
+        "responsibilities/scn.md",
+        "responsibilities/vdr.md",
+      ],
+    );
 
     for (const artifact of expectedArtifacts) {
       await access(artifact.outputPath);
@@ -81,48 +73,92 @@ describe("build-markdown", () => {
     ]);
     expect(definitionsContents).toContain("## Specific Terms: Vulnerabilities");
 
-    const previewIndexContents = await readFile(
-      path.join(OUTPUT_DIR, "index.md"),
-      "utf8",
+    const contentDefinitionsPath = path.join(
+      resolveToolPath(config.paths.content),
+      "definitions.md",
     );
-    expect(previewIndexContents).toContain("# FedRAMP Rules Preview");
-    expect(previewIndexContents).toContain("[Definitions](definitions/)");
+    await expect(access(contentDefinitionsPath)).rejects.toThrow();
 
-    const requirementContents = await readFile(
-      path.join(OUTPUT_DIR, "20x", "certification-data-sharing.md"),
+    const provider20xContents = await readFile(
+      path.join(OUTPUT_DIR, "providers", "20x", "initial", "certification.md"),
       "utf8",
     );
-    expect(requirementContents).toContain(
+    expect(provider20xContents).toContain(
       '!!! info "Effective Date(s) & Overall Applicability for 20x"',
     );
-    expect(requirementContents).toContain('{ data-preview }');
-    expect(requirementContents).toContain("../definitions/#");
+    expect(provider20xContents).toContain("FRC-CSO-CDS");
+    expect(provider20xContents).toContain("FRC-CSX-SUM");
+    expect(provider20xContents).not.toContain("FRC-CSL-CDE");
+    expect(provider20xContents).toContain("../../../definitions/#");
 
-    expect(definitionsContents).toContain(
-      '!!! info "Effective Date(s) & Overall Applicability for 20x and Rev5"',
-    );
-
-    const sharedTwentyXContents = await readFile(
-      path.join(OUTPUT_DIR, "20x", "fedramp-security-inbox.md"),
+    const providerRev5Contents = await readFile(
+      path.join(OUTPUT_DIR, "providers", "rev5", "initial", "certification.md"),
       "utf8",
     );
-    expect(sharedTwentyXContents).toContain(
-      '!!! info "Effective Date(s) & Overall Applicability for 20x"',
-    );
-
-    const sharedRev5Contents = await readFile(
-      path.join(OUTPUT_DIR, "rev5", "fedramp-security-inbox.md"),
-      "utf8",
-    );
-    expect(sharedRev5Contents).toContain(
+    expect(providerRev5Contents).toContain(
       '!!! info "Effective Date(s) & Overall Applicability for Rev5"',
     );
+    expect(providerRev5Contents).toContain("FRC-CSO-CDS");
+    expect(providerRev5Contents).toContain("FRC-CSL-CDE");
+    expect(providerRev5Contents).not.toContain("FRC-CSX-SUM");
 
-    const nonApplicableRev5Path = path.join(
-      OUTPUT_DIR,
-      "rev5",
-      "persistent-validation-and-assessment.md",
+    const fedrampResponsibilitiesContents = await readFile(
+      path.join(OUTPUT_DIR, "responsibilities", "index.md"),
+      "utf8",
     );
-    await expect(access(nonApplicableRev5Path)).rejects.toThrow();
+    expect(fedrampResponsibilitiesContents).toContain(
+      "# FedRAMP Responsibilities",
+    );
+    expect(fedrampResponsibilitiesContents).not.toContain("Effective Date(s)");
+    expect(fedrampResponsibilitiesContents).toContain("FSI-FRP-VRE");
+    expect(fedrampResponsibilitiesContents).toContain("ICP-FRP-ORV");
+    expect(fedrampResponsibilitiesContents).toContain("MKT-FRP-DSM");
+    expect(fedrampResponsibilitiesContents).toContain("SCN-FRP-CAP");
+    expect(fedrampResponsibilitiesContents).toContain("VDR-FRP-ARP");
+    expect(fedrampResponsibilitiesContents).not.toContain("FRC-CSO-CDS");
+
+    const fedrampVdrContents = await readFile(
+      path.join(OUTPUT_DIR, "responsibilities", "vdr.md"),
+      "utf8",
+    );
+    expect(fedrampVdrContents).toContain(
+      "# Vulnerability Detection and Response",
+    );
+    expect(fedrampVdrContents).toContain("## FedRAMP Responsibilities");
+    expect(fedrampVdrContents).not.toContain(
+      "## Vulnerability Detection and Response",
+    );
+    expect(fedrampVdrContents).toContain("VDR-FRP-ARP");
+  });
+
+  test("rejects generated outputs that already exist in content", async () => {
+    const config = await loadToolConfig();
+    const tempDir = await mkdtemp(path.join(tmpdir(), "cr26-site-tools-"));
+    const tempContentDir = path.join(tempDir, "content");
+    const tempSrcDir = path.join(tempDir, "src");
+    const tempHtmlDir = path.join(tempDir, "html");
+
+    try {
+      await mkdir(tempContentDir, { recursive: true });
+      await writeFile(
+        path.join(tempContentDir, "definitions.md"),
+        "# Manual definitions\n",
+        "utf8",
+      );
+
+      await expect(
+        buildMarkdown({
+          ...config,
+          paths: {
+            ...config.paths,
+            content: path.relative(resolveToolPath("."), tempContentDir),
+            src: path.relative(resolveToolPath("."), tempSrcDir),
+            html: path.relative(resolveToolPath("."), tempHtmlDir),
+          },
+        }),
+      ).rejects.toThrow(/would shadow content\/definitions\.md/);
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
   });
 });
