@@ -7,6 +7,7 @@ import {
   loadToolConfig,
   resolveToolPath,
   toPosixPath,
+  type DefinitionDocumentMappingConfig,
   type RuleDocumentMappingConfig,
   type RuleType,
   type ToolConfig,
@@ -125,9 +126,7 @@ interface RequirementEntrySource {
 
 interface DefinitionsSource {
   info: InfoSource;
-  data: {
-    both?: Record<string, DefinitionEntrySource>;
-  };
+  data: Partial<Record<Version | "both", Record<string, DefinitionEntrySource>>>;
 }
 
 interface DefinitionEntrySource {
@@ -686,13 +685,13 @@ function buildDefinitionViewModel(
   };
 }
 
-function buildDefinitionSectionViewModels(
-  entries: Record<string, DefinitionEntrySource> = {},
+function buildDefinitionSectionViewModelsFromEntries(
+  entries: Array<[string, DefinitionEntrySource]>,
 ): DefinitionSectionViewModel[] {
   const generalDefinitions: DefinitionViewModel[] = [];
   const taggedDefinitions = new Map<string, DefinitionViewModel[]>();
 
-  for (const [id, entry] of Object.entries(entries)) {
+  for (const [id, entry] of entries) {
     const definition = buildDefinitionViewModel(id, entry);
     const tag = entry.tag?.trim();
 
@@ -723,6 +722,29 @@ function buildDefinitionSectionViewModels(
   }
 
   return sections;
+}
+
+function definitionDocumentTypes(
+  mapping: DefinitionDocumentMappingConfig,
+): Version[] {
+  return mapping.source.types ?? ["20x", "rev5"];
+}
+
+function buildConfiguredDefinitionSectionViewModels(
+  definitions: DefinitionsSource,
+  mapping: DefinitionDocumentMappingConfig,
+): DefinitionSectionViewModel[] {
+  const entries: Array<[string, DefinitionEntrySource]> = [];
+
+  for (const bucketName of configuredTypeBuckets(
+    definitionDocumentTypes(mapping),
+    mapping.source.includeBoth,
+    mapping.source.bothPosition,
+  )) {
+    entries.push(...Object.entries(definitions.data[bucketName] ?? {}));
+  }
+
+  return buildDefinitionSectionViewModelsFromEntries(entries);
 }
 
 function buildSectionViewModels(
@@ -796,14 +818,22 @@ function resolveGeneratedOutputPath(
 function configuredBuckets(
   mapping: RuleDocumentMappingConfig,
 ): Array<Version | "both"> {
-  const types = mapping.source.types;
-  const includeBoth = mapping.source.includeBoth ?? true;
+  return configuredTypeBuckets(
+    mapping.source.types,
+    mapping.source.includeBoth,
+    mapping.source.bothPosition,
+  );
+}
 
+function configuredTypeBuckets(
+  types: Version[],
+  includeBoth = true,
+  bothPosition: "first" | "last" = "last",
+): Array<Version | "both"> {
   if (!includeBoth) {
     return types;
   }
 
-  const bothPosition = mapping.source.bothPosition ?? "last";
   return bothPosition === "first" ? ["both", ...types] : [...types, "both"];
 }
 
@@ -1121,7 +1151,49 @@ export async function loadRules(
   return JSON.parse(source) as RulesDocument;
 }
 
-function collectDefinitionsArtifact(
+function collectDefinitionDocumentArtifact(
+  rules: RulesDocument,
+  config: ToolConfig,
+  mapping: DefinitionDocumentMappingConfig,
+): BuildArtifact | null {
+  if (mapping.source.collection !== "FRD") {
+    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+  }
+
+  const definitionSections = buildConfiguredDefinitionSectionViewModels(
+    rules.FRD,
+    mapping,
+  );
+  if (!definitionSections.length && mapping.emptyBehavior === "skip") {
+    return null;
+  }
+
+  const relativePath = normalizeGeneratedPath(mapping.output);
+  const title = mapping.title ?? rules.FRD.info.name;
+  const effectiveEntries =
+    mapping.includeEffectiveDates === false
+      ? []
+      : toEffectiveEntries(
+          rules.FRD.info.effective,
+          definitionDocumentTypes(mapping),
+        );
+
+  return {
+    relativePath,
+    outputPath: resolveGeneratedOutputPath(config, relativePath),
+    templatePath: resolveToolPath(mapping.template ?? config.paths.template),
+    mappingId: mapping.id,
+    title,
+    documentType: "FRD",
+    context: buildDocumentContext(title, {
+      effectiveEntries,
+      isDefinitionDocument: true,
+      definitionSections,
+    }),
+  };
+}
+
+function collectLegacyDefinitionsArtifact(
   rules: RulesDocument,
   config: ToolConfig,
 ): BuildArtifact | null {
@@ -1130,26 +1202,35 @@ function collectDefinitionsArtifact(
     return null;
   }
 
-  const relativePath = normalizeGeneratedPath(mapping.output);
+  return collectDefinitionDocumentArtifact(rules, config, {
+    id: "definitions",
+    title: mapping.title,
+    output: mapping.output,
+    template: mapping.template,
+    source: {
+      collection: "FRD",
+      types: ["20x", "rev5"],
+      includeBoth: true,
+      bothPosition: "first",
+    },
+  });
+}
 
-  return {
-    relativePath,
-    outputPath: resolveGeneratedOutputPath(config, relativePath),
-    templatePath: resolveToolPath(mapping.template ?? config.paths.template),
-    mappingId: "definitions",
-    title: mapping.title ?? rules.FRD.info.name,
-    documentType: "FRD",
-    context: buildDocumentContext(mapping.title ?? rules.FRD.info.name, {
-      effectiveEntries: toEffectiveEntries(rules.FRD.info.effective, [
-        "20x",
-        "rev5",
-      ]),
-      isDefinitionDocument: true,
-      definitionSections: buildDefinitionSectionViewModels(
-        rules.FRD.data.both,
-      ),
-    }),
-  };
+function collectDefinitionDocumentArtifacts(
+  rules: RulesDocument,
+  config: ToolConfig,
+): BuildArtifact[] {
+  const mappings = config.generated.definitionDocuments;
+  if (mappings?.length) {
+    return mappings
+      .map((mapping) =>
+        collectDefinitionDocumentArtifact(rules, config, mapping),
+      )
+      .filter((artifact): artifact is BuildArtifact => artifact !== null);
+  }
+
+  const legacyArtifact = collectLegacyDefinitionsArtifact(rules, config);
+  return legacyArtifact ? [legacyArtifact] : [];
 }
 
 function collectSingleRuleDocumentArtifact(
@@ -1259,11 +1340,7 @@ export function collectArtifacts(
   config: ToolConfig = DEFAULT_CONFIG,
 ): BuildArtifact[] {
   const artifacts: BuildArtifact[] = [];
-  const definitionsArtifact = collectDefinitionsArtifact(rules, config);
-
-  if (definitionsArtifact) {
-    artifacts.push(definitionsArtifact);
-  }
+  artifacts.push(...collectDefinitionDocumentArtifacts(rules, config));
 
   for (const mapping of config.generated.ruleDocuments) {
     artifacts.push(...collectRuleDocumentArtifacts(rules, config, mapping));

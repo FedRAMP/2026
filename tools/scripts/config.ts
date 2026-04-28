@@ -27,6 +27,23 @@ export interface DefinitionsMappingConfig {
   template?: string;
 }
 
+export interface DefinitionDocumentSourceConfig {
+  collection: "FRD";
+  types?: RuleType[];
+  includeBoth?: boolean;
+  bothPosition?: BothRulesPosition;
+}
+
+export interface DefinitionDocumentMappingConfig {
+  id: string;
+  title?: string;
+  output: string;
+  template?: string;
+  emptyBehavior?: GeneratedEmptyBehavior;
+  includeEffectiveDates?: boolean;
+  source: DefinitionDocumentSourceConfig;
+}
+
 export interface RuleDocumentSourceConfig {
   collection: "FRR";
   document?: string;
@@ -55,6 +72,7 @@ export interface RuleDocumentMappingConfig {
 export interface GeneratedConfig {
   manifest: string;
   definitions?: DefinitionsMappingConfig;
+  definitionDocuments?: DefinitionDocumentMappingConfig[];
   ruleDocuments: RuleDocumentMappingConfig[];
 }
 

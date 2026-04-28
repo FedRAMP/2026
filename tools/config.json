@@ -10,11 +10,20 @@
   },
   "generated": {
     "manifest": ".generated-markdown.json",
-    "definitions": {
-      "enabled": true,
-      "title": "FedRAMP Definitions",
-      "output": "definitions.md"
-    },
+    "definitionDocuments": [
+      {
+        "id": "fedramp-definitions",
+        "title": "FedRAMP Definitions",
+        "output": "definitions.md",
+        "includeEffectiveDates": false,
+        "source": {
+          "collection": "FRD",
+          "types": ["20x", "rev5"],
+          "includeBoth": true,
+          "bothPosition": "first"
+        }
+      }
+    ],
     "ruleDocuments": [
       {
         "id": "fedramp-responsibilities",

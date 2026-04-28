@@ -53,6 +53,38 @@ Important path settings:
 
 Generated files are tracked in `generated.manifest` inside `src/`. The generator removes files from the previous manifest before writing the next set, and it refuses to generate a file that would shadow a manual `content/` file.
 
+## Adding A Generated Definitions Page
+
+Add an entry to `generated.definitionDocuments` in `config.json`:
+
+```json
+{
+  "id": "fedramp-definitions",
+  "title": "FedRAMP Definitions",
+  "output": "definitions.md",
+  "includeEffectiveDates": false,
+  "source": {
+    "collection": "FRD",
+    "types": ["20x", "rev5"],
+    "includeBoth": true,
+    "bothPosition": "first"
+  }
+}
+```
+
+Definition mapping fields:
+
+- `id`: stable identifier for the mapping.
+- `title`: page H1. If omitted, the FRD document title is used.
+- `output`: destination path relative to `paths.src`; the default site location is `definitions.md`.
+- `template`: optional Handlebars template path relative to `tools/`; defaults to `paths.template`.
+- `emptyBehavior`: `write` keeps an empty page, `skip` omits it when no definitions match.
+- `includeEffectiveDates`: set to `false` to omit the top applicability block.
+- `source.collection`: must be `FRD`.
+- `source.types`: one or more certification types, such as `["20x"]` or `["rev5"]`.
+- `source.includeBoth`: include `data.both` definitions with each selected type.
+- `source.bothPosition`: place `data.both` definitions `first` or `last`.
+
 ## Adding A Generated Rules Page
 
 Add an entry to `generated.ruleDocuments` in `config.json`:
