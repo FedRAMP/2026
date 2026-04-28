@@ -7,6 +7,7 @@ nav = [
     { "Certification" = "certification.md" },
     { "Shared Responsibility Model" = "shared-responsibilities.md" },
     { "FedRAMP Marketplace" = "marketplace.md" },
+    { "Scope of FedRAMP" = "scope.md" },
     { "Changelog" = "changelog.md" },
     { "Source Data" = "sources.md" },
     { "FedRAMP's Responsibilities" = [
@@ -16,7 +17,6 @@ nav = [
       { "Marketplace Listing" = "responsibilities/mkt.md" },
       { "Significant Change Notifications" = "responsibilities/scn.md" },
       { "Vulnerability Detection and Response" = "responsibilities/vdr.md" },
-
     ] },
     { "FedRAMP's Authority" = [
       { "FedRAMP Authorization Act" = [
@@ -52,7 +52,6 @@ nav = [
   { Agencies = [
     "agencies/index.md",
     { "Getting Started" = "agencies/start.md" },
-    { "Scope of FedRAMP" = "agencies/scope.md" },
     { "Getting Support" = [
       "agencies/support/index.md",
       { "Liaisons Program" = "agencies/support/liaisons.md" },
@@ -84,6 +83,11 @@ nav = [
       { "Initial Certification" = "agencies/sponsoring/initial.md" },
       { "Ongoing Certification" = "agencies/sponsoring/ongoing.md" },
     ] },
+    { "Agency-Specific FedRAMP Rules" = [
+      "agencies/rules/index.md",
+      { "Collaborative Continuous Monitoring" = "agencies/rules/ccm.md" },
+      { "Vulnerability Detection and Response" = "agencies/rules/vdr.md" },
+    ] },
     { "Legacy Agency Materials" = [
       "agencies/legacy/index.md",
     ] },
@@ -109,10 +113,25 @@ nav = [
       "providers/20x/index.md",
       { "Initial Certification" = [
         "providers/20x/initial/index.md",
-        { "Certification" = "providers/20x/initial/certification.md" },
+
       ] },
       { "Ongoing Certification" = [
         "providers/20x/ongoing/index.md",
+      ] },
+      { "Applicable Rules" = [
+        "providers/20x/rules/index.md",
+        { "Marketplace Listing" = "providers/20x/rules/mkt.md" },
+        { "FedRAMP Certification" = "providers/20x/rules/frc.md" },
+        { "Minimum Assessment Scope" = "providers/20x/rules/mas.md" },
+        { "Certification Data Sharing" = "providers/20x/rules/cds.md" },
+        { "Secure Configuration Guide" = "providers/20x/rules/scg.md" },
+        { "Using Cryptographic Modules" = "providers/20x/rules/ucm.md" },
+        { "FedRAMP Security Inbox" = "providers/20x/rules/fsi.md" },
+        { "Incident Communications Procedures" = "providers/20x/rules/icp.md" },
+        { "Significant Change Notifications" = "providers/20x/rules/scn.md" },
+        { "Vulnerability Detection and Response" = "providers/20x/rules/vdr.md" },
+        { "Collaborative Continuous Monitoring" = "providers/20x/rules/ccm.md" },
+
       ] },
 
     ] },
@@ -120,10 +139,24 @@ nav = [
       "providers/rev5/index.md",
       { "Initial Certification" = [
         "providers/rev5/initial/index.md",
-        { "Certification" = "providers/rev5/initial/certification.md" },
       ] },
       { "Ongoing Certification" = [
         "providers/rev5/ongoing/index.md",
+      ] },
+      { "Applicable Rules" = [
+        "providers/rev5/rules/index.md",
+        { "Marketplace Listing" = "providers/rev5/rules/mkt.md" },
+        { "FedRAMP Certification" = "providers/rev5/rules/frc.md" },
+        { "Minimum Assessment Scope" = "providers/rev5/rules/mas.md" },
+        { "Certification Data Sharing" = "providers/rev5/rules/cds.md" },
+        { "Secure Configuration Guide" = "providers/rev5/rules/scg.md" },
+        { "Using Cryptographic Modules" = "providers/rev5/rules/ucm.md" },
+        { "FedRAMP Security Inbox" = "providers/rev5/rules/fsi.md" },
+        { "Incident Communications Procedures" = "providers/rev5/rules/icp.md" },
+        { "Significant Change Notifications" = "providers/rev5/rules/scn.md" },
+        { "Vulnerability Detection and Response" = "providers/rev5/rules/vdr.md" },
+        { "Collaborative Continuous Monitoring" = "providers/rev5/rules/ccm.md" },
+
       ] },
     ] },
   ] },

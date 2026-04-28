@@ -8,6 +8,7 @@ export type GeneratedEmptyBehavior = "write" | "skip";
 export type BothRulesPosition = "first" | "last";
 export type RuleDocumentSelection = string[] | "ALL";
 export type RuleDocumentGrouping = "section" | "document";
+export type RuleDocumentOutputMode = "single" | "documents";
 
 export interface ToolPathsConfig {
   src: string;
@@ -42,6 +43,7 @@ export interface RuleDocumentMappingConfig {
   id: string;
   title?: string;
   output: string;
+  outputMode?: RuleDocumentOutputMode;
   template?: string;
   definitionsHref?: string;
   rulesHref?: string;

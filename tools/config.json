@@ -17,15 +17,16 @@
     },
     "ruleDocuments": [
       {
-        "id": "fedramp-responsibilities-fsi",
-        "output": "responsibilities/fsi.md",
+        "id": "fedramp-responsibilities",
+        "output": "responsibilities/{FRR}.md",
+        "outputMode": "documents",
         "definitionsHref": "../definitions/",
         "rulesHref": "../",
-        "emptyBehavior": "write",
+        "emptyBehavior": "skip",
         "includeEffectiveDates": false,
         "source": {
           "collection": "FRR",
-          "document": "FSI",
+          "documents": ["FSI", "ICP", "MKT", "SCN", "VDR"],
           "types": ["20x", "rev5"],
           "affects": ["FedRAMP"],
           "includeBoth": true,
@@ -33,97 +34,33 @@
         }
       },
       {
-        "id": "fedramp-responsibilities-icp",
-        "output": "responsibilities/icp.md",
-        "definitionsHref": "../definitions/",
-        "rulesHref": "../",
-        "emptyBehavior": "write",
-        "includeEffectiveDates": false,
-        "source": {
-          "collection": "FRR",
-          "document": "ICP",
-          "types": ["20x", "rev5"],
-          "affects": ["FedRAMP"],
-          "includeBoth": true,
-          "bothPosition": "first"
-        }
-      },
-      {
-        "id": "fedramp-responsibilities-mkt",
-        "output": "responsibilities/mkt.md",
-        "definitionsHref": "../definitions/",
-        "rulesHref": "../",
-        "emptyBehavior": "write",
-        "includeEffectiveDates": false,
-        "source": {
-          "collection": "FRR",
-          "document": "MKT",
-          "types": ["20x", "rev5"],
-          "affects": ["FedRAMP"],
-          "includeBoth": true,
-          "bothPosition": "first"
-        }
-      },
-      {
-        "id": "fedramp-responsibilities-scn",
-        "output": "responsibilities/scn.md",
-        "definitionsHref": "../definitions/",
-        "rulesHref": "../",
-        "emptyBehavior": "write",
-        "includeEffectiveDates": false,
-        "source": {
-          "collection": "FRR",
-          "document": "SCN",
-          "types": ["20x", "rev5"],
-          "affects": ["FedRAMP"],
-          "includeBoth": true,
-          "bothPosition": "first"
-        }
-      },
-      {
-        "id": "fedramp-responsibilities-vdr",
-        "output": "responsibilities/vdr.md",
-        "definitionsHref": "../definitions/",
-        "rulesHref": "../",
-        "emptyBehavior": "write",
-        "includeEffectiveDates": false,
-        "source": {
-          "collection": "FRR",
-          "document": "VDR",
-          "types": ["20x", "rev5"],
-          "affects": ["FedRAMP"],
-          "includeBoth": true,
-          "bothPosition": "first"
-        }
-      },
-      {
-        "id": "all-fedramp-responsibilities",
-        "title": "FedRAMP Responsibilities",
-        "output": "responsibilities/index.md",
-        "definitionsHref": "../definitions/",
-        "rulesHref": "../",
-        "emptyBehavior": "write",
+        "id": "agency-specific-rules",
+        "output": "agencies/rules/{FRR}.md",
+        "outputMode": "documents",
+        "definitionsHref": "../../definitions/",
+        "rulesHref": "../../",
+        "emptyBehavior": "skip",
         "includeEffectiveDates": false,
         "source": {
           "collection": "FRR",
           "documents": "ALL",
           "types": ["20x", "rev5"],
-          "affects": ["FedRAMP"],
+          "affects": ["Agencies"],
           "includeBoth": true,
-          "bothPosition": "first",
-          "groupBy": "document"
+          "bothPosition": "first"
         }
       },
       {
-        "id": "frc-provider-20x-initial-certification",
-        "title": "FedRAMP 20x Initial Certification Responsibilities",
-        "output": "providers/20x/initial/certification.md",
+        "id": "provider-specific-initial-rules-20x",
+        "output": "providers/20x/rules/{FRR}.md",
+        "outputMode": "documents",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../../../",
-        "emptyBehavior": "write",
+        "emptyBehavior": "skip",
+        "includeEffectiveDates": false,
         "source": {
           "collection": "FRR",
-          "document": "FRC",
+          "documents": "ALL",
           "types": ["20x"],
           "affects": ["Providers"],
           "includeBoth": true,
@@ -131,15 +68,16 @@
         }
       },
       {
-        "id": "frc-provider-rev5-initial-certification",
-        "title": "FedRAMP Rev5 Initial Certification Responsibilities",
-        "output": "providers/rev5/initial/certification.md",
+        "id": "provider-specific-initial-rules-rev5",
+        "output": "providers/rev5/rules/{FRR}.md",
+        "outputMode": "documents",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../../../",
-        "emptyBehavior": "write",
+        "emptyBehavior": "skip",
+        "includeEffectiveDates": false,
         "source": {
           "collection": "FRR",
-          "document": "FRC",
+          "documents": "ALL",
           "types": ["rev5"],
           "affects": ["Providers"],
           "includeBoth": true,

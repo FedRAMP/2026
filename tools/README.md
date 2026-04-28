@@ -10,7 +10,7 @@ Run commands from `tools/`.
 bun run dev
 ```
 
-Copies `../content` into `../src`, generates configured Markdown into `../src`, then starts `zensical serve` with `../zensical.toml`. The dev script watches manual content, templates, config, generator code, and the rules JSON.
+Copies `../content` into `../src`, generates configured Markdown into `../src`, then starts `zensical serve` with `../zensical.toml`. The dev script watches manual content, templates, config, generator code, and the rules JSON. During dev, the copy step leaves `../html` alone so the running Zensical server owns its output directory.
 
 Watch rebuilds are debounced by `dev.watchDebounceMs` in `config.json`; by default the pipeline waits for 1 second with no further changes before rebuilding.
 
@@ -80,7 +80,8 @@ Mapping fields:
 
 - `id`: stable identifier for the mapping.
 - `title`: page H1. If omitted, the FRR document title is used.
-- `output`: destination path relative to `paths.src`.
+- `output`: destination path relative to `paths.src`. For `outputMode: "documents"`, use `{FRR}` as the lowercase FRR key placeholder.
+- `outputMode`: optional output behavior. Omit it or use `single` for one output file; use `documents` to generate one file per selected FRR.
 - `template`: optional Handlebars template path relative to `tools/`; defaults to `paths.template`.
 - `definitionsHref`: relative link prefix for generated term links.
 - `rulesHref`: relative link prefix for `reference_url_web_name` references.
@@ -113,6 +114,29 @@ For example, this mapping processes every FRR and generates one list of every ru
     "includeBoth": true,
     "bothPosition": "first",
     "groupBy": "document"
+  }
+}
+```
+
+For example, this mapping generates one agency rules page for each FRR with `AGM` rules that affect agencies, and maintains matching nav entries in `zensical.toml`:
+
+```json
+{
+  "id": "agency-specific-rules",
+  "output": "agencies/rules/{FRR}.md",
+  "outputMode": "documents",
+  "definitionsHref": "../../definitions/",
+  "rulesHref": "../../",
+  "emptyBehavior": "skip",
+  "includeEffectiveDates": false,
+  "source": {
+    "collection": "FRR",
+    "documents": "ALL",
+    "types": ["20x", "rev5"],
+    "affects": ["Agencies"],
+    "sections": ["AGM"],
+    "includeBoth": true,
+    "bothPosition": "first"
   }
 }
 ```

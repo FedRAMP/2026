@@ -1,25 +1,60 @@
-# Scope of FedRAMP Guidelines and Examples
+# Scope of FedRAMP
 
-This page details the scope of the FedRAMP program based on
-[OMB M-24-15](m-24-15/scope.md){data-preview}.
+FedRAMP was established in the law to provide a standardized approach to the
+assessment and authorization of cloud computing products and services that process
+unclassified information used by agencies. Agencies **must** promote the use
+of cloud computing products and services that are FedRAMP Certified if their
+use is within the scope of FedRAMP.
 
-Agencies **must** obtain and maintain a FedRAMP authorization for cloud services
-that are within the scope of FedRAMP; this guidance helps agencies determine if
-they must obtain and maintain a FedRAMP authorization for their intended use of
-a cloud service.
-
-Agencies with questions about the scope of FedRAMP or other agency
-responsibilities related to FedRAMP set by OMB in M-24-15 should direct those to
-the OMB Office of the Federal Chief Information Officer via email:
-[ofcio@omb.eop.gov](mailto:ofcio@omb.eop.gov).
+Many agency use cases are exempted from the scope of FedRAMP, however,
+especially agency-specific applications that won't be reusable by other
+agencies. This page includes the original guidance from [OMB Memorandum
+M-24-15](authority/m-24-15/scope.md){data-preview} on the Scope of FedRAMP along with guidelines and examples.
 
 !!! info "This guidance is intended for agency use."
 
     Only a federal agency can determine if their use case for a cloud service
     falls within the scope of FedRAMP. Cloud service providers may reference
-    this when considering whether to pursue a FedRAMP authorization but the
+    this when considering whether to pursue a FedRAMP Certification but the
     specific agency use case for adoption is what matters, not the service
     itself.
+
+## OMB Memorandum M-24-15
+
+_This section quotes directly from [OMB Memorandum M-24-15](authority/m-24-15/scope.md){data-preview}._
+
+The scope of FedRAMP is **cloud computing products and services** (such as IaaS,
+Platform-as-a-Service (PaaS), and SaaS) that create, collect, process, store, or
+maintain Federal information on behalf of a Federal agency, and that are **not
+otherwise specified as out of scope** below.[^6]
+
+### Outside the Scope of FedRAMP
+
+The following categories of cloud computing products and services are specified
+as outside the scope of FedRAMP, subject to exceptions made by the FedRAMP
+Director with the approval of OMB:
+
+1. Information systems that are only used for a single agency's operations,
+   hosted on cloud infrastructure or platform, and are not offered as a shared
+   service or do not operate with a shared responsibility model;
+
+2. Social media and communications platforms used in accordance with agency
+   social media policies;
+
+3. Search engines;
+
+4. Widely available services that provide commercially available information to
+   agencies, but do not collect Federal information;
+
+5. Ancillary services whose compromise would pose a negligible risk to Federal
+   information or information systems, such as systems that make external
+   measurements or only ingest information from other publicly available
+   services; and
+
+6. Any other categories of products or services identified for exclusion by the
+   FedRAMP Board, with the concurrence of the Federal CIO.
+
+
 
 ## Agency Use Case Indicators
 

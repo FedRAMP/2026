@@ -26,19 +26,25 @@ describe("build-markdown", () => {
     const summary = await buildMarkdown();
     expect(summary.artifactCount).toBe(expectedArtifacts.length);
 
-    expect(summary.artifacts.map((artifact) => artifact.relativePath).sort()).toEqual(
-      [
-        "definitions.md",
-        "providers/20x/initial/certification.md",
-        "providers/rev5/initial/certification.md",
-        "responsibilities/fsi.md",
-        "responsibilities/icp.md",
-        "responsibilities/index.md",
-        "responsibilities/mkt.md",
-        "responsibilities/scn.md",
-        "responsibilities/vdr.md",
-      ],
+    const relativePaths = summary.artifacts
+      .map((artifact) => artifact.relativePath)
+      .sort();
+    expect(relativePaths).toEqual(
+      expectedArtifacts.map((artifact) => artifact.relativePath).sort(),
     );
+    for (const relativePath of [
+      "agencies/rules/ccm.md",
+      "agencies/rules/vdr.md",
+      "definitions.md",
+      "providers/20x/rules/frc.md",
+      "responsibilities/fsi.md",
+      "responsibilities/icp.md",
+      "responsibilities/mkt.md",
+      "responsibilities/scn.md",
+      "responsibilities/vdr.md",
+    ]) {
+      expect(relativePaths).toContain(relativePath);
+    }
 
     for (const artifact of expectedArtifacts) {
       await access(artifact.outputPath);
@@ -80,42 +86,23 @@ describe("build-markdown", () => {
     await expect(access(contentDefinitionsPath)).rejects.toThrow();
 
     const provider20xContents = await readFile(
-      path.join(OUTPUT_DIR, "providers", "20x", "initial", "certification.md"),
+      path.join(OUTPUT_DIR, "providers", "20x", "rules", "frc.md"),
       "utf8",
     );
-    expect(provider20xContents).toContain(
-      '!!! info "Effective Date(s) & Overall Applicability for 20x"',
-    );
+    expect(provider20xContents).toContain("# FedRAMP Certification");
     expect(provider20xContents).toContain("FRC-CSO-CDS");
     expect(provider20xContents).toContain("FRC-CSX-SUM");
     expect(provider20xContents).not.toContain("FRC-CSL-CDE");
     expect(provider20xContents).toContain("../../../definitions/#");
 
-    const providerRev5Contents = await readFile(
-      path.join(OUTPUT_DIR, "providers", "rev5", "initial", "certification.md"),
+    const fedrampFsiContents = await readFile(
+      path.join(OUTPUT_DIR, "responsibilities", "fsi.md"),
       "utf8",
     );
-    expect(providerRev5Contents).toContain(
-      '!!! info "Effective Date(s) & Overall Applicability for Rev5"',
-    );
-    expect(providerRev5Contents).toContain("FRC-CSO-CDS");
-    expect(providerRev5Contents).toContain("FRC-CSL-CDE");
-    expect(providerRev5Contents).not.toContain("FRC-CSX-SUM");
-
-    const fedrampResponsibilitiesContents = await readFile(
-      path.join(OUTPUT_DIR, "responsibilities", "index.md"),
-      "utf8",
-    );
-    expect(fedrampResponsibilitiesContents).toContain(
-      "# FedRAMP Responsibilities",
-    );
-    expect(fedrampResponsibilitiesContents).not.toContain("Effective Date(s)");
-    expect(fedrampResponsibilitiesContents).toContain("FSI-FRP-VRE");
-    expect(fedrampResponsibilitiesContents).toContain("ICP-FRP-ORV");
-    expect(fedrampResponsibilitiesContents).toContain("MKT-FRP-DSM");
-    expect(fedrampResponsibilitiesContents).toContain("SCN-FRP-CAP");
-    expect(fedrampResponsibilitiesContents).toContain("VDR-FRP-ARP");
-    expect(fedrampResponsibilitiesContents).not.toContain("FRC-CSO-CDS");
+    expect(fedrampFsiContents).toContain("# FedRAMP Security Inbox");
+    expect(fedrampFsiContents).not.toContain("Effective Date(s)");
+    expect(fedrampFsiContents).toContain("FSI-FRP-VRE");
+    expect(fedrampFsiContents).not.toContain("FRC-CSO-CDS");
 
     const fedrampVdrContents = await readFile(
       path.join(OUTPUT_DIR, "responsibilities", "vdr.md"),
@@ -129,6 +116,25 @@ describe("build-markdown", () => {
       "## Vulnerability Detection and Response",
     );
     expect(fedrampVdrContents).toContain("VDR-FRP-ARP");
+
+    const agencyCcmContents = await readFile(
+      path.join(OUTPUT_DIR, "agencies", "rules", "ccm.md"),
+      "utf8",
+    );
+    expect(agencyCcmContents).toContain("# Collaborative Continuous Monitoring");
+    expect(agencyCcmContents).toContain("## Agency Guidance");
+    expect(agencyCcmContents).toContain("CCM-AGM-ROR");
+    expect(agencyCcmContents).not.toContain("## Ongoing Certification Reports");
+
+    const agencyVdrContents = await readFile(
+      path.join(OUTPUT_DIR, "agencies", "rules", "vdr.md"),
+      "utf8",
+    );
+    expect(agencyVdrContents).toContain("# Vulnerability Detection and Response");
+    expect(agencyVdrContents).toContain("## Agency Guidance");
+    expect(agencyVdrContents).toContain("VDR-AGM-RVR");
+    expect(agencyVdrContents).not.toContain("VDR-FRP-ARP");
+
   });
 
   test("rejects generated outputs that already exist in content", async () => {

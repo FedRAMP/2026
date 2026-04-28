@@ -34,7 +34,7 @@ async function runPipeline(reason: string, shouldDeploy: boolean): Promise<void>
 
   try {
     if (shouldDeploy) {
-      const deploySummary = await deploy();
+      const deploySummary = await deploy({ clearHtml: false });
       console.log(`[dev] copied ${deploySummary.copiedFiles} content files`);
     }
 

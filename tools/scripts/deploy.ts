@@ -13,6 +13,10 @@ export interface DeploySummary {
   htmlPath: string;
 }
 
+export interface DeployOptions {
+  clearHtml?: boolean;
+}
+
 function ensureDirectory(dirPath: string): void {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
@@ -60,10 +64,11 @@ function copyRecursive(
   }
 }
 
-export async function deploy(): Promise<DeploySummary> {
+export async function deploy(options: DeployOptions = {}): Promise<DeploySummary> {
   const config = await loadToolConfig();
   const startTime = Date.now();
   const stats: CopyStats = { count: 0 };
+  const clearHtmlOutput = options.clearHtml ?? true;
 
   const srcPath = resolveToolPath(config.paths.src);
   const contentPath = resolveToolPath(config.paths.content);
@@ -73,7 +78,9 @@ export async function deploy(): Promise<DeploySummary> {
   clearDirectory(srcPath);
 
   ensureDirectory(htmlPath);
-  clearDirectory(htmlPath);
+  if (clearHtmlOutput) {
+    clearDirectory(htmlPath);
+  }
 
   copyRecursive(contentPath, srcPath, stats);
 

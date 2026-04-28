@@ -281,6 +281,7 @@ export interface BuildArtifact {
   outputPath: string;
   templatePath: string;
   mappingId: string;
+  sourceDocument?: string;
   title: string;
   documentType: "FRD" | "FRR" | "KSI";
   context: DocumentViewModel;
@@ -944,17 +945,25 @@ function sourceDocumentKeys(
   );
 }
 
+interface SourceDocument {
+  key: string;
+  document: RequirementDocumentSource;
+}
+
 function sourceDocuments(
   rules: RulesDocument,
   mapping: RuleDocumentMappingConfig,
-): RequirementDocumentSource[] {
+): SourceDocument[] {
   return sourceDocumentKeys(rules, mapping).map((documentKey) => {
     const document = rules.FRR[documentKey];
     if (!document) {
       throw new Error(`Unknown FRR document: ${documentKey}`);
     }
 
-    return document;
+    return {
+      key: documentKey,
+      document,
+    };
   });
 }
 
@@ -1000,6 +1009,27 @@ function buildDocumentContext(
     themeParagraphs: options.themeParagraphs ?? [],
     indicators: options.indicators ?? [],
   };
+}
+
+function renderRuleDocumentOutput(
+  mapping: RuleDocumentMappingConfig,
+  documentKey?: string,
+): string {
+  const normalizedKey = documentKey?.toLowerCase() ?? "";
+
+  if (mapping.output.includes("{FRR}")) {
+    return mapping.output.replaceAll("{FRR}", normalizedKey);
+  }
+
+  if (mapping.output.includes("{document}")) {
+    return mapping.output.replaceAll("{document}", normalizedKey);
+  }
+
+  if (mapping.outputMode === "documents") {
+    return `${mapping.output.replace(/\/?$/, "/")}${normalizedKey}.md`;
+  }
+
+  return mapping.output;
 }
 
 function buildPreviewIndex(artifacts: BuildArtifact[]): string {
@@ -1122,7 +1152,7 @@ function collectDefinitionsArtifact(
   };
 }
 
-function collectRuleDocumentArtifact(
+function collectSingleRuleDocumentArtifact(
   rules: RulesDocument,
   config: ToolConfig,
   mapping: RuleDocumentMappingConfig,
@@ -1131,18 +1161,19 @@ function collectRuleDocumentArtifact(
     throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
   }
 
-  const documents = sourceDocuments(rules, mapping);
-  const firstDocument = documents[0];
+  const sourceDocumentEntries = sourceDocuments(rules, mapping);
+  const firstDocument = sourceDocumentEntries[0]?.document;
   if (!firstDocument) {
     throw new Error(`Rule document mapping "${mapping.id}" matched no FRR documents.`);
   }
 
+  const documents = sourceDocumentEntries.map((entry) => entry.document);
   const sections = buildConfiguredSections(documents, mapping);
   if (!sections.length && mapping.emptyBehavior === "skip") {
     return null;
   }
 
-  const relativePath = normalizeGeneratedPath(mapping.output);
+  const relativePath = normalizeGeneratedPath(renderRuleDocumentOutput(mapping));
   const title = mapping.title ?? firstDocument.info.name;
   const effectiveEntries =
     mapping.includeEffectiveDates === false || documents.length !== 1
@@ -1154,6 +1185,9 @@ function collectRuleDocumentArtifact(
     outputPath: resolveGeneratedOutputPath(config, relativePath),
     templatePath: resolveToolPath(mapping.template ?? config.paths.template),
     mappingId: mapping.id,
+    sourceDocument: sourceDocumentEntries.length === 1
+      ? sourceDocumentEntries[0]?.key
+      : undefined,
     title,
     documentType: "FRR",
     context: buildDocumentContext(title, {
@@ -1162,6 +1196,62 @@ function collectRuleDocumentArtifact(
       sections,
     }),
   };
+}
+
+function collectDocumentRuleDocumentArtifacts(
+  rules: RulesDocument,
+  config: ToolConfig,
+  mapping: RuleDocumentMappingConfig,
+): BuildArtifact[] {
+  if (mapping.source.collection !== "FRR") {
+    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+  }
+
+  return sourceDocuments(rules, mapping)
+    .map(({ key, document }): BuildArtifact | null => {
+      const sections = buildConfiguredSections([document], mapping);
+      if (!sections.length && mapping.emptyBehavior === "skip") {
+        return null;
+      }
+
+      const relativePath = normalizeGeneratedPath(
+        renderRuleDocumentOutput(mapping, key),
+      );
+      const title = document.info.name;
+      const effectiveEntries =
+        mapping.includeEffectiveDates === false
+          ? []
+          : toEffectiveEntries(document.info.effective, mapping.source.types);
+
+      return {
+        relativePath,
+        outputPath: resolveGeneratedOutputPath(config, relativePath),
+        templatePath: resolveToolPath(mapping.template ?? config.paths.template),
+        mappingId: mapping.id,
+        sourceDocument: key,
+        title,
+        documentType: "FRR",
+        context: buildDocumentContext(title, {
+          effectiveEntries,
+          isRequirementsDocument: true,
+          sections,
+        }),
+      };
+    })
+    .filter((artifact): artifact is BuildArtifact => artifact !== null);
+}
+
+function collectRuleDocumentArtifacts(
+  rules: RulesDocument,
+  config: ToolConfig,
+  mapping: RuleDocumentMappingConfig,
+): BuildArtifact[] {
+  if (mapping.outputMode === "documents") {
+    return collectDocumentRuleDocumentArtifacts(rules, config, mapping);
+  }
+
+  const artifact = collectSingleRuleDocumentArtifact(rules, config, mapping);
+  return artifact ? [artifact] : [];
 }
 
 export function collectArtifacts(
@@ -1176,10 +1266,7 @@ export function collectArtifacts(
   }
 
   for (const mapping of config.generated.ruleDocuments) {
-    const artifact = collectRuleDocumentArtifact(rules, config, mapping);
-    if (artifact) {
-      artifacts.push(artifact);
-    }
+    artifacts.push(...collectRuleDocumentArtifacts(rules, config, mapping));
   }
 
   return artifacts;
