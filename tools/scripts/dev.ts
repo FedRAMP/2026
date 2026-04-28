@@ -19,6 +19,7 @@ const BUILD_SCRIPT = path.join(
 let isBuilding = false;
 let buildQueued = false;
 let buildTimer: ReturnType<typeof setTimeout> | null = null;
+let pendingDeploy = false;
 let queuedDeploy = false;
 
 async function runPipeline(reason: string, shouldDeploy: boolean): Promise<void> {
@@ -55,21 +56,25 @@ async function runPipeline(reason: string, shouldDeploy: boolean): Promise<void>
 }
 
 function schedulePipeline(reason: string, shouldDeploy = false): void {
+  pendingDeploy = pendingDeploy || shouldDeploy;
+
   if (buildTimer) {
     clearTimeout(buildTimer);
   }
 
   buildTimer = setTimeout(() => {
+    const nextShouldDeploy = pendingDeploy;
     buildTimer = null;
-    void runPipeline(reason, shouldDeploy);
+    pendingDeploy = false;
+    void runPipeline(reason, nextShouldDeploy);
   }, currentWatchDebounceMs);
 }
 
-let currentWatchDebounceMs = 150;
+let currentWatchDebounceMs = 1000;
 
 async function main(): Promise<void> {
   const config = await loadToolConfig();
-  currentWatchDebounceMs = config.dev?.watchDebounceMs ?? 150;
+  currentWatchDebounceMs = config.dev?.watchDebounceMs ?? 1000;
 
   const contentDir = resolveToolPath(config.paths.content);
   const templatesDir = path.dirname(resolveToolPath(config.paths.template));

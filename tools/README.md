@@ -12,6 +12,8 @@ bun run dev
 
 Copies `../content` into `../src`, generates configured Markdown into `../src`, then starts `zensical serve` with `../zensical.toml`. The dev script watches manual content, templates, config, generator code, and the rules JSON.
 
+Watch rebuilds are debounced by `dev.watchDebounceMs` in `config.json`; by default the pipeline waits for 1 second with no further changes before rebuilding.
+
 ```bash
 bun test
 ```

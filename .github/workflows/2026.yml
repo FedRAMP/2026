@@ -16,15 +16,35 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/configure-pages@v5
       - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - uses: actions/configure-pages@v5
+
       - uses: actions/setup-python@v5
         with:
           python-version: 3.x
+
+      - uses: oven-sh/setup-bun@v2
+
       - run: pip install zensical mkdocs-ultralytics-plugin
+
+      - name: Install tool dependencies
+        working-directory: tools
+        run: bun install --frozen-lockfile
+
+      - name: Sync rules submodule
+        working-directory: tools
+        run: bun sync
+
       - name: Build
-        run: zensical build
+        working-directory: tools
+        run: bun run build
+
       - uses: actions/upload-pages-artifact@v4
         with:
-          path: docs/
-      - uses: actions/deploy-pages@v4
+          path: html/
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
