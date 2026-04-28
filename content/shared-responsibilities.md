@@ -27,6 +27,8 @@ In short, FedRAMP grants or revokes FedRAMP Certification while companies choose
 
     The primary purpose of a FedRAMP Certification is to supply sufficient information, following FedRAMP rules, so that agencies can effectively and consistently apply this information to make decisions as they manage federal information systems following all relevant federal requirements.
 
+[Learn more about FedRAMP](responsibilities/index.md){ .md-button }
+
 ## Cloud Service Provider Responsibilities
 
 FedRAMP does not regulate private companies; agencies must only use cloud services with FedRAMP Certification if their use case is within the scope of FedRAMP, so cloud service providers are not subject to any FedRAMP rules unless they wish to provide services to agencies.
@@ -45,6 +47,8 @@ In general, the responsibilities to obtain and maintain a FedRAMP Certification 
 
 Agencies may require cloud service providers to provide additional materials, implement additional capabilities, or otherwise modify their cloud service offering or operational procedures as part of a contract agreement with the cloud service provider based on specific agency requirements. This is expected and acceptable, however, cloud service providers must avoid any contractual obligation that prevents them from meeting ongoing FedRAMP Certification rules unless they are willing to lose their FedRAMP Certification.
 
+[Learn more about Providers](providers/index.md){ .md-button }
+
 ## Agency Responsibilities
 
 Federal agencies must ensure that any cloud service they use has a FedRAMP Certification if their use is within the scope of FedRAMP. Furthermore, agencies must follow FedRAMP rules for assessment and use of a cloud service within a federal information system; this includes the process for using a FedRAMP Certification package. FedRAMP has the responsibility and authority in law and policy for the use of cloud services by agencies and provides instructions to ensure agencies meet their statutory obligations under both FISMA and the FedRAMP Authorization Act.
@@ -56,6 +60,7 @@ In their use of cloud services that are within the scope of FedRAMP, agencies ar
 3. Implementing and assessing the integration of FedRAMP Certified cloud services within the agency information system to ensure it has been securely configured and integrated into all necessary agency services in alignment with the required protections, including compensating controls as necessary. The resulting System Security Plan should ***only*** contain information that the agency is responsible for and should completely address each control identified in the selection step as either implemented by the agency or inherited from the cloud service provider.
 4. Authorizing the operation of the information system and notifying FedRAMP of such.
 5. Monitoring the information system and all agency-responsible controls in alignment with agency policy, and monitoring the cloud service used within the information system in alignment with FedRAMP policy.
+
 
 ### Requiring Additional Capabilities
 
@@ -73,6 +78,8 @@ Agencies may require cloud service providers to provide additional materials, im
 
     This additional agency-specific requirement would prevent other agencies from accessing critical continuous monitoring information and the cloud service provider would not be able to meet ongoing FedRAMP Certification requirements. If an agency and a cloud service provider were to enter into a contract agreement like this, FedRAMP would be forced to revoke the cloud service offering’s FedRAMP Certification and refer the issue to the agency Inspector General for review.
 
+[Learn more about Agencies](agencies/index.md){ .md-button }
+
 ## Independent Assessment Service Responsibilities
 
 FedRAMP relies on independent assessment services (also known as independent assessors, formerly referred to as Third-Party Assessment Organizations or 3PAOs) to analyze, validate, and attest to the quality and compliance of security assessment materials provided by cloud service providers seeking to obtain or maintain FedRAMP Certification. Independent assessors are contracted by cloud service providers to perform the bulk of the verification and validation necessary for FedRAMP to complete the assessment.
@@ -87,3 +94,22 @@ Throughout the lifecycle of a FedRAMP Certification for a cloud service provider
 6. In the case of an agency sponsored FedRAMP Rev5 Certification, providing all materials to the sponsoring agency along with a recommendation or determination as required by the sponsoring agency.
 
 To be used in a FedRAMP Certification, independent assessors must be FedRAMP Recognized. It is the responsibility of FedRAMP Recognized independent assessment services to meet all necessary requirements to maintain FedRAMP Recognition.
+
+[Learn more about Assessors](assessors/index.md){ .md-button }
+
+## Advisory Service Responsibilities
+
+It can be incredibly difficult for companies to navigate the federal marketplace, and FedRAMP is just one small thing that makes providing services to the government different from private sector. Advisory services can help companies navigate these complexities and stay up to date - but be careful, as not all advisory services are created equal and tracking all of the modernization changes in government requires a lot of continuous effort.
+
+Advisory services are optional within the FedRAMP shared responsibility model. FedRAMP does not certify, review, recommend, or officially recognize advisory services, but any advisory service may be listed in the FedRAMP Marketplace by meeting a few simple requirements.
+
+!!! danger "Advisory services are not vetted by FedRAMP!"
+
+    The FedRAMP Marketplace lists advisory services for the convenience of the public and does not
+    review, endorse, or take any responsibility for advisory services or their use.
+
+    Advisory services who indicate that a listing in the FedRAMP Marketplace is any special
+    badge or certification from FedRAMP is sending an strong red flag.
+
+[Learn more about Advisors](advisors/index.md){ .md-button }
+
