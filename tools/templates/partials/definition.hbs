@@ -1,0 +1,45 @@
+### {{term}}
+
+{{#if changelog.length}}
+??? abstract "**ID:** {{id}}"
+{{#if formerId}}
+    **Former ID:** {{formerId}}
+
+{{/if}}
+    **Changelog:**
+{{#each changelog}}
+    - **{{date}}:** {{comment}}{{#if previousValue}}
+
+        **Was:** {{previousValue}}{{/if}}
+{{/each}}
+{{else}}
+!!! abstract "**ID:** {{id}}"
+{{/if}}
+
+!!! quote ""
+{{#each definitionParagraphs}}
+    {{this}}
+
+{{/each}}
+{{#if noteParagraphs.length}}
+    ---
+
+    _**Note:** {{#each noteParagraphs}}{{this}}{{#unless @last}} {{/unless}}{{/each}}_
+{{/if}}
+{{#if notes.length}}
+    ---
+
+    _**Notes:**_
+{{#each notes}}
+    - _{{this}}_
+{{/each}}
+{{/if}}
+{{#if reference}}
+
+    **Reference:** [{{reference.label}}]({{reference.url}})
+{{/if}}
+{{#if alternateTerms.length}}
+
+    **Also:** {{#each alternateTerms}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+{{/if}}
+

@@ -1,3 +1,8 @@
 .DS_Store
 docs/
 .cache
+node_modules/
+html/
+src/
+output/
+
