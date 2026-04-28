@@ -1215,7 +1215,7 @@ function collectDocumentRuleDocumentArtifacts(
       }
 
       const relativePath = normalizeGeneratedPath(
-        renderRuleDocumentOutput(mapping, key),
+        renderRuleDocumentOutput(mapping, document.info.web_name),
       );
       const title = document.info.name;
       const effectiveEntries =
