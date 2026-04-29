@@ -1,7 +1,3 @@
-<<<<<<< HEAD
 # Initial Assessment
-=======
-# Applicable Rules
->>>>>>> main
 
 !!! failure "This page is incomplete."

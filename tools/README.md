@@ -53,7 +53,6 @@ Important path settings:
 
 Generated files are tracked in `generated.manifest` inside `src/`. The generator removes files from the previous manifest before writing the next set, and it refuses to generate a file that would shadow a manual `content/` file.
 
-<<<<<<< HEAD
 ## Adding A Generated Definitions Page
 
 Add an entry to `generated.definitionDocuments` in `config.json`:
@@ -114,8 +113,6 @@ KSI mapping fields:
 - `source.theme`: one KSI theme key from the rules JSON, such as `CMT`.
 - `source.themes`: an array of KSI theme keys, such as `["CMT", "IAM"]`, or `"ALL"` to process every KSI theme.
 
-=======
->>>>>>> main
 ## Adding A Generated Rules Page
 
 Add an entry to `generated.ruleDocuments` in `config.json`:

@@ -7,11 +7,8 @@ import {
   loadToolConfig,
   resolveToolPath,
   toPosixPath,
-<<<<<<< HEAD
   type DefinitionDocumentMappingConfig,
   type KsiDocumentMappingConfig,
-=======
->>>>>>> main
   type RuleDocumentMappingConfig,
   type RuleType,
   type ToolConfig,
@@ -130,13 +127,7 @@ interface RequirementEntrySource {
 
 interface DefinitionsSource {
   info: InfoSource;
-<<<<<<< HEAD
   data: Partial<Record<Version | "both", Record<string, DefinitionEntrySource>>>;
-=======
-  data: {
-    both?: Record<string, DefinitionEntrySource>;
-  };
->>>>>>> main
 }
 
 interface DefinitionEntrySource {
@@ -695,22 +686,13 @@ function buildDefinitionViewModel(
   };
 }
 
-<<<<<<< HEAD
 function buildDefinitionSectionViewModelsFromEntries(
   entries: Array<[string, DefinitionEntrySource]>,
-=======
-function buildDefinitionSectionViewModels(
-  entries: Record<string, DefinitionEntrySource> = {},
->>>>>>> main
 ): DefinitionSectionViewModel[] {
   const generalDefinitions: DefinitionViewModel[] = [];
   const taggedDefinitions = new Map<string, DefinitionViewModel[]>();
 
-<<<<<<< HEAD
   for (const [id, entry] of entries) {
-=======
-  for (const [id, entry] of Object.entries(entries)) {
->>>>>>> main
     const definition = buildDefinitionViewModel(id, entry);
     const tag = entry.tag?.trim();
 
@@ -743,7 +725,6 @@ function buildDefinitionSectionViewModels(
   return sections;
 }
 
-<<<<<<< HEAD
 function definitionDocumentTypes(
   mapping: DefinitionDocumentMappingConfig,
 ): Version[] {
@@ -767,8 +748,6 @@ function buildConfiguredDefinitionSectionViewModels(
   return buildDefinitionSectionViewModelsFromEntries(entries);
 }
 
-=======
->>>>>>> main
 function buildSectionViewModels(
   document: RequirementDocumentSource,
   version: Version,
@@ -840,7 +819,6 @@ function resolveGeneratedOutputPath(
 function configuredBuckets(
   mapping: RuleDocumentMappingConfig,
 ): Array<Version | "both"> {
-<<<<<<< HEAD
   return configuredTypeBuckets(
     mapping.source.types,
     mapping.source.includeBoth,
@@ -853,19 +831,10 @@ function configuredTypeBuckets(
   includeBoth = true,
   bothPosition: "first" | "last" = "last",
 ): Array<Version | "both"> {
-=======
-  const types = mapping.source.types;
-  const includeBoth = mapping.source.includeBoth ?? true;
-
->>>>>>> main
   if (!includeBoth) {
     return types;
   }
 
-<<<<<<< HEAD
-=======
-  const bothPosition = mapping.source.bothPosition ?? "last";
->>>>>>> main
   return bothPosition === "first" ? ["both", ...types] : [...types, "both"];
 }
 
@@ -1094,7 +1063,6 @@ function renderRuleDocumentOutput(
   return mapping.output;
 }
 
-<<<<<<< HEAD
 function renderKsiDocumentOutput(
   mapping: KsiDocumentMappingConfig,
   theme: KsiThemeSource,
@@ -1112,8 +1080,6 @@ function renderKsiDocumentOutput(
   return `${mapping.output.replace(/\/?$/, "/")}${normalizedKey}.md`;
 }
 
-=======
->>>>>>> main
 function buildPreviewIndex(artifacts: BuildArtifact[]): string {
   const definitions = artifacts.find(
     (artifact) => artifact.relativePath === "definitions.md",
@@ -1129,11 +1095,7 @@ function buildPreviewIndex(artifacts: BuildArtifact[]): string {
       artifact.relativePath.startsWith("rev5/"),
   );
   const ksi = artifacts.filter((artifact) =>
-<<<<<<< HEAD
     artifact.relativePath.startsWith("providers/20x/key-security-indicators/"),
-=======
-    artifact.relativePath.startsWith("20x/key-security-indicators/"),
->>>>>>> main
   );
 
   const lines = [
@@ -1207,7 +1169,6 @@ export async function loadRules(
   return JSON.parse(source) as RulesDocument;
 }
 
-<<<<<<< HEAD
 function collectDefinitionDocumentArtifact(
   rules: RulesDocument,
   config: ToolConfig,
@@ -1251,9 +1212,6 @@ function collectDefinitionDocumentArtifact(
 }
 
 function collectLegacyDefinitionsArtifact(
-=======
-function collectDefinitionsArtifact(
->>>>>>> main
   rules: RulesDocument,
   config: ToolConfig,
 ): BuildArtifact | null {
@@ -1262,7 +1220,6 @@ function collectDefinitionsArtifact(
     return null;
   }
 
-<<<<<<< HEAD
   return collectDefinitionDocumentArtifact(rules, config, {
     id: "definitions",
     title: mapping.title,
@@ -1400,28 +1357,6 @@ function collectConfiguredKsiDocumentArtifacts(
   return (config.generated.ksiDocuments ?? []).flatMap((mapping) =>
     collectKsiDocumentArtifacts(rules, config, mapping),
   );
-=======
-  const relativePath = normalizeGeneratedPath(mapping.output);
-
-  return {
-    relativePath,
-    outputPath: resolveGeneratedOutputPath(config, relativePath),
-    templatePath: resolveToolPath(mapping.template ?? config.paths.template),
-    mappingId: "definitions",
-    title: mapping.title ?? rules.FRD.info.name,
-    documentType: "FRD",
-    context: buildDocumentContext(mapping.title ?? rules.FRD.info.name, {
-      effectiveEntries: toEffectiveEntries(rules.FRD.info.effective, [
-        "20x",
-        "rev5",
-      ]),
-      isDefinitionDocument: true,
-      definitionSections: buildDefinitionSectionViewModels(
-        rules.FRD.data.both,
-      ),
-    }),
-  };
->>>>>>> main
 }
 
 function collectSingleRuleDocumentArtifact(
@@ -1487,11 +1422,7 @@ function collectDocumentRuleDocumentArtifacts(
       }
 
       const relativePath = normalizeGeneratedPath(
-<<<<<<< HEAD
         renderRuleDocumentOutput(mapping, document.info.web_name),
-=======
-        renderRuleDocumentOutput(mapping, key),
->>>>>>> main
       );
       const title = document.info.name;
       const effectiveEntries =
@@ -1535,16 +1466,8 @@ export function collectArtifacts(
   config: ToolConfig = DEFAULT_CONFIG,
 ): BuildArtifact[] {
   const artifacts: BuildArtifact[] = [];
-<<<<<<< HEAD
   artifacts.push(...collectDefinitionDocumentArtifacts(rules, config));
   artifacts.push(...collectConfiguredKsiDocumentArtifacts(rules, config));
-=======
-  const definitionsArtifact = collectDefinitionsArtifact(rules, config);
-
-  if (definitionsArtifact) {
-    artifacts.push(definitionsArtifact);
-  }
->>>>>>> main
 
   for (const mapping of config.generated.ruleDocuments) {
     artifacts.push(...collectRuleDocumentArtifacts(rules, config, mapping));

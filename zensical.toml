@@ -5,23 +5,8 @@ nav = [
     { "CR26 Overview" = "index.md" },
     { "Certification" = "certification.md" },
     { "Shared Responsibility Model" = "shared-responsibilities.md" },
-<<<<<<< HEAD
     { "Changelog" = "changelog.md" },
     { "Source Data" = "sources.md" },
-=======
-    { "FedRAMP Marketplace" = "marketplace.md" },
-    { "Scope of FedRAMP" = "scope.md" },
-    { "Changelog" = "changelog.md" },
-    { "Source Data" = "sources.md" },
-    { "FedRAMP's Responsibilities" = [
-      "responsibilities/index.md",
-      { "FedRAMP Security Inbox" = "responsibilities/fsi.md" },
-      { "Incident Communications Procedures" = "responsibilities/icp.md" },
-      { "Marketplace Listing" = "responsibilities/mkt.md" },
-      { "Significant Change Notifications" = "responsibilities/scn.md" },
-      { "Vulnerability Detection and Response" = "responsibilities/vdr.md" },
-    ] },
->>>>>>> main
     { "FedRAMP's Authority" = [
       { "FedRAMP Authorization Act" = [
         "authority/law/index.md",
@@ -69,15 +54,9 @@ nav = [
   ] },
   { Agencies = [
     "agencies/index.md",
-<<<<<<< HEAD
     { "Getting Started" = [
       "agencies/start.md",
       { "Getting Support" = "agencies/support/index.md" },
-=======
-    { "Getting Started" = "agencies/start.md" },
-    { "Getting Support" = [
-      "agencies/support/index.md",
->>>>>>> main
       { "Liaisons Program" = "agencies/support/liaisons.md" },
       { "Support Groups" = "agencies/support/groups.md" },
       { "Reporting Concerns" = "agencies/support/concerns.md" },
@@ -108,16 +87,8 @@ nav = [
     ] },
     { "Agency-Specific FedRAMP Rules" = [
       "agencies/rules/index.md",
-<<<<<<< HEAD
       { "Collaborative Continuous Monitoring" = "agencies/rules/collaborative-continuous-monitoring.md" },
       { "Vulnerability Detection and Response" = "agencies/rules/vulnerability-detection-and-response.md" },
-=======
-      { "Collaborative Continuous Monitoring" = "agencies/rules/ccm.md" },
-      { "Vulnerability Detection and Response" = "agencies/rules/vdr.md" },
-    ] },
-    { "Legacy Agency Materials" = [
-      "agencies/legacy/index.md",
->>>>>>> main
     ] },
   ] },
   { "Cloud Service Providers" = [
@@ -152,7 +123,6 @@ nav = [
       ] },
       { "Applicable Rules" = [
         "providers/20x/rules/index.md",
-<<<<<<< HEAD
         { "Marketplace Listing" = "providers/20x/rules/marketplace-listing.md" },
         { "FedRAMP Certification" = "providers/20x/rules/fedramp-certification.md" },
         { "Minimum Assessment Scope" = "providers/20x/rules/minimum-assessment-scope.md" },
@@ -164,21 +134,6 @@ nav = [
         { "Significant Change Notifications" = "providers/20x/rules/significant-change-notifications.md" },
         { "Vulnerability Detection and Response" = "providers/20x/rules/vulnerability-detection-and-response.md" },
         { "Collaborative Continuous Monitoring" = "providers/20x/rules/collaborative-continuous-monitoring.md" },
-=======
-        { "Marketplace Listing" = "providers/20x/rules/mkt.md" },
-        { "FedRAMP Certification" = "providers/20x/rules/frc.md" },
-        { "Minimum Assessment Scope" = "providers/20x/rules/mas.md" },
-        { "Certification Data Sharing" = "providers/20x/rules/cds.md" },
-        { "Secure Configuration Guide" = "providers/20x/rules/scg.md" },
-        { "Using Cryptographic Modules" = "providers/20x/rules/ucm.md" },
-        { "FedRAMP Security Inbox" = "providers/20x/rules/fsi.md" },
-        { "Incident Communications Procedures" = "providers/20x/rules/icp.md" },
-        { "Significant Change Notifications" = "providers/20x/rules/scn.md" },
-        { "Vulnerability Detection and Response" = "providers/20x/rules/vdr.md" },
-        { "Collaborative Continuous Monitoring" = "providers/20x/rules/ccm.md" },
-
-      ] },
->>>>>>> main
 
       ] },
       { "Key Security Indicators" = [
@@ -205,7 +160,6 @@ nav = [
       ] },
       { "Applicable Rules" = [
         "providers/rev5/rules/index.md",
-<<<<<<< HEAD
         { "Marketplace Listing" = "providers/rev5/rules/marketplace-listing.md" },
         { "FedRAMP Certification" = "providers/rev5/rules/fedramp-certification.md" },
         { "Minimum Assessment Scope" = "providers/rev5/rules/minimum-assessment-scope.md" },
@@ -220,20 +174,6 @@ nav = [
       ] },
       { "Control Baselines" = [
         "providers/rev5/controls/index.md",
-=======
-        { "Marketplace Listing" = "providers/rev5/rules/mkt.md" },
-        { "FedRAMP Certification" = "providers/rev5/rules/frc.md" },
-        { "Minimum Assessment Scope" = "providers/rev5/rules/mas.md" },
-        { "Certification Data Sharing" = "providers/rev5/rules/cds.md" },
-        { "Secure Configuration Guide" = "providers/rev5/rules/scg.md" },
-        { "Using Cryptographic Modules" = "providers/rev5/rules/ucm.md" },
-        { "FedRAMP Security Inbox" = "providers/rev5/rules/fsi.md" },
-        { "Incident Communications Procedures" = "providers/rev5/rules/icp.md" },
-        { "Significant Change Notifications" = "providers/rev5/rules/scn.md" },
-        { "Vulnerability Detection and Response" = "providers/rev5/rules/vdr.md" },
-        { "Collaborative Continuous Monitoring" = "providers/rev5/rules/ccm.md" },
-
->>>>>>> main
       ] },
     ] },
   ] },
@@ -295,13 +235,8 @@ site_author = "pete@fedramp.gov"
 docs_dir = "src/"
 site_dir = "html/"
 site_url = "https://fedramp.gov/2026/"
-<<<<<<< HEAD
 repo_url = "https://github.com/fedramp/rules-web"
 repo_name = "FedRAMP/rules-web"
-=======
-repo_url = "https://github.com/fedramp/cr26-site"
-repo_name = "FedRAMP/cr26-site"
->>>>>>> main
 extra_css = ["stylesheets/custom.css"]
 copyright = "fedramp.gov"
 

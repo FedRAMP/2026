@@ -10,7 +10,6 @@
   },
   "generated": {
     "manifest": ".generated-markdown.json",
-<<<<<<< HEAD
     "definitionDocuments": [
       {
         "id": "fedramp-definitions",
@@ -36,13 +35,6 @@
         }
       }
     ],
-=======
-    "definitions": {
-      "enabled": true,
-      "title": "FedRAMP Definitions",
-      "output": "definitions.md"
-    },
->>>>>>> main
     "ruleDocuments": [
       {
         "id": "fedramp-responsibilities",
@@ -54,11 +46,7 @@
         "includeEffectiveDates": false,
         "source": {
           "collection": "FRR",
-<<<<<<< HEAD
           "documents": "ALL",
-=======
-          "documents": ["FSI", "ICP", "MKT", "SCN", "VDR"],
->>>>>>> main
           "types": ["20x", "rev5"],
           "affects": ["FedRAMP"],
           "includeBoth": true,
@@ -115,7 +103,6 @@
           "includeBoth": true,
           "bothPosition": "first"
         }
-<<<<<<< HEAD
       },
       {
         "id": "assessor-specific-initial-rules-20x",
@@ -184,8 +171,6 @@
           "includeBoth": true,
           "bothPosition": "first"
         }
-=======
->>>>>>> main
       }
     ]
   },
