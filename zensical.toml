@@ -3,7 +3,6 @@
 nav = [
   { "Overview" = [
     { "CR26 Overview" = "index.md" },
-
     { "Certification" = "certification.md" },
     { "Shared Responsibility Model" = "shared-responsibilities.md" },
     { "Changelog" = "changelog.md" },
@@ -52,7 +51,6 @@ nav = [
       { "Significant Change Notifications" = "responsibilities/significant-change-notifications.md" },
       { "Vulnerability Detection and Response" = "responsibilities/vulnerability-detection-and-response.md" },
     ] },
-
   ] },
   { Agencies = [
     "agencies/index.md",
@@ -63,7 +61,6 @@ nav = [
       { "Support Groups" = "agencies/support/groups.md" },
       { "Reporting Concerns" = "agencies/support/concerns.md" },
       { "CISA Directives" = "agencies/support/cisa-directives.md" },
-
     ] },
     { "Using a FedRAMP Certified Cloud Service" = [
       "agencies/use/index.md",
@@ -93,7 +90,6 @@ nav = [
       { "Collaborative Continuous Monitoring" = "agencies/rules/collaborative-continuous-monitoring.md" },
       { "Vulnerability Detection and Response" = "agencies/rules/vulnerability-detection-and-response.md" },
     ] },
-
   ] },
   { "Cloud Service Providers" = [
     "providers/index.md",
@@ -110,6 +106,11 @@ nav = [
       { "Getting Listed" = "providers/start/get-listed.md" },
       { "Finding an Assessor" = "providers/start/assessor.md" },
       { "Getting Certified" = "providers/start/get-certified.md" },
+    ] },
+    { "Updating to 2026 Rules" = [
+      "providers/updating/index.md",
+      { "What's Changing" = "providers/updating/changes.md" },
+      { "Important Deadlines" = "providers/updating/deadlines.md" },
     ] },
     { "FedRAMP 20x Certification Rules" = [
       "providers/20x/index.md",
@@ -148,8 +149,6 @@ nav = [
         { "Service Configuration" = "providers/20x/key-security-indicators/service-configuration.md" },
         { "Supply Chain Risk" = "providers/20x/key-security-indicators/supply-chain-risk.md" },
       ] },
-
-
     ] },
     { "FedRAMP Rev5 Certification Rules" = [
       "providers/rev5/index.md",
@@ -194,7 +193,9 @@ nav = [
       { "Initial Assessment" = [
         "assessors/20x/initial/index.md",
       ] },
-      { "Ongoing Assessment" = "assessors/20x/ongoing.md" },
+      { "Ongoing Assessment" = [
+        "assessors/20x/ongoing/index.md",
+      ] },
       { "Applicable Rules" = [
         "assessors/20x/rules/index.md",
         { "FedRAMP Certification" = "assessors/20x/rules/fedramp-certification.md" },
