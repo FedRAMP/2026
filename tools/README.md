@@ -85,6 +85,34 @@ Definition mapping fields:
 - `source.includeBoth`: include `data.both` definitions with each selected type.
 - `source.bothPosition`: place `data.both` definitions `first` or `last`.
 
+## Adding Generated Key Security Indicator Pages
+
+Add an entry to `generated.ksiDocuments` in `config.json`:
+
+```json
+{
+  "id": "provider-20x-key-security-indicators",
+  "output": "providers/20x/key-security-indicators/{KSI}.md",
+  "definitionsHref": "../../../definitions/",
+  "source": {
+    "collection": "KSI",
+    "themes": "ALL"
+  }
+}
+```
+
+KSI mapping fields:
+
+- `id`: stable identifier for the mapping.
+- `title`: page H1. If omitted, the KSI theme name is used.
+- `output`: destination path relative to `paths.src`. Use `{KSI}` or `{theme}` as the lowercase KSI theme `web_name` placeholder.
+- `template`: optional Handlebars template path relative to `tools/`; defaults to `paths.template`.
+- `definitionsHref`: relative link prefix for generated term links.
+- `emptyBehavior`: `write` keeps an empty page, `skip` omits it when no indicators match.
+- `source.collection`: must be `KSI`.
+- `source.theme`: one KSI theme key from the rules JSON, such as `CMT`.
+- `source.themes`: an array of KSI theme keys, such as `["CMT", "IAM"]`, or `"ALL"` to process every KSI theme.
+
 ## Adding A Generated Rules Page
 
 Add an entry to `generated.ruleDocuments` in `config.json`:

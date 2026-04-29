@@ -6,7 +6,7 @@ nav = [
 
     { "Certification" = "certification.md" },
     { "Shared Responsibility Model" = "shared-responsibilities.md" },
-        { "Changelog" = "changelog.md" },
+    { "Changelog" = "changelog.md" },
     { "Source Data" = "sources.md" },
     { "FedRAMP's Authority" = [
       { "FedRAMP Authorization Act" = [
@@ -92,7 +92,7 @@ nav = [
       "agencies/rules/index.md",
       { "Collaborative Continuous Monitoring" = "agencies/rules/collaborative-continuous-monitoring.md" },
       { "Vulnerability Detection and Response" = "agencies/rules/vulnerability-detection-and-response.md" },
-    ] }
+    ] },
 
   ] },
   { "Cloud Service Providers" = [
@@ -135,6 +135,20 @@ nav = [
         { "Collaborative Continuous Monitoring" = "providers/20x/rules/collaborative-continuous-monitoring.md" },
 
       ] },
+      { "Key Security Indicators" = [
+        "providers/20x/key-security-indicators/index.md",
+        { "Change Management" = "providers/20x/key-security-indicators/change-management.md" },
+        { "Cloud Native Architecture" = "providers/20x/key-security-indicators/cloud-native-architecture.md" },
+        { "Cybersecurity Education" = "providers/20x/key-security-indicators/cybersecurity-education.md" },
+        { "Identity and Access Management" = "providers/20x/key-security-indicators/identity-and-access-management.md" },
+        { "Incident Response" = "providers/20x/key-security-indicators/incident-response.md" },
+        { "Monitoring, Logging, and Auditing" = "providers/20x/key-security-indicators/monitoring-logging-and-auditing.md" },
+        { "Policy and Inventory" = "providers/20x/key-security-indicators/policy-and-inventory.md" },
+        { "Recovery Planning" = "providers/20x/key-security-indicators/recovery-planning.md" },
+        { "Service Configuration" = "providers/20x/key-security-indicators/service-configuration.md" },
+        { "Supply Chain Risk" = "providers/20x/key-security-indicators/supply-chain-risk.md" },
+      ] },
+
 
     ] },
     { "FedRAMP Rev5 Certification Rules" = [
@@ -158,7 +172,9 @@ nav = [
         { "Significant Change Notifications" = "providers/rev5/rules/significant-change-notifications.md" },
         { "Vulnerability Detection and Response" = "providers/rev5/rules/vulnerability-detection-and-response.md" },
         { "Collaborative Continuous Monitoring" = "providers/rev5/rules/collaborative-continuous-monitoring.md" },
-
+      ] },
+      { "Control Baselines" = [
+        "providers/rev5/controls/index.md",
       ] },
     ] },
   ] },

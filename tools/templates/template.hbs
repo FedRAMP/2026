@@ -54,12 +54,14 @@
 {{/if}}
 
 {{#if isKsiDocument}}
+{{#if themeParagraphs.length}}
 !!! info ""
 {{#each themeParagraphs}}
     {{this}}
-
+    
 {{/each}}
 
+{{/if}}
 {{#each indicators}}
 {{> requirement}}
 {{/each}}

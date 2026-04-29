@@ -8,6 +8,7 @@ import {
   resolveToolPath,
   toPosixPath,
   type DefinitionDocumentMappingConfig,
+  type KsiDocumentMappingConfig,
   type RuleDocumentMappingConfig,
   type RuleType,
   type ToolConfig,
@@ -1062,6 +1063,23 @@ function renderRuleDocumentOutput(
   return mapping.output;
 }
 
+function renderKsiDocumentOutput(
+  mapping: KsiDocumentMappingConfig,
+  theme: KsiThemeSource,
+): string {
+  const normalizedKey = theme.web_name.toLowerCase();
+
+  if (mapping.output.includes("{KSI}")) {
+    return mapping.output.replaceAll("{KSI}", normalizedKey);
+  }
+
+  if (mapping.output.includes("{theme}")) {
+    return mapping.output.replaceAll("{theme}", normalizedKey);
+  }
+
+  return `${mapping.output.replace(/\/?$/, "/")}${normalizedKey}.md`;
+}
+
 function buildPreviewIndex(artifacts: BuildArtifact[]): string {
   const definitions = artifacts.find(
     (artifact) => artifact.relativePath === "definitions.md",
@@ -1077,7 +1095,7 @@ function buildPreviewIndex(artifacts: BuildArtifact[]): string {
       artifact.relativePath.startsWith("rev5/"),
   );
   const ksi = artifacts.filter((artifact) =>
-    artifact.relativePath.startsWith("20x/key-security-indicators/"),
+    artifact.relativePath.startsWith("providers/20x/key-security-indicators/"),
   );
 
   const lines = [
@@ -1233,6 +1251,114 @@ function collectDefinitionDocumentArtifacts(
   return legacyArtifact ? [legacyArtifact] : [];
 }
 
+function sourceKsiThemeKeys(
+  rules: RulesDocument,
+  mapping: KsiDocumentMappingConfig,
+): string[] {
+  const { theme, themes } = mapping.source;
+
+  if (themes === "ALL") {
+    return Object.keys(rules.KSI);
+  }
+
+  if (Array.isArray(themes)) {
+    if (!themes.length) {
+      throw new Error(
+        `KSI document mapping "${mapping.id}" must specify at least one source theme.`,
+      );
+    }
+
+    return themes;
+  }
+
+  if (theme) {
+    return [theme];
+  }
+
+  throw new Error(
+    `KSI document mapping "${mapping.id}" must specify source.theme, source.themes, or source.themes: "ALL".`,
+  );
+}
+
+interface SourceKsiTheme {
+  key: string;
+  theme: KsiThemeSource;
+}
+
+function sourceKsiThemes(
+  rules: RulesDocument,
+  mapping: KsiDocumentMappingConfig,
+): SourceKsiTheme[] {
+  return sourceKsiThemeKeys(rules, mapping).map((themeKey) => {
+    const theme = rules.KSI[themeKey];
+    if (!theme) {
+      throw new Error(`Unknown KSI theme: ${themeKey}`);
+    }
+
+    return {
+      key: themeKey,
+      theme,
+    };
+  });
+}
+
+function collectKsiDocumentArtifacts(
+  rules: RulesDocument,
+  config: ToolConfig,
+  mapping: KsiDocumentMappingConfig,
+): BuildArtifact[] {
+  if (mapping.source.collection !== "KSI") {
+    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+  }
+
+  return sourceKsiThemes(rules, mapping)
+    .map(({ key, theme }): BuildArtifact | null => {
+      const indicators = Object.entries(theme.indicators ?? {}).map(
+        ([id, indicator]) =>
+          buildRequirementViewModel(
+            id,
+            indicator,
+            mapping.definitionsHref ?? "definitions/",
+            "",
+          ),
+      );
+
+      if (!indicators.length && mapping.emptyBehavior === "skip") {
+        return null;
+      }
+
+      const relativePath = normalizeGeneratedPath(
+        renderKsiDocumentOutput(mapping, theme),
+      );
+      const title = mapping.title ?? theme.name;
+
+      return {
+        relativePath,
+        outputPath: resolveGeneratedOutputPath(config, relativePath),
+        templatePath: resolveToolPath(mapping.template ?? config.paths.template),
+        mappingId: mapping.id,
+        sourceDocument: key,
+        title,
+        documentType: "KSI",
+        context: buildDocumentContext(title, {
+          isKsiDocument: true,
+          themeParagraphs: splitParagraphs(theme.theme),
+          indicators,
+        }),
+      };
+    })
+    .filter((artifact): artifact is BuildArtifact => artifact !== null);
+}
+
+function collectConfiguredKsiDocumentArtifacts(
+  rules: RulesDocument,
+  config: ToolConfig,
+): BuildArtifact[] {
+  return (config.generated.ksiDocuments ?? []).flatMap((mapping) =>
+    collectKsiDocumentArtifacts(rules, config, mapping),
+  );
+}
+
 function collectSingleRuleDocumentArtifact(
   rules: RulesDocument,
   config: ToolConfig,
@@ -1341,6 +1467,7 @@ export function collectArtifacts(
 ): BuildArtifact[] {
   const artifacts: BuildArtifact[] = [];
   artifacts.push(...collectDefinitionDocumentArtifacts(rules, config));
+  artifacts.push(...collectConfiguredKsiDocumentArtifacts(rules, config));
 
   for (const mapping of config.generated.ruleDocuments) {
     artifacts.push(...collectRuleDocumentArtifacts(rules, config, mapping));

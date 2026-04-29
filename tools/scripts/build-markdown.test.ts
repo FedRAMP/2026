@@ -36,6 +36,8 @@ describe("build-markdown", () => {
       "agencies/rules/collaborative-continuous-monitoring.md",
       "agencies/rules/vulnerability-detection-and-response.md",
       "definitions.md",
+      "providers/20x/key-security-indicators/change-management.md",
+      "providers/20x/key-security-indicators/cloud-native-architecture.md",
       "providers/20x/rules/fedramp-certification.md",
       "responsibilities/fedramp-security-inbox.md",
       "responsibilities/incident-communications-procedures.md",
@@ -80,6 +82,35 @@ describe("build-markdown", () => {
       ...definitionTags.map((tag) => `Specific Terms: ${tag}`),
     ]);
     expect(definitionsContents).toContain("## Specific Terms: Vulnerabilities");
+
+    const ksiArtifactPaths = relativePaths.filter((relativePath) =>
+      relativePath.startsWith("providers/20x/key-security-indicators/"),
+    );
+    expect(ksiArtifactPaths).toHaveLength(Object.keys(rules.KSI).length);
+
+    const ksiChangeManagementContents = await readFile(
+      path.join(
+        OUTPUT_DIR,
+        "providers",
+        "20x",
+        "key-security-indicators",
+        "change-management.md",
+      ),
+      "utf8",
+    );
+    expect(ksiChangeManagementContents).toContain("# Change Management");
+    expect(ksiChangeManagementContents).not.toContain('!!! info ""');
+    expect(ksiChangeManagementContents).toContain("KSI-CMT-LMC");
+    expect(ksiChangeManagementContents).toContain("### Logging Changes");
+    expect(ksiChangeManagementContents).toContain(
+      "**Related SP 800-53 Controls:**",
+    );
+    expect(ksiChangeManagementContents).toContain(
+      "[AU-2](https://controlfreak.risk-redux.io/controls/AU-02)",
+    );
+    expect(ksiChangeManagementContents).toContain(
+      "../../../definitions/#cloud-service-offering",
+    );
 
     const contentDefinitionsPath = path.join(
       resolveToolPath(config.paths.content),
@@ -193,6 +224,7 @@ describe("build-markdown", () => {
               },
             },
           ],
+          ksiDocuments: [],
           ruleDocuments: [],
         },
       });

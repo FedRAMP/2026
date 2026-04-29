@@ -24,6 +24,17 @@
         }
       }
     ],
+    "ksiDocuments": [
+      {
+        "id": "provider-20x-key-security-indicators",
+        "output": "providers/20x/key-security-indicators/{KSI}.md",
+        "definitionsHref": "../../../definitions/",
+        "source": {
+          "collection": "KSI",
+          "themes": "ALL"
+        }
+      }
+    ],
     "ruleDocuments": [
       {
         "id": "fedramp-responsibilities",

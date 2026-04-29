@@ -7,6 +7,7 @@ export type RuleType = "20x" | "rev5";
 export type GeneratedEmptyBehavior = "write" | "skip";
 export type BothRulesPosition = "first" | "last";
 export type RuleDocumentSelection = string[] | "ALL";
+export type KsiThemeSelection = string[] | "ALL";
 export type RuleDocumentGrouping = "section" | "document";
 export type RuleDocumentOutputMode = "single" | "documents";
 
@@ -69,10 +70,27 @@ export interface RuleDocumentMappingConfig {
   source: RuleDocumentSourceConfig;
 }
 
+export interface KsiDocumentSourceConfig {
+  collection: "KSI";
+  theme?: string;
+  themes?: KsiThemeSelection;
+}
+
+export interface KsiDocumentMappingConfig {
+  id: string;
+  title?: string;
+  output: string;
+  template?: string;
+  definitionsHref?: string;
+  emptyBehavior?: GeneratedEmptyBehavior;
+  source: KsiDocumentSourceConfig;
+}
+
 export interface GeneratedConfig {
   manifest: string;
   definitions?: DefinitionsMappingConfig;
   definitionDocuments?: DefinitionDocumentMappingConfig[];
+  ksiDocuments?: KsiDocumentMappingConfig[];
   ruleDocuments: RuleDocumentMappingConfig[];
 }
 
