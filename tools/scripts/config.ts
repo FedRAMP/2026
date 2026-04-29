@@ -7,7 +7,10 @@ export type RuleType = "20x" | "rev5";
 export type GeneratedEmptyBehavior = "write" | "skip";
 export type BothRulesPosition = "first" | "last";
 export type RuleDocumentSelection = string[] | "ALL";
+<<<<<<< HEAD
 export type KsiThemeSelection = string[] | "ALL";
+=======
+>>>>>>> main
 export type RuleDocumentGrouping = "section" | "document";
 export type RuleDocumentOutputMode = "single" | "documents";
 
@@ -28,6 +31,7 @@ export interface DefinitionsMappingConfig {
   template?: string;
 }
 
+<<<<<<< HEAD
 export interface DefinitionDocumentSourceConfig {
   collection: "FRD";
   types?: RuleType[];
@@ -45,6 +49,8 @@ export interface DefinitionDocumentMappingConfig {
   source: DefinitionDocumentSourceConfig;
 }
 
+=======
+>>>>>>> main
 export interface RuleDocumentSourceConfig {
   collection: "FRR";
   document?: string;
@@ -70,6 +76,7 @@ export interface RuleDocumentMappingConfig {
   source: RuleDocumentSourceConfig;
 }
 
+<<<<<<< HEAD
 export interface KsiDocumentSourceConfig {
   collection: "KSI";
   theme?: string;
@@ -91,6 +98,11 @@ export interface GeneratedConfig {
   definitions?: DefinitionsMappingConfig;
   definitionDocuments?: DefinitionDocumentMappingConfig[];
   ksiDocuments?: KsiDocumentMappingConfig[];
+=======
+export interface GeneratedConfig {
+  manifest: string;
+  definitions?: DefinitionsMappingConfig;
+>>>>>>> main
   ruleDocuments: RuleDocumentMappingConfig[];
 }
 

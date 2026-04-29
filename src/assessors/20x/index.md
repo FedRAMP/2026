@@ -1,7 +1,3 @@
-<<<<<<< HEAD
 # Performing FedRAMP 20x Assessments
-=======
-# Applicable Rules
->>>>>>> main
 
 !!! failure "This page is incomplete."

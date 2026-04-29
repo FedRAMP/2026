@@ -33,6 +33,7 @@ describe("build-markdown", () => {
       expectedArtifacts.map((artifact) => artifact.relativePath).sort(),
     );
     for (const relativePath of [
+<<<<<<< HEAD
       "agencies/rules/collaborative-continuous-monitoring.md",
       "agencies/rules/vulnerability-detection-and-response.md",
       "definitions.md",
@@ -44,6 +45,17 @@ describe("build-markdown", () => {
       "responsibilities/marketplace-listing.md",
       "responsibilities/significant-change-notifications.md",
       "responsibilities/vulnerability-detection-and-response.md",
+=======
+      "agencies/rules/ccm.md",
+      "agencies/rules/vdr.md",
+      "definitions.md",
+      "providers/20x/rules/frc.md",
+      "responsibilities/fsi.md",
+      "responsibilities/icp.md",
+      "responsibilities/mkt.md",
+      "responsibilities/scn.md",
+      "responsibilities/vdr.md",
+>>>>>>> main
     ]) {
       expect(relativePaths).toContain(relativePath);
     }
@@ -63,8 +75,11 @@ describe("build-markdown", () => {
     expect(definitionsContents).not.toContain(
       '??? abstract "Background & Authority"',
     );
+<<<<<<< HEAD
     expect(definitionsContents).not.toContain("Effective Date(s)");
     expect(definitionsContents).not.toContain("Overall Applicability");
+=======
+>>>>>>> main
     expect(definitionsContents).toContain('!!! quote ""');
     const definitionSectionHeaders = Array.from(
       definitionsContents.matchAll(/^## (.+)$/gm),
@@ -83,6 +98,7 @@ describe("build-markdown", () => {
     ]);
     expect(definitionsContents).toContain("## Specific Terms: Vulnerabilities");
 
+<<<<<<< HEAD
     const ksiArtifactPaths = relativePaths.filter((relativePath) =>
       relativePath.startsWith("providers/20x/key-security-indicators/"),
     );
@@ -112,6 +128,8 @@ describe("build-markdown", () => {
       "../../../definitions/#cloud-service-offering",
     );
 
+=======
+>>>>>>> main
     const contentDefinitionsPath = path.join(
       resolveToolPath(config.paths.content),
       "definitions.md",
@@ -119,6 +137,7 @@ describe("build-markdown", () => {
     await expect(access(contentDefinitionsPath)).rejects.toThrow();
 
     const provider20xContents = await readFile(
+<<<<<<< HEAD
       path.join(
         OUTPUT_DIR,
         "providers",
@@ -126,6 +145,9 @@ describe("build-markdown", () => {
         "rules",
         "fedramp-certification.md",
       ),
+=======
+      path.join(OUTPUT_DIR, "providers", "20x", "rules", "frc.md"),
+>>>>>>> main
       "utf8",
     );
     expect(provider20xContents).toContain("# FedRAMP Certification");
@@ -135,7 +157,11 @@ describe("build-markdown", () => {
     expect(provider20xContents).toContain("../../../definitions/#");
 
     const fedrampFsiContents = await readFile(
+<<<<<<< HEAD
       path.join(OUTPUT_DIR, "responsibilities", "fedramp-security-inbox.md"),
+=======
+      path.join(OUTPUT_DIR, "responsibilities", "fsi.md"),
+>>>>>>> main
       "utf8",
     );
     expect(fedrampFsiContents).toContain("# FedRAMP Security Inbox");
@@ -144,11 +170,15 @@ describe("build-markdown", () => {
     expect(fedrampFsiContents).not.toContain("FRC-CSO-CDS");
 
     const fedrampVdrContents = await readFile(
+<<<<<<< HEAD
       path.join(
         OUTPUT_DIR,
         "responsibilities",
         "vulnerability-detection-and-response.md",
       ),
+=======
+      path.join(OUTPUT_DIR, "responsibilities", "vdr.md"),
+>>>>>>> main
       "utf8",
     );
     expect(fedrampVdrContents).toContain(
@@ -161,12 +191,16 @@ describe("build-markdown", () => {
     expect(fedrampVdrContents).toContain("VDR-FRP-ARP");
 
     const agencyCcmContents = await readFile(
+<<<<<<< HEAD
       path.join(
         OUTPUT_DIR,
         "agencies",
         "rules",
         "collaborative-continuous-monitoring.md",
       ),
+=======
+      path.join(OUTPUT_DIR, "agencies", "rules", "ccm.md"),
+>>>>>>> main
       "utf8",
     );
     expect(agencyCcmContents).toContain("# Collaborative Continuous Monitoring");
@@ -175,18 +209,23 @@ describe("build-markdown", () => {
     expect(agencyCcmContents).not.toContain("## Ongoing Certification Reports");
 
     const agencyVdrContents = await readFile(
+<<<<<<< HEAD
       path.join(
         OUTPUT_DIR,
         "agencies",
         "rules",
         "vulnerability-detection-and-response.md",
       ),
+=======
+      path.join(OUTPUT_DIR, "agencies", "rules", "vdr.md"),
+>>>>>>> main
       "utf8",
     );
     expect(agencyVdrContents).toContain("# Vulnerability Detection and Response");
     expect(agencyVdrContents).toContain("## Agency Guidance");
     expect(agencyVdrContents).toContain("VDR-AGM-RVR");
     expect(agencyVdrContents).not.toContain("VDR-FRP-ARP");
+<<<<<<< HEAD
   });
 
   test("builds configured FRD definition document mappings", async () => {
@@ -245,6 +284,9 @@ describe("build-markdown", () => {
     } finally {
       await rm(tempDir, { recursive: true, force: true });
     }
+=======
+
+>>>>>>> main
   });
 
   test("rejects generated outputs that already exist in content", async () => {
