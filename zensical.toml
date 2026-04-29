@@ -45,6 +45,7 @@ nav = [
     { "Scope of FedRAMP" = "scope.md" },
 
     { "FedRAMP's Responsibilities" = [
+      { "FedRAMP Certification" = "responsibilities/fedramp-certification.md" },
       { "FedRAMP Security Inbox" = "responsibilities/fedramp-security-inbox.md" },
       { "Incident Communications Procedures" = "responsibilities/incident-communications-procedures.md" },
       { "Marketplace Listing" = "responsibilities/marketplace-listing.md" },
