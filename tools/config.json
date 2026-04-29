@@ -35,6 +35,31 @@
         }
       }
     ],
+    "deadlineDocuments": [
+      {
+        "id": "provider-important-deadlines",
+        "title": "Important Deadlines",
+        "output": "providers/updating/deadlines/{type}.md",
+        "template": "templates/deadlines.hbs",
+        "source": {
+          "collection": "FRR",
+          "documents": [
+            "MKT",
+            "FRC",
+            "MAS",
+            "CDS",
+            "SCG",
+            "UCM",
+            "FSI",
+            "ICP",
+            "SCN",
+            "VDR",
+            "CCM"
+          ],
+          "types": ["20x", "rev5"]
+        }
+      }
+    ],
     "ruleDocuments": [
       {
         "id": "fedramp-responsibilities",

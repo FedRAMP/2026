@@ -39,6 +39,8 @@ describe("build-markdown", () => {
       "providers/20x/key-security-indicators/change-management.md",
       "providers/20x/key-security-indicators/cloud-native-architecture.md",
       "providers/20x/rules/fedramp-certification.md",
+      "providers/updating/deadlines/20x.md",
+      "providers/updating/deadlines/rev5.md",
       "responsibilities/fedramp-security-inbox.md",
       "responsibilities/incident-communications-procedures.md",
       "responsibilities/marketplace-listing.md",
@@ -59,6 +61,9 @@ describe("build-markdown", () => {
     const definitionsContents = await readFile(
       path.join(OUTPUT_DIR, "definitions.md"),
       "utf8",
+    );
+    expect(definitionsContents).toStartWith(
+      "---\ntags:\n  - 20x\n  - Rev5\n---\n\n# FedRAMP Definitions",
     );
     expect(definitionsContents).not.toContain(
       '??? abstract "Background & Authority"',
@@ -98,6 +103,9 @@ describe("build-markdown", () => {
       ),
       "utf8",
     );
+    expect(ksiChangeManagementContents).toStartWith(
+      "---\ntags:\n  - 20x\n---\n\n# Change Management",
+    );
     expect(ksiChangeManagementContents).toContain("# Change Management");
     expect(ksiChangeManagementContents).not.toContain('!!! info ""');
     expect(ksiChangeManagementContents).toContain("KSI-CMT-LMC");
@@ -111,6 +119,42 @@ describe("build-markdown", () => {
     expect(ksiChangeManagementContents).toContain(
       "../../../definitions/#cloud-service-offering",
     );
+
+    const deadlines20xContents = await readFile(
+      path.join(OUTPUT_DIR, "providers", "updating", "deadlines", "20x.md"),
+      "utf8",
+    );
+    expect(deadlines20xContents).toStartWith(
+      "---\ntags:\n  - 20x\n---\n\n# 20x Deadlines",
+    );
+    expect(deadlines20xContents).toContain(
+      "| FRC | [FedRAMP Certification](../../20x/rules/fedramp-certification.md) | 2026-05-04 | 2027-05-04 | 2027-05-04 |",
+    );
+    expect(deadlines20xContents).not.toContain("Rev5 Deadlines");
+    expect(
+      deadlines20xContents.indexOf(
+        "| SCG | [Secure Configuration Guide](../../20x/rules/secure-configuration-guide.md) | 2026-03-01 | 2026-03-01 | 2026-07-01 |",
+      ),
+    ).toBeLessThan(
+      deadlines20xContents.indexOf(
+        "| MKT | [Marketplace Listing](../../20x/rules/marketplace-listing.md) | 2026-05-04 | 2027-01-01 | 2027-05-04 |",
+      ),
+    );
+
+    const deadlinesRev5Contents = await readFile(
+      path.join(OUTPUT_DIR, "providers", "updating", "deadlines", "rev5.md"),
+      "utf8",
+    );
+    expect(deadlinesRev5Contents).toStartWith(
+      "---\ntags:\n  - Rev5\n---\n\n# Rev5 Deadlines",
+    );
+    expect(deadlinesRev5Contents).toContain(
+      "| FRC | [FedRAMP Certification](../../rev5/rules/fedramp-certification.md) | 2027-01-01 | 2027-01-01 | 2027-01-01 |",
+    );
+    expect(deadlinesRev5Contents).toContain(
+      "| MAS | [Minimum Assessment Scope](../../rev5/rules/minimum-assessment-scope.md) | 2027-01-01 | 2027-01-01 | Within 2 months of the next annual assessment after 2027-01-01 |",
+    );
+    expect(deadlinesRev5Contents).not.toContain("20x Deadlines");
 
     const contentDefinitionsPath = path.join(
       resolveToolPath(config.paths.content),
@@ -128,15 +172,37 @@ describe("build-markdown", () => {
       ),
       "utf8",
     );
+    expect(provider20xContents).toStartWith(
+      "---\ntags:\n  - 20x\n---\n\n# FedRAMP Certification",
+    );
     expect(provider20xContents).toContain("# FedRAMP Certification");
     expect(provider20xContents).toContain("FRC-CSO-CDS");
     expect(provider20xContents).toContain("FRC-CSX-SUM");
     expect(provider20xContents).not.toContain("FRC-CSL-CDE");
     expect(provider20xContents).toContain("../../../definitions/#");
 
+    const providerRev5Contents = await readFile(
+      path.join(
+        OUTPUT_DIR,
+        "providers",
+        "rev5",
+        "rules",
+        "fedramp-certification.md",
+      ),
+      "utf8",
+    );
+    expect(providerRev5Contents).toStartWith(
+      "---\ntags:\n  - Rev5\n---\n\n# FedRAMP Certification",
+    );
+    expect(providerRev5Contents).toContain("FRC-CSL-CDE");
+    expect(providerRev5Contents).not.toContain("FRC-CSX-SUM");
+
     const fedrampFsiContents = await readFile(
       path.join(OUTPUT_DIR, "responsibilities", "fedramp-security-inbox.md"),
       "utf8",
+    );
+    expect(fedrampFsiContents).toStartWith(
+      "---\ntags:\n  - 20x\n  - Rev5\n---\n\n# FedRAMP Security Inbox",
     );
     expect(fedrampFsiContents).toContain("# FedRAMP Security Inbox");
     expect(fedrampFsiContents).not.toContain("Effective Date(s)");
@@ -225,6 +291,7 @@ describe("build-markdown", () => {
             },
           ],
           ksiDocuments: [],
+          deadlineDocuments: [],
           ruleDocuments: [],
         },
       });

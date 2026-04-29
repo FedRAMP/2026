@@ -1,0 +1,20 @@
+{{#if tags.length}}
+---
+tags:
+{{#each tags}}
+  - {{this}}
+{{/each}}
+---
+
+{{/if}}
+# {{title}}
+
+{{#each deadlineTables}}
+
+| Short Name | Name | Obtain | Maintain | Grace Ends |
+| --- | --- | --- | --- | --- |
+{{#each rows}}
+| {{shortName}} | [{{name}}]({{href}}) | {{obtain}} | {{maintain}} | {{graceEnds}} |
+{{/each}}
+
+{{/each}}

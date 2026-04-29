@@ -86,11 +86,26 @@ export interface KsiDocumentMappingConfig {
   source: KsiDocumentSourceConfig;
 }
 
+export interface DeadlineDocumentSourceConfig {
+  collection: "FRR";
+  documents?: RuleDocumentSelection;
+  types: RuleType[];
+}
+
+export interface DeadlineDocumentMappingConfig {
+  id: string;
+  title?: string;
+  output: string;
+  template?: string;
+  source: DeadlineDocumentSourceConfig;
+}
+
 export interface GeneratedConfig {
   manifest: string;
   definitions?: DefinitionsMappingConfig;
   definitionDocuments?: DefinitionDocumentMappingConfig[];
   ksiDocuments?: KsiDocumentMappingConfig[];
+  deadlineDocuments?: DeadlineDocumentMappingConfig[];
   ruleDocuments: RuleDocumentMappingConfig[];
 }
 

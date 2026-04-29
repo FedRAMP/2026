@@ -113,6 +113,26 @@ KSI mapping fields:
 - `source.theme`: one KSI theme key from the rules JSON, such as `CMT`.
 - `source.themes`: an array of KSI theme keys, such as `["CMT", "IAM"]`, or `"ALL"` to process every KSI theme.
 
+## Adding A Generated Deadline Page
+
+Add an entry to `generated.deadlineDocuments` in `config.json`:
+
+```json
+{
+  "id": "provider-important-deadlines",
+  "title": "Important Deadlines",
+  "output": "providers/updating/deadlines/{type}.md",
+  "template": "templates/deadlines.hbs",
+  "source": {
+    "collection": "FRR",
+    "documents": ["MKT", "FRC"],
+    "types": ["20x", "rev5"]
+  }
+}
+```
+
+Deadline documents generate one page per configured type. They read each selected FRR document's `info.short_name`, `info.name`, `info.web_name`, and `info.effective` values. The generated table links each rule family name to the matching provider rule page for that type. Use `{type}` or `{version}` in `output` to place each type page explicitly.
+
 ## Adding A Generated Rules Page
 
 Add an entry to `generated.ruleDocuments` in `config.json`:
