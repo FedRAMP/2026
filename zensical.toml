@@ -54,9 +54,9 @@ nav = [
   ] },
   { Agencies = [
     "agencies/index.md",
-    { "Getting Started" = "agencies/start.md" },
-    { "Getting Support" = [
-      "agencies/support/index.md",
+    { "Getting Started" = [
+      "agencies/start.md",
+      { "Getting Support" = "agencies/support/index.md" },
       { "Liaisons Program" = "agencies/support/liaisons.md" },
       { "Support Groups" = "agencies/support/groups.md" },
       { "Reporting Concerns" = "agencies/support/concerns.md" },
@@ -179,8 +179,10 @@ nav = [
   ] },
   { "Independent Assessors" = [
     "assessors/index.md",
-    { "Getting Started" = "assessors/start.md" },
-    { "Getting Support" = "assessors/support.md" },
+    { "Getting Started" = [
+      "assessors/start.md",
+      { "Getting Support" = "assessors/support.md" },
+    ] },
     { "FedRAMP Recognition" = [
       "assessors/recognition/index.md",
       { "Applicable Rules" = [
@@ -216,7 +218,9 @@ nav = [
   ] },
   { "Advisors" = [
     "advisors/index.md",
-    { "Getting Started" = "advisors/start.md" },
+    { "Getting Started" = [
+      "advisors/start.md",
+    ] },
     { "Applicable Rules" = [
       "advisors/rules/index.md",
       { "Marketplace Listing" = "advisors/rules/marketplace-listing.md" },
