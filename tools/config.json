@@ -1,0 +1,180 @@
+{
+  "paths": {
+    "src": "../src",
+    "content": "../content",
+    "html": "../html",
+    "rulesFile": "rules/fedramp-consolidated-rules.json",
+    "template": "templates/template.hbs",
+    "partials": "templates/partials",
+    "zensicalConfig": "../zensical.toml"
+  },
+  "generated": {
+    "manifest": ".generated-markdown.json",
+    "definitionDocuments": [
+      {
+        "id": "fedramp-definitions",
+        "title": "FedRAMP Definitions",
+        "output": "definitions.md",
+        "includeEffectiveDates": false,
+        "source": {
+          "collection": "FRD",
+          "types": ["20x", "rev5"],
+          "includeBoth": true,
+          "bothPosition": "first"
+        }
+      }
+    ],
+    "ksiDocuments": [
+      {
+        "id": "provider-20x-key-security-indicators",
+        "output": "providers/20x/key-security-indicators/{KSI}.md",
+        "definitionsHref": "../../../definitions/",
+        "source": {
+          "collection": "KSI",
+          "themes": "ALL"
+        }
+      }
+    ],
+    "ruleDocuments": [
+      {
+        "id": "fedramp-responsibilities",
+        "output": "responsibilities/{FRR}.md",
+        "outputMode": "documents",
+        "definitionsHref": "../definitions/",
+        "rulesHref": "../",
+        "emptyBehavior": "skip",
+        "includeEffectiveDates": false,
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x", "rev5"],
+          "affects": ["FedRAMP"],
+          "includeBoth": true,
+          "bothPosition": "first"
+        }
+      },
+      {
+        "id": "agency-specific-rules",
+        "output": "agencies/rules/{FRR}.md",
+        "outputMode": "documents",
+        "definitionsHref": "../../definitions/",
+        "rulesHref": "../../",
+        "emptyBehavior": "skip",
+        "includeEffectiveDates": false,
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x", "rev5"],
+          "affects": ["Agencies"],
+          "includeBoth": true,
+          "bothPosition": "first"
+        }
+      },
+      {
+        "id": "provider-specific-initial-rules-20x",
+        "output": "providers/20x/rules/{FRR}.md",
+        "outputMode": "documents",
+        "definitionsHref": "../../../definitions/",
+        "rulesHref": "../../../",
+        "emptyBehavior": "skip",
+        "includeEffectiveDates": false,
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x"],
+          "affects": ["Providers"],
+          "includeBoth": true,
+          "bothPosition": "first"
+        }
+      },
+      {
+        "id": "provider-specific-initial-rules-rev5",
+        "output": "providers/rev5/rules/{FRR}.md",
+        "outputMode": "documents",
+        "definitionsHref": "../../../definitions/",
+        "rulesHref": "../../../",
+        "emptyBehavior": "skip",
+        "includeEffectiveDates": false,
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["rev5"],
+          "affects": ["Providers"],
+          "includeBoth": true,
+          "bothPosition": "first"
+        }
+      },
+      {
+        "id": "assessor-specific-initial-rules-20x",
+        "output": "assessors/20x/rules/{FRR}.md",
+        "outputMode": "documents",
+        "definitionsHref": "../../../definitions/",
+        "rulesHref": "../../../",
+        "emptyBehavior": "skip",
+        "includeEffectiveDates": false,
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x"],
+          "affects": ["Assessors"],
+          "includeBoth": true,
+          "bothPosition": "first"
+        }
+      },
+      {
+        "id": "assessor-specific-initial-rules-rev5",
+        "output": "assessors/rev5/rules/{FRR}.md",
+        "outputMode": "documents",
+        "definitionsHref": "../../../definitions/",
+        "rulesHref": "../../../",
+        "emptyBehavior": "skip",
+        "includeEffectiveDates": false,
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["rev5"],
+          "affects": ["Assessors"],
+          "includeBoth": true,
+          "bothPosition": "first"
+        }
+      },
+      {
+        "id": "assessor-recognition",
+        "output": "assessors/recognition/rules/{FRR}.md",
+        "outputMode": "documents",
+        "definitionsHref": "../../../definitions/",
+        "rulesHref": "../",
+        "emptyBehavior": "skip",
+        "includeEffectiveDates": false,
+        "source": {
+          "collection": "FRR",
+          "documents": ["MKT"],
+          "types": ["20x", "rev5"],
+          "affects": ["Assessors"],
+          "includeBoth": true,
+          "bothPosition": "first"
+        }
+      },
+      {
+        "id": "advisors-marketplace",
+        "output": "advisors/rules/{FRR}.md",
+        "outputMode": "documents",
+        "definitionsHref": "../../definitions/",
+        "rulesHref": "../",
+        "emptyBehavior": "skip",
+        "includeEffectiveDates": false,
+        "source": {
+          "collection": "FRR",
+          "documents": ["MKT"],
+          "types": ["20x", "rev5"],
+          "affects": ["Advisors"],
+          "includeBoth": true,
+          "bothPosition": "first"
+        }
+      }
+    ]
+  },
+  "dev": {
+    "watchDebounceMs": 1000
+  }
+}

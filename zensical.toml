@@ -1,0 +1,328 @@
+
+[project]
+nav = [
+  { "Overview" = [
+    { "CR26 Overview" = "index.md" },
+    { "Certification" = "certification.md" },
+    { "Shared Responsibility Model" = "shared-responsibilities.md" },
+    { "Changelog" = "changelog.md" },
+    { "Source Data" = "sources.md" },
+    { "FedRAMP's Authority" = [
+      { "FedRAMP Authorization Act" = [
+        "authority/law/index.md",
+        { "Definitions" = "authority/law/definitions.md" },
+        { "GSA" = "authority/law/gsa.md" },
+        { "FedRAMP Board" = "authority/law/board.md" },
+        { "Independent Assessment" = "authority/law/assessment.md" },
+        { "Agencies" = "authority/law/agencies.md" },
+        { "OMB" = "authority/law/omb.md" },
+        { "Reports to Congress" = "authority/law/reports.md" },
+        { "FSCAC" = "authority/law/fscac.md" },
+      ] },
+      { "M-24-15" = [
+        "authority/m-24-15/index.md",
+        { "Background" = "authority/m-24-15/background.md" },
+        { "Vision" = "authority/m-24-15/vision.md" },
+        { "Scope of FedRAMP" = "authority/m-24-15/scope.md" },
+        { "The FedRAMP Authorization Process" = "authority/m-24-15/process.md" },
+        { "Automation and Efficiency" = "authority/m-24-15/automation.md" },
+        { "Continuous Monitoring" = "authority/m-24-15/monitoring.md" },
+        { "Roles and Responsibilities" = "authority/m-24-15/roles.md" },
+        { "Industry Engagement" = "authority/m-24-15/industry.md" },
+        { "Implementation" = "authority/m-24-15/implementation.md" },
+        { "Rescissions" = "authority/m-24-15/rescissions.md" },
+        { "Policy and Program Implementation Assistance" = "authority/m-24-15/assistance.md" },
+      ] },
+    ] },
+    { "Historical" = [
+      { "Rescinded 2011 Memo" = "authority/rescinded-2011-fedramp-memo.md" },
+    ] },
+  ] },
+  { "FedRAMP" = [
+    "responsibilities/index.md",
+    { "Definitions" = "definitions.md" },
+    { "FedRAMP Marketplace" = "marketplace.md" },
+    { "Scope of FedRAMP" = "scope.md" },
+
+    { "FedRAMP's Responsibilities" = [
+      { "FedRAMP Security Inbox" = "responsibilities/fedramp-security-inbox.md" },
+      { "Incident Communications Procedures" = "responsibilities/incident-communications-procedures.md" },
+      { "Marketplace Listing" = "responsibilities/marketplace-listing.md" },
+      { "Significant Change Notifications" = "responsibilities/significant-change-notifications.md" },
+      { "Vulnerability Detection and Response" = "responsibilities/vulnerability-detection-and-response.md" },
+    ] },
+  ] },
+  { Agencies = [
+    "agencies/index.md",
+    { "Getting Started" = [
+      "agencies/start.md",
+      { "Getting Support" = "agencies/support/index.md" },
+      { "Liaisons Program" = "agencies/support/liaisons.md" },
+      { "Support Groups" = "agencies/support/groups.md" },
+      { "Reporting Concerns" = "agencies/support/concerns.md" },
+      { "CISA Directives" = "agencies/support/cisa-directives.md" },
+    ] },
+    { "Using a FedRAMP Certified Cloud Service" = [
+      "agencies/use/index.md",
+      { "Initial Authorization" = [
+        "agencies/use/initial/index.md",
+        { "Managing Your SSP" = "agencies/use/initial/ssp.md" },
+      ] },
+      { "Ongoing Authorization" = [
+        "agencies/use/ongoing/index.md",
+        { "Managing POA&Ms" = "agencies/use/ongoing/poams.md" },
+      ] },
+      { "FedRAMP Marketplace" = "agencies/use/marketplace.md" },
+      { "Certification Classes" = "agencies/use/classes.md" },
+      { "Certification Packages" = [
+        "agencies/use/packages/index.md",
+        { "20x Certification Packages" = "agencies/use/packages/20x.md" },
+        { "Rev5 Certification Packages" = "agencies/use/packages/rev5.md" },
+      ] },
+    ] },
+    { "Sponsoring a Cloud Service for FedRAMP Certification" = [
+      "agencies/sponsoring/index.md",
+      { "Initial Certification" = "agencies/sponsoring/initial.md" },
+      { "Ongoing Certification" = "agencies/sponsoring/ongoing.md" },
+    ] },
+    { "Agency-Specific FedRAMP Rules" = [
+      "agencies/rules/index.md",
+      { "Collaborative Continuous Monitoring" = "agencies/rules/collaborative-continuous-monitoring.md" },
+      { "Vulnerability Detection and Response" = "agencies/rules/vulnerability-detection-and-response.md" },
+    ] },
+  ] },
+  { "Cloud Service Providers" = [
+    "providers/index.md",
+    { "Getting Started" = [
+      "providers/start/index.md",
+      { "Getting Support" = "providers/support.md" },
+      { "Finding an Advisor" = "providers/start/advisor.md" },
+      { "Choosing a Certification..." = [
+        { "Type" = "providers/start/type.md" },
+        { "Path" = "providers/start/path.md" },
+        { "Class" = "providers/start/class.md" },
+      ] },
+      { "Preparing" = "providers/start/prepare.md" },
+      { "Getting Listed" = "providers/start/get-listed.md" },
+      { "Finding an Assessor" = "providers/start/assessor.md" },
+      { "Getting Certified" = "providers/start/get-certified.md" },
+    ] },
+    { "Updating to 2026 Rules" = [
+      "providers/updating/index.md",
+      { "What's Changing" = "providers/updating/changes.md" },
+      { "Important Deadlines" = "providers/updating/deadlines.md" },
+    ] },
+    { "FedRAMP 20x Certification Rules" = [
+      "providers/20x/index.md",
+      { "Initial Certification" = [
+        "providers/20x/initial/index.md",
+
+      ] },
+      { "Ongoing Certification" = [
+        "providers/20x/ongoing/index.md",
+      ] },
+      { "Applicable Rules" = [
+        "providers/20x/rules/index.md",
+        { "Marketplace Listing" = "providers/20x/rules/marketplace-listing.md" },
+        { "FedRAMP Certification" = "providers/20x/rules/fedramp-certification.md" },
+        { "Minimum Assessment Scope" = "providers/20x/rules/minimum-assessment-scope.md" },
+        { "Certification Data Sharing" = "providers/20x/rules/certification-data-sharing.md" },
+        { "Secure Configuration Guide" = "providers/20x/rules/secure-configuration-guide.md" },
+        { "Using Cryptographic Modules" = "providers/20x/rules/using-cryptographic-modules.md" },
+        { "FedRAMP Security Inbox" = "providers/20x/rules/fedramp-security-inbox.md" },
+        { "Incident Communications Procedures" = "providers/20x/rules/incident-communications-procedures.md" },
+        { "Significant Change Notifications" = "providers/20x/rules/significant-change-notifications.md" },
+        { "Vulnerability Detection and Response" = "providers/20x/rules/vulnerability-detection-and-response.md" },
+        { "Collaborative Continuous Monitoring" = "providers/20x/rules/collaborative-continuous-monitoring.md" },
+
+      ] },
+      { "Key Security Indicators" = [
+        "providers/20x/key-security-indicators/index.md",
+        { "Change Management" = "providers/20x/key-security-indicators/change-management.md" },
+        { "Cloud Native Architecture" = "providers/20x/key-security-indicators/cloud-native-architecture.md" },
+        { "Cybersecurity Education" = "providers/20x/key-security-indicators/cybersecurity-education.md" },
+        { "Identity and Access Management" = "providers/20x/key-security-indicators/identity-and-access-management.md" },
+        { "Incident Response" = "providers/20x/key-security-indicators/incident-response.md" },
+        { "Monitoring, Logging, and Auditing" = "providers/20x/key-security-indicators/monitoring-logging-and-auditing.md" },
+        { "Policy and Inventory" = "providers/20x/key-security-indicators/policy-and-inventory.md" },
+        { "Recovery Planning" = "providers/20x/key-security-indicators/recovery-planning.md" },
+        { "Service Configuration" = "providers/20x/key-security-indicators/service-configuration.md" },
+        { "Supply Chain Risk" = "providers/20x/key-security-indicators/supply-chain-risk.md" },
+      ] },
+    ] },
+    { "FedRAMP Rev5 Certification Rules" = [
+      "providers/rev5/index.md",
+      { "Initial Certification" = [
+        "providers/rev5/initial/index.md",
+      ] },
+      { "Ongoing Certification" = [
+        "providers/rev5/ongoing/index.md",
+      ] },
+      { "Applicable Rules" = [
+        "providers/rev5/rules/index.md",
+        { "Marketplace Listing" = "providers/rev5/rules/marketplace-listing.md" },
+        { "FedRAMP Certification" = "providers/rev5/rules/fedramp-certification.md" },
+        { "Minimum Assessment Scope" = "providers/rev5/rules/minimum-assessment-scope.md" },
+        { "Certification Data Sharing" = "providers/rev5/rules/certification-data-sharing.md" },
+        { "Secure Configuration Guide" = "providers/rev5/rules/secure-configuration-guide.md" },
+        { "Using Cryptographic Modules" = "providers/rev5/rules/using-cryptographic-modules.md" },
+        { "FedRAMP Security Inbox" = "providers/rev5/rules/fedramp-security-inbox.md" },
+        { "Incident Communications Procedures" = "providers/rev5/rules/incident-communications-procedures.md" },
+        { "Significant Change Notifications" = "providers/rev5/rules/significant-change-notifications.md" },
+        { "Vulnerability Detection and Response" = "providers/rev5/rules/vulnerability-detection-and-response.md" },
+        { "Collaborative Continuous Monitoring" = "providers/rev5/rules/collaborative-continuous-monitoring.md" },
+      ] },
+      { "Control Baselines" = [
+        "providers/rev5/controls/index.md",
+      ] },
+    ] },
+  ] },
+  { "Independent Assessors" = [
+    "assessors/index.md",
+    { "Getting Started" = [
+      "assessors/start.md",
+      { "Getting Support" = "assessors/support.md" },
+    ] },
+    { "FedRAMP Recognition" = [
+      "assessors/recognition/index.md",
+      { "Applicable Rules" = [
+        "assessors/recognition/rules/index.md",
+        { "Marketplace Listing" = "assessors/recognition/rules/marketplace-listing.md" },
+      ] },
+    ] },
+    { "Performing FedRAMP 20x Assessments" = [
+      "assessors/20x/index.md",
+      { "Initial Assessment" = [
+        "assessors/20x/initial/index.md",
+      ] },
+      { "Ongoing Assessment" = [
+        "assessors/20x/ongoing/index.md",
+      ] },
+      { "Applicable Rules" = [
+        "assessors/20x/rules/index.md",
+        { "FedRAMP Certification" = "assessors/20x/rules/fedramp-certification.md" },
+      ] },
+    ] },
+    { "Performing FedRAMP Rev5 Assessments" = [
+      "assessors/rev5/index.md",
+      { "Initial Assessment" = [
+        "assessors/rev5/initial/index.md",
+      ] },
+      { "Ongoing Assessment" = "assessors/rev5/ongoing/index.md" },
+      { "Applicable Rules" = [
+        "assessors/rev5/rules/index.md",
+        { "FedRAMP Certification" = "assessors/rev5/rules/fedramp-certification.md" },
+      ] },
+    ] },
+
+  ] },
+  { "Advisors" = [
+    "advisors/index.md",
+    { "Getting Started" = [
+      "advisors/start.md",
+    ] },
+    { "Applicable Rules" = [
+      "advisors/rules/index.md",
+      { "Marketplace Listing" = "advisors/rules/marketplace-listing.md" },
+    ] },
+  ] },
+  { "--> return to FedRAMP.gov" = "/" },
+]
+
+site_name = "FedRAMP Consolidated Rules for 2026"
+site_description = "A description."
+site_author = "pete@fedramp.gov"
+docs_dir = "src/"
+site_dir = "html/"
+site_url = "https://fedramp.gov/2026/"
+repo_url = "https://github.com/fedramp/rules-web"
+repo_name = "FedRAMP/rules-web"
+extra_css = ["stylesheets/custom.css"]
+copyright = "fedramp.gov"
+
+[project.extra]
+homepage = "/2026"
+generator = false
+
+[project.extra.tags]
+Rev5 = "rev5"
+20x = "20x"
+
+[project.theme]
+custom_dir = "overrides"
+logo = "assets/fr-only-logo-black.png"
+language = "en"
+features = [
+  "announce.dismiss",
+  "content.code.annotate",
+  "content.code.copy",
+  "content.code.select",
+  "content.footnote.tooltips",
+  "content.tabs.link",
+  "content.tooltips",
+  "header.autohide",
+  "navigation.footer",
+  "navigation.indexes",
+  "navigation.instant",
+  "navigation.instant.prefetch",
+  "navigation.instant.progress",
+  "navigation.path",
+  "navigation.sections",
+  "navigation.tabs",
+  "navigation.top",
+  "navigation.tracking",
+  #"navigation.expand",
+  "search.highlight",
+  "toc.follow",
+  #"toc.integrate",
+]
+
+[project.theme.icon]
+repo = "fontawesome/brands/github"
+
+[project.theme.icon.tag]
+rev5 = "material/numeric-5-circle-outline"
+20x = "material/alpha-x-circle-outline"
+
+[project.theme.icon.admonition]
+abstract = "fontawesome/solid/gavel"
+
+# Palette toggle for automatic mode
+[[project.theme.palette]]
+media = "(prefers-color-scheme)"
+toggle.icon = "lucide/sun-moon"
+toggle.name = "Switch to light mode"
+
+# Palette toggle for light mode
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+# Palette toggle for dark mode
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to system preference"
+
+[project.markdown_extensions]
+abbr = {}
+admonition = {}
+attr_list = {}
+def_list = {}
+footnotes = {}
+md_in_html = {}
+tables = {}
+
+[project.markdown_extensions.toc]
+permalink = true
+
+[project.markdown_extensions.pymdownx.details]
+[project.markdown_extensions.pymdownx.superfences]
+[project.markdown_extensions.pymdownx.tabbed]
+alternate_style = true
+[project.markdown_extensions.pymdownx.emoji]
+emoji_index = "zensical.extensions.emoji.twemoji"
+emoji_generator = "zensical.extensions.emoji.to_svg"

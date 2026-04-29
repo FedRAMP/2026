@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block announce %}
+<p align=center>This is a <b>incomplete</b> public preview of the FedRAMP Consolidated Rules for 2026 that is under active development. The content on this site may change rapidly during the preview period and stakeholders are advised to avoid directly implementing any preview rules until the final version is published.</p>
+{% endblock %}
+
+{% block libs %}
+  {{ super() }}
+  <link rel="stylesheet" href="{{ config.site_url }}assets/stylesheets/custom.css" />
+{% endblock %}
