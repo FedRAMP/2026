@@ -45,6 +45,7 @@ nav = [
     { "Scope of FedRAMP" = "scope.md" },
 
     { "FedRAMP's Responsibilities" = [
+      { "FedRAMP Certification" = "responsibilities/fedramp-certification.md" },
       { "FedRAMP Security Inbox" = "responsibilities/fedramp-security-inbox.md" },
       { "Incident Communications Procedures" = "responsibilities/incident-communications-procedures.md" },
       { "Marketplace Listing" = "responsibilities/marketplace-listing.md" },
@@ -110,7 +111,11 @@ nav = [
     { "Updating to 2026 Rules" = [
       "providers/updating/index.md",
       { "What's Changing" = "providers/updating/changes.md" },
-      { "Important Deadlines" = "providers/updating/deadlines.md" },
+      { "Important Deadlines" = [
+        "providers/updating/deadlines/index.md",
+        { "Rev5 Deadlines" = "providers/updating/deadlines/rev5.md" },
+        { "20x Deadlines" = "providers/updating/deadlines/20x.md" },
+        ]},
     ] },
     { "FedRAMP 20x Certification Rules" = [
       "providers/20x/index.md",
@@ -239,6 +244,11 @@ repo_url = "https://github.com/fedramp/rules-web"
 repo_name = "FedRAMP/rules-web"
 extra_css = ["stylesheets/custom.css"]
 copyright = "fedramp.gov"
+
+extra_javascript = [
+    "https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js",
+    "javascripts/tablesort.js"
+]
 
 [project.extra]
 homepage = "/2026"

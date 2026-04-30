@@ -8,6 +8,7 @@ import {
   resolveToolPath,
   toPosixPath,
   type DefinitionDocumentMappingConfig,
+  type DeadlineDocumentMappingConfig,
   type KsiDocumentMappingConfig,
   type RuleDocumentMappingConfig,
   type RuleType,
@@ -264,16 +265,33 @@ interface SectionViewModel {
   requirements: RequirementViewModel[];
 }
 
+interface DeadlineRowViewModel {
+  shortName: string;
+  name: string;
+  href: string;
+  obtain: string;
+  maintain: string;
+  graceEnds: string;
+}
+
+interface DeadlineTableViewModel {
+  title: string;
+  rows: DeadlineRowViewModel[];
+}
+
 interface DocumentViewModel {
   title: string;
+  tags: string[];
   effectiveEntries: EffectiveEntryViewModel[];
   isDefinitionDocument: boolean;
   isRequirementsDocument: boolean;
   isKsiDocument: boolean;
+  isDeadlineDocument: boolean;
   definitionSections: DefinitionSectionViewModel[];
   sections: SectionViewModel[];
   themeParagraphs: string[];
   indicators: RequirementViewModel[];
+  deadlineTables: DeadlineTableViewModel[];
 }
 
 export interface BuildArtifact {
@@ -283,7 +301,7 @@ export interface BuildArtifact {
   mappingId: string;
   sourceDocument?: string;
   title: string;
-  documentType: "FRD" | "FRR" | "KSI";
+  documentType: "FRD" | "FRR" | "KSI" | "DEADLINES";
   context: DocumentViewModel;
 }
 
@@ -315,6 +333,10 @@ function titleCase(value: string): string {
 
 function humanizeVersion(version: Version): string {
   return version === "20x" ? "20x" : "Rev5";
+}
+
+function versionTags(versions: Version[]): string[] {
+  return Array.from(new Set(versions)).map(humanizeVersion);
 }
 
 function humanizeVersions(versions: Version[]): string {
@@ -998,6 +1020,150 @@ function sourceDocuments(
   });
 }
 
+function deadlineSourceDocumentKeys(
+  rules: RulesDocument,
+  mapping: DeadlineDocumentMappingConfig,
+): string[] {
+  const { documents } = mapping.source;
+
+  if (documents === "ALL") {
+    return Object.keys(rules.FRR);
+  }
+
+  if (Array.isArray(documents)) {
+    if (!documents.length) {
+      throw new Error(
+        `Deadline document mapping "${mapping.id}" must specify at least one source document.`,
+      );
+    }
+
+    return documents;
+  }
+
+  throw new Error(
+    `Deadline document mapping "${mapping.id}" must specify source.documents or source.documents: "ALL".`,
+  );
+}
+
+function sourceDeadlineDocuments(
+  rules: RulesDocument,
+  mapping: DeadlineDocumentMappingConfig,
+): SourceDocument[] {
+  return deadlineSourceDocumentKeys(rules, mapping).map((documentKey) => {
+    const document = rules.FRR[documentKey];
+    if (!document) {
+      throw new Error(`Unknown FRR document: ${documentKey}`);
+    }
+
+    return {
+      key: documentKey,
+      document,
+    };
+  });
+}
+
+function markdownTableCell(value: string): string {
+  return value.replace(/\s+/g, " ").replace(/\|/g, "\\|").trim();
+}
+
+function deadlineDate(
+  entry: EffectiveEntrySource,
+  key: "obtain" | "maintain" | "grace_ends" | "grace_by_assessment_months",
+): string {
+  const value = entry.date?.[key];
+  return value === undefined ? "" : String(value);
+}
+
+function deadlineGraceEnds(entry: EffectiveEntrySource): string {
+  const graceEnds = deadlineDate(entry, "grace_ends");
+  if (graceEnds) {
+    return graceEnds;
+  }
+
+  const graceByAssessmentMonths = deadlineDate(
+    entry,
+    "grace_by_assessment_months",
+  );
+  if (!graceByAssessmentMonths) {
+    return "";
+  }
+
+  const maintain = deadlineDate(entry, "maintain") || "Maintain";
+  return `Within ${graceByAssessmentMonths} months of the next annual assessment after ${maintain}`;
+}
+
+function buildDeadlineRowViewModel(
+  document: RequirementDocumentSource,
+  version: Version,
+  pageRelativePath: string,
+): DeadlineRowViewModel | null {
+  const entry = effectiveEntryForVersion(document.info.effective, version);
+  if (!entry) {
+    return null;
+  }
+
+  const rulesRelativePath = toPosixPath(
+    path.posix.relative(
+      path.posix.dirname(pageRelativePath),
+      `providers/${version}/rules/${document.info.web_name}.md`,
+    ),
+  );
+
+  return {
+    shortName: markdownTableCell(document.info.short_name ?? ""),
+    name: markdownTableCell(document.info.name),
+    href: rulesRelativePath,
+    obtain: markdownTableCell(deadlineDate(entry, "obtain")),
+    maintain: markdownTableCell(deadlineDate(entry, "maintain")),
+    graceEnds: markdownTableCell(deadlineGraceEnds(entry)),
+  };
+}
+
+function buildDeadlineTables(
+  documents: RequirementDocumentSource[],
+  version: Version,
+  pageRelativePath: string,
+): DeadlineTableViewModel[] {
+  const rows = documents
+    .map((document, index) => ({
+      index,
+      row: buildDeadlineRowViewModel(document, version, pageRelativePath),
+    }))
+    .filter((entry): entry is { index: number; row: DeadlineRowViewModel } =>
+      entry.row !== null
+    )
+    .sort((left, right) => {
+      if (!left.row.maintain && !right.row.maintain) {
+        return left.index - right.index;
+      }
+
+      if (!left.row.maintain) {
+        return 1;
+      }
+
+      if (!right.row.maintain) {
+        return -1;
+      }
+
+      return (
+        left.row.maintain.localeCompare(right.row.maintain) ||
+        left.index - right.index
+      );
+    })
+    .map((entry) => entry.row);
+
+  if (!rows.length) {
+    return [];
+  }
+
+  return [
+    {
+      title: `${humanizeVersion(version)} Deadlines`,
+      rows,
+    },
+  ];
+}
+
 function buildConfiguredSections(
   documents: RequirementDocumentSource[],
   mapping: RuleDocumentMappingConfig,
@@ -1031,14 +1197,17 @@ function buildDocumentContext(
 ): DocumentViewModel {
   return {
     title,
+    tags: options.tags ?? [],
     effectiveEntries: options.effectiveEntries ?? [],
     isDefinitionDocument: options.isDefinitionDocument ?? false,
     isRequirementsDocument: options.isRequirementsDocument ?? false,
     isKsiDocument: options.isKsiDocument ?? false,
+    isDeadlineDocument: options.isDeadlineDocument ?? false,
     definitionSections: options.definitionSections ?? [],
     sections: options.sections ?? [],
     themeParagraphs: options.themeParagraphs ?? [],
     indicators: options.indicators ?? [],
+    deadlineTables: options.deadlineTables ?? [],
   };
 }
 
@@ -1078,6 +1247,25 @@ function renderKsiDocumentOutput(
   }
 
   return `${mapping.output.replace(/\/?$/, "/")}${normalizedKey}.md`;
+}
+
+function renderDeadlineDocumentOutput(
+  mapping: DeadlineDocumentMappingConfig,
+  version: Version,
+): string {
+  if (mapping.output.includes("{type}")) {
+    return mapping.output.replaceAll("{type}", version);
+  }
+
+  if (mapping.output.includes("{version}")) {
+    return mapping.output.replaceAll("{version}", version);
+  }
+
+  if (mapping.source.types.length === 1) {
+    return mapping.output;
+  }
+
+  return `${mapping.output.replace(/\/?$/, "/")}${version}.md`;
 }
 
 function buildPreviewIndex(artifacts: BuildArtifact[]): string {
@@ -1204,6 +1392,7 @@ function collectDefinitionDocumentArtifact(
     title,
     documentType: "FRD",
     context: buildDocumentContext(title, {
+      tags: versionTags(definitionDocumentTypes(mapping)),
       effectiveEntries,
       isDefinitionDocument: true,
       definitionSections,
@@ -1341,6 +1530,7 @@ function collectKsiDocumentArtifacts(
         title,
         documentType: "KSI",
         context: buildDocumentContext(title, {
+          tags: versionTags(["20x"]),
           isKsiDocument: true,
           themeParagraphs: splitParagraphs(theme.theme),
           indicators,
@@ -1356,6 +1546,61 @@ function collectConfiguredKsiDocumentArtifacts(
 ): BuildArtifact[] {
   return (config.generated.ksiDocuments ?? []).flatMap((mapping) =>
     collectKsiDocumentArtifacts(rules, config, mapping),
+  );
+}
+
+function collectDeadlineDocumentArtifactsForMapping(
+  rules: RulesDocument,
+  config: ToolConfig,
+  mapping: DeadlineDocumentMappingConfig,
+): BuildArtifact[] {
+  if (mapping.source.collection !== "FRR") {
+    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+  }
+
+  const documents = sourceDeadlineDocuments(rules, mapping).map(
+    (entry) => entry.document,
+  );
+
+  return mapping.source.types
+    .map((version): BuildArtifact | null => {
+      const relativePath = normalizeGeneratedPath(
+        renderDeadlineDocumentOutput(mapping, version),
+      );
+      const deadlineTables = buildDeadlineTables(
+        documents,
+        version,
+        relativePath,
+      );
+      if (!deadlineTables.length) {
+        return null;
+      }
+
+      const title = `${humanizeVersion(version)} Deadlines`;
+
+      return {
+        relativePath,
+        outputPath: resolveGeneratedOutputPath(config, relativePath),
+        templatePath: resolveToolPath(mapping.template ?? config.paths.template),
+        mappingId: mapping.id,
+        title,
+        documentType: "DEADLINES",
+        context: buildDocumentContext(title, {
+          tags: versionTags([version]),
+          isDeadlineDocument: true,
+          deadlineTables,
+        }),
+      };
+    })
+    .filter((artifact): artifact is BuildArtifact => artifact !== null);
+}
+
+function collectDeadlineDocumentArtifacts(
+  rules: RulesDocument,
+  config: ToolConfig,
+): BuildArtifact[] {
+  return (config.generated.deadlineDocuments ?? []).flatMap((mapping) =>
+    collectDeadlineDocumentArtifactsForMapping(rules, config, mapping),
   );
 }
 
@@ -1398,6 +1643,7 @@ function collectSingleRuleDocumentArtifact(
     title,
     documentType: "FRR",
     context: buildDocumentContext(title, {
+      tags: versionTags(mapping.source.types),
       effectiveEntries,
       isRequirementsDocument: true,
       sections,
@@ -1439,6 +1685,7 @@ function collectDocumentRuleDocumentArtifacts(
         title,
         documentType: "FRR",
         context: buildDocumentContext(title, {
+          tags: versionTags(mapping.source.types),
           effectiveEntries,
           isRequirementsDocument: true,
           sections,
@@ -1468,6 +1715,7 @@ export function collectArtifacts(
   const artifacts: BuildArtifact[] = [];
   artifacts.push(...collectDefinitionDocumentArtifacts(rules, config));
   artifacts.push(...collectConfiguredKsiDocumentArtifacts(rules, config));
+  artifacts.push(...collectDeadlineDocumentArtifacts(rules, config));
 
   for (const mapping of config.generated.ruleDocuments) {
     artifacts.push(...collectRuleDocumentArtifacts(rules, config, mapping));
