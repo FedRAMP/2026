@@ -8,7 +8,7 @@ readonly REPO_ROOT="$(git -C "${TOOLS_DIR}" rev-parse --show-toplevel)"
 readonly RULES_PATH="tools/rules"
 readonly RULES_WORKTREE="${REPO_ROOT}/${RULES_PATH}"
 readonly RULES_MODULE="tools/rules"
-readonly RULES_BRANCH="pwx"
+readonly RULES_BRANCH="main"
 
 git -C "${REPO_ROOT}" submodule sync --recursive "${RULES_PATH}"
 git -C "${REPO_ROOT}" config --remove-section "submodule.fedramp-rules" 2>/dev/null || true

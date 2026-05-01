@@ -35,7 +35,7 @@ Runs the full static build pipeline:
 bun sync
 ```
 
-Syncs the `rules` submodule from the `pwx` branch of `https://github.com/FedRAMP/rules.git`.
+Syncs the `rules` submodule from the `main` branch of `https://github.com/FedRAMP/rules.git`.
 
 ## Configuration
 
