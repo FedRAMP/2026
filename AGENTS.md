@@ -19,6 +19,10 @@ Scripts should also avoid writing to `content/`. Generated Markdown belongs in `
 
 ## Pipeline
 
+Run project tooling from `tools/`, not from the repository root. The root does not have a `package.json`; `tools/package.json` owns the Bun scripts and dependencies.
+
+Use `tools/` as the working directory for `bun test`, `bun run build`, `bun run dev`, `bun run sync`, and TypeScript checks such as `bunx tsc -p tsconfig.json --noEmit`. It is still fine to inspect the repository from root with generic commands like `git`, `rg`, `find`, or `sed`.
+
 - `bun run dev` starts the local development pipeline and Zensical preview.
 - `bun test` verifies the tool pipeline.
 - `bun run build` copies manual content, generates configured Markdown, and builds the static site.

@@ -1,7 +1,20 @@
-import { describe, expect, test } from "bun:test";
-import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { afterAll, describe, expect, test } from "bun:test";
+import { execFile, spawn } from "node:child_process";
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { promisify } from "node:util";
+import Ajv2020 from "ajv/dist/2020";
+import addFormats from "ajv-formats";
+import type { AnySchema } from "ajv";
 import {
   buildMarkdown,
   collectArtifacts,
@@ -9,12 +22,195 @@ import {
   OUTPUT_DIR,
   RULES_FILE,
 } from "./build-markdown";
-import { loadToolConfig, resolveToolPath } from "./config";
+import { loadToolConfig, REPO_ROOT, resolveToolPath } from "./config";
 import { deploy } from "./deploy";
+
+const execFileAsync = promisify(execFile);
+const RULES_REMOTE_URL = "https://github.com/FedRAMP/rules.git";
+const RULES_REMOTE_BRANCH = "main";
+const RULES_SCHEMA_FILE = resolveToolPath(
+  "rules/schemas/fedramp-consolidated-rules.schema.json",
+);
+const WARNING_ORANGE = "\x1b[38;5;208m";
+const WARNING_RESET = "\x1b[0m";
+const WARNING_MARK = "⚠";
+let unlinkedMarkdownWarningPaths: string[] = [];
+
+afterAll(() => {
+  if (!unlinkedMarkdownWarningPaths.length) {
+    return;
+  }
+
+  console.warn(
+    [
+      "",
+      `${WARNING_ORANGE}${WARNING_MARK} Markdown files exist in src/ after bun run build but are not linked in zensical.toml:${WARNING_RESET}`,
+      "",
+      ...unlinkedMarkdownWarningPaths.map(
+        (relativePath) =>
+          `    ${WARNING_ORANGE}${WARNING_MARK} ${relativePath}${WARNING_RESET}`,
+      ),
+      "",
+    ].join("\n"),
+  );
+});
+
+async function git(args: string[], cwd = REPO_ROOT): Promise<string> {
+  const { stdout } = await execFileAsync("git", args, { cwd });
+  return stdout.trim();
+}
+
+async function readJson<T>(filePath: string): Promise<T> {
+  return JSON.parse(await readFile(filePath, "utf8")) as T;
+}
+
+async function runCommandWithSpinner(
+  command: string,
+  args: string[],
+  cwd: string,
+): Promise<{ stdout: string; stderr: string }> {
+  const spinnerFrames = ["-", "\\", "|", "/"];
+  let frameIndex = 0;
+  const renderSpinner = () => {
+    const frame = spinnerFrames[frameIndex % spinnerFrames.length];
+    frameIndex++;
+    process.stderr.write(`\rRunning build pipeline ${frame}`);
+  };
+
+  renderSpinner();
+  const spinner = setInterval(renderSpinner, 120);
+
+  try {
+    return await new Promise((resolve, reject) => {
+      const child = spawn(command, args, {
+        cwd,
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      let stdout = "";
+      let stderr = "";
+
+      child.stdout.setEncoding("utf8");
+      child.stderr.setEncoding("utf8");
+      child.stdout.on("data", (chunk) => {
+        stdout += chunk;
+      });
+      child.stderr.on("data", (chunk) => {
+        stderr += chunk;
+      });
+      child.on("error", reject);
+      child.on("close", (code, signal) => {
+        if (signal) {
+          reject(new Error(`${command} exited from signal ${signal}`));
+          return;
+        }
+
+        if (code && code !== 0) {
+          const details = [stderr.trim(), stdout.trim()]
+            .filter(Boolean)
+            .join("\n\n");
+          reject(
+            new Error(
+              `${command} ${args.join(" ")} exited with code ${code}${
+                details ? `\n\n${details}` : ""
+              }`,
+            ),
+          );
+          return;
+        }
+
+        resolve({ stdout, stderr });
+      });
+    });
+  } finally {
+    clearInterval(spinner);
+    process.stderr.write("\r\x1b[2K");
+  }
+}
+
+async function listRelativeFiles(root: string): Promise<string[]> {
+  const entries = await readdir(root, { withFileTypes: true });
+  const files = await Promise.all(
+    entries.map(async (entry) => {
+      const entryPath = path.join(root, entry.name);
+
+      if (entry.isDirectory()) {
+        const childFiles = await listRelativeFiles(entryPath);
+        return childFiles.map((childFile) =>
+          path.join(entry.name, childFile),
+        );
+      }
+
+      if (entry.isFile()) {
+        return [entry.name];
+      }
+
+      return [];
+    }),
+  );
+
+  return files.flat().map((filePath) => filePath.split(path.sep).join("/"));
+}
+
+function markdownToHtmlPath(htmlRoot: string, relativePath: string): string {
+  const parsedPath = path.posix.parse(relativePath);
+  const directoryParts = parsedPath.dir ? parsedPath.dir.split("/") : [];
+
+  if (parsedPath.name === "index") {
+    return path.join(htmlRoot, ...directoryParts, "index.html");
+  }
+
+  return path.join(htmlRoot, ...directoryParts, parsedPath.name, "index.html");
+}
+
+function markdownPathsInZensicalConfig(source: string): string[] {
+  return Array.from(
+    new Set(
+      Array.from(source.matchAll(/"([^"]+\.md)"/g), (match) => match[1])
+        .filter((relativePath): relativePath is string => Boolean(relativePath))
+        .sort(),
+    ),
+  );
+}
 
 describe("build-markdown", () => {
   test("the consolidated rules source exists", async () => {
     await access(RULES_FILE);
+  });
+
+  test("the consolidated rules source matches the bundled schema", async () => {
+    const schema = await readJson<AnySchema>(RULES_SCHEMA_FILE);
+    const rules = await readJson<unknown>(RULES_FILE);
+    const ajv = new Ajv2020({ allErrors: true });
+    addFormats(ajv);
+
+    const validate = ajv.compile(schema);
+    const valid = validate(rules);
+
+    expect(
+      valid,
+      ajv.errorsText(validate.errors, { separator: "\n" }),
+    ).toBe(true);
+  });
+
+  test("the rules submodule is synced to the latest upstream main", async () => {
+    const rulesPath = resolveToolPath("rules");
+    const localHead = await git(["rev-parse", "HEAD"], rulesPath);
+    const latestRemoteRef = await git([
+      "ls-remote",
+      RULES_REMOTE_URL,
+      `refs/heads/${RULES_REMOTE_BRANCH}`,
+    ]);
+    const latestRemoteHead = latestRemoteRef.split(/\s+/)[0];
+    if (!latestRemoteHead) {
+      throw new Error(
+        `Could not resolve ${RULES_REMOTE_URL} ${RULES_REMOTE_BRANCH}.`,
+      );
+    }
+
+    expect(
+      localHead,
+      `tools/rules is not synced to ${RULES_REMOTE_URL} ${RULES_REMOTE_BRANCH}; run "bun run sync" from tools/ and commit the updated submodule pointer.`,
+    ).toBe(latestRemoteHead);
   });
 
   test("builds configured markdown files from the JSON source", async () => {
@@ -342,6 +538,118 @@ describe("build-markdown", () => {
       ).rejects.toThrow(/would shadow content\/definitions\.md/);
     } finally {
       await rm(tempDir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("build pipeline", () => {
+  test("bun run build produces a complete Zensical site", async () => {
+    const config = await loadToolConfig();
+    const rules = await loadRules(config);
+    const expectedArtifacts = collectArtifacts(rules, config);
+    const expectedGeneratedFiles = expectedArtifacts
+      .map((artifact) => artifact.relativePath)
+      .sort();
+    const srcPath = resolveToolPath(config.paths.src);
+    const contentPath = resolveToolPath(config.paths.content);
+    const htmlPath = resolveToolPath(config.paths.html);
+
+    const { stdout } = await runCommandWithSpinner(
+      "bun",
+      ["run", "build"],
+      resolveToolPath("."),
+    );
+
+    expect(stdout).toContain(
+      `Generated ${expectedArtifacts.length} markdown files.`,
+    );
+    expect(stdout).toContain("Build finished");
+
+    const manifest = await readJson<{ files: string[] }>(
+      path.join(srcPath, config.generated.manifest),
+    );
+    expect(manifest.files).toEqual(expectedGeneratedFiles);
+
+    const contentFiles = await listRelativeFiles(contentPath);
+    for (const relativePath of contentFiles) {
+      await access(path.join(srcPath, relativePath));
+    }
+
+    const zensicalConfig = await readFile(
+      resolveToolPath(config.paths.zensicalConfig),
+      "utf8",
+    );
+    const linkedMarkdownPaths = new Set(
+      markdownPathsInZensicalConfig(zensicalConfig),
+    );
+    const srcMarkdownPaths = (await listRelativeFiles(srcPath))
+      .filter((relativePath) => relativePath.endsWith(".md"))
+      .sort();
+    const unlinkedMarkdownPaths = srcMarkdownPaths.filter(
+      (relativePath) => !linkedMarkdownPaths.has(relativePath),
+    );
+
+    unlinkedMarkdownWarningPaths = unlinkedMarkdownPaths;
+
+    for (const relativePath of markdownPathsInZensicalConfig(zensicalConfig)) {
+      await access(path.join(srcPath, relativePath));
+      await access(markdownToHtmlPath(htmlPath, relativePath));
+    }
+
+    for (const artifact of expectedArtifacts) {
+      await access(path.join(srcPath, artifact.relativePath));
+      await access(markdownToHtmlPath(htmlPath, artifact.relativePath));
+
+      const generatedMarkdown = await readFile(
+        path.join(srcPath, artifact.relativePath),
+        "utf8",
+      );
+      expect(generatedMarkdown).not.toContain("{{");
+      expect(generatedMarkdown).not.toContain("[object Object]");
+    }
+
+    for (const relativePath of [
+      "index.html",
+      "search.json",
+      "sitemap.xml",
+      "assets/fr-only-logo-black.png",
+      "stylesheets/custom.css",
+      "authority/m-24-15/m-24-15-official.png",
+    ]) {
+      await access(path.join(htmlPath, relativePath));
+    }
+
+    const renderedPages = [
+      {
+        path: "definitions/index.html",
+        expectedText: ["FedRAMP Definitions", "Cloud Service Offering"],
+      },
+      {
+        path: "providers/20x/rules/fedramp-certification/index.html",
+        expectedText: ["FedRAMP Certification", "FRC-CSO-CDS"],
+      },
+      {
+        path: "providers/20x/key-security-indicators/change-management/index.html",
+        expectedText: ["Change Management", "KSI-CMT-LMC"],
+      },
+      {
+        path: "providers/updating/deadlines/20x/index.html",
+        expectedText: ["20x Deadlines", "FedRAMP Certification"],
+      },
+      {
+        path: "agencies/rules/agency-use/index.html",
+        expectedText: ["Agency Use of FedRAMP Certified Cloud Services"],
+      },
+    ];
+
+    for (const page of renderedPages) {
+      const contents = await readFile(path.join(htmlPath, page.path), "utf8");
+
+      for (const expectedText of page.expectedText) {
+        expect(contents).toContain(expectedText);
+      }
+      expect(contents).not.toContain("{{");
+      expect(contents).not.toContain("[object Object]");
     }
   });
 });

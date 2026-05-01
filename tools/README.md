@@ -18,7 +18,7 @@ Watch rebuilds are debounced by `dev.watchDebounceMs` in `config.json`; by defau
 bun test
 ```
 
-Verifies the configured generated Markdown pipeline.
+Verifies the rules source schema, `tools/rules` sync status, generated Markdown pipeline, full `bun run build` static site output, and warns when built `src/*.md` pages are not linked from `zensical.toml`.
 
 ```bash
 bun run build
