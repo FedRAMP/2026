@@ -25,6 +25,9 @@ Use `tools/` as the working directory for `bun test`, `bun run build`, `bun run 
 
 - `bun run dev` starts the local development pipeline and Zensical preview.
 - `bun test` verifies the tool pipeline.
+- `bun run check` runs the full pre-commit quality gate.
 - `bun run build` copies manual content, generates configured Markdown, and builds the static site.
+
+The tracked `.githooks/pre-commit` hook runs `bun run check` from `tools/`. Enable it in a clone with `git config core.hooksPath .githooks`.
 
 When adding generated pages, prefer updating `tools/config.json` and the Handlebars templates over hardcoding output paths in scripts.

@@ -21,6 +21,12 @@ bun test
 Verifies the rules source schema, `tools/rules` sync status, generated Markdown pipeline, full `bun run build` static site output, and warns when built `src/*.md` pages are not linked from `zensical.toml`.
 
 ```bash
+bun run check
+```
+
+Runs the full local quality gate: `bun test` followed by `bunx tsc -p tsconfig.json --noEmit`.
+
+```bash
 bun run build
 ```
 
@@ -36,6 +42,16 @@ bun sync
 ```
 
 Syncs the `rules` submodule from the `main` branch of `https://github.com/FedRAMP/rules.git`.
+
+## Git Hooks
+
+This repo includes a tracked pre-commit hook in `../.githooks/pre-commit` that runs `bun run check` from `tools/` and blocks commits when the check fails.
+
+Enable it in a clone with:
+
+```bash
+git config core.hooksPath .githooks
+```
 
 ## Configuration
 

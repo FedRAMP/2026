@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+
+echo "Running pre-commit checks: bun run check"
+cd "${repo_root}/tools"
+bun run check
