@@ -37,11 +37,11 @@ const RULES_SCHEMA_FILE = resolveToolPath(
   "rules/schemas/fedramp-consolidated-rules.schema.json",
 );
 const STABLE_STATUS_SPAN =
-  '<span class="picto">:lucide-computer:{ .machine } :lucide-book-open-check:{ .stable }</span>';
+  '<span class="picto">:lucide-computer:{ .machine title="This content is machine-generated from FedRAMP Machine-Readable Rules." } :lucide-book-open-check:{ .stable title="This content is relatively stable and only minor changes are expected." }</span>';
 const PLACEHOLDER_STATUS_SPAN =
-  '<span class="picto">:lucide-computer:{ .machine } :lucide-pencil:{ .placeholder }</span>';
+  '<span class="picto">:lucide-computer:{ .machine title="This content is machine-generated from FedRAMP Machine-Readable Rules." } :lucide-pencil:{ .placeholder title="This content is a placeholder and is not complete." }</span>';
 const MANUAL_STABLE_STATUS_SPAN =
-  '<span class="picto">:lucide-person-standing:{ .person } :lucide-book-open-check:{ .stable }</span>';
+  '<span class="picto">:lucide-person-standing:{ .person title="This content was written by a human just for this page." } :lucide-book-open-check:{ .stable title="This content is relatively stable and only minor changes are expected." }</span>';
 const WARNING_ORANGE = "\x1b[38;5;208m";
 const WARNING_RESET = "\x1b[0m";
 const WARNING_MARK = "⚠";
@@ -561,6 +561,22 @@ function generatedMappingStatusFailures(config: ToolConfig): string[] {
   return failures;
 }
 
+function pictographTooltipFailures(config: ToolConfig): string[] {
+  const failures: string[] = [];
+  const tooltipKeys = [
+    ...Object.keys(config.pictographs.source),
+    ...Object.keys(config.pictographs.status),
+  ] as Array<keyof ToolConfig["pictographs"]["tooltips"]>;
+
+  for (const key of tooltipKeys) {
+    if (!config.pictographs.tooltips[key]?.trim()) {
+      failures.push(`pictographs.tooltips.${key} is missing or empty`);
+    }
+  }
+
+  return failures;
+}
+
 describe("build-markdown", () => {
   test("the consolidated rules source exists", async () => {
     await access(RULES_FILE);
@@ -576,6 +592,19 @@ describe("build-markdown", () => {
 
     expectWithFailureSummary(statusFailureSummary, () => {
       expect(failures, statusFailureSummary).toEqual([]);
+    });
+  });
+
+  test("pictographs declare tooltips", async () => {
+    const config = await loadToolConfig();
+    const failures = pictographTooltipFailures(config);
+    const tooltipFailureSummary = [
+      "Pictographs in tools/config.json must declare matching tooltips.",
+      ...failures,
+    ].join("\n");
+
+    expectWithFailureSummary(tooltipFailureSummary, () => {
+      expect(failures, tooltipFailureSummary).toEqual([]);
     });
   });
 
@@ -659,6 +688,9 @@ describe("build-markdown", () => {
     ]) {
       expect(relativePaths).toContain(relativePath);
     }
+    expect(relativePaths).not.toContain(
+      "assessors/20x/rules/marketplace-listing.md",
+    );
 
     for (const artifact of expectedArtifacts) {
       await access(artifact.outputPath);
@@ -868,6 +900,167 @@ describe("build-markdown", () => {
     expect(agencyVdrContents).not.toContain("VDR-FRP-ARP");
   });
 
+  test("ignores configured rule documents after resolving the source selection", async () => {
+    const config = await loadToolConfig();
+    const rules = await loadRules(config);
+    const artifacts = collectArtifacts(rules, {
+      ...config,
+      generated: {
+        ...config.generated,
+        definitionDocuments: [],
+        ksiDocuments: [],
+        deadlineDocuments: [],
+        ruleDocuments: [
+          {
+            id: "assessor-20x-with-ignored-marketplace",
+            output: "assessors/20x/rules/{FRR}.md",
+            outputMode: "documents",
+            status: "placeholder",
+            emptyBehavior: "skip",
+            source: {
+              collection: "FRR",
+              documents: "ALL",
+              ignoreDocuments: ["MKT"],
+              types: ["20x"],
+              affects: ["Assessors"],
+              includeBoth: true,
+              bothPosition: "first",
+            },
+          },
+        ],
+      },
+    });
+
+    expect(artifacts.some((artifact) => artifact.sourceDocument === "MKT")).toBe(
+      false,
+    );
+    expect(
+      artifacts.some(
+        (artifact) =>
+          artifact.relativePath === "assessors/20x/rules/marketplace-listing.md",
+      ),
+    ).toBe(false);
+  });
+
+  test("adds page info admonitions below content pictograph spans", async () => {
+    const config = await loadToolConfig();
+    const tempDir = await mkdtemp(path.join(tmpdir(), "cr26-site-tools-"));
+    const tempContentDir = path.join(tempDir, "content");
+    const tempSrcDir = path.join(tempDir, "src");
+    const tempHtmlDir = path.join(tempDir, "html");
+
+    try {
+      await mkdir(tempContentDir, { recursive: true });
+      await mkdir(tempSrcDir, { recursive: true });
+      await writeFile(
+        path.join(tempSrcDir, "index.md"),
+        [
+          "---",
+          "description: This page contains an overview of the Public Preview, including descriptions of the content sources and status.",
+          "purpose: Helps folks understand the goals of the Public Preview and how to approach reviewing it.",
+          "picto:",
+          "  source: person",
+          "  status: stable",
+          "---",
+          "",
+          "# Public Preview",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      await writeFile(
+        path.join(tempSrcDir, "purpose-only.md"),
+        [
+          "---",
+          'description: ""',
+          "purpose: Explains why this page exists.",
+          "picto:",
+          "  source: person",
+          "  status: stable",
+          "---",
+          "",
+          "# Purpose Only",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      await writeFile(
+        path.join(tempSrcDir, "empty.md"),
+        [
+          "---",
+          'description: ""',
+          "purpose: ''",
+          "picto:",
+          "  source: person",
+          "  status: stable",
+          "---",
+          "",
+          "# Empty Page Info",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+
+      await buildMarkdown({
+        ...config,
+        paths: {
+          ...config.paths,
+          content: path.relative(resolveToolPath("."), tempContentDir),
+          src: path.relative(resolveToolPath("."), tempSrcDir),
+          html: path.relative(resolveToolPath("."), tempHtmlDir),
+        },
+        generated: {
+          ...config.generated,
+          definitions: undefined,
+          definitionDocuments: [],
+          ksiDocuments: [],
+          deadlineDocuments: [],
+          ruleDocuments: [],
+        },
+      });
+
+      const indexContents = await readFile(
+        path.join(tempSrcDir, "index.md"),
+        "utf8",
+      );
+      expect(indexContents).toContain(
+        [
+          MANUAL_STABLE_STATUS_SPAN,
+          "",
+          '??? info inline end "Page Info"',
+          "",
+          "    **Description:** This page contains an overview of the Public Preview, including descriptions of the content sources and status.",
+          "    ",
+          "    **Purpose:** Helps folks understand the goals of the Public Preview and how to approach reviewing it.",
+        ].join("\n"),
+      );
+
+      const purposeOnlyContents = await readFile(
+        path.join(tempSrcDir, "purpose-only.md"),
+        "utf8",
+      );
+      expect(purposeOnlyContents).toContain(
+        [
+          MANUAL_STABLE_STATUS_SPAN,
+          "",
+          '??? info inline end "Page Info"',
+          "",
+          "    **Purpose:** Explains why this page exists.",
+        ].join("\n"),
+      );
+      expect(purposeOnlyContents).not.toContain("**Description:**");
+
+      const emptyContents = await readFile(
+        path.join(tempSrcDir, "empty.md"),
+        "utf8",
+      );
+      expect(emptyContents).toContain(`---\n\n${MANUAL_STABLE_STATUS_SPAN}`);
+      expect(emptyContents).not.toContain('??? info inline end "Page Info"');
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
   test("builds configured FRD definition document mappings", async () => {
     const config = await loadToolConfig();
     const tempDir = await mkdtemp(path.join(tmpdir(), "cr26-site-tools-"));
@@ -1042,7 +1235,22 @@ describe("build pipeline", () => {
       "utf8",
     );
     expect(copiedIndexMarkdown).toContain(
-      `picto:\n  source: person\n  status: stable\n---\n\n${MANUAL_STABLE_STATUS_SPAN}\n\n# Public Preview`,
+      [
+        "picto:",
+        "  source: person",
+        "  status: stable",
+        "---",
+        "",
+        MANUAL_STABLE_STATUS_SPAN,
+        "",
+        '??? info inline end "Page Info"',
+        "",
+        "    **Description:** This page contains an overview of the Public Preview, including descriptions of the content sources and status.",
+        "    ",
+        "    **Purpose:** Helps folks understand the goals of the Public Preview and how to approach reviewing it.",
+        "",
+        "# Public Preview",
+      ].join("\n"),
     );
 
     const zensicalConfig = await readFile(

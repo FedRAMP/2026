@@ -9,7 +9,7 @@ picto:
   status: empty
 ---
 
-<span class="picto">:lucide-person-standing:{ .person } :lucide-circle-slash:{ .empty }</span>
+<span class="picto">:lucide-person-standing:{ .person title="This content was written by a human just for this page." } :lucide-circle-slash:{ .empty title="This content has not been produced or ported to this website yet." }</span>
 
 # Performing FedRAMP 20x Assessments
 

@@ -89,6 +89,7 @@ nav = [
     ] },
     { "Agency-Specific FedRAMP Rules" = [
       "agencies/rules/index.md",
+      { "Agency Use" = "agencies/rules/agency-use.md" },
       { "Collaborative Continuous Monitoring" = "agencies/rules/collaborative-continuous-monitoring.md" },
       { "Vulnerability Detection and Response" = "agencies/rules/vulnerability-detection-and-response.md" },
     ] },

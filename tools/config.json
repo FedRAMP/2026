@@ -17,6 +17,13 @@
       "stable": ":lucide-book-open-check:{ .stable }",
       "placeholder": ":lucide-pencil:{ .placeholder }",
       "empty": ":lucide-circle-slash:{ .empty }"
+    },
+    "tooltips": {
+      "machine": "This content is machine-generated from FedRAMP Machine-Readable Rules.",
+      "person": "This content was written by a human just for this page.",
+      "stable": "This content is relatively stable and only minor changes are expected.",
+      "placeholder": "This content is a placeholder and is not complete.",
+      "empty": "This content has not been produced or ported to this website yet."
     }
   },
   "generated": {
@@ -159,6 +166,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
+          "ignoreDocuments": ["MKT"],
           "types": ["20x"],
           "affects": ["Assessors"],
           "includeBoth": true,
@@ -177,6 +185,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
+          "ignoreDocuments": ["MKT"],
           "types": ["rev5"],
           "affects": ["Assessors"],
           "includeBoth": true,

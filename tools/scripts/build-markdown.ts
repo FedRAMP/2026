@@ -977,28 +977,77 @@ function sourceDocumentKeys(
   mapping: RuleDocumentMappingConfig,
 ): string[] {
   const { document, documents } = mapping.source;
+  let selectedDocumentKeys: string[];
 
   if (documents === "ALL") {
-    return Object.keys(rules.FRR);
-  }
-
-  if (Array.isArray(documents)) {
+    selectedDocumentKeys = Object.keys(rules.FRR);
+  } else if (Array.isArray(documents)) {
     if (!documents.length) {
       throw new Error(
         `Rule document mapping "${mapping.id}" must specify at least one source document.`,
       );
     }
 
-    return documents;
+    selectedDocumentKeys = documents;
+  } else if (document) {
+    selectedDocumentKeys = [document];
+  } else {
+    throw new Error(
+      `Rule document mapping "${mapping.id}" must specify source.document, source.documents, or source.documents: "ALL".`,
+    );
   }
 
-  if (document) {
-    return [document];
+  const ignoredDocumentKeys = normalizeIgnoredDocumentKeys(mapping);
+  if (!ignoredDocumentKeys.length) {
+    return selectedDocumentKeys;
   }
 
-  throw new Error(
-    `Rule document mapping "${mapping.id}" must specify source.document, source.documents, or source.documents: "ALL".`,
+  for (const ignoredDocumentKey of ignoredDocumentKeys) {
+    if (!rules.FRR[ignoredDocumentKey]) {
+      throw new Error(`Unknown FRR document: ${ignoredDocumentKey}`);
+    }
+  }
+
+  const filteredDocumentKeys = selectedDocumentKeys.filter(
+    (documentKey) => !ignoredDocumentKeys.includes(documentKey),
   );
+  if (!filteredDocumentKeys.length) {
+    throw new Error(
+      `Rule document mapping "${mapping.id}" ignored every selected FRR document.`,
+    );
+  }
+
+  return filteredDocumentKeys;
+}
+
+function normalizeIgnoredDocumentKeys(
+  mapping: RuleDocumentMappingConfig,
+): string[] {
+  const { ignoreDocuments } = mapping.source as { ignoreDocuments?: unknown };
+
+  if (Array.isArray(ignoreDocuments)) {
+    if (!ignoreDocuments.length) {
+      throw new Error(
+        `Rule document mapping "${mapping.id}" must specify at least one ignored source document when source.ignoreDocuments is present.`,
+      );
+    }
+
+    if (!ignoreDocuments.every((documentKey) => typeof documentKey === "string")) {
+      throw new Error(
+        `Rule document mapping "${mapping.id}" must specify source.ignoreDocuments as an array of FRR document keys.`,
+      );
+    }
+
+    return ignoreDocuments;
+  }
+
+  if (ignoreDocuments !== undefined) {
+    throw new Error(
+      `Rule document mapping "${mapping.id}" must specify source.ignoreDocuments as an array of FRR document keys.`,
+    );
+  }
+
+  return [];
 }
 
 interface SourceDocument {
@@ -1222,6 +1271,8 @@ function pictographSpan(
 ): string {
   const sourcePictograph = config.pictographs.source[source];
   const statusPictograph = config.pictographs.status[status];
+  const sourceTooltip = config.pictographs.tooltips[source];
+  const statusTooltip = config.pictographs.tooltips[status];
 
   if (!sourcePictograph) {
     throw new Error(`Unsupported generated document pictograph source: ${source}`);
@@ -1231,7 +1282,35 @@ function pictographSpan(
     throw new Error(`Unsupported generated document status: ${status}`);
   }
 
-  return `<span class="picto">${sourcePictograph} ${statusPictograph}</span>`;
+  if (!sourceTooltip) {
+    throw new Error(`Missing generated document pictograph tooltip: ${source}`);
+  }
+
+  if (!statusTooltip) {
+    throw new Error(`Missing generated document status tooltip: ${status}`);
+  }
+
+  return `<span class="picto">${pictographWithTooltip(
+    sourcePictograph,
+    sourceTooltip,
+  )} ${pictographWithTooltip(statusPictograph, statusTooltip)}</span>`;
+}
+
+function pictographWithTooltip(pictograph: string, tooltip: string): string {
+  const match = pictograph.match(/^(.*)\{\s*([^}]*?)\s*\}$/);
+  if (!match?.[1] || !match[2]) {
+    throw new Error(`Pictograph is missing Markdown attributes: ${pictograph}`);
+  }
+
+  return `${match[1]}{ ${match[2]} title="${markdownAttributeValue(tooltip)}" }`;
+}
+
+function markdownAttributeValue(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
 }
 
 function isGeneratedDocumentSource(
@@ -1284,6 +1363,98 @@ function pictoFrontmatterValue(
   return value;
 }
 
+function frontmatterScalarValue(
+  frontmatterLines: string[],
+  key: "description" | "purpose",
+): string | undefined {
+  const keyPattern = new RegExp(`^${key}:\\s*(.*)$`);
+  const keyIndex = frontmatterLines.findIndex((line) => keyPattern.test(line));
+  if (keyIndex === -1) {
+    return undefined;
+  }
+
+  const value = frontmatterLines[keyIndex]?.match(keyPattern)?.[1]?.trim() ?? "";
+  const blockScalarMatch = value.match(/^([>|])[-+]?$/);
+  if (blockScalarMatch?.[1]) {
+    const blockLines: string[] = [];
+    for (let index = keyIndex + 1; index < frontmatterLines.length; index++) {
+      const line = frontmatterLines[index];
+      if (!line) {
+        blockLines.push("");
+        continue;
+      }
+
+      if (!line.startsWith(" ")) {
+        break;
+      }
+
+      blockLines.push(line.trim());
+    }
+
+    const separator = blockScalarMatch[1] === ">" ? " " : "\n";
+    return meaningfulFrontmatterValue(blockLines.join(separator));
+  }
+
+  return meaningfulFrontmatterValue(value);
+}
+
+function meaningfulFrontmatterValue(value: string): string | undefined {
+  let normalized = value.trim();
+  const quotedValue = normalized.match(/^(['"])(.*)\1$/);
+  if (quotedValue?.[2] !== undefined) {
+    normalized = quotedValue[2].trim();
+  }
+
+  return normalized ? normalized : undefined;
+}
+
+function renderPageInfoAdmonition(
+  frontmatterLines: string[],
+): string[] {
+  const description = frontmatterScalarValue(frontmatterLines, "description");
+  const purpose = frontmatterScalarValue(frontmatterLines, "purpose");
+
+  if (!description && !purpose) {
+    return [];
+  }
+
+  const lines = ['??? info inline end "Page Info"', ""];
+  if (description) {
+    lines.push(`    **Description:** ${description.replace(/\s+/g, " ")}`);
+  }
+
+  if (description && purpose) {
+    lines.push("    ");
+  }
+
+  if (purpose) {
+    lines.push(`    **Purpose:** ${purpose.replace(/\s+/g, " ")}`);
+  }
+
+  return lines;
+}
+
+function stripLeadingPageInfoAdmonition(bodyLines: string[]): void {
+  if (bodyLines[0]?.trim() !== '??? info inline end "Page Info"') {
+    return;
+  }
+
+  bodyLines.shift();
+  while (bodyLines.length) {
+    const line = bodyLines[0];
+    if (line === "" || line?.startsWith(" ")) {
+      bodyLines.shift();
+      continue;
+    }
+
+    break;
+  }
+
+  while (bodyLines[0] === "") {
+    bodyLines.shift();
+  }
+}
+
 function renderContentPictographSpan(
   relativePath: string,
   contents: string,
@@ -1301,7 +1472,8 @@ function renderContentPictographSpan(
     return contents;
   }
 
-  const picto = pictoFrontmatterValue(lines.slice(1, frontmatterEndIndex));
+  const frontmatterLines = lines.slice(1, frontmatterEndIndex);
+  const picto = pictoFrontmatterValue(frontmatterLines);
   if (!picto) {
     return contents;
   }
@@ -1323,18 +1495,25 @@ function renderContentPictographSpan(
     bodyLines.shift();
   }
 
+  stripLeadingPageInfoAdmonition(bodyLines);
+
   if (/^<span class="picto">.+<\/span>\s*$/.test(bodyLines[0]?.trim() ?? "")) {
     bodyLines.shift();
     while (bodyLines[0] === "") {
       bodyLines.shift();
     }
   }
+  stripLeadingPageInfoAdmonition(bodyLines);
+
+  const pageInfoAdmonition = renderPageInfoAdmonition(frontmatterLines);
 
   return [
     ...lines.slice(0, frontmatterEndIndex + 1),
     "",
     pictographSpan(config, picto.status, picto.source),
     "",
+    ...pageInfoAdmonition,
+    ...(pageInfoAdmonition.length ? [""] : []),
     ...bodyLines,
   ].join("\n");
 }

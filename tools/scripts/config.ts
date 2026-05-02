@@ -16,6 +16,7 @@ export type GeneratedDocumentSource = "machine" | "person";
 export interface PictographsConfig {
   source: Record<GeneratedDocumentSource, string>;
   status: Record<GeneratedDocumentStatus, string>;
+  tooltips: Record<GeneratedDocumentSource | GeneratedDocumentStatus, string>;
 }
 
 export interface ToolPathsConfig {
@@ -57,6 +58,7 @@ export interface RuleDocumentSourceConfig {
   collection: "FRR";
   document?: string;
   documents?: RuleDocumentSelection;
+  ignoreDocuments?: string[];
   types: RuleType[];
   affects?: string[];
   sections?: string[];
