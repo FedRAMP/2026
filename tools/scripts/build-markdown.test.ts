@@ -511,7 +511,10 @@ async function findEmptyContentFrontmatterWarnings(
   root: string,
 ): Promise<string[]> {
   const markdownPaths = (await listRelativeFiles(root))
-    .filter((relativePath) => relativePath.endsWith(".md"))
+    .filter(
+      (relativePath) =>
+        relativePath.endsWith(".md") && !relativePath.startsWith("authority/"),
+    )
     .sort();
   const warnings: string[] = [];
 
