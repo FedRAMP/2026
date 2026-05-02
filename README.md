@@ -23,6 +23,45 @@ The rough flow is:
 - `html/`: generated static site output.
 - `zensical.toml`: Zensical site configuration and navigation.
 
+## Page Pictographs
+
+Every Markdown page should begin with one `picto` span after any frontmatter and before the first heading. The span contains one source pictograph and one status pictograph.
+
+Source pictographs:
+
+```markdown
+:lucide-person-standing:{ .person }
+:lucide-computer:{ .machine }
+```
+
+Status pictographs:
+
+```markdown
+:lucide-book-open-check:{ .stable }
+:lucide-pencil:{ .placeholder }
+:lucide-circle-slash:{ .empty }
+```
+
+Ready-to-copy spans for manually edited pages:
+
+```markdown
+<span class="picto">:lucide-person-standing:{ .person } :lucide-book-open-check:{ .stable }</span>
+
+<span class="picto">:lucide-person-standing:{ .person } :lucide-pencil:{ .placeholder }</span>
+
+<span class="picto">:lucide-person-standing:{ .person } :lucide-circle-slash:{ .empty }</span>
+```
+
+Ready-to-copy spans for generated or machine-sourced pages:
+
+```markdown
+<span class="picto">:lucide-computer:{ .machine } :lucide-book-open-check:{ .stable }</span>
+
+<span class="picto">:lucide-computer:{ .machine } :lucide-pencil:{ .placeholder }</span>
+
+<span class="picto">:lucide-computer:{ .machine } :lucide-circle-slash:{ .empty }</span>
+```
+
 ## Common Commands
 
 Run these from `tools/`:

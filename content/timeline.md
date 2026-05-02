@@ -1,14 +1,14 @@
 <span class="picto">:lucide-person-standing:{ .person } :lucide-book-open-check:{ .stable }</span>
 
 
-# FedRAMP Consolidated Rules for 2026
+# FedRAMP Consolidated Rules for 2026 Release Timeline
 
 
 FedRAMP’s Consolidated Rules for 2026 (CR26) contain all of the information necessary for FedRAMP stakeholders to participate effectively in the FedRAMP process in a format that is designed to remain mostly consistent with little change for a period of up to 2 years.
 
 These Consolidated Rules formalize considerable changes to the FedRAMP process in alignment with statutory and policy modernization requirements, informed by over 30 public Requests for Comment (RFCs) and many pilots and beta tests during 2025 and early 2026. FedRAMP will continue iteratively implementing modernization requirements each year in a consistent and predictable cadence.
 
-The effective dates and overall applicability for the Consolidated Rules for 2026 are as follows:
+## Effective Dates and Overall Applicability
 
 | Milestone                                    | Date       | Explanation                                                                                                                                                                                   |
 | :------------------------------------------- | :--------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

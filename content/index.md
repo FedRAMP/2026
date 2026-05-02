@@ -2,6 +2,9 @@
 title: "Public Preview Overview"
 description: "Public preview of the FedRAMP Consolidated Rules for 2026 (CR26)"
 icon: material/information-outline
+picto:
+  source: person
+  status: stable
 ---
 
 <span class="picto">:lucide-person-standing:{ .person } :lucide-book-open-check:{ .stable }</span>
@@ -112,4 +115,3 @@ The page only exists to demonstrate the intended structure of the site and that 
 will be produced for this topic. The content itself does not exist in the Public
 Preview yet, either because it is being edited by FedRAMP in a separate document,
 has not yet been generated, or has no placeholder content available yet.
-
