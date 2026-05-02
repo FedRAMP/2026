@@ -64,19 +64,19 @@
         "template": "templates/deadlines.hbs",
         "source": {
           "collection": "FRR",
-          "documents": [
-            "MKT",
-            "FRC",
-            "MAS",
-            "CDS",
-            "SCG",
-            "UCM",
-            "FSI",
-            "ICP",
-            "SCN",
-            "VDR",
-            "CCM"
-          ],
+          "documents": "ALL",
+          "types": ["20x", "rev5"]
+        }
+      },
+      {
+        "id": "assessor-important-deadlines",
+        "title": "Important Deadlines",
+        "output": "assessors/updating/deadlines/{type}.md",
+        "status": "stable",
+        "template": "templates/deadlines.hbs",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
           "types": ["20x", "rev5"]
         }
       }

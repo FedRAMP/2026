@@ -1,8 +1,19 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdtemp, rm, unlink, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  unlink,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { createContentChangeFilter } from "./dev";
+import {
+  createContentChangeFilter,
+  createContentChangeTracker,
+  syncContentChangesToSrc,
+} from "./dev";
 
 const tempRoots: string[] = [];
 
@@ -52,5 +63,66 @@ describe("dev content watcher", () => {
 
     await writeFile(filePath, "Created again\n");
     expect(hasMeaningfulChange("start.md")).toBe(true);
+  });
+
+  test("syncs changed content files into src without clearing src", async () => {
+    const tempRoot = await createTempContent();
+    const contentDir = path.join(tempRoot, "content");
+    const srcDir = path.join(tempRoot, "src");
+    const contentFile = path.join(contentDir, "nested", "start.md");
+    const srcGeneratedFile = path.join(srcDir, "definitions.md");
+
+    await mkdir(path.dirname(contentFile), { recursive: true });
+    await mkdir(srcDir, { recursive: true });
+    await writeFile(contentFile, "Initial content\n");
+    await writeFile(srcGeneratedFile, "Generated output\n");
+
+    const trackContentChange = createContentChangeTracker(contentDir);
+
+    await writeFile(contentFile, "Updated content\n");
+    const change = trackContentChange("nested/start.md");
+    expect(change).not.toBeNull();
+
+    const summary = syncContentChangesToSrc(contentDir, srcDir, [change!]);
+
+    expect(summary).toEqual({
+      copiedFiles: 1,
+      needsFullDeploy: false,
+      removedFiles: 0,
+      reloadTargets: ["nested/start.md"],
+    });
+    expect(
+      await readFile(path.join(srcDir, "nested", "start.md"), "utf8"),
+    ).toBe("Updated content\n");
+    expect(await readFile(srcGeneratedFile, "utf8")).toBe("Generated output\n");
+  });
+
+  test("removes deleted content files from src without requiring a full deploy", async () => {
+    const tempRoot = await createTempContent();
+    const contentDir = path.join(tempRoot, "content");
+    const srcDir = path.join(tempRoot, "src");
+    const contentFile = path.join(contentDir, "start.md");
+    const srcFile = path.join(srcDir, "start.md");
+
+    await mkdir(contentDir, { recursive: true });
+    await mkdir(srcDir, { recursive: true });
+    await writeFile(contentFile, "Initial content\n");
+    await writeFile(srcFile, "Initial content\n");
+
+    const trackContentChange = createContentChangeTracker(contentDir);
+
+    await unlink(contentFile);
+    const change = trackContentChange("start.md");
+    expect(change).not.toBeNull();
+
+    const summary = syncContentChangesToSrc(contentDir, srcDir, [change!]);
+
+    expect(summary).toEqual({
+      copiedFiles: 0,
+      needsFullDeploy: false,
+      removedFiles: 1,
+      reloadTargets: [],
+    });
+    expect(await readFile(srcFile, "utf8").catch(() => null)).toBeNull();
   });
 });
