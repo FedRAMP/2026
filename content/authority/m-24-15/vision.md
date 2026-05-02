@@ -1,4 +1,8 @@
-<span class="picto">:lucide-person-standing:{ .person } :lucide-book-open-check:{ .stable }</span>
+---
+picto:
+  source: person
+  status: stable
+---
 
 # M-24-15 Section II. Vision
 

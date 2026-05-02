@@ -2,8 +2,10 @@
 title: "Assessors"
 description: "A description of Assessors."
 icon: material/eye-check-outline
+picto:
+  source: person
+  status: placeholder
 ---
-<span class="picto">:lucide-person-standing:{ .person } :lucide-pencil:{ .placeholder }</span>
 
 # Independent Assessment Services
 

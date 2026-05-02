@@ -40,6 +40,8 @@ const STABLE_STATUS_SPAN =
   '<span class="picto">:lucide-computer:{ .machine } :lucide-book-open-check:{ .stable }</span>';
 const PLACEHOLDER_STATUS_SPAN =
   '<span class="picto">:lucide-computer:{ .machine } :lucide-pencil:{ .placeholder }</span>';
+const MANUAL_STABLE_STATUS_SPAN =
+  '<span class="picto">:lucide-person-standing:{ .person } :lucide-book-open-check:{ .stable }</span>';
 const WARNING_ORANGE = "\x1b[38;5;208m";
 const WARNING_RESET = "\x1b[0m";
 const WARNING_MARK = "⚠";
@@ -103,7 +105,7 @@ function printContentPictographWarnings(): void {
   console.warn(
     [
       "",
-      `${WARNING_ORANGE}${WARNING_MARK} Content markdown files should begin with one source pictograph and one status pictograph in a picto span:${WARNING_RESET}`,
+      `${WARNING_ORANGE}${WARNING_MARK} Content markdown files should declare picto.source and picto.status in frontmatter:${WARNING_RESET}`,
       "",
       ...contentPictographWarnings.map(
         (warning) => `    ${WARNING_ORANGE}${WARNING_MARK} ${warning}${WARNING_RESET}`,
@@ -284,94 +286,80 @@ async function findBoldMarkdownHeadingWarnings(root: string): Promise<string[]> 
   return warnings;
 }
 
-function escapeRegExp(source: string): string {
-  return source.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function countOccurrences(source: string, needle: string): number {
-  return Array.from(source.matchAll(new RegExp(escapeRegExp(needle), "g")))
-    .length;
-}
-
-function findMarkdownBodyStart(
+function pictoFrontmatterValue(
   contents: string,
-): { line: string; lineNumber: number } | null {
+): { source?: string; status?: string } | null {
   const lines = contents.split(/\r?\n/);
-  let index = 0;
-
-  if (lines[0]?.trim() === "---") {
-    index = 1;
-    while (index < lines.length && lines[index]?.trim() !== "---") {
-      index++;
-    }
-
-    if (index < lines.length) {
-      index++;
-    }
-  }
-
-  while (index < lines.length && !lines[index]?.trim()) {
-    index++;
-  }
-
-  const line = lines[index];
-  if (line === undefined) {
+  if (lines[0]?.trim() !== "---") {
     return null;
   }
 
-  return {
-    line,
-    lineNumber: index + 1,
-  };
+  const frontmatterEndIndex = lines.findIndex(
+    (line, index) => index > 0 && line.trim() === "---",
+  );
+  if (frontmatterEndIndex === -1) {
+    return null;
+  }
+
+  const frontmatterLines = lines.slice(1, frontmatterEndIndex);
+  const pictoIndex = frontmatterLines.findIndex(
+    (line) => line.trim() === "picto:",
+  );
+  if (pictoIndex === -1) {
+    return null;
+  }
+
+  const value: { source?: string; status?: string } = {};
+  for (let index = pictoIndex + 1; index < frontmatterLines.length; index++) {
+    const line = frontmatterLines[index];
+    if (!line) {
+      continue;
+    }
+
+    if (!line.startsWith(" ")) {
+      break;
+    }
+
+    const sourceMatch = line.match(/^\s+source:\s*([A-Za-z0-9_-]+)\s*$/);
+    const statusMatch = line.match(/^\s+status:\s*([A-Za-z0-9_-]+)\s*$/);
+    if (sourceMatch?.[1]) {
+      value.source = sourceMatch[1];
+    }
+    if (statusMatch?.[1]) {
+      value.status = statusMatch[1];
+    }
+  }
+
+  return value;
 }
 
-function validatePictographSpan(
+function validatePictographFrontmatter(
   relativePath: string,
   contents: string,
   config: ToolConfig,
 ): string | null {
-  const bodyStart = findMarkdownBodyStart(contents);
-  if (!bodyStart) {
-    return `${relativePath}: missing content`;
+  const picto = pictoFrontmatterValue(contents);
+  if (!picto) {
+    return `${relativePath}: missing picto frontmatter`;
   }
 
-  const spanMatch = bodyStart.line
-    .trim()
-    .match(/^<span class="picto">(.+)<\/span>$/);
-  if (!spanMatch?.[1]) {
-    return `${relativePath}:${bodyStart.lineNumber}: missing picto span at beginning`;
+  const knownSources = new Set(Object.keys(config.pictographs.source));
+  const knownStatuses = new Set(Object.keys(config.pictographs.status));
+
+  if (!picto.source) {
+    return `${relativePath}: missing picto.source`;
   }
 
-  const innerSpan = spanMatch[1].trim();
-  const sourcePictographs = Object.values(config.pictographs.source);
-  const statusPictographs = Object.values(config.pictographs.status);
-  const matchedSourcePictographs = sourcePictographs.filter(
-    (pictograph) => countOccurrences(innerSpan, pictograph) === 1,
-  );
-  const matchedStatusPictographs = statusPictographs.filter(
-    (pictograph) => countOccurrences(innerSpan, pictograph) === 1,
-  );
-
-  if (matchedSourcePictographs.length !== 1) {
-    return `${relativePath}:${bodyStart.lineNumber}: expected exactly one source pictograph`;
+  if (!knownSources.has(picto.source)) {
+    return `${relativePath}: unknown picto.source "${picto.source}"`;
   }
 
-  if (matchedStatusPictographs.length !== 1) {
-    return `${relativePath}:${bodyStart.lineNumber}: expected exactly one status pictograph`;
+  if (!picto.status) {
+    return `${relativePath}: missing picto.status`;
   }
 
-  const matchedSourcePictograph = matchedSourcePictographs[0];
-  const matchedStatusPictograph = matchedStatusPictographs[0];
-  if (!matchedSourcePictograph || !matchedStatusPictograph) {
-    return `${relativePath}:${bodyStart.lineNumber}: invalid picto span`;
-  }
-
-  const remaining = innerSpan
-    .replace(matchedSourcePictograph, "")
-    .replace(matchedStatusPictograph, "")
-    .trim();
-  if (remaining.length) {
-    return `${relativePath}:${bodyStart.lineNumber}: picto span contains extra content`;
+  if (!knownStatuses.has(picto.status)) {
+    return `${relativePath}: unknown picto.status "${picto.status}"`;
   }
 
   return null;
@@ -388,7 +376,11 @@ async function findContentPictographWarnings(
 
   for (const relativePath of markdownPaths) {
     const contents = await readFile(path.join(root, relativePath), "utf8");
-    const warning = validatePictographSpan(relativePath, contents, config);
+    const warning = validatePictographFrontmatter(
+      relativePath,
+      contents,
+      config,
+    );
     if (warning) {
       warnings.push(warning);
     }
@@ -832,7 +824,7 @@ describe("build-markdown", () => {
 });
 
 describe("content quality", () => {
-  test("warns when content markdown is missing a valid pictograph span", async () => {
+  test("warns when content markdown is missing valid pictograph frontmatter", async () => {
     const config = await loadToolConfig();
     const contentPath = resolveToolPath(config.paths.content);
 
@@ -887,6 +879,14 @@ describe("build pipeline", () => {
     for (const relativePath of contentFiles) {
       await access(path.join(srcPath, relativePath));
     }
+
+    const copiedIndexMarkdown = await readFile(
+      path.join(srcPath, "index.md"),
+      "utf8",
+    );
+    expect(copiedIndexMarkdown).toContain(
+      `picto:\n  source: person\n  status: stable\n---\n\n${MANUAL_STABLE_STATUS_SPAN}\n\n# Public Preview`,
+    );
 
     const zensicalConfig = await readFile(
       resolveToolPath(config.paths.zensicalConfig),

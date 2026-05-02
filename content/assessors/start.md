@@ -1,4 +1,8 @@
-<span class="picto">:lucide-person-standing:{ .person } :lucide-pencil:{ .placeholder }</span>
+---
+picto:
+  source: person
+  status: placeholder
+---
 
 # Getting Started as an Independent Assessor
 

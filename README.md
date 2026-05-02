@@ -25,41 +25,51 @@ The rough flow is:
 
 ## Page Pictographs
 
-Every Markdown page should begin with one `picto` span after any frontmatter and before the first heading. The span contains one source pictograph and one status pictograph.
+Every manually edited Markdown page should declare one source and one status in frontmatter. The build copies `content/` into `src/`, reads this `picto` frontmatter, and inserts the rendered `picto` span below the frontmatter before the first heading.
 
-Source pictographs:
+Ready-to-copy frontmatter for manually edited pages:
 
 ```markdown
-:lucide-person-standing:{ .person }
-:lucide-computer:{ .machine }
+---
+picto:
+  source: person
+  status: stable
+---
+
+---
+picto:
+  source: person
+  status: placeholder
+---
+
+---
+picto:
+  source: person
+  status: empty
+---
 ```
 
-Status pictographs:
+Generated or machine-sourced pages use `source: machine`:
 
 ```markdown
-:lucide-book-open-check:{ .stable }
-:lucide-pencil:{ .placeholder }
-:lucide-circle-slash:{ .empty }
+picto:
+  source: machine
+  status: stable
 ```
 
-Ready-to-copy spans for manually edited pages:
+Source values:
 
 ```markdown
-<span class="picto">:lucide-person-standing:{ .person } :lucide-book-open-check:{ .stable }</span>
-
-<span class="picto">:lucide-person-standing:{ .person } :lucide-pencil:{ .placeholder }</span>
-
-<span class="picto">:lucide-person-standing:{ .person } :lucide-circle-slash:{ .empty }</span>
+person
+machine
 ```
 
-Ready-to-copy spans for generated or machine-sourced pages:
+Status values:
 
 ```markdown
-<span class="picto">:lucide-computer:{ .machine } :lucide-book-open-check:{ .stable }</span>
-
-<span class="picto">:lucide-computer:{ .machine } :lucide-pencil:{ .placeholder }</span>
-
-<span class="picto">:lucide-computer:{ .machine } :lucide-circle-slash:{ .empty }</span>
+stable
+placeholder
+empty
 ```
 
 ## Common Commands

@@ -1234,6 +1234,157 @@ function pictographSpan(
   return `<span class="picto">${sourcePictograph} ${statusPictograph}</span>`;
 }
 
+function isGeneratedDocumentSource(
+  config: ToolConfig,
+  value: string | undefined,
+): value is GeneratedDocumentSource {
+  return Boolean(value && value in config.pictographs.source);
+}
+
+function isGeneratedDocumentStatus(
+  config: ToolConfig,
+  value: string | undefined,
+): value is GeneratedDocumentStatus {
+  return Boolean(value && value in config.pictographs.status);
+}
+
+function pictoFrontmatterValue(
+  frontmatterLines: string[],
+): { source?: string; status?: string } | null {
+  const pictoIndex = frontmatterLines.findIndex(
+    (line) => line.trim() === "picto:",
+  );
+  if (pictoIndex === -1) {
+    return null;
+  }
+
+  const value: { source?: string; status?: string } = {};
+  for (let index = pictoIndex + 1; index < frontmatterLines.length; index++) {
+    const line = frontmatterLines[index];
+    if (!line) {
+      continue;
+    }
+
+    if (!line.startsWith(" ")) {
+      break;
+    }
+
+    const sourceMatch = line.match(/^\s+source:\s*([A-Za-z0-9_-]+)\s*$/);
+    const statusMatch = line.match(/^\s+status:\s*([A-Za-z0-9_-]+)\s*$/);
+
+    if (sourceMatch?.[1]) {
+      value.source = sourceMatch[1];
+    }
+
+    if (statusMatch?.[1]) {
+      value.status = statusMatch[1];
+    }
+  }
+
+  return value;
+}
+
+function renderContentPictographSpan(
+  relativePath: string,
+  contents: string,
+  config: ToolConfig,
+): string {
+  const lines = contents.split(/\r?\n/);
+  if (lines[0]?.trim() !== "---") {
+    return contents;
+  }
+
+  const frontmatterEndIndex = lines.findIndex(
+    (line, index) => index > 0 && line.trim() === "---",
+  );
+  if (frontmatterEndIndex === -1) {
+    return contents;
+  }
+
+  const picto = pictoFrontmatterValue(lines.slice(1, frontmatterEndIndex));
+  if (!picto) {
+    return contents;
+  }
+
+  if (!isGeneratedDocumentSource(config, picto.source)) {
+    throw new Error(
+      `content/${relativePath} has unsupported picto source: ${picto.source ?? "<missing>"}`,
+    );
+  }
+
+  if (!isGeneratedDocumentStatus(config, picto.status)) {
+    throw new Error(
+      `content/${relativePath} has unsupported picto status: ${picto.status ?? "<missing>"}`,
+    );
+  }
+
+  const bodyLines = lines.slice(frontmatterEndIndex + 1);
+  while (bodyLines[0] === "") {
+    bodyLines.shift();
+  }
+
+  if (/^<span class="picto">.+<\/span>\s*$/.test(bodyLines[0]?.trim() ?? "")) {
+    bodyLines.shift();
+    while (bodyLines[0] === "") {
+      bodyLines.shift();
+    }
+  }
+
+  return [
+    ...lines.slice(0, frontmatterEndIndex + 1),
+    "",
+    pictographSpan(config, picto.status, picto.source),
+    "",
+    ...bodyLines,
+  ].join("\n");
+}
+
+async function listMarkdownFiles(root: string): Promise<string[]> {
+  let entries;
+  try {
+    entries = await readdir(root, { withFileTypes: true });
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return [];
+    }
+
+    throw error;
+  }
+
+  const files = await Promise.all(
+    entries.map(async (entry) => {
+      const entryPath = path.join(root, entry.name);
+      if (entry.isDirectory()) {
+        const childFiles = await listMarkdownFiles(entryPath);
+        return childFiles.map((childFile) => path.join(entry.name, childFile));
+      }
+
+      if (entry.isFile() && entry.name.endsWith(".md")) {
+        return [entry.name];
+      }
+
+      return [];
+    }),
+  );
+
+  return files.flat().map(toPosixPath);
+}
+
+async function renderContentPictographs(config: ToolConfig): Promise<void> {
+  const srcPath = resolveToolPath(config.paths.src);
+  const markdownPaths = await listMarkdownFiles(srcPath);
+
+  for (const relativePath of markdownPaths) {
+    const markdownPath = path.join(srcPath, relativePath);
+    const contents = await readFile(markdownPath, "utf8");
+    const rendered = renderContentPictographSpan(relativePath, contents, config);
+
+    if (rendered !== contents) {
+      await writeFile(markdownPath, rendered, "utf8");
+    }
+  }
+}
+
 function renderRuleDocumentOutput(
   mapping: RuleDocumentMappingConfig,
   documentKey?: string,
@@ -1837,6 +1988,7 @@ export async function buildMarkdown(config?: ToolConfig): Promise<BuildSummary> 
   const partialsDir = resolveToolPath(toolConfig.paths.partials);
   const templates = new Map<string, (context: DocumentViewModel) => string>();
 
+  await renderContentPictographs(toolConfig);
   await assertNoContentCollisions(toolConfig, artifacts);
   await cleanupGeneratedFiles(toolConfig);
 

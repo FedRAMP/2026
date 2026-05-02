@@ -7,8 +7,6 @@ picto:
   status: stable
 ---
 
-<span class="picto">:lucide-person-standing:{ .person } :lucide-book-open-check:{ .stable }</span>
-
 # Public Preview
 
 Welcome to FedRAMP's Consolidated Rules for 2026 Public Preview! This is an unprecedented

@@ -1,3 +1,7 @@
-<span class="picto">:lucide-person-standing:{ .person } :lucide-circle-slash:{ .empty }</span>
+---
+picto:
+  source: person
+  status: empty
+---
 
 # The FedRAMP Marketplace

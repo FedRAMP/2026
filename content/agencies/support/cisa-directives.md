@@ -1,4 +1,8 @@
-<span class="picto">:lucide-person-standing:{ .person } :lucide-pencil:{ .placeholder }</span>
+---
+picto:
+  source: person
+  status: placeholder
+---
 
 # Responding to CISA Emergency and Binding Operational Directives
 

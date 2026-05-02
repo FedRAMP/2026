@@ -1,8 +1,10 @@
 ---
 tags:
   - Rev5
+picto:
+  source: person
+  status: placeholder
 ---
-<span class="picto">:lucide-person-standing:{ .person } :lucide-pencil:{ .placeholder }</span>
 
 # FedRAMP Rev5 Certification Rules
 

@@ -1,4 +1,8 @@
-<span class="picto">:lucide-person-standing:{ .person } :lucide-circle-slash:{ .empty }</span>
+---
+picto:
+  source: person
+  status: empty
+---
 
 # Updating to 2026 Rules
 

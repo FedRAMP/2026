@@ -1,8 +1,10 @@
 ---
 tags:
   - Rev5
+picto:
+  source: person
+  status: empty
 ---
-<span class="picto">:lucide-person-standing:{ .person } :lucide-circle-slash:{ .empty }</span>
 
 # Performing FedRAMP Rev5 Assessments
 
