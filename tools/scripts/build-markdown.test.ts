@@ -188,6 +188,20 @@ function expectWithFailureSummary(
   }
 }
 
+function expectFileToStartWith(
+  filePath: string,
+  contents: string,
+  expectedStart: string,
+  description: string,
+): void {
+  const relativePath = path.relative(REPO_ROOT, filePath);
+  const summary = `${description}: ${relativePath}`;
+
+  expectWithFailureSummary(summary, () => {
+    expect(contents, summary).toStartWith(expectedStart);
+  });
+}
+
 async function git(args: string[], cwd = REPO_ROOT): Promise<string> {
   const { stdout } = await execFileAsync("git", args, { cwd });
   return stdout.trim();
@@ -765,12 +779,19 @@ describe("build-markdown", () => {
       "../../../definitions/#cloud-service-offering",
     );
 
-    const deadlines20xContents = await readFile(
-      path.join(OUTPUT_DIR, "providers", "updating", "deadlines", "20x.md"),
-      "utf8",
+    const deadlines20xPath = path.join(
+      OUTPUT_DIR,
+      "providers",
+      "updating",
+      "deadlines",
+      "20x.md",
     );
-    expect(deadlines20xContents).toStartWith(
+    const deadlines20xContents = await readFile(deadlines20xPath, "utf8");
+    expectFileToStartWith(
+      deadlines20xPath,
+      deadlines20xContents,
       `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# 20x Deadlines`,
+      "Generated provider 20x deadlines markdown has an unexpected header",
     );
     expect(deadlines20xContents).toContain(
       "| FRC | [FedRAMP Certification](../../20x/rules/fedramp-certification.md) | 2026-07-04 | 2027-05-04 | 2027-05-04 |",

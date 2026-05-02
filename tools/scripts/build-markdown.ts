@@ -1332,6 +1332,29 @@ function combinedGeneratedDocumentStatus(
     .sort((left, right) => statusRank[right] - statusRank[left])[0]!;
 }
 
+function combinedDeadlineDocumentStatus(
+  config: ToolConfig,
+  documents: RequirementDocumentSource[],
+  label: string,
+): GeneratedDocumentStatus {
+  return combinedGeneratedDocumentStatus(
+    config,
+    documents.map((document) => {
+      const sourceStatus = generatedDocumentStatus(
+        config,
+        document.info.status,
+        `FRR.${document.info.short_name ?? document.info.web_name}.info`,
+      );
+
+      return {
+        label: `FRR.${document.info.short_name ?? document.info.web_name}.info`,
+        status: sourceStatus === "empty" ? "placeholder" : sourceStatus,
+      };
+    }),
+    label,
+  );
+}
+
 function pictographWithTooltip(pictograph: string, tooltip: string): string {
   const match = pictograph.match(/^(.*)\{\s*([^}]*?)\s*\}$/);
   if (!match?.[1] || !match[2]) {
@@ -1959,12 +1982,9 @@ function collectDeadlineDocumentArtifactsForMapping(
   const documents = sourceDeadlineDocuments(rules, mapping).map(
     (entry) => entry.document,
   );
-  const status = combinedGeneratedDocumentStatus(
+  const status = combinedDeadlineDocumentStatus(
     config,
-    documents.map((document) => ({
-      label: `FRR.${document.info.short_name ?? document.info.web_name}.info`,
-      status: document.info.status,
-    })),
+    documents,
     `deadline document mapping "${mapping.id}"`,
   );
 
