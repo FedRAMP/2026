@@ -1,0 +1,24 @@
+.picto {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.machine {
+  color: #9A8678;
+}
+
+.person {
+  color: #AD5C71;
+}
+
+.stable {
+  color: #b0f539;
+}
+
+.placeholder {
+  color: #ffa23f;
+}
+
+.empty {
+  color: #FF4081;
+}

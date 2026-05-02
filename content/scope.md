@@ -1,3 +1,5 @@
+<span class="picto">:lucide-person-standing:{ .person } :lucide-book-open-check:{ .stable }</span>
+
 # Scope of FedRAMP
 
 FedRAMP was established in the law to provide a standardized approach to the

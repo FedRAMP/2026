@@ -10,6 +10,13 @@ export type RuleDocumentSelection = string[] | "ALL";
 export type KsiThemeSelection = string[] | "ALL";
 export type RuleDocumentGrouping = "section" | "document";
 export type RuleDocumentOutputMode = "single" | "documents";
+export type GeneratedDocumentStatus = "stable" | "placeholder" | "empty";
+export type GeneratedDocumentSource = "machine" | "person";
+
+export interface PictographsConfig {
+  source: Record<GeneratedDocumentSource, string>;
+  status: Record<GeneratedDocumentStatus, string>;
+}
 
 export interface ToolPathsConfig {
   src: string;
@@ -39,6 +46,7 @@ export interface DefinitionDocumentMappingConfig {
   id: string;
   title?: string;
   output: string;
+  status: GeneratedDocumentStatus;
   template?: string;
   emptyBehavior?: GeneratedEmptyBehavior;
   includeEffectiveDates?: boolean;
@@ -62,6 +70,7 @@ export interface RuleDocumentMappingConfig {
   title?: string;
   output: string;
   outputMode?: RuleDocumentOutputMode;
+  status: GeneratedDocumentStatus;
   template?: string;
   definitionsHref?: string;
   rulesHref?: string;
@@ -80,6 +89,7 @@ export interface KsiDocumentMappingConfig {
   id: string;
   title?: string;
   output: string;
+  status: GeneratedDocumentStatus;
   template?: string;
   definitionsHref?: string;
   emptyBehavior?: GeneratedEmptyBehavior;
@@ -96,6 +106,7 @@ export interface DeadlineDocumentMappingConfig {
   id: string;
   title?: string;
   output: string;
+  status: GeneratedDocumentStatus;
   template?: string;
   source: DeadlineDocumentSourceConfig;
 }
@@ -115,6 +126,7 @@ export interface DevConfig {
 
 export interface ToolConfig {
   paths: ToolPathsConfig;
+  pictographs: PictographsConfig;
   generated: GeneratedConfig;
   dev?: DevConfig;
 }

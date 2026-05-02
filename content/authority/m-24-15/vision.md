@@ -1,3 +1,5 @@
+<span class="picto">:lucide-person-standing:{ .person } :lucide-book-open-check:{ .stable }</span>
+
 # M-24-15 Section II. Vision
 
 The purpose of the FedRAMP program is to increase Federal agencies' adoption and

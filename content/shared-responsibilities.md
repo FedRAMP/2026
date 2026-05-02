@@ -1,3 +1,6 @@
+<span class="picto">:lucide-person-standing:{ .person } :lucide-book-open-check:{ .stable }</span>
+
+
 # The Shared Responsibility Model
 
 The FedRAMP process relies on shared responsibility throughout various stages of the initial and ongoing FedRAMP Certification process, however each stakeholder also has sole responsibility for specific parts of the process itself.

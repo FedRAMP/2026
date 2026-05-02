@@ -3,6 +3,8 @@ title: "Agencies"
 description: "A description of Agencies."
 icon: material/bank-outline
 ---
+<span class="picto">:lucide-person-standing:{ .person } :lucide-pencil:{ .placeholder }</span>
+
 # Federal Agencies
 
 !!! warning "This contains placeholder content that will change during editing in the Preview Phase."

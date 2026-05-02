@@ -8,6 +8,17 @@
     "partials": "templates/partials",
     "zensicalConfig": "../zensical.toml"
   },
+  "pictographs": {
+    "source": {
+      "machine": ":lucide-computer:{ .machine }",
+      "person": ":lucide-person-standing:{ .person }"
+    },
+    "status": {
+      "stable": ":lucide-book-open-check:{ .stable }",
+      "placeholder": ":lucide-pencil:{ .placeholder }",
+      "empty": ":lucide-circle-slash:{ .empty }"
+    }
+  },
   "generated": {
     "manifest": ".generated-markdown.json",
     "definitionDocuments": [
@@ -15,6 +26,7 @@
         "id": "fedramp-definitions",
         "title": "FedRAMP Definitions",
         "output": "definitions.md",
+        "status": "stable",
         "includeEffectiveDates": false,
         "source": {
           "collection": "FRD",
@@ -28,6 +40,7 @@
       {
         "id": "provider-20x-key-security-indicators",
         "output": "providers/20x/key-security-indicators/{KSI}.md",
+        "status": "stable",
         "definitionsHref": "../../../definitions/",
         "source": {
           "collection": "KSI",
@@ -40,6 +53,7 @@
         "id": "provider-important-deadlines",
         "title": "Important Deadlines",
         "output": "providers/updating/deadlines/{type}.md",
+        "status": "stable",
         "template": "templates/deadlines.hbs",
         "source": {
           "collection": "FRR",
@@ -65,6 +79,7 @@
         "id": "fedramp-responsibilities",
         "output": "responsibilities/{FRR}.md",
         "outputMode": "documents",
+        "status": "stable",
         "definitionsHref": "../definitions/",
         "rulesHref": "../",
         "emptyBehavior": "skip",
@@ -82,6 +97,7 @@
         "id": "agency-specific-rules",
         "output": "agencies/rules/{FRR}.md",
         "outputMode": "documents",
+        "status": "placeholder",
         "definitionsHref": "../../definitions/",
         "rulesHref": "../../",
         "emptyBehavior": "skip",
@@ -99,6 +115,7 @@
         "id": "provider-specific-initial-rules-20x",
         "output": "providers/20x/rules/{FRR}.md",
         "outputMode": "documents",
+        "status": "stable",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../../../",
         "emptyBehavior": "skip",
@@ -116,6 +133,7 @@
         "id": "provider-specific-initial-rules-rev5",
         "output": "providers/rev5/rules/{FRR}.md",
         "outputMode": "documents",
+        "status": "placeholder",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../../../",
         "emptyBehavior": "skip",
@@ -133,6 +151,7 @@
         "id": "assessor-specific-initial-rules-20x",
         "output": "assessors/20x/rules/{FRR}.md",
         "outputMode": "documents",
+        "status": "placeholder",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../../../",
         "emptyBehavior": "skip",
@@ -150,6 +169,7 @@
         "id": "assessor-specific-initial-rules-rev5",
         "output": "assessors/rev5/rules/{FRR}.md",
         "outputMode": "documents",
+        "status": "placeholder",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../../../",
         "emptyBehavior": "skip",
@@ -167,6 +187,8 @@
         "id": "assessor-recognition",
         "output": "assessors/recognition/rules/{FRR}.md",
         "outputMode": "documents",
+        "status": "placeholder",
+
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../",
         "emptyBehavior": "skip",
@@ -184,6 +206,8 @@
         "id": "advisors-marketplace",
         "output": "advisors/rules/{FRR}.md",
         "outputMode": "documents",
+        "status": "placeholder",
+
         "definitionsHref": "../../definitions/",
         "rulesHref": "../",
         "emptyBehavior": "skip",

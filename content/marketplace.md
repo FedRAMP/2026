@@ -1,3 +1,3 @@
-# The FedRAMP Marketplace
+<span class="picto">:lucide-person-standing:{ .person } :lucide-circle-slash:{ .empty }</span>
 
-!!! failure "This page is incomplete."
+# The FedRAMP Marketplace

@@ -1,10 +1,12 @@
+<span class="picto">:lucide-person-standing:{ .person } :lucide-book-open-check:{ .stable }</span>
+
 # FedRAMP Authorization Act on OMB
 
 !!! abstract "OMB Memorandum M-24-15"
 
     The guidance required by this section is published as OMB Memorandum [M-24-15](../m-24-15/index.md).
 
-## **Sec. 3614. Roles and responsibilities of the Office of Management and Budget**
+## Sec. 3614. Roles and responsibilities of the Office of Management and Budget
 
 The Director **shall**–
 

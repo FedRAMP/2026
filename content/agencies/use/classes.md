@@ -1,3 +1,4 @@
+<span class="picto">:lucide-person-standing:{ .person } :lucide-circle-slash:{ .empty }</span>
+
 # FedRAMP Certification Classes
 
-!!! failure "This page is incomplete."

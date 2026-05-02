@@ -28,6 +28,8 @@ let buildQueued = false;
 let buildTimer: ReturnType<typeof setTimeout> | null = null;
 let pendingDeploy = false;
 let queuedDeploy = false;
+let devReloadTarget: string | null = null;
+const PREVIEW_RELOAD_DELAY_MS = 200;
 
 async function runPipeline(reason: string, shouldDeploy: boolean): Promise<void> {
   if (isBuilding) {
@@ -47,6 +49,7 @@ async function runPipeline(reason: string, shouldDeploy: boolean): Promise<void>
 
     const summary = await buildMarkdown();
     console.log(`[dev] generated ${summary.artifactCount} markdown files`);
+    await signalPreviewReload();
   } catch (error) {
     console.error("[dev] site input build failed");
     console.error(error);
@@ -78,6 +81,21 @@ function schedulePipeline(reason: string, shouldDeploy = false): void {
 }
 
 let currentWatchDebounceMs = 1000;
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function signalPreviewReload(): Promise<void> {
+  if (!devReloadTarget || !fs.existsSync(devReloadTarget)) {
+    return;
+  }
+
+  await delay(PREVIEW_RELOAD_DELAY_MS);
+
+  const now = new Date();
+  fs.utimesSync(devReloadTarget, now, now);
+}
 
 function contentSnapshotFor(
   contentDir: string,
@@ -192,6 +210,7 @@ async function main(): Promise<void> {
   const partialsDir = resolveToolPath(config.paths.partials);
   const rulesFile = resolveToolPath(config.paths.rulesFile);
   const zensicalConfig = resolveToolPath(config.paths.zensicalConfig);
+  devReloadTarget = path.join(resolveToolPath(config.paths.src), "index.md");
 
   await runPipeline("initial build", true);
 

@@ -1,8 +1,10 @@
+<span class="picto">:lucide-person-standing:{ .person } :lucide-book-open-check:{ .stable }</span>
+
 # M-24-15 Section VII. Roles and Responsibilities
 
 This section details the responsibilities and interactions of key Government stakeholders that make up or interact with FedRAMP. These stakeholders include GSA, the FedRAMP Board, the FedRAMP Technical Advisory Group, NIST, CISA, and Federal agencies. The roles and responsibilities below are intended to identify many of the critical directives of this policy and applicable statutes.
 
-## **a. The General Services Administration**
+## a. The General Services Administration
 
 GSA resources, administers, and operates the FedRAMP PMO, and is responsible for the successful implementation of FedRAMP.[^31]
 
@@ -46,7 +48,7 @@ In operating FedRAMP, GSA will fulfill a variety of responsibilities, including:
 
 
 
-## **b. The FedRAMP Board**
+## b. The FedRAMP Board
 
 The FedRAMP Board consists of up to seven senior officials or experts from agencies that are appointed by OMB in consultation with GSA.[^34] The Board must include at least one representative from each of GSA, DHS, and the Department of Defense, and will include representation from other agencies as determined by OMB. The FedRAMP Board members must possess technical expertise in cloud computing, cybersecurity, privacy, risk management, and other competencies identified by OMB, in consultation with GSA.[^35] OMB may elect to adjust the board membership over time, and the membership will be documented in the FedRAMP Board Charter maintained by GSA. OMB, through the Federal CIO, will participate in FedRAMP Board meetings to provide oversight and guidance, and the Office of the National Cyber Director may attend Board meetings as appropriate to assist in the coordination of FedRAMP activities with national cyber policy and strategy.
 
@@ -74,7 +76,7 @@ The following responsibilities of the Board have been established by or pursuant
 
 As agreed by OMB and GSA, the Board will also provide input to GSA regarding the establishment of metrics reflecting the time and quality of the assessments necessary for completion of a FedRAMP authorization.
 
-## **c. Technical Advisory Group**
+## c. Technical Advisory Group
 
 OMB and GSA will establish a Technical Advisory Group (TAG) to provide additional subject matter expertise to FedRAMP. The FedRAMP TAG will consist of a team of Federal practitioners not directly associated with the FedRAMP program that will provide advice and insights to FedRAMP on an as-needed basis. The TAG is not a governance body and only provides technical advice on pre-decisional information and situations, making it distinct from the FSCAC or the FedRAMP Board.
 
@@ -88,7 +90,7 @@ The TAG will:
 
 3. Advise on other issues as requested by the FedRAMP Director or the FedRAMP Board.
 
-## **d. Agencies**
+## d. Agencies
 
 To further strengthen the FedRAMP program, each agency must:
 
@@ -112,7 +114,7 @@ To further strengthen the FedRAMP program, each agency must:
 
 10. Regularly review continuous monitoring materials provided by CSPs, and provide timely and actionable feedback as necessary to manage risk to the Government.
 
-## **e. Department of Commerce**
+## e. Department of Commerce
 
 NIST, within the Department of Commerce, consistent with existing authorities, is responsible for developing and issuing standards and guidelines for the security and privacy of information in Federal information systems. In doing so, NIST has an essential role in the FedRAMP process.
 

@@ -1,3 +1,5 @@
+<span class="picto">:lucide-person-standing:{ .person } :lucide-book-open-check:{ .stable }</span>
+
 # FedRAMP in United States Law
 
 !!! abstract "The Statutory Establishment of FedRAMP"
@@ -14,13 +16,13 @@
 
 ---
 
-## **SEC. 5921. FEDRAMP AUTHORIZATION ACT**
+## SEC. 5921. FEDRAMP AUTHORIZATION ACT
 
-### **(a) Short Title**
+### (a) Short Title
 
 This section may be cited as the FedRAMP Authorization Act.
 
-### **(b) Amendment**
+### (b) Amendment
 
 Chapter 36 of title 44, United States Code, is amended by adding at the end the
 following:
@@ -49,7 +51,7 @@ following:
 
 ---
 
-### **\(c) Technical and Conforming Amendment**
+### \(c) Technical and Conforming Amendment
 
 The table of sections for chapter 36 of title 44, United States Code, is amended
 by adding at the end the following new items:
@@ -74,21 +76,21 @@ by adding at the end the following new items:
 
 3616. Federal Secure Cloud Advisory Committee.
 
-### **(d) Sunset**
+### (d) Sunset
 
-#### **(1) In general**
+#### (1) In general
 
 Effective on the date that is 5 years after the date of enactment of this Act,
 chapter 36 of title 44, United States Code, is amended by striking sections 3607
 through 3616.
 
-#### **(2) Conforming amendment**
+#### (2) Conforming amendment
 
 Effective on the date that is 5 years after the date of enactment of this Act,
 the table of sections for chapter 36 of title 44, United States Code, is amended
 by striking the items relating to sections 3607 through 3616.
 
-### **(e) Rule of Construction**
+### (e) Rule of Construction
 
 Nothing in this section or any amendment made by this section shall be construed
 as altering or impairing the authorities of the Director of the Office of

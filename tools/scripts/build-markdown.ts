@@ -9,6 +9,8 @@ import {
   toPosixPath,
   type DefinitionDocumentMappingConfig,
   type DeadlineDocumentMappingConfig,
+  type GeneratedDocumentSource,
+  type GeneratedDocumentStatus,
   type KsiDocumentMappingConfig,
   type RuleDocumentMappingConfig,
   type RuleType,
@@ -281,6 +283,7 @@ interface DeadlineTableViewModel {
 
 interface DocumentViewModel {
   title: string;
+  statusSpan?: string;
   tags: string[];
   effectiveEntries: EffectiveEntryViewModel[];
   isDefinitionDocument: boolean;
@@ -1197,6 +1200,7 @@ function buildDocumentContext(
 ): DocumentViewModel {
   return {
     title,
+    statusSpan: options.statusSpan,
     tags: options.tags ?? [],
     effectiveEntries: options.effectiveEntries ?? [],
     isDefinitionDocument: options.isDefinitionDocument ?? false,
@@ -1209,6 +1213,25 @@ function buildDocumentContext(
     indicators: options.indicators ?? [],
     deadlineTables: options.deadlineTables ?? [],
   };
+}
+
+function pictographSpan(
+  config: ToolConfig,
+  status: GeneratedDocumentStatus,
+  source: GeneratedDocumentSource = "machine",
+): string {
+  const sourcePictograph = config.pictographs.source[source];
+  const statusPictograph = config.pictographs.status[status];
+
+  if (!sourcePictograph) {
+    throw new Error(`Unsupported generated document pictograph source: ${source}`);
+  }
+
+  if (!statusPictograph) {
+    throw new Error(`Unsupported generated document status: ${status}`);
+  }
+
+  return `<span class="picto">${sourcePictograph} ${statusPictograph}</span>`;
 }
 
 function renderRuleDocumentOutput(
@@ -1392,6 +1415,7 @@ function collectDefinitionDocumentArtifact(
     title,
     documentType: "FRD",
     context: buildDocumentContext(title, {
+      statusSpan: pictographSpan(config, mapping.status),
       tags: versionTags(definitionDocumentTypes(mapping)),
       effectiveEntries,
       isDefinitionDocument: true,
@@ -1414,6 +1438,7 @@ function collectLegacyDefinitionsArtifact(
     title: mapping.title,
     output: mapping.output,
     template: mapping.template,
+    status: "stable",
     source: {
       collection: "FRD",
       types: ["20x", "rev5"],
@@ -1530,6 +1555,7 @@ function collectKsiDocumentArtifacts(
         title,
         documentType: "KSI",
         context: buildDocumentContext(title, {
+          statusSpan: pictographSpan(config, mapping.status),
           tags: versionTags(["20x"]),
           isKsiDocument: true,
           themeParagraphs: splitParagraphs(theme.theme),
@@ -1586,6 +1612,7 @@ function collectDeadlineDocumentArtifactsForMapping(
         title,
         documentType: "DEADLINES",
         context: buildDocumentContext(title, {
+          statusSpan: pictographSpan(config, mapping.status),
           tags: versionTags([version]),
           isDeadlineDocument: true,
           deadlineTables,
@@ -1643,6 +1670,7 @@ function collectSingleRuleDocumentArtifact(
     title,
     documentType: "FRR",
     context: buildDocumentContext(title, {
+      statusSpan: pictographSpan(config, mapping.status),
       tags: versionTags(mapping.source.types),
       effectiveEntries,
       isRequirementsDocument: true,
@@ -1685,6 +1713,7 @@ function collectDocumentRuleDocumentArtifacts(
         title,
         documentType: "FRR",
         context: buildDocumentContext(title, {
+          statusSpan: pictographSpan(config, mapping.status),
           tags: versionTags(mapping.source.types),
           effectiveEntries,
           isRequirementsDocument: true,

@@ -1,3 +1,5 @@
+<span class="picto">:lucide-person-standing:{ .person } :lucide-book-open-check:{ .stable }</span>
+
 # FedRAMP Certification
 
 FedRAMP Certification, formerly referred to as “FedRAMP authorization,” is a certification by the Federal Risk and Authorization Management Program (FedRAMP) in the General Services Administration (GSA) that a cloud computing product or service has completed a standardized security assessment and review that is adequate for use by federal agencies in making initial and ongoing authorization to operate decisions for use of that cloud service.

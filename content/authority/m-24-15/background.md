@@ -1,3 +1,5 @@
+<span class="picto">:lucide-person-standing:{ .person } :lucide-book-open-check:{ .stable }</span>
+
 # M-24-15 Section I. Background
 
 Since its establishment in 2011, FedRAMP has operated by partnering with

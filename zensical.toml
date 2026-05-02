@@ -2,8 +2,9 @@
 [project]
 nav = [
   { "Overview" = [
-    { "CR26 Overview" = "index.md" },
-    { "Certification" = "certification.md" },
+    { "Overview" = "index.md" },
+    { "CR26 Timeline" = "timeline.md" },
+    { "FedRAMP Certification" = "certification.md" },
     { "Shared Responsibility Model" = "shared-responsibilities.md" },
     { "Changelog" = "changelog.md" },
     { "Source Data" = "sources.md" },
@@ -234,15 +235,15 @@ nav = [
   { "--> return to FedRAMP.gov" = "/" },
 ]
 
-site_name = "FedRAMP Consolidated Rules for 2026"
-site_description = "A description."
+site_name = "FedRAMP Consolidated Rules for 2026 Public Preview"
+site_description = "This site contains a Public Preview of FedRAMP's upcoming Consolidated Rules for 2026, under active development. It should not be used after July 1, 2026."
 site_author = "pete@fedramp.gov"
 docs_dir = "src/"
 site_dir = "html/"
 site_url = "https://fedramp.gov/preview/2026/"
 repo_url = "https://github.com/fedramp/2026"
 repo_name = "FedRAMP/2026"
-extra_css = ["stylesheets/custom.css"]
+extra_css = ["stylesheets/custom.css","stylesheets/extra.css"]
 copyright = "fedramp.gov"
 
 extra_javascript = [

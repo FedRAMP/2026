@@ -1,3 +1,5 @@
+<span class="picto">:lucide-person-standing:{ .person } :lucide-pencil:{ .placeholder }</span>
+
 # The FedRAMP Agency Liaisons Program
 
 !!! warning "This contains placeholder content that will change during editing in the Preview Phase."

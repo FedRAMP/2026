@@ -1,6 +1,8 @@
+<span class="picto">:lucide-person-standing:{ .person } :lucide-book-open-check:{ .stable }</span>
+
 # FedRAMP Authorization Act on GSA
 
-## **Sec. 3608. Federal Risk and Authorization Management Program**
+## Sec. 3608. Federal Risk and Authorization Management Program
 
 There is established within the General Services Administration the Federal Risk and Authorization Management Program. The Administrator, subject to section 3614, **shall** establish a Government-wide program that provides a standardized, reusable approach to security assessment and authorization for cloud computing products and services that process unclassified information used by agencies.
 
@@ -18,9 +20,9 @@ There is established within the General Services Administration the Federal Risk
       (D) Government-owned contractor-operated facilities, including laboratories engaged in national defense research and production activities;
       </ul>
 
-## **Sec. 3609. Roles and responsibilities of the General Services Administration**
+## Sec. 3609. Roles and responsibilities of the General Services Administration
 
-### **(a) Roles and Responsibilities**
+### (a) Roles and Responsibilities
 
 The Administrator **shall:**
 
@@ -56,7 +58,7 @@ The Administrator **shall:**
 
 13. take such other actions as the Administrator may determine necessary to carry out FedRAMP.
 
-### **(b) Website**
+### (b) Website
 
 1. In general:
 
@@ -66,7 +68,7 @@ The Administrator **shall:**
 
     The Administrator **shall** develop and make publicly available on the website described in paragraph (1) the criteria and process for prioritizing and selecting cloud computing products and services that will receive a FedRAMP authorization, in consultation with the FedRAMP Board and the Chief Information Officers Council.
 
-### **\(c) Evaluation of Automation Procedures**
+### \(c) Evaluation of Automation Procedures
 
 1. In general:
 
@@ -76,7 +78,7 @@ The Administrator **shall:**
 
     Not later than 1 year[^1] after the date of enactment of this section, and updated regularly thereafter, the Administrator **shall** establish a means for the automation of security assessments and reviews.
 
-### **(d) Metrics for Authorization**
+### (d) Metrics for Authorization
 
 The Administrator **shall** establish annual metrics regarding the time and quality of the assessments necessary for completion of a FedRAMP authorization process in a manner that can be consistently tracked over time in conjunction with the periodic testing and evaluation process pursuant to section 3554 in a manner that minimizes the agency reporting burden.
 

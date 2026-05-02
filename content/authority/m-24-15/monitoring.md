@@ -1,3 +1,5 @@
+<span class="picto">:lucide-person-standing:{ .person } :lucide-book-open-check:{ .stable }</span>
+
 # M-24-15 Section VI. Continuous Monitoring
 
 FedRAMP's continuous monitoring processes should incentivize security through

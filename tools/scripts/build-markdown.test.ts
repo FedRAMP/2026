@@ -22,7 +22,12 @@ import {
   OUTPUT_DIR,
   RULES_FILE,
 } from "./build-markdown";
-import { loadToolConfig, REPO_ROOT, resolveToolPath } from "./config";
+import {
+  loadToolConfig,
+  REPO_ROOT,
+  resolveToolPath,
+  type ToolConfig,
+} from "./config";
 import { deploy } from "./deploy";
 
 const execFileAsync = promisify(execFile);
@@ -31,16 +36,24 @@ const RULES_REMOTE_BRANCH = "main";
 const RULES_SCHEMA_FILE = resolveToolPath(
   "rules/schemas/fedramp-consolidated-rules.schema.json",
 );
+const STABLE_STATUS_SPAN =
+  '<span class="picto">:lucide-computer:{ .machine } :lucide-book-open-check:{ .stable }</span>';
+const PLACEHOLDER_STATUS_SPAN =
+  '<span class="picto">:lucide-computer:{ .machine } :lucide-pencil:{ .placeholder }</span>';
 const WARNING_ORANGE = "\x1b[38;5;208m";
 const WARNING_RESET = "\x1b[0m";
 const WARNING_MARK = "⚠";
 const ERROR_RED = "\x1b[31m";
 const COLOR_RESET = "\x1b[0m";
 let unlinkedMarkdownWarningPaths: string[] = [];
+let boldMarkdownHeadingWarnings: string[] = [];
+let contentPictographWarnings: string[] = [];
 const humanReadableFailureSummaries: string[] = [];
 
 afterAll(() => {
   printUnlinkedMarkdownWarnings();
+  printBoldMarkdownHeadingWarnings();
+  printContentPictographWarnings();
   printHumanReadableFailureSummaries();
 });
 
@@ -57,6 +70,43 @@ function printUnlinkedMarkdownWarnings(): void {
       ...unlinkedMarkdownWarningPaths.map(
         (relativePath) =>
           `    ${WARNING_ORANGE}${WARNING_MARK} ${relativePath}${WARNING_RESET}`,
+      ),
+      "",
+    ].join("\n"),
+  );
+}
+
+function printBoldMarkdownHeadingWarnings(): void {
+  if (!boldMarkdownHeadingWarnings.length) {
+    return;
+  }
+
+  console.warn(
+    [
+      "",
+      `${WARNING_ORANGE}${WARNING_MARK} Markdown headings should not be wrapped in bold markers:${WARNING_RESET}`,
+      "",
+      ...boldMarkdownHeadingWarnings.map(
+        (location) =>
+          `    ${WARNING_ORANGE}${WARNING_MARK} ${location}${WARNING_RESET}`,
+      ),
+      "",
+    ].join("\n"),
+  );
+}
+
+function printContentPictographWarnings(): void {
+  if (!contentPictographWarnings.length) {
+    return;
+  }
+
+  console.warn(
+    [
+      "",
+      `${WARNING_ORANGE}${WARNING_MARK} Content markdown files should begin with one source pictograph and one status pictograph in a picto span:${WARNING_RESET}`,
+      "",
+      ...contentPictographWarnings.map(
+        (warning) => `    ${WARNING_ORANGE}${WARNING_MARK} ${warning}${WARNING_RESET}`,
       ),
       "",
     ].join("\n"),
@@ -213,9 +263,191 @@ function markdownPathsInZensicalConfig(source: string): string[] {
   );
 }
 
+async function findBoldMarkdownHeadingWarnings(root: string): Promise<string[]> {
+  const markdownPaths = (await listRelativeFiles(root))
+    .filter((relativePath) => relativePath.endsWith(".md"))
+    .sort();
+  const warnings: string[] = [];
+  const boldHeadingPattern = /^#{1,6}\s+\*\*.+\*\*\s*(?:#+\s*)?$/;
+
+  for (const relativePath of markdownPaths) {
+    const contents = await readFile(path.join(root, relativePath), "utf8");
+    const lines = contents.split(/\r?\n/);
+
+    lines.forEach((line, index) => {
+      if (boldHeadingPattern.test(line.trim())) {
+        warnings.push(`${relativePath}:${index + 1}: ${line.trim()}`);
+      }
+    });
+  }
+
+  return warnings;
+}
+
+function escapeRegExp(source: string): string {
+  return source.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function countOccurrences(source: string, needle: string): number {
+  return Array.from(source.matchAll(new RegExp(escapeRegExp(needle), "g")))
+    .length;
+}
+
+function findMarkdownBodyStart(
+  contents: string,
+): { line: string; lineNumber: number } | null {
+  const lines = contents.split(/\r?\n/);
+  let index = 0;
+
+  if (lines[0]?.trim() === "---") {
+    index = 1;
+    while (index < lines.length && lines[index]?.trim() !== "---") {
+      index++;
+    }
+
+    if (index < lines.length) {
+      index++;
+    }
+  }
+
+  while (index < lines.length && !lines[index]?.trim()) {
+    index++;
+  }
+
+  const line = lines[index];
+  if (line === undefined) {
+    return null;
+  }
+
+  return {
+    line,
+    lineNumber: index + 1,
+  };
+}
+
+function validatePictographSpan(
+  relativePath: string,
+  contents: string,
+  config: ToolConfig,
+): string | null {
+  const bodyStart = findMarkdownBodyStart(contents);
+  if (!bodyStart) {
+    return `${relativePath}: missing content`;
+  }
+
+  const spanMatch = bodyStart.line
+    .trim()
+    .match(/^<span class="picto">(.+)<\/span>$/);
+  if (!spanMatch?.[1]) {
+    return `${relativePath}:${bodyStart.lineNumber}: missing picto span at beginning`;
+  }
+
+  const innerSpan = spanMatch[1].trim();
+  const sourcePictographs = Object.values(config.pictographs.source);
+  const statusPictographs = Object.values(config.pictographs.status);
+  const matchedSourcePictographs = sourcePictographs.filter(
+    (pictograph) => countOccurrences(innerSpan, pictograph) === 1,
+  );
+  const matchedStatusPictographs = statusPictographs.filter(
+    (pictograph) => countOccurrences(innerSpan, pictograph) === 1,
+  );
+
+  if (matchedSourcePictographs.length !== 1) {
+    return `${relativePath}:${bodyStart.lineNumber}: expected exactly one source pictograph`;
+  }
+
+  if (matchedStatusPictographs.length !== 1) {
+    return `${relativePath}:${bodyStart.lineNumber}: expected exactly one status pictograph`;
+  }
+
+  const matchedSourcePictograph = matchedSourcePictographs[0];
+  const matchedStatusPictograph = matchedStatusPictographs[0];
+  if (!matchedSourcePictograph || !matchedStatusPictograph) {
+    return `${relativePath}:${bodyStart.lineNumber}: invalid picto span`;
+  }
+
+  const remaining = innerSpan
+    .replace(matchedSourcePictograph, "")
+    .replace(matchedStatusPictograph, "")
+    .trim();
+  if (remaining.length) {
+    return `${relativePath}:${bodyStart.lineNumber}: picto span contains extra content`;
+  }
+
+  return null;
+}
+
+async function findContentPictographWarnings(
+  root: string,
+  config: ToolConfig,
+): Promise<string[]> {
+  const markdownPaths = (await listRelativeFiles(root))
+    .filter((relativePath) => relativePath.endsWith(".md"))
+    .sort();
+  const warnings: string[] = [];
+
+  for (const relativePath of markdownPaths) {
+    const contents = await readFile(path.join(root, relativePath), "utf8");
+    const warning = validatePictographSpan(relativePath, contents, config);
+    if (warning) {
+      warnings.push(warning);
+    }
+  }
+
+  return warnings;
+}
+
+function generatedMappingStatusFailures(config: ToolConfig): string[] {
+  const configuredStatuses = new Set(Object.keys(config.pictographs.status));
+  const generatedMappingGroups: Array<
+    [string, Array<{ id?: unknown; status?: unknown }>]
+  > = [
+    ["definitionDocuments", config.generated.definitionDocuments ?? []],
+    ["ksiDocuments", config.generated.ksiDocuments ?? []],
+    ["deadlineDocuments", config.generated.deadlineDocuments ?? []],
+    ["ruleDocuments", config.generated.ruleDocuments],
+  ];
+  const failures: string[] = [];
+
+  for (const [groupName, mappings] of generatedMappingGroups) {
+    mappings.forEach((mapping, index) => {
+      const mappingLabel =
+        typeof mapping.id === "string" ? mapping.id : "unknown mapping";
+
+      if (typeof mapping.status !== "string") {
+        failures.push(
+          `generated.${groupName}[${index}] (${mappingLabel}) is missing status`,
+        );
+        return;
+      }
+
+      if (!configuredStatuses.has(mapping.status)) {
+        failures.push(
+          `generated.${groupName}[${index}] (${mappingLabel}) uses unknown status "${mapping.status}"`,
+        );
+      }
+    });
+  }
+
+  return failures;
+}
+
 describe("build-markdown", () => {
   test("the consolidated rules source exists", async () => {
     await access(RULES_FILE);
+  });
+
+  test("generated config mappings declare known statuses", async () => {
+    const config = await loadToolConfig();
+    const failures = generatedMappingStatusFailures(config);
+    const statusFailureSummary = [
+      "Generated markdown mappings in tools/config.json must declare a status from pictographs.status.",
+      ...failures,
+    ].join("\n");
+
+    expectWithFailureSummary(statusFailureSummary, () => {
+      expect(failures, statusFailureSummary).toEqual([]);
+    });
   });
 
   test("the consolidated rules source matches the bundled schema", async () => {
@@ -312,7 +544,7 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(definitionsContents).toStartWith(
-      "---\ntags:\n  - 20x\n  - Rev5\n---\n\n# FedRAMP Definitions",
+      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# FedRAMP Definitions`,
     );
     expect(definitionsContents).not.toContain(
       '??? abstract "Background & Authority"',
@@ -353,7 +585,7 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(ksiChangeManagementContents).toStartWith(
-      "---\ntags:\n  - 20x\n---\n\n# Change Management",
+      `---\ntags:\n  - 20x\n---\n\n${STABLE_STATUS_SPAN}\n\n# Change Management`,
     );
     expect(ksiChangeManagementContents).toContain("# Change Management");
     expect(ksiChangeManagementContents).not.toContain('!!! info ""');
@@ -374,7 +606,7 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(deadlines20xContents).toStartWith(
-      "---\ntags:\n  - 20x\n---\n\n# 20x Deadlines",
+      `---\ntags:\n  - 20x\n---\n\n${STABLE_STATUS_SPAN}\n\n# 20x Deadlines`,
     );
     expect(deadlines20xContents).toContain(
       "| FRC | [FedRAMP Certification](../../20x/rules/fedramp-certification.md) | 2026-05-04 | 2027-05-04 | 2027-05-04 |",
@@ -395,7 +627,7 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(deadlinesRev5Contents).toStartWith(
-      "---\ntags:\n  - Rev5\n---\n\n# Rev5 Deadlines",
+      `---\ntags:\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# Rev5 Deadlines`,
     );
     expect(deadlinesRev5Contents).toContain(
       "| FRC | [FedRAMP Certification](../../rev5/rules/fedramp-certification.md) | 2027-01-01 | 2027-01-01 | 2027-01-01 |",
@@ -422,7 +654,7 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(provider20xContents).toStartWith(
-      "---\ntags:\n  - 20x\n---\n\n# FedRAMP Certification",
+      `---\ntags:\n  - 20x\n---\n\n${STABLE_STATUS_SPAN}\n\n# FedRAMP Certification`,
     );
     expect(provider20xContents).toContain("# FedRAMP Certification");
     expect(provider20xContents).toContain("FRC-CSO-CDS");
@@ -441,7 +673,7 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(providerRev5Contents).toStartWith(
-      "---\ntags:\n  - Rev5\n---\n\n# FedRAMP Certification",
+      `---\ntags:\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# FedRAMP Certification`,
     );
     expect(providerRev5Contents).toContain("FRC-CSL-CDE");
     expect(providerRev5Contents).not.toContain("FRC-CSX-SUM");
@@ -451,7 +683,7 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(fedrampFsiContents).toStartWith(
-      "---\ntags:\n  - 20x\n  - Rev5\n---\n\n# FedRAMP Security Inbox",
+      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# FedRAMP Security Inbox`,
     );
     expect(fedrampFsiContents).toContain("# FedRAMP Security Inbox");
     expect(fedrampFsiContents).not.toContain("Effective Date(s)");
@@ -483,6 +715,9 @@ describe("build-markdown", () => {
         "collaborative-continuous-monitoring.md",
       ),
       "utf8",
+    );
+    expect(agencyCcmContents).toStartWith(
+      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Collaborative Continuous Monitoring`,
     );
     expect(agencyCcmContents).toContain("# Collaborative Continuous Monitoring");
     expect(agencyCcmContents).toContain("## Agency Guidance");
@@ -530,6 +765,7 @@ describe("build-markdown", () => {
               id: "custom-definitions",
               title: "Custom FedRAMP Definitions",
               output: "reference/fedramp-definitions.md",
+              status: "stable",
               includeEffectiveDates: false,
               source: {
                 collection: "FRD",
@@ -592,6 +828,30 @@ describe("build-markdown", () => {
     } finally {
       await rm(tempDir, { recursive: true, force: true });
     }
+  });
+});
+
+describe("content quality", () => {
+  test("warns when content markdown is missing a valid pictograph span", async () => {
+    const config = await loadToolConfig();
+    const contentPath = resolveToolPath(config.paths.content);
+
+    contentPictographWarnings = await findContentPictographWarnings(
+      contentPath,
+      config,
+    );
+
+    expect(Array.isArray(contentPictographWarnings)).toBe(true);
+  });
+
+  test("warns when markdown headings are wrapped in bold markers", async () => {
+    const config = await loadToolConfig();
+    const contentPath = resolveToolPath(config.paths.content);
+
+    boldMarkdownHeadingWarnings =
+      await findBoldMarkdownHeadingWarnings(contentPath);
+
+    expect(Array.isArray(boldMarkdownHeadingWarnings)).toBe(true);
   });
 });
 

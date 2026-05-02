@@ -1,3 +1,5 @@
+<span class="picto">:lucide-person-standing:{ .person } :lucide-book-open-check:{ .stable }</span>
+
 # M-24-15 Section IX. Implementation
 
 For two years, FedRAMP will submit an annual plan in the second quarter of FY 2025 and FY 2026, approved by the GSA Administrator, to OMB, detailing program activities, including staffing plans and budget information, for implementing the requirements in this memorandum. The plan will include a timeline and strategy to bring any pending authorizations or existing FedRAMP initiatives into conformance with the Act and this memorandum.

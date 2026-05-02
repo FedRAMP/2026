@@ -1,3 +1,5 @@
+<span class="picto">:lucide-person-standing:{ .person } :lucide-book-open-check:{ .stable }</span>
+
 # M-24-15 Section V. Automation and Efficiency
 
 As part of a technology-forward program optimized for efficiency and

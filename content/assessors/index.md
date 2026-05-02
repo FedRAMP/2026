@@ -3,6 +3,8 @@ title: "Assessors"
 description: "A description of Assessors."
 icon: material/eye-check-outline
 ---
+<span class="picto">:lucide-person-standing:{ .person } :lucide-pencil:{ .placeholder }</span>
+
 # Independent Assessment Services
 
 FedRAMP relies on independent assessment services (also known as independent assessors, formerly referred to as Third-Party Assessment Organizations or 3PAOs) to scale initial assessment capabilities based on industry need instead of directly operating an end-to-end assessment organization within FedRAMP itself. Relying on third-parties that are contracted by cloud service providers reduces cost for the tax payer by placing the burden for initial assessment on the cloud service provider.
