@@ -1,12 +1,21 @@
+---
+description: ""
+purpose: ""
+google_doc: ""
+picto:
+  source: person
+  status: stable
+---
+
 # FedRAMP Authorization Act on the Board
 
-## **Sec. 3610. FedRAMP Board**
+## Sec. 3610. FedRAMP Board
 
-### **(a) Establishment**
+### (a) Establishment
 
 There is established a FedRAMP Board to provide input and recommendations to the Administrator regarding the requirements and guidelines for, and the prioritization of, security assessments of cloud computing products and services.
 
-### **(b) Membership**
+### (b) Membership
 
 The FedRAMP Board **shall** consist of not more than 7 senior officials or experts from agencies appointed by the Director, in consultation with the Administrator, from each of the following:
 
@@ -18,7 +27,7 @@ The FedRAMP Board **shall** consist of not more than 7 senior officials or exper
 
 4. Such other agencies as determined by the Director, in consultation with the Administrator.
 
-### **\(c) Qualifications**
+### \(c) Qualifications
 
 Members of the FedRAMP Board appointed under subsection (b) **shall** have technical expertise in domains relevant to FedRAMP, such as:
 
@@ -32,7 +41,7 @@ Members of the FedRAMP Board appointed under subsection (b) **shall** have techn
 
 5. other competencies identified by the Director to support the secure authorization of cloud services and products.
 
-### **(d) Duties**
+### (d) Duties
 
 The FedRAMP Board **shall**–
 
@@ -46,7 +55,7 @@ The FedRAMP Board **shall**–
 
 5. perform such other roles and responsibilities as the Director may assign, with concurrence from the Administrator.
 
-### **(e) Determinations of Demand for Cloud Computing Products and Services**
+### (e) Determinations of Demand for Cloud Computing Products and Services
 
 The FedRAMP Board may consult with the Chief Information Officers Council to establish a process, which may be made available on the website maintained under section 3609(b), for prioritizing and accepting the cloud computing products and services to be granted a FedRAMP authorization.
 

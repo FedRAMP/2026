@@ -9,6 +9,8 @@ import {
   toPosixPath,
   type DefinitionDocumentMappingConfig,
   type DeadlineDocumentMappingConfig,
+  type GeneratedDocumentSource,
+  type GeneratedDocumentStatus,
   type KsiDocumentMappingConfig,
   type RuleDocumentMappingConfig,
   type RuleType,
@@ -281,6 +283,7 @@ interface DeadlineTableViewModel {
 
 interface DocumentViewModel {
   title: string;
+  statusSpan?: string;
   tags: string[];
   effectiveEntries: EffectiveEntryViewModel[];
   isDefinitionDocument: boolean;
@@ -974,28 +977,77 @@ function sourceDocumentKeys(
   mapping: RuleDocumentMappingConfig,
 ): string[] {
   const { document, documents } = mapping.source;
+  let selectedDocumentKeys: string[];
 
   if (documents === "ALL") {
-    return Object.keys(rules.FRR);
-  }
-
-  if (Array.isArray(documents)) {
+    selectedDocumentKeys = Object.keys(rules.FRR);
+  } else if (Array.isArray(documents)) {
     if (!documents.length) {
       throw new Error(
         `Rule document mapping "${mapping.id}" must specify at least one source document.`,
       );
     }
 
-    return documents;
+    selectedDocumentKeys = documents;
+  } else if (document) {
+    selectedDocumentKeys = [document];
+  } else {
+    throw new Error(
+      `Rule document mapping "${mapping.id}" must specify source.document, source.documents, or source.documents: "ALL".`,
+    );
   }
 
-  if (document) {
-    return [document];
+  const ignoredDocumentKeys = normalizeIgnoredDocumentKeys(mapping);
+  if (!ignoredDocumentKeys.length) {
+    return selectedDocumentKeys;
   }
 
-  throw new Error(
-    `Rule document mapping "${mapping.id}" must specify source.document, source.documents, or source.documents: "ALL".`,
+  for (const ignoredDocumentKey of ignoredDocumentKeys) {
+    if (!rules.FRR[ignoredDocumentKey]) {
+      throw new Error(`Unknown FRR document: ${ignoredDocumentKey}`);
+    }
+  }
+
+  const filteredDocumentKeys = selectedDocumentKeys.filter(
+    (documentKey) => !ignoredDocumentKeys.includes(documentKey),
   );
+  if (!filteredDocumentKeys.length) {
+    throw new Error(
+      `Rule document mapping "${mapping.id}" ignored every selected FRR document.`,
+    );
+  }
+
+  return filteredDocumentKeys;
+}
+
+function normalizeIgnoredDocumentKeys(
+  mapping: RuleDocumentMappingConfig,
+): string[] {
+  const { ignoreDocuments } = mapping.source as { ignoreDocuments?: unknown };
+
+  if (Array.isArray(ignoreDocuments)) {
+    if (!ignoreDocuments.length) {
+      throw new Error(
+        `Rule document mapping "${mapping.id}" must specify at least one ignored source document when source.ignoreDocuments is present.`,
+      );
+    }
+
+    if (!ignoreDocuments.every((documentKey) => typeof documentKey === "string")) {
+      throw new Error(
+        `Rule document mapping "${mapping.id}" must specify source.ignoreDocuments as an array of FRR document keys.`,
+      );
+    }
+
+    return ignoreDocuments;
+  }
+
+  if (ignoreDocuments !== undefined) {
+    throw new Error(
+      `Rule document mapping "${mapping.id}" must specify source.ignoreDocuments as an array of FRR document keys.`,
+    );
+  }
+
+  return [];
 }
 
 interface SourceDocument {
@@ -1197,6 +1249,7 @@ function buildDocumentContext(
 ): DocumentViewModel {
   return {
     title,
+    statusSpan: options.statusSpan,
     tags: options.tags ?? [],
     effectiveEntries: options.effectiveEntries ?? [],
     isDefinitionDocument: options.isDefinitionDocument ?? false,
@@ -1209,6 +1262,306 @@ function buildDocumentContext(
     indicators: options.indicators ?? [],
     deadlineTables: options.deadlineTables ?? [],
   };
+}
+
+function pictographSpan(
+  config: ToolConfig,
+  status: GeneratedDocumentStatus,
+  source: GeneratedDocumentSource = "machine",
+): string {
+  const sourcePictograph = config.pictographs.source[source];
+  const statusPictograph = config.pictographs.status[status];
+  const sourceTooltip = config.pictographs.tooltips[source];
+  const statusTooltip = config.pictographs.tooltips[status];
+
+  if (!sourcePictograph) {
+    throw new Error(`Unsupported generated document pictograph source: ${source}`);
+  }
+
+  if (!statusPictograph) {
+    throw new Error(`Unsupported generated document status: ${status}`);
+  }
+
+  if (!sourceTooltip) {
+    throw new Error(`Missing generated document pictograph tooltip: ${source}`);
+  }
+
+  if (!statusTooltip) {
+    throw new Error(`Missing generated document status tooltip: ${status}`);
+  }
+
+  return `<span class="picto">${pictographWithTooltip(
+    sourcePictograph,
+    sourceTooltip,
+  )} ${pictographWithTooltip(statusPictograph, statusTooltip)}</span>`;
+}
+
+function pictographWithTooltip(pictograph: string, tooltip: string): string {
+  const match = pictograph.match(/^(.*)\{\s*([^}]*?)\s*\}$/);
+  if (!match?.[1] || !match[2]) {
+    throw new Error(`Pictograph is missing Markdown attributes: ${pictograph}`);
+  }
+
+  return `${match[1]}{ ${match[2]} title="${markdownAttributeValue(tooltip)}" }`;
+}
+
+function markdownAttributeValue(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function isGeneratedDocumentSource(
+  config: ToolConfig,
+  value: string | undefined,
+): value is GeneratedDocumentSource {
+  return Boolean(value && value in config.pictographs.source);
+}
+
+function isGeneratedDocumentStatus(
+  config: ToolConfig,
+  value: string | undefined,
+): value is GeneratedDocumentStatus {
+  return Boolean(value && value in config.pictographs.status);
+}
+
+function pictoFrontmatterValue(
+  frontmatterLines: string[],
+): { source?: string; status?: string } | null {
+  const pictoIndex = frontmatterLines.findIndex(
+    (line) => line.trim() === "picto:",
+  );
+  if (pictoIndex === -1) {
+    return null;
+  }
+
+  const value: { source?: string; status?: string } = {};
+  for (let index = pictoIndex + 1; index < frontmatterLines.length; index++) {
+    const line = frontmatterLines[index];
+    if (!line) {
+      continue;
+    }
+
+    if (!line.startsWith(" ")) {
+      break;
+    }
+
+    const sourceMatch = line.match(/^\s+source:\s*([A-Za-z0-9_-]+)\s*$/);
+    const statusMatch = line.match(/^\s+status:\s*([A-Za-z0-9_-]+)\s*$/);
+
+    if (sourceMatch?.[1]) {
+      value.source = sourceMatch[1];
+    }
+
+    if (statusMatch?.[1]) {
+      value.status = statusMatch[1];
+    }
+  }
+
+  return value;
+}
+
+function frontmatterScalarValue(
+  frontmatterLines: string[],
+  key: "description" | "purpose",
+): string | undefined {
+  const keyPattern = new RegExp(`^${key}:\\s*(.*)$`);
+  const keyIndex = frontmatterLines.findIndex((line) => keyPattern.test(line));
+  if (keyIndex === -1) {
+    return undefined;
+  }
+
+  const value = frontmatterLines[keyIndex]?.match(keyPattern)?.[1]?.trim() ?? "";
+  const blockScalarMatch = value.match(/^([>|])[-+]?$/);
+  if (blockScalarMatch?.[1]) {
+    const blockLines: string[] = [];
+    for (let index = keyIndex + 1; index < frontmatterLines.length; index++) {
+      const line = frontmatterLines[index];
+      if (!line) {
+        blockLines.push("");
+        continue;
+      }
+
+      if (!line.startsWith(" ")) {
+        break;
+      }
+
+      blockLines.push(line.trim());
+    }
+
+    const separator = blockScalarMatch[1] === ">" ? " " : "\n";
+    return meaningfulFrontmatterValue(blockLines.join(separator));
+  }
+
+  return meaningfulFrontmatterValue(value);
+}
+
+function meaningfulFrontmatterValue(value: string): string | undefined {
+  let normalized = value.trim();
+  const quotedValue = normalized.match(/^(['"])(.*)\1$/);
+  if (quotedValue?.[2] !== undefined) {
+    normalized = quotedValue[2].trim();
+  }
+
+  return normalized ? normalized : undefined;
+}
+
+function renderPageInfoAdmonition(
+  frontmatterLines: string[],
+): string[] {
+  const description = frontmatterScalarValue(frontmatterLines, "description");
+  const purpose = frontmatterScalarValue(frontmatterLines, "purpose");
+
+  if (!description && !purpose) {
+    return [];
+  }
+
+  const lines = ['??? info inline end "Page Info"', ""];
+  if (description) {
+    lines.push(`    **Description:** ${description.replace(/\s+/g, " ")}`);
+  }
+
+  if (description && purpose) {
+    lines.push("    ");
+  }
+
+  if (purpose) {
+    lines.push(`    **Purpose:** ${purpose.replace(/\s+/g, " ")}`);
+  }
+
+  return lines;
+}
+
+function stripLeadingPageInfoAdmonition(bodyLines: string[]): void {
+  if (bodyLines[0]?.trim() !== '??? info inline end "Page Info"') {
+    return;
+  }
+
+  bodyLines.shift();
+  while (bodyLines.length) {
+    const line = bodyLines[0];
+    if (line === "" || line?.startsWith(" ")) {
+      bodyLines.shift();
+      continue;
+    }
+
+    break;
+  }
+
+  while (bodyLines[0] === "") {
+    bodyLines.shift();
+  }
+}
+
+function renderContentPictographSpan(
+  relativePath: string,
+  contents: string,
+  config: ToolConfig,
+): string {
+  const lines = contents.split(/\r?\n/);
+  if (lines[0]?.trim() !== "---") {
+    return contents;
+  }
+
+  const frontmatterEndIndex = lines.findIndex(
+    (line, index) => index > 0 && line.trim() === "---",
+  );
+  if (frontmatterEndIndex === -1) {
+    return contents;
+  }
+
+  const frontmatterLines = lines.slice(1, frontmatterEndIndex);
+  const picto = pictoFrontmatterValue(frontmatterLines);
+  if (!picto) {
+    return contents;
+  }
+
+  if (!isGeneratedDocumentSource(config, picto.source)) {
+    throw new Error(
+      `content/${relativePath} has unsupported picto source: ${picto.source ?? "<missing>"}`,
+    );
+  }
+
+  if (!isGeneratedDocumentStatus(config, picto.status)) {
+    throw new Error(
+      `content/${relativePath} has unsupported picto status: ${picto.status ?? "<missing>"}`,
+    );
+  }
+
+  const bodyLines = lines.slice(frontmatterEndIndex + 1);
+  while (bodyLines[0] === "") {
+    bodyLines.shift();
+  }
+
+  stripLeadingPageInfoAdmonition(bodyLines);
+
+  if (/^<span class="picto">.+<\/span>\s*$/.test(bodyLines[0]?.trim() ?? "")) {
+    bodyLines.shift();
+    while (bodyLines[0] === "") {
+      bodyLines.shift();
+    }
+  }
+  stripLeadingPageInfoAdmonition(bodyLines);
+
+  const pageInfoAdmonition = renderPageInfoAdmonition(frontmatterLines);
+
+  return [
+    ...lines.slice(0, frontmatterEndIndex + 1),
+    "",
+    pictographSpan(config, picto.status, picto.source),
+    "",
+    ...pageInfoAdmonition,
+    ...(pageInfoAdmonition.length ? [""] : []),
+    ...bodyLines,
+  ].join("\n");
+}
+
+async function listMarkdownFiles(root: string): Promise<string[]> {
+  let entries;
+  try {
+    entries = await readdir(root, { withFileTypes: true });
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return [];
+    }
+
+    throw error;
+  }
+
+  const files = await Promise.all(
+    entries.map(async (entry) => {
+      const entryPath = path.join(root, entry.name);
+      if (entry.isDirectory()) {
+        const childFiles = await listMarkdownFiles(entryPath);
+        return childFiles.map((childFile) => path.join(entry.name, childFile));
+      }
+
+      if (entry.isFile() && entry.name.endsWith(".md")) {
+        return [entry.name];
+      }
+
+      return [];
+    }),
+  );
+
+  return files.flat().map(toPosixPath);
+}
+
+async function renderContentPictographs(config: ToolConfig): Promise<void> {
+  const srcPath = resolveToolPath(config.paths.src);
+  const markdownPaths = await listMarkdownFiles(srcPath);
+
+  for (const relativePath of markdownPaths) {
+    const markdownPath = path.join(srcPath, relativePath);
+    const contents = await readFile(markdownPath, "utf8");
+    const rendered = renderContentPictographSpan(relativePath, contents, config);
+
+    if (rendered !== contents) {
+      await writeFile(markdownPath, rendered, "utf8");
+    }
+  }
 }
 
 function renderRuleDocumentOutput(
@@ -1392,6 +1745,7 @@ function collectDefinitionDocumentArtifact(
     title,
     documentType: "FRD",
     context: buildDocumentContext(title, {
+      statusSpan: pictographSpan(config, mapping.status),
       tags: versionTags(definitionDocumentTypes(mapping)),
       effectiveEntries,
       isDefinitionDocument: true,
@@ -1414,6 +1768,7 @@ function collectLegacyDefinitionsArtifact(
     title: mapping.title,
     output: mapping.output,
     template: mapping.template,
+    status: "stable",
     source: {
       collection: "FRD",
       types: ["20x", "rev5"],
@@ -1530,6 +1885,7 @@ function collectKsiDocumentArtifacts(
         title,
         documentType: "KSI",
         context: buildDocumentContext(title, {
+          statusSpan: pictographSpan(config, mapping.status),
           tags: versionTags(["20x"]),
           isKsiDocument: true,
           themeParagraphs: splitParagraphs(theme.theme),
@@ -1586,6 +1942,7 @@ function collectDeadlineDocumentArtifactsForMapping(
         title,
         documentType: "DEADLINES",
         context: buildDocumentContext(title, {
+          statusSpan: pictographSpan(config, mapping.status),
           tags: versionTags([version]),
           isDeadlineDocument: true,
           deadlineTables,
@@ -1643,6 +2000,7 @@ function collectSingleRuleDocumentArtifact(
     title,
     documentType: "FRR",
     context: buildDocumentContext(title, {
+      statusSpan: pictographSpan(config, mapping.status),
       tags: versionTags(mapping.source.types),
       effectiveEntries,
       isRequirementsDocument: true,
@@ -1685,6 +2043,7 @@ function collectDocumentRuleDocumentArtifacts(
         title,
         documentType: "FRR",
         context: buildDocumentContext(title, {
+          statusSpan: pictographSpan(config, mapping.status),
           tags: versionTags(mapping.source.types),
           effectiveEntries,
           isRequirementsDocument: true,
@@ -1808,6 +2167,7 @@ export async function buildMarkdown(config?: ToolConfig): Promise<BuildSummary> 
   const partialsDir = resolveToolPath(toolConfig.paths.partials);
   const templates = new Map<string, (context: DocumentViewModel) => string>();
 
+  await renderContentPictographs(toolConfig);
   await assertNoContentCollisions(toolConfig, artifacts);
   await cleanupGeneratedFiles(toolConfig);
 

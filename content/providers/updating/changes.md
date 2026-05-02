@@ -1,3 +1,12 @@
+---
+description: ""
+purpose: ""
+google_doc: ""
+picto:
+  source: person
+  status: empty
+---
+
 # What's Changing in 2026
 
 !!! failure "This page is incomplete."

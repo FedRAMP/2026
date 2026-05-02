@@ -22,7 +22,12 @@ import {
   OUTPUT_DIR,
   RULES_FILE,
 } from "./build-markdown";
-import { loadToolConfig, REPO_ROOT, resolveToolPath } from "./config";
+import {
+  loadToolConfig,
+  REPO_ROOT,
+  resolveToolPath,
+  type ToolConfig,
+} from "./config";
 import { deploy } from "./deploy";
 
 const execFileAsync = promisify(execFile);
@@ -31,12 +36,34 @@ const RULES_REMOTE_BRANCH = "main";
 const RULES_SCHEMA_FILE = resolveToolPath(
   "rules/schemas/fedramp-consolidated-rules.schema.json",
 );
+const STABLE_STATUS_SPAN =
+  '<span class="picto">:lucide-computer:{ .machine title="This content is machine-generated from FedRAMP Machine-Readable Rules." } :lucide-book-open-check:{ .stable title="This content is relatively stable and only minor changes are expected." }</span>';
+const PLACEHOLDER_STATUS_SPAN =
+  '<span class="picto">:lucide-computer:{ .machine title="This content is machine-generated from FedRAMP Machine-Readable Rules." } :lucide-pencil:{ .placeholder title="This content is a placeholder and is not complete." }</span>';
+const MANUAL_STABLE_STATUS_SPAN =
+  '<span class="picto">:lucide-person-standing:{ .person title="This content was written by a human just for this page." } :lucide-book-open-check:{ .stable title="This content is relatively stable and only minor changes are expected." }</span>';
 const WARNING_ORANGE = "\x1b[38;5;208m";
 const WARNING_RESET = "\x1b[0m";
 const WARNING_MARK = "⚠";
+const ERROR_RED = "\x1b[31m";
+const COLOR_RESET = "\x1b[0m";
 let unlinkedMarkdownWarningPaths: string[] = [];
+let boldMarkdownHeadingWarnings: string[] = [];
+let contentPictographWarnings: string[] = [];
+let contentFrontmatterWarnings: string[] = [];
+let emptyContentFrontmatterWarnings: string[] = [];
+const humanReadableFailureSummaries: string[] = [];
 
 afterAll(() => {
+  printUnlinkedMarkdownWarnings();
+  printBoldMarkdownHeadingWarnings();
+  printContentPictographWarnings();
+  printContentFrontmatterWarnings();
+  printEmptyContentFrontmatterWarnings();
+  printHumanReadableFailureSummaries();
+});
+
+function printUnlinkedMarkdownWarnings(): void {
   if (!unlinkedMarkdownWarningPaths.length) {
     return;
   }
@@ -53,7 +80,113 @@ afterAll(() => {
       "",
     ].join("\n"),
   );
-});
+}
+
+function printBoldMarkdownHeadingWarnings(): void {
+  if (!boldMarkdownHeadingWarnings.length) {
+    return;
+  }
+
+  console.warn(
+    [
+      "",
+      `${WARNING_ORANGE}${WARNING_MARK} Markdown headings should not be wrapped in bold markers:${WARNING_RESET}`,
+      "",
+      ...boldMarkdownHeadingWarnings.map(
+        (location) =>
+          `    ${WARNING_ORANGE}${WARNING_MARK} ${location}${WARNING_RESET}`,
+      ),
+      "",
+    ].join("\n"),
+  );
+}
+
+function printContentPictographWarnings(): void {
+  if (!contentPictographWarnings.length) {
+    return;
+  }
+
+  console.warn(
+    [
+      "",
+      `${WARNING_ORANGE}${WARNING_MARK} Content markdown files should declare picto.source and picto.status in frontmatter:${WARNING_RESET}`,
+      "",
+      ...contentPictographWarnings.map(
+        (warning) => `    ${WARNING_ORANGE}${WARNING_MARK} ${warning}${WARNING_RESET}`,
+      ),
+      "",
+    ].join("\n"),
+  );
+}
+
+function printContentFrontmatterWarnings(): void {
+  if (!contentFrontmatterWarnings.length) {
+    return;
+  }
+
+  console.warn(
+    [
+      "",
+      `${WARNING_ORANGE}${WARNING_MARK} Content markdown files should declare description, purpose, and google_doc in frontmatter:${WARNING_RESET}`,
+      "",
+      ...contentFrontmatterWarnings.map(
+        (warning) => `    ${WARNING_ORANGE}${WARNING_MARK} ${warning}${WARNING_RESET}`,
+      ),
+      "",
+    ].join("\n"),
+  );
+}
+
+function printEmptyContentFrontmatterWarnings(): void {
+  if (!emptyContentFrontmatterWarnings.length) {
+    return;
+  }
+
+  console.warn(
+    [
+      "",
+      `${WARNING_ORANGE}${WARNING_MARK} Content markdown description and purpose frontmatter should not be empty:${WARNING_RESET}`,
+      "",
+      ...emptyContentFrontmatterWarnings.map(
+        (warning) => `    ${WARNING_ORANGE}${WARNING_MARK} ${warning}${WARNING_RESET}`,
+      ),
+      "",
+    ].join("\n"),
+  );
+}
+
+function printHumanReadableFailureSummaries(): void {
+  if (!humanReadableFailureSummaries.length) {
+    return;
+  }
+
+  console.error(
+    [
+      "",
+      `${ERROR_RED}Human-readable failure summary:${COLOR_RESET}`,
+      "",
+      ...humanReadableFailureSummaries.map(
+        (summary, index) =>
+          `${ERROR_RED}${index + 1}. ${summary
+            .trim()
+            .replaceAll("\n", `\n   `)}${COLOR_RESET}`,
+      ),
+      "",
+    ].join("\n"),
+  );
+}
+
+function expectWithFailureSummary(
+  summary: string,
+  assertion: () => void,
+): void {
+  try {
+    assertion();
+  } catch (error) {
+    humanReadableFailureSummaries.push(summary);
+    throw error;
+  }
+}
 
 async function git(args: string[], cwd = REPO_ROOT): Promise<string> {
   const { stdout } = await execFileAsync("git", args, { cwd });
@@ -172,9 +305,310 @@ function markdownPathsInZensicalConfig(source: string): string[] {
   );
 }
 
+async function findBoldMarkdownHeadingWarnings(root: string): Promise<string[]> {
+  const markdownPaths = (await listRelativeFiles(root))
+    .filter((relativePath) => relativePath.endsWith(".md"))
+    .sort();
+  const warnings: string[] = [];
+  const boldHeadingPattern = /^#{1,6}\s+\*\*.+\*\*\s*(?:#+\s*)?$/;
+
+  for (const relativePath of markdownPaths) {
+    const contents = await readFile(path.join(root, relativePath), "utf8");
+    const lines = contents.split(/\r?\n/);
+
+    lines.forEach((line, index) => {
+      if (boldHeadingPattern.test(line.trim())) {
+        warnings.push(`${relativePath}:${index + 1}: ${line.trim()}`);
+      }
+    });
+  }
+
+  return warnings;
+}
+
+function frontmatterLines(contents: string): string[] | null {
+  const lines = contents.split(/\r?\n/);
+  if (lines[0]?.trim() !== "---") {
+    return null;
+  }
+
+  const frontmatterEndIndex = lines.findIndex(
+    (line, index) => index > 0 && line.trim() === "---",
+  );
+  if (frontmatterEndIndex === -1) {
+    return null;
+  }
+
+  return lines.slice(1, frontmatterEndIndex);
+}
+
+function pictoFrontmatterValue(
+  contents: string,
+): { source?: string; status?: string } | null {
+  const frontmatter = frontmatterLines(contents);
+  if (!frontmatter) {
+    return null;
+  }
+
+  const pictoIndex = frontmatter.findIndex(
+    (line) => line.trim() === "picto:",
+  );
+  if (pictoIndex === -1) {
+    return null;
+  }
+
+  const value: { source?: string; status?: string } = {};
+  for (let index = pictoIndex + 1; index < frontmatter.length; index++) {
+    const line = frontmatter[index];
+    if (!line) {
+      continue;
+    }
+
+    if (!line.startsWith(" ")) {
+      break;
+    }
+
+    const sourceMatch = line.match(/^\s+source:\s*([A-Za-z0-9_-]+)\s*$/);
+    const statusMatch = line.match(/^\s+status:\s*([A-Za-z0-9_-]+)\s*$/);
+    if (sourceMatch?.[1]) {
+      value.source = sourceMatch[1];
+    }
+    if (statusMatch?.[1]) {
+      value.status = statusMatch[1];
+    }
+  }
+
+  return value;
+}
+
+function validateRequiredContentFrontmatter(
+  relativePath: string,
+  contents: string,
+): string | null {
+  const frontmatter = frontmatterLines(contents);
+  if (!frontmatter) {
+    return `${relativePath}: missing yaml frontmatter`;
+  }
+
+  const declaredKeys = new Set(
+    frontmatter
+      .map((line) => line.match(/^([A-Za-z0-9_-]+):(?:\s|$)/)?.[1])
+      .filter((key): key is string => Boolean(key)),
+  );
+  const missingKeys = ["description", "purpose", "google_doc"].filter(
+    (key) => !declaredKeys.has(key),
+  );
+
+  if (!missingKeys.length) {
+    return null;
+  }
+
+  return `${relativePath}: missing ${missingKeys.join(", ")}`;
+}
+
+function validateNonEmptyContentFrontmatter(
+  relativePath: string,
+  contents: string,
+): string | null {
+  const frontmatter = frontmatterLines(contents);
+  if (!frontmatter) {
+    return null;
+  }
+
+  const emptyKeys = ["description", "purpose"].filter((key) => {
+    const line = frontmatter.find((frontmatterLine) =>
+      frontmatterLine.match(new RegExp(`^${key}:`)),
+    );
+    if (!line) {
+      return false;
+    }
+
+    const value = line.slice(line.indexOf(":") + 1).trim();
+    return value === "" || value === '""' || value === "''";
+  });
+
+  if (!emptyKeys.length) {
+    return null;
+  }
+
+  return `${relativePath}: empty ${emptyKeys.join(", ")}`;
+}
+
+function validatePictographFrontmatter(
+  relativePath: string,
+  contents: string,
+  config: ToolConfig,
+): string | null {
+  const picto = pictoFrontmatterValue(contents);
+  if (!picto) {
+    return `${relativePath}: missing picto frontmatter`;
+  }
+
+  const knownSources = new Set(Object.keys(config.pictographs.source));
+  const knownStatuses = new Set(Object.keys(config.pictographs.status));
+
+  if (!picto.source) {
+    return `${relativePath}: missing picto.source`;
+  }
+
+  if (!knownSources.has(picto.source)) {
+    return `${relativePath}: unknown picto.source "${picto.source}"`;
+  }
+
+  if (!picto.status) {
+    return `${relativePath}: missing picto.status`;
+  }
+
+  if (!knownStatuses.has(picto.status)) {
+    return `${relativePath}: unknown picto.status "${picto.status}"`;
+  }
+
+  return null;
+}
+
+async function findContentPictographWarnings(
+  root: string,
+  config: ToolConfig,
+): Promise<string[]> {
+  const markdownPaths = (await listRelativeFiles(root))
+    .filter((relativePath) => relativePath.endsWith(".md"))
+    .sort();
+  const warnings: string[] = [];
+
+  for (const relativePath of markdownPaths) {
+    const contents = await readFile(path.join(root, relativePath), "utf8");
+    const warning = validatePictographFrontmatter(
+      relativePath,
+      contents,
+      config,
+    );
+    if (warning) {
+      warnings.push(warning);
+    }
+  }
+
+  return warnings;
+}
+
+async function findContentFrontmatterWarnings(root: string): Promise<string[]> {
+  const markdownPaths = (await listRelativeFiles(root))
+    .filter((relativePath) => relativePath.endsWith(".md"))
+    .sort();
+  const warnings: string[] = [];
+
+  for (const relativePath of markdownPaths) {
+    const contents = await readFile(path.join(root, relativePath), "utf8");
+    const warning = validateRequiredContentFrontmatter(relativePath, contents);
+    if (warning) {
+      warnings.push(warning);
+    }
+  }
+
+  return warnings;
+}
+
+async function findEmptyContentFrontmatterWarnings(
+  root: string,
+): Promise<string[]> {
+  const markdownPaths = (await listRelativeFiles(root))
+    .filter(
+      (relativePath) =>
+        relativePath.endsWith(".md") && !relativePath.startsWith("authority/"),
+    )
+    .sort();
+  const warnings: string[] = [];
+
+  for (const relativePath of markdownPaths) {
+    const contents = await readFile(path.join(root, relativePath), "utf8");
+    const warning = validateNonEmptyContentFrontmatter(relativePath, contents);
+    if (warning) {
+      warnings.push(warning);
+    }
+  }
+
+  return warnings;
+}
+
+function generatedMappingStatusFailures(config: ToolConfig): string[] {
+  const configuredStatuses = new Set(Object.keys(config.pictographs.status));
+  const generatedMappingGroups: Array<
+    [string, Array<{ id?: unknown; status?: unknown }>]
+  > = [
+    ["definitionDocuments", config.generated.definitionDocuments ?? []],
+    ["ksiDocuments", config.generated.ksiDocuments ?? []],
+    ["deadlineDocuments", config.generated.deadlineDocuments ?? []],
+    ["ruleDocuments", config.generated.ruleDocuments],
+  ];
+  const failures: string[] = [];
+
+  for (const [groupName, mappings] of generatedMappingGroups) {
+    mappings.forEach((mapping, index) => {
+      const mappingLabel =
+        typeof mapping.id === "string" ? mapping.id : "unknown mapping";
+
+      if (typeof mapping.status !== "string") {
+        failures.push(
+          `generated.${groupName}[${index}] (${mappingLabel}) is missing status`,
+        );
+        return;
+      }
+
+      if (!configuredStatuses.has(mapping.status)) {
+        failures.push(
+          `generated.${groupName}[${index}] (${mappingLabel}) uses unknown status "${mapping.status}"`,
+        );
+      }
+    });
+  }
+
+  return failures;
+}
+
+function pictographTooltipFailures(config: ToolConfig): string[] {
+  const failures: string[] = [];
+  const tooltipKeys = [
+    ...Object.keys(config.pictographs.source),
+    ...Object.keys(config.pictographs.status),
+  ] as Array<keyof ToolConfig["pictographs"]["tooltips"]>;
+
+  for (const key of tooltipKeys) {
+    if (!config.pictographs.tooltips[key]?.trim()) {
+      failures.push(`pictographs.tooltips.${key} is missing or empty`);
+    }
+  }
+
+  return failures;
+}
+
 describe("build-markdown", () => {
   test("the consolidated rules source exists", async () => {
     await access(RULES_FILE);
+  });
+
+  test("generated config mappings declare known statuses", async () => {
+    const config = await loadToolConfig();
+    const failures = generatedMappingStatusFailures(config);
+    const statusFailureSummary = [
+      "Generated markdown mappings in tools/config.json must declare a status from pictographs.status.",
+      ...failures,
+    ].join("\n");
+
+    expectWithFailureSummary(statusFailureSummary, () => {
+      expect(failures, statusFailureSummary).toEqual([]);
+    });
+  });
+
+  test("pictographs declare tooltips", async () => {
+    const config = await loadToolConfig();
+    const failures = pictographTooltipFailures(config);
+    const tooltipFailureSummary = [
+      "Pictographs in tools/config.json must declare matching tooltips.",
+      ...failures,
+    ].join("\n");
+
+    expectWithFailureSummary(tooltipFailureSummary, () => {
+      expect(failures, tooltipFailureSummary).toEqual([]);
+    });
   });
 
   test("the consolidated rules source matches the bundled schema", async () => {
@@ -185,11 +619,17 @@ describe("build-markdown", () => {
 
     const validate = ajv.compile(schema);
     const valid = validate(rules);
-
-    expect(
-      valid,
+    const schemaFailureSummary = [
+      `${path.relative(REPO_ROOT, RULES_FILE)} does not match ${path.relative(
+        REPO_ROOT,
+        RULES_SCHEMA_FILE,
+      )}.`,
       ajv.errorsText(validate.errors, { separator: "\n" }),
-    ).toBe(true);
+    ].join("\n");
+
+    expectWithFailureSummary(schemaFailureSummary, () => {
+      expect(valid, schemaFailureSummary).toBe(true);
+    });
   });
 
   test("the rules submodule is synced to the latest upstream main", async () => {
@@ -207,10 +647,16 @@ describe("build-markdown", () => {
       );
     }
 
-    expect(
-      localHead,
-      `tools/rules is not synced to ${RULES_REMOTE_URL} ${RULES_REMOTE_BRANCH}; run "bun run sync" from tools/ and commit the updated submodule pointer.`,
-    ).toBe(latestRemoteHead);
+    const syncFailureSummary = [
+      `tools/rules is not synced to ${RULES_REMOTE_URL} ${RULES_REMOTE_BRANCH}.`,
+      `Run "bun run sync" from tools/ and commit the updated submodule pointer.`,
+      `Local HEAD: ${localHead}`,
+      `Upstream ${RULES_REMOTE_BRANCH}: ${latestRemoteHead}`,
+    ].join("\n");
+
+    expectWithFailureSummary(syncFailureSummary, () => {
+      expect(localHead, syncFailureSummary).toBe(latestRemoteHead);
+    });
   });
 
   test("builds configured markdown files from the JSON source", async () => {
@@ -245,6 +691,9 @@ describe("build-markdown", () => {
     ]) {
       expect(relativePaths).toContain(relativePath);
     }
+    expect(relativePaths).not.toContain(
+      "assessors/20x/rules/marketplace-listing.md",
+    );
 
     for (const artifact of expectedArtifacts) {
       await access(artifact.outputPath);
@@ -259,7 +708,7 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(definitionsContents).toStartWith(
-      "---\ntags:\n  - 20x\n  - Rev5\n---\n\n# FedRAMP Definitions",
+      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# FedRAMP Definitions`,
     );
     expect(definitionsContents).not.toContain(
       '??? abstract "Background & Authority"',
@@ -300,7 +749,7 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(ksiChangeManagementContents).toStartWith(
-      "---\ntags:\n  - 20x\n---\n\n# Change Management",
+      `---\ntags:\n  - 20x\n---\n\n${STABLE_STATUS_SPAN}\n\n# Change Management`,
     );
     expect(ksiChangeManagementContents).toContain("# Change Management");
     expect(ksiChangeManagementContents).not.toContain('!!! info ""');
@@ -321,7 +770,7 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(deadlines20xContents).toStartWith(
-      "---\ntags:\n  - 20x\n---\n\n# 20x Deadlines",
+      `---\ntags:\n  - 20x\n---\n\n${STABLE_STATUS_SPAN}\n\n# 20x Deadlines`,
     );
     expect(deadlines20xContents).toContain(
       "| FRC | [FedRAMP Certification](../../20x/rules/fedramp-certification.md) | 2026-05-04 | 2027-05-04 | 2027-05-04 |",
@@ -342,7 +791,7 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(deadlinesRev5Contents).toStartWith(
-      "---\ntags:\n  - Rev5\n---\n\n# Rev5 Deadlines",
+      `---\ntags:\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# Rev5 Deadlines`,
     );
     expect(deadlinesRev5Contents).toContain(
       "| FRC | [FedRAMP Certification](../../rev5/rules/fedramp-certification.md) | 2027-01-01 | 2027-01-01 | 2027-01-01 |",
@@ -369,7 +818,7 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(provider20xContents).toStartWith(
-      "---\ntags:\n  - 20x\n---\n\n# FedRAMP Certification",
+      `---\ntags:\n  - 20x\n---\n\n${STABLE_STATUS_SPAN}\n\n# FedRAMP Certification`,
     );
     expect(provider20xContents).toContain("# FedRAMP Certification");
     expect(provider20xContents).toContain("FRC-CSO-CDS");
@@ -388,7 +837,7 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(providerRev5Contents).toStartWith(
-      "---\ntags:\n  - Rev5\n---\n\n# FedRAMP Certification",
+      `---\ntags:\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# FedRAMP Certification`,
     );
     expect(providerRev5Contents).toContain("FRC-CSL-CDE");
     expect(providerRev5Contents).not.toContain("FRC-CSX-SUM");
@@ -398,7 +847,7 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(fedrampFsiContents).toStartWith(
-      "---\ntags:\n  - 20x\n  - Rev5\n---\n\n# FedRAMP Security Inbox",
+      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# FedRAMP Security Inbox`,
     );
     expect(fedrampFsiContents).toContain("# FedRAMP Security Inbox");
     expect(fedrampFsiContents).not.toContain("Effective Date(s)");
@@ -431,6 +880,9 @@ describe("build-markdown", () => {
       ),
       "utf8",
     );
+    expect(agencyCcmContents).toStartWith(
+      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Collaborative Continuous Monitoring`,
+    );
     expect(agencyCcmContents).toContain("# Collaborative Continuous Monitoring");
     expect(agencyCcmContents).toContain("## Agency Guidance");
     expect(agencyCcmContents).toContain("CCM-AGM-ROR");
@@ -449,6 +901,167 @@ describe("build-markdown", () => {
     expect(agencyVdrContents).toContain("## Agency Guidance");
     expect(agencyVdrContents).toContain("VDR-AGM-RVR");
     expect(agencyVdrContents).not.toContain("VDR-FRP-ARP");
+  });
+
+  test("ignores configured rule documents after resolving the source selection", async () => {
+    const config = await loadToolConfig();
+    const rules = await loadRules(config);
+    const artifacts = collectArtifacts(rules, {
+      ...config,
+      generated: {
+        ...config.generated,
+        definitionDocuments: [],
+        ksiDocuments: [],
+        deadlineDocuments: [],
+        ruleDocuments: [
+          {
+            id: "assessor-20x-with-ignored-marketplace",
+            output: "assessors/20x/rules/{FRR}.md",
+            outputMode: "documents",
+            status: "placeholder",
+            emptyBehavior: "skip",
+            source: {
+              collection: "FRR",
+              documents: "ALL",
+              ignoreDocuments: ["MKT"],
+              types: ["20x"],
+              affects: ["Assessors"],
+              includeBoth: true,
+              bothPosition: "first",
+            },
+          },
+        ],
+      },
+    });
+
+    expect(artifacts.some((artifact) => artifact.sourceDocument === "MKT")).toBe(
+      false,
+    );
+    expect(
+      artifacts.some(
+        (artifact) =>
+          artifact.relativePath === "assessors/20x/rules/marketplace-listing.md",
+      ),
+    ).toBe(false);
+  });
+
+  test("adds page info admonitions below content pictograph spans", async () => {
+    const config = await loadToolConfig();
+    const tempDir = await mkdtemp(path.join(tmpdir(), "cr26-site-tools-"));
+    const tempContentDir = path.join(tempDir, "content");
+    const tempSrcDir = path.join(tempDir, "src");
+    const tempHtmlDir = path.join(tempDir, "html");
+
+    try {
+      await mkdir(tempContentDir, { recursive: true });
+      await mkdir(tempSrcDir, { recursive: true });
+      await writeFile(
+        path.join(tempSrcDir, "index.md"),
+        [
+          "---",
+          "description: This page contains an overview of the Public Preview, including descriptions of the content sources and status.",
+          "purpose: Helps folks understand the goals of the Public Preview and how to approach reviewing it.",
+          "picto:",
+          "  source: person",
+          "  status: stable",
+          "---",
+          "",
+          "# Public Preview",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      await writeFile(
+        path.join(tempSrcDir, "purpose-only.md"),
+        [
+          "---",
+          'description: ""',
+          "purpose: Explains why this page exists.",
+          "picto:",
+          "  source: person",
+          "  status: stable",
+          "---",
+          "",
+          "# Purpose Only",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      await writeFile(
+        path.join(tempSrcDir, "empty.md"),
+        [
+          "---",
+          'description: ""',
+          "purpose: ''",
+          "picto:",
+          "  source: person",
+          "  status: stable",
+          "---",
+          "",
+          "# Empty Page Info",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+
+      await buildMarkdown({
+        ...config,
+        paths: {
+          ...config.paths,
+          content: path.relative(resolveToolPath("."), tempContentDir),
+          src: path.relative(resolveToolPath("."), tempSrcDir),
+          html: path.relative(resolveToolPath("."), tempHtmlDir),
+        },
+        generated: {
+          ...config.generated,
+          definitions: undefined,
+          definitionDocuments: [],
+          ksiDocuments: [],
+          deadlineDocuments: [],
+          ruleDocuments: [],
+        },
+      });
+
+      const indexContents = await readFile(
+        path.join(tempSrcDir, "index.md"),
+        "utf8",
+      );
+      expect(indexContents).toContain(
+        [
+          MANUAL_STABLE_STATUS_SPAN,
+          "",
+          '??? info inline end "Page Info"',
+          "",
+          "    **Description:** This page contains an overview of the Public Preview, including descriptions of the content sources and status.",
+          "    ",
+          "    **Purpose:** Helps folks understand the goals of the Public Preview and how to approach reviewing it.",
+        ].join("\n"),
+      );
+
+      const purposeOnlyContents = await readFile(
+        path.join(tempSrcDir, "purpose-only.md"),
+        "utf8",
+      );
+      expect(purposeOnlyContents).toContain(
+        [
+          MANUAL_STABLE_STATUS_SPAN,
+          "",
+          '??? info inline end "Page Info"',
+          "",
+          "    **Purpose:** Explains why this page exists.",
+        ].join("\n"),
+      );
+      expect(purposeOnlyContents).not.toContain("**Description:**");
+
+      const emptyContents = await readFile(
+        path.join(tempSrcDir, "empty.md"),
+        "utf8",
+      );
+      expect(emptyContents).toContain(`---\n\n${MANUAL_STABLE_STATUS_SPAN}`);
+      expect(emptyContents).not.toContain('??? info inline end "Page Info"');
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
   });
 
   test("builds configured FRD definition document mappings", async () => {
@@ -477,6 +1090,7 @@ describe("build-markdown", () => {
               id: "custom-definitions",
               title: "Custom FedRAMP Definitions",
               output: "reference/fedramp-definitions.md",
+              status: "stable",
               includeEffectiveDates: false,
               source: {
                 collection: "FRD",
@@ -542,6 +1156,50 @@ describe("build-markdown", () => {
   });
 });
 
+describe("content quality", () => {
+  test("warns when content markdown is missing valid pictograph frontmatter", async () => {
+    const config = await loadToolConfig();
+    const contentPath = resolveToolPath(config.paths.content);
+
+    contentPictographWarnings = await findContentPictographWarnings(
+      contentPath,
+      config,
+    );
+
+    expect(Array.isArray(contentPictographWarnings)).toBe(true);
+  });
+
+  test("warns when content markdown is missing required frontmatter fields", async () => {
+    const config = await loadToolConfig();
+    const contentPath = resolveToolPath(config.paths.content);
+
+    contentFrontmatterWarnings =
+      await findContentFrontmatterWarnings(contentPath);
+
+    expect(Array.isArray(contentFrontmatterWarnings)).toBe(true);
+  });
+
+  test("warns when content markdown has empty description or purpose frontmatter", async () => {
+    const config = await loadToolConfig();
+    const contentPath = resolveToolPath(config.paths.content);
+
+    emptyContentFrontmatterWarnings =
+      await findEmptyContentFrontmatterWarnings(contentPath);
+
+    expect(Array.isArray(emptyContentFrontmatterWarnings)).toBe(true);
+  });
+
+  test("warns when markdown headings are wrapped in bold markers", async () => {
+    const config = await loadToolConfig();
+    const contentPath = resolveToolPath(config.paths.content);
+
+    boldMarkdownHeadingWarnings =
+      await findBoldMarkdownHeadingWarnings(contentPath);
+
+    expect(Array.isArray(boldMarkdownHeadingWarnings)).toBe(true);
+  });
+});
+
 describe("build pipeline", () => {
   test("bun run build produces a complete Zensical site", async () => {
     const config = await loadToolConfig();
@@ -574,6 +1232,29 @@ describe("build pipeline", () => {
     for (const relativePath of contentFiles) {
       await access(path.join(srcPath, relativePath));
     }
+
+    const copiedIndexMarkdown = await readFile(
+      path.join(srcPath, "index.md"),
+      "utf8",
+    );
+    expect(copiedIndexMarkdown).toContain(
+      [
+        "picto:",
+        "  source: person",
+        "  status: stable",
+        "---",
+        "",
+        MANUAL_STABLE_STATUS_SPAN,
+        "",
+        '??? info inline end "Page Info"',
+        "",
+        "    **Description:** This page contains an overview of the Public Preview, including descriptions of the content sources and status.",
+        "    ",
+        "    **Purpose:** Helps folks understand the goals of the Public Preview and how to approach reviewing it.",
+        "",
+        "# Public Preview",
+      ].join("\n"),
+    );
 
     const zensicalConfig = await readFile(
       resolveToolPath(config.paths.zensicalConfig),

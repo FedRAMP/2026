@@ -1,3 +1,12 @@
+---
+description: ""
+purpose: ""
+google_doc: ""
+picto:
+  source: person
+  status: stable
+---
+
 # M-24-15 Section III. Scope of FedRAMP
 
 The Act charges OMB with specifying the categories or characteristics of cloud
@@ -53,11 +62,12 @@ illustrate what types of services are in and out of scope.
 
 !!! abstract "Guidelines and Examples for the Scope of FedRAMP"
 
-    The guidelines and examples regarding the Scope of FedRAMP are available
-    at [fedramp.gov/docs/authority/scope](../scope.md).
+    The guidelines and examples regarding the Scope of FedRAMP [are available
+    on the Rules site here](../../scope.md){data-preview}.
 
 [^5]: 44 U.S.C. § 3614(1)(A).
+
 [^6]:
     This scope applies only to information systems that process unclassified
     information and are not national security systems as defined in 44 U.S.C. §
-    3552\.
+    3552.

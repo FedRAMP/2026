@@ -185,6 +185,7 @@ Mapping fields:
 - `includeEffectiveDates`: set to `false` to omit the top applicability block.
 - `source.document`: one FRR key from the rules JSON, such as `FRC`.
 - `source.documents`: an array of FRR keys, such as `["FSI", "ICP"]`, or `"ALL"` to process every FRR.
+- `source.ignoreDocuments`: optional array of FRR keys to remove after `source.document` or `source.documents` is resolved. This is useful with `"ALL"` when one generated page set should omit a specific family such as `["MKT"]`.
 - `source.types`: one or more certification types, such as `["20x"]` or `["rev5"]`.
 - `source.affects`: optional filter matched against each rule's `affects` list.
 - `source.sections`: optional list of section keys to include, such as `["CSO", "CSX"]`.
@@ -228,6 +229,7 @@ For example, this mapping generates one agency rules page for each FRR with `AGM
   "source": {
     "collection": "FRR",
     "documents": "ALL",
+    "ignoreDocuments": ["MKT"],
     "types": ["20x", "rev5"],
     "affects": ["Agencies"],
     "sections": ["AGM"],

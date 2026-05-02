@@ -1,3 +1,12 @@
+---
+description: ""
+purpose: ""
+google_doc: ""
+picto:
+  source: person
+  status: stable
+---
+
 # M-24-15 Section IV. The FedRAMP Authorization Process
 
 The FedRAMP program provides for the issuance of FedRAMP "authorizations,"
@@ -19,7 +28,7 @@ guidelines for security authorizations of cloud computing products and services,
 consistent with standards and guidelines established by NIST, to be used in the
 determination of FedRAMP authorizations.[^9]
 
-## **a. The Presumption of Adequacy**
+## a. The Presumption of Adequacy
 
 FedRAMP should reduce duplicative work for agencies and companies alike,
 bringing a measure of consistency and coherence to what the Federal Government
@@ -53,7 +62,7 @@ an agency's additional security needs merit conducting additional FedRAMP
 authorization work, and thus using additional FedRAMP resources, to support a
 revised package.
 
-## **b. Authorization Process Requirements**
+## b. Authorization Process Requirements
 
 FedRAMP is responsible for defining the processes and criteria that must be met
 in order for a cloud product or service to receive a FedRAMP authorization.[^15]
@@ -75,7 +84,7 @@ would ordinarily be required. This process for assessing and documenting the
 security of cloud computing products and services is a shared responsibility
 between the agency and the CSP.
 
-## **c. Authorization Paths**
+## c. Authorization Paths
 
 To promote reusability while accommodating different use cases within the
 Federal Government, FedRAMP will support the following paths to obtain FedRAMP
@@ -139,7 +148,7 @@ authorization. As part of the agency authorization process, agencies may decide
 to authorize a CSP with an existing FedRAMP authorization at a higher impact
 level after applying the appropriate tailoring process.[^17]
 
-## **d. Assessing Security Postures**
+## d. Assessing Security Postures
 
 Regardless of the authorization path, FedRAMP should consistently assess and
 validate cloud providers' complex architectures and encryption schemes to ensure
@@ -176,7 +185,7 @@ a provider seeks to modify an existing FedRAMP-authorized service. Summary
 findings of this analysis will be available to agencies engaged in the FedRAMP
 authorization process.
 
-## **e. Supporting the FedRAMP Marketplace**
+## e. Supporting the FedRAMP Marketplace
 
 The FedRAMP Marketplace facilitates interagency awareness of services available
 for reuse. It displays cloud computing products and services that are in the
@@ -288,3 +297,13 @@ requirements.
     Questions regarding acquisition.
 
 [^21]: 44 U.S.C. § 3609(b)(2).
+
+[^22]:
+    NIST SP 800-37, _Risk Management Framework for Information Systems and
+    Organization_, includes discussion of issuing authorizations for a short
+    period of time.
+
+[^23]:
+    FedRAMP will provide additional procedures related to this trial process,
+    and agencies are encouraged to coordinate with FedRAMP to ensure that there
+    is no potential gap in service when the trial period concludes.

@@ -1,8 +1,17 @@
+---
+description: ""
+purpose: ""
+google_doc: ""
+picto:
+  source: person
+  status: stable
+---
+
 # FedRAMP Authorization Act on the FSCAC
 
-## **Sec. 3616. Federal Secure Cloud Advisory Committee**
+## Sec. 3616. Federal Secure Cloud Advisory Committee
 
-### **(a) Establishment, Purposes, and Duties**
+### (a) Establishment, Purposes, and Duties
 
 1. Establishment:
 
@@ -34,7 +43,7 @@
 
     The duties of the Committee include providing advice and recommendations to the Administrator, the FedRAMP Board, and agencies on technical, financial, programmatic, and operational matters regarding secure adoption of cloud computing products and services.
 
-### **(b) Members**
+### (b) Members
 
 1. Composition:
 
@@ -63,15 +72,15 @@
 3. Period of appointment; vacancies:
 
     <ul>(A) In general:
-    
+
     Each non-Federal member of the Committee **shall** be appointed for a term of 3 years, except that the initial terms for members may be staggered 1-, 2-, or 3-year terms to establish a rotation in which one-third of the members are selected each year. Any such member may be appointed for not more than 2 consecutive terms.
 
     (B) Vacancies:
-    
+
     Any vacancy in the Committee **shall** not affect its powers, but **shall** be filled in the same manner in which the original appointment was made. Any member appointed to fill a vacancy occurring before the expiration of the term for which the member's predecessor was appointed **shall** be appointed only for the remainder of that term. A member may serve after the expiration of that member's term until a successor has taken office.
     </ul>
 
-### **\(c) Meetings and Rules of Procedures**
+### \(c) Meetings and Rules of Procedures
 
 1. Meetings:
 
@@ -85,7 +94,7 @@
 
     The Committee may establish rules for the conduct of the business of the Committee if such rules are not inconsistent with this section or other applicable law.
 
-### **(d) Employee Status**
+### (d) Employee Status
 
 1. In general:
 
@@ -95,19 +104,19 @@
 
     A member of the Committee covered by paragraph (1) may not receive pay by reason of service on the Committee.
 
-### **(e) Applicability to the Federal Advisory Committee Act**
+### (e) Applicability to the Federal Advisory Committee Act
 
 Section 14 of the Federal Advisory Committee Act (5 U.S.C. App.) **shall not** apply to the Committee.
 
-### **(f) Detail of Employees**
+### (f) Detail of Employees
 
 Any Federal Government employee may be detailed to the Committee without reimbursement from the Committee, and such detailee **shall** retain the rights, status, and privileges of his or her regular employment without interruption.
 
-### **(g) Postal Services**
+### (g) Postal Services
 
 The Committee may use the United States mails in the same manner and under the same conditions as agencies.
 
-### **(h) Reports**
+### (h) Reports
 
 1. Interim reports:
 

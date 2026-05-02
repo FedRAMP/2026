@@ -2,14 +2,20 @@
 title: "Assessors"
 description: "A description of Assessors."
 icon: material/eye-check-outline
+purpose: ""
+google_doc: ""
+picto:
+  source: person
+  status: placeholder
 ---
+
 # Independent Assessment Services
 
 FedRAMP relies on independent assessment services (also known as independent assessors, formerly referred to as Third-Party Assessment Organizations or 3PAOs) to scale initial assessment capabilities based on industry need instead of directly operating an end-to-end assessment organization within FedRAMP itself. Relying on third-parties that are contracted by cloud service providers reduces cost for the tax payer by placing the burden for initial assessment on the cloud service provider.
 
 !!! info "The authority for FedRAMP to use independent assessment services is granted by 44 USC § 3611."
 
-    _"The Administrator [of GSA] may determine whether FedRAMP may use an independent assessment service to analyze, validate, and attest to the quality and compliance of security assessment materials provided by cloud service providers during the course of a determination of whether to use a cloud computing product or service."_
+    _"The Administrator of GSA may determine whether FedRAMP may use an independent assessment service to analyze, validate, and attest to the quality and compliance of security assessment materials provided by cloud service providers during the course of a determination of whether to use a cloud computing product or service."_
 
 **To be used by FedRAMP for this purpose, independent assessment services must first become FedRAMP Recognized.**
 

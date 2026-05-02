@@ -1,3 +1,12 @@
+---
+description: ""
+purpose: ""
+google_doc: ""
+picto:
+  source: person
+  status: stable
+---
+
 # M-24-15 Section I. Background
 
 Since its establishment in 2011, FedRAMP has operated by partnering with

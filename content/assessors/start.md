@@ -1,3 +1,12 @@
+---
+description: ""
+purpose: ""
+google_doc: ""
+picto:
+  source: person
+  status: placeholder
+---
+
 # Getting Started as an Independent Assessor
 
 Becoming a FedRAMP Recognized independent assessment service is a two-stage process. First, build and prove your inspection and quality management capability through A2LA. Then obtain FedRAMP approval and maintain it through high-quality work within the bounds of FedRAMP performance standards and A2LA requirements.

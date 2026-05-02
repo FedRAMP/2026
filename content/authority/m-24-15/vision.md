@@ -1,3 +1,12 @@
+---
+description: ""
+purpose: ""
+google_doc: ""
+picto:
+  source: person
+  status: stable
+---
+
 # M-24-15 Section II. Vision
 
 The purpose of the FedRAMP program is to increase Federal agencies' adoption and

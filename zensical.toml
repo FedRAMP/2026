@@ -2,8 +2,9 @@
 [project]
 nav = [
   { "Overview" = [
-    { "CR26 Overview" = "index.md" },
-    { "Certification" = "certification.md" },
+    { "Overview" = "index.md" },
+    { "Release Timeline" = "timeline.md" },
+    { "FedRAMP Certification" = "certification.md" },
     { "Shared Responsibility Model" = "shared-responsibilities.md" },
     { "Changelog" = "changelog.md" },
     { "Source Data" = "sources.md" },
@@ -56,7 +57,7 @@ nav = [
   { Agencies = [
     "agencies/index.md",
     { "Getting Started" = [
-      "agencies/start.md",
+      "agencies/start/index.md",
       { "Getting Support" = "agencies/support/index.md" },
       { "Liaisons Program" = "agencies/support/liaisons.md" },
       { "Support Groups" = "agencies/support/groups.md" },
@@ -65,14 +66,6 @@ nav = [
     ] },
     { "Using a FedRAMP Certified Cloud Service" = [
       "agencies/use/index.md",
-      { "Initial Authorization" = [
-        "agencies/use/initial/index.md",
-        { "Managing Your SSP" = "agencies/use/initial/ssp.md" },
-      ] },
-      { "Ongoing Authorization" = [
-        "agencies/use/ongoing/index.md",
-        { "Managing POA&Ms" = "agencies/use/ongoing/poams.md" },
-      ] },
       { "FedRAMP Marketplace" = "agencies/use/marketplace.md" },
       { "Certification Classes" = "agencies/use/classes.md" },
       { "Certification Packages" = [
@@ -80,6 +73,14 @@ nav = [
         { "20x Certification Packages" = "agencies/use/packages/20x.md" },
         { "Rev5 Certification Packages" = "agencies/use/packages/rev5.md" },
       ] },
+      { "Initial Authorization" = [
+        "agencies/use/initial/index.md",
+        { "Managing Your SSP" = "agencies/use/initial/ssp.md" },
+      ] },
+      { "Ongoing Authorization" = [
+        "agencies/use/ongoing/index.md",
+        { "Managing POA&Ms" = "agencies/use/ongoing/poams.md" },
+      ] }
     ] },
     { "Sponsoring a Cloud Service for FedRAMP Certification" = [
       "agencies/sponsoring/index.md",
@@ -88,6 +89,7 @@ nav = [
     ] },
     { "Agency-Specific FedRAMP Rules" = [
       "agencies/rules/index.md",
+      { "Agency Use" = "agencies/rules/agency-use.md" },
       { "Collaborative Continuous Monitoring" = "agencies/rules/collaborative-continuous-monitoring.md" },
       { "Vulnerability Detection and Response" = "agencies/rules/vulnerability-detection-and-response.md" },
     ] },
@@ -225,6 +227,8 @@ nav = [
     "advisors/index.md",
     { "Getting Started" = [
       "advisors/start.md",
+      { "Getting Support" = "advisors/support.md" },
+
     ] },
     { "Applicable Rules" = [
       "advisors/rules/index.md",
@@ -234,15 +238,15 @@ nav = [
   { "--> return to FedRAMP.gov" = "/" },
 ]
 
-site_name = "FedRAMP Consolidated Rules for 2026"
-site_description = "A description."
+site_name = "FedRAMP Consolidated Rules for 2026 Public Preview"
+site_description = "This site contains a Public Preview of FedRAMP's upcoming Consolidated Rules for 2026, under active development. It should not be used after July 1, 2026."
 site_author = "pete@fedramp.gov"
 docs_dir = "src/"
 site_dir = "html/"
 site_url = "https://fedramp.gov/preview/2026/"
 repo_url = "https://github.com/fedramp/2026"
 repo_name = "FedRAMP/2026"
-extra_css = ["stylesheets/custom.css"]
+extra_css = ["stylesheets/custom.css","stylesheets/extra.css"]
 copyright = "fedramp.gov"
 
 extra_javascript = [
@@ -317,6 +321,9 @@ scheme = "slate"
 toggle.icon = "lucide/moon"
 toggle.name = "Switch to system preference"
 
+[project.validation]
+unresolved_references = false
+
 [project.markdown_extensions]
 abbr = {}
 admonition = {}
@@ -329,6 +336,7 @@ tables = {}
 [project.markdown_extensions.toc]
 permalink = true
 
+[project.markdown_extensions.pymdownx.mark]
 [project.markdown_extensions.pymdownx.details]
 [project.markdown_extensions.pymdownx.superfences]
 [project.markdown_extensions.pymdownx.tabbed]

@@ -1,3 +1,12 @@
+---
+description: ""
+purpose: ""
+google_doc: ""
+picto:
+  source: person
+  status: stable
+---
+
 # M-24-15 Section VI. Continuous Monitoring
 
 FedRAMP's continuous monitoring processes should incentivize security through

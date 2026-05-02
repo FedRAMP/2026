@@ -23,6 +23,55 @@ The rough flow is:
 - `html/`: generated static site output.
 - `zensical.toml`: Zensical site configuration and navigation.
 
+## Page Pictographs
+
+Every manually edited Markdown page should declare one source and one status in frontmatter. The build copies `content/` into `src/`, reads this `picto` frontmatter, and inserts the rendered `picto` span below the frontmatter before the first heading.
+
+Ready-to-copy frontmatter for manually edited pages:
+
+```markdown
+---
+picto:
+  source: person
+  status: stable
+---
+
+---
+picto:
+  source: person
+  status: placeholder
+---
+
+---
+picto:
+  source: person
+  status: empty
+---
+```
+
+Generated or machine-sourced pages use `source: machine`:
+
+```markdown
+picto:
+  source: machine
+  status: stable
+```
+
+Source values:
+
+```markdown
+person
+machine
+```
+
+Status values:
+
+```markdown
+stable
+placeholder
+empty
+```
+
 ## Common Commands
 
 Run these from `tools/`:

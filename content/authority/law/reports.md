@@ -1,8 +1,17 @@
+---
+description: ""
+purpose: ""
+google_doc: ""
+picto:
+  source: person
+  status: stable
+---
+
 # FedRAMP Authorization Act on Reports
 
-## **Sec. 3615. Reports to Congress; GAO report**
+## Sec. 3615. Reports to Congress; GAO report
 
-### **(a) Reports to Congress**
+### (a) Reports to Congress
 
 Not later than 1 year[^1] after the date of enactment of this section, and annually thereafter, the Director **shall** submit to the appropriate congressional committees a report that includes the following:
 
@@ -30,7 +39,7 @@ Not later than 1 year[^1] after the date of enactment of this section, and annua
 
     <ul>(D) encryption for data processed, stored, or transmitted by cloud service providers.</ul>
 
-### **(b) GAO Report**
+### (b) GAO Report
 
 Not later than 180 days[^2] after the date of enactment of this section, the Comptroller General of the United States **shall** report to the appropriate congressional committees an assessment of the following:
 
@@ -45,9 +54,9 @@ Not later than 180 days[^2] after the date of enactment of this section, the Com
 !!! note "GAO-24-106591"
 
     This required report was released on January 18, 2024 by GAO:
-    
+
     [Cloud Security: Federal Authorization Program Usage Increasing, but Challenges Need to Be Fully Addressed"](https://www.gao.gov/products/gao-24-106591)
-    
+
 
 [^1]: December 23, 2023
 [^2]: June 21, 2023
