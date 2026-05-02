@@ -55,6 +55,7 @@ interface InfoSource {
   name: string;
   short_name?: string;
   web_name: string;
+  status?: string;
   effective?: Partial<Record<EffectiveAudience, EffectiveEntrySource>>;
   labels?: Record<string, { name?: string; description?: string }>;
 }
@@ -162,6 +163,7 @@ interface KsiThemeSource {
   name: string;
   web_name: string;
   short_name?: string;
+  status?: string;
   theme?: string;
   indicators: Record<string, RequirementEntrySource>;
 }
@@ -1296,6 +1298,40 @@ function pictographSpan(
   )} ${pictographWithTooltip(statusPictograph, statusTooltip)}</span>`;
 }
 
+function generatedDocumentStatus(
+  config: ToolConfig,
+  status: string | undefined,
+  label: string,
+): GeneratedDocumentStatus {
+  if (isGeneratedDocumentStatus(config, status)) {
+    return status;
+  }
+
+  throw new Error(
+    `${label} has unsupported generated document status: ${status ?? "<missing>"}`,
+  );
+}
+
+function combinedGeneratedDocumentStatus(
+  config: ToolConfig,
+  entries: Array<{ label: string; status?: string }>,
+  label: string,
+): GeneratedDocumentStatus {
+  if (!entries.length) {
+    throw new Error(`${label} has no source statuses to combine.`);
+  }
+
+  const statusRank: Record<GeneratedDocumentStatus, number> = {
+    stable: 0,
+    placeholder: 1,
+    empty: 2,
+  };
+
+  return entries
+    .map((entry) => generatedDocumentStatus(config, entry.status, entry.label))
+    .sort((left, right) => statusRank[right] - statusRank[left])[0]!;
+}
+
 function pictographWithTooltip(pictograph: string, tooltip: string): string {
   const match = pictograph.match(/^(.*)\{\s*([^}]*?)\s*\}$/);
   if (!match?.[1] || !match[2]) {
@@ -1745,7 +1781,10 @@ function collectDefinitionDocumentArtifact(
     title,
     documentType: "FRD",
     context: buildDocumentContext(title, {
-      statusSpan: pictographSpan(config, mapping.status),
+      statusSpan: pictographSpan(
+        config,
+        generatedDocumentStatus(config, rules.FRD.info.status, "FRD.info"),
+      ),
       tags: versionTags(definitionDocumentTypes(mapping)),
       effectiveEntries,
       isDefinitionDocument: true,
@@ -1885,7 +1924,10 @@ function collectKsiDocumentArtifacts(
         title,
         documentType: "KSI",
         context: buildDocumentContext(title, {
-          statusSpan: pictographSpan(config, mapping.status),
+          statusSpan: pictographSpan(
+            config,
+            generatedDocumentStatus(config, theme.status, `KSI.${key}`),
+          ),
           tags: versionTags(["20x"]),
           isKsiDocument: true,
           themeParagraphs: splitParagraphs(theme.theme),
@@ -1917,6 +1959,14 @@ function collectDeadlineDocumentArtifactsForMapping(
   const documents = sourceDeadlineDocuments(rules, mapping).map(
     (entry) => entry.document,
   );
+  const status = combinedGeneratedDocumentStatus(
+    config,
+    documents.map((document) => ({
+      label: `FRR.${document.info.short_name ?? document.info.web_name}.info`,
+      status: document.info.status,
+    })),
+    `deadline document mapping "${mapping.id}"`,
+  );
 
   return mapping.source.types
     .map((version): BuildArtifact | null => {
@@ -1942,7 +1992,7 @@ function collectDeadlineDocumentArtifactsForMapping(
         title,
         documentType: "DEADLINES",
         context: buildDocumentContext(title, {
-          statusSpan: pictographSpan(config, mapping.status),
+          statusSpan: pictographSpan(config, status),
           tags: versionTags([version]),
           isDeadlineDocument: true,
           deadlineTables,
@@ -2000,7 +2050,17 @@ function collectSingleRuleDocumentArtifact(
     title,
     documentType: "FRR",
     context: buildDocumentContext(title, {
-      statusSpan: pictographSpan(config, mapping.status),
+      statusSpan: pictographSpan(
+        config,
+        combinedGeneratedDocumentStatus(
+          config,
+          documents.map((document) => ({
+            label: `FRR.${document.info.short_name ?? document.info.web_name}.info`,
+            status: document.info.status,
+          })),
+          `rule document mapping "${mapping.id}"`,
+        ),
+      ),
       tags: versionTags(mapping.source.types),
       effectiveEntries,
       isRequirementsDocument: true,
@@ -2043,7 +2103,10 @@ function collectDocumentRuleDocumentArtifacts(
         title,
         documentType: "FRR",
         context: buildDocumentContext(title, {
-          statusSpan: pictographSpan(config, mapping.status),
+          statusSpan: pictographSpan(
+            config,
+            generatedDocumentStatus(config, document.info.status, `FRR.${key}.info`),
+          ),
           tags: versionTags(mapping.source.types),
           effectiveEntries,
           isRequirementsDocument: true,

@@ -770,10 +770,10 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(deadlines20xContents).toStartWith(
-      `---\ntags:\n  - 20x\n---\n\n${STABLE_STATUS_SPAN}\n\n# 20x Deadlines`,
+      `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# 20x Deadlines`,
     );
     expect(deadlines20xContents).toContain(
-      "| FRC | [FedRAMP Certification](../../20x/rules/fedramp-certification.md) | 2026-05-04 | 2027-05-04 | 2027-05-04 |",
+      "| FRC | [FedRAMP Certification](../../20x/rules/fedramp-certification.md) | 2026-07-04 | 2027-05-04 | 2027-05-04 |",
     );
     expect(deadlines20xContents).not.toContain("Rev5 Deadlines");
     expect(
@@ -782,7 +782,7 @@ describe("build-markdown", () => {
       ),
     ).toBeLessThan(
       deadlines20xContents.indexOf(
-        "| MKT | [Marketplace Listing](../../20x/rules/marketplace-listing.md) | 2026-05-04 | 2027-01-01 | 2027-05-04 |",
+        "| MKT | [Marketplace Listing](../../20x/rules/marketplace-listing.md) | 2026-07-04 | 2027-01-01 | 2027-05-04 |",
       ),
     );
 
@@ -791,7 +791,7 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(deadlinesRev5Contents).toStartWith(
-      `---\ntags:\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# Rev5 Deadlines`,
+      `---\ntags:\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Rev5 Deadlines`,
     );
     expect(deadlinesRev5Contents).toContain(
       "| FRC | [FedRAMP Certification](../../rev5/rules/fedramp-certification.md) | 2027-01-01 | 2027-01-01 | 2027-01-01 |",
@@ -818,7 +818,7 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(provider20xContents).toStartWith(
-      `---\ntags:\n  - 20x\n---\n\n${STABLE_STATUS_SPAN}\n\n# FedRAMP Certification`,
+      `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# FedRAMP Certification`,
     );
     expect(provider20xContents).toContain("# FedRAMP Certification");
     expect(provider20xContents).toContain("FRC-CSO-CDS");
@@ -881,7 +881,7 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(agencyCcmContents).toStartWith(
-      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Collaborative Continuous Monitoring`,
+      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# Collaborative Continuous Monitoring`,
     );
     expect(agencyCcmContents).toContain("# Collaborative Continuous Monitoring");
     expect(agencyCcmContents).toContain("## Agency Guidance");
@@ -1090,7 +1090,7 @@ describe("build-markdown", () => {
               id: "custom-definitions",
               title: "Custom FedRAMP Definitions",
               output: "reference/fedramp-definitions.md",
-              status: "stable",
+              status: "placeholder",
               includeEffectiveDates: false,
               source: {
                 collection: "FRD",
@@ -1117,6 +1117,9 @@ describe("build-markdown", () => {
         "utf8",
       );
       expect(contents).toContain("# Custom FedRAMP Definitions");
+      expect(contents).toStartWith(
+        `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# Custom FedRAMP Definitions`,
+      );
       expect(contents).toContain("## General Terms");
       expect(contents).not.toContain("Effective Date(s)");
     } finally {
