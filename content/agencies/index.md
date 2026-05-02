@@ -2,6 +2,8 @@
 title: "Agencies"
 description: "A description of Agencies."
 icon: material/bank-outline
+purpose: ""
+google_doc: ""
 picto:
   source: person
   status: placeholder

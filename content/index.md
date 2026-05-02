@@ -1,6 +1,8 @@
 ---
 title: "Public Preview Overview"
-description: "Public preview of the FedRAMP Consolidated Rules for 2026 (CR26)"
+description: "This page contains an overview of the Public Preview, including descriptions of the content sources and status."
+purpose: "Helps folks understand the goals of the Public Preview and how to approach reviewing it."
+google_doc: ""
 icon: material/information-outline
 picto:
   source: person

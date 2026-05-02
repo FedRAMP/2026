@@ -50,12 +50,16 @@ const COLOR_RESET = "\x1b[0m";
 let unlinkedMarkdownWarningPaths: string[] = [];
 let boldMarkdownHeadingWarnings: string[] = [];
 let contentPictographWarnings: string[] = [];
+let contentFrontmatterWarnings: string[] = [];
+let emptyContentFrontmatterWarnings: string[] = [];
 const humanReadableFailureSummaries: string[] = [];
 
 afterAll(() => {
   printUnlinkedMarkdownWarnings();
   printBoldMarkdownHeadingWarnings();
   printContentPictographWarnings();
+  printContentFrontmatterWarnings();
+  printEmptyContentFrontmatterWarnings();
   printHumanReadableFailureSummaries();
 });
 
@@ -108,6 +112,42 @@ function printContentPictographWarnings(): void {
       `${WARNING_ORANGE}${WARNING_MARK} Content markdown files should declare picto.source and picto.status in frontmatter:${WARNING_RESET}`,
       "",
       ...contentPictographWarnings.map(
+        (warning) => `    ${WARNING_ORANGE}${WARNING_MARK} ${warning}${WARNING_RESET}`,
+      ),
+      "",
+    ].join("\n"),
+  );
+}
+
+function printContentFrontmatterWarnings(): void {
+  if (!contentFrontmatterWarnings.length) {
+    return;
+  }
+
+  console.warn(
+    [
+      "",
+      `${WARNING_ORANGE}${WARNING_MARK} Content markdown files should declare description, purpose, and google_doc in frontmatter:${WARNING_RESET}`,
+      "",
+      ...contentFrontmatterWarnings.map(
+        (warning) => `    ${WARNING_ORANGE}${WARNING_MARK} ${warning}${WARNING_RESET}`,
+      ),
+      "",
+    ].join("\n"),
+  );
+}
+
+function printEmptyContentFrontmatterWarnings(): void {
+  if (!emptyContentFrontmatterWarnings.length) {
+    return;
+  }
+
+  console.warn(
+    [
+      "",
+      `${WARNING_ORANGE}${WARNING_MARK} Content markdown description and purpose frontmatter should not be empty:${WARNING_RESET}`,
+      "",
+      ...emptyContentFrontmatterWarnings.map(
         (warning) => `    ${WARNING_ORANGE}${WARNING_MARK} ${warning}${WARNING_RESET}`,
       ),
       "",
@@ -286,9 +326,7 @@ async function findBoldMarkdownHeadingWarnings(root: string): Promise<string[]> 
   return warnings;
 }
 
-function pictoFrontmatterValue(
-  contents: string,
-): { source?: string; status?: string } | null {
+function frontmatterLines(contents: string): string[] | null {
   const lines = contents.split(/\r?\n/);
   if (lines[0]?.trim() !== "---") {
     return null;
@@ -301,8 +339,18 @@ function pictoFrontmatterValue(
     return null;
   }
 
-  const frontmatterLines = lines.slice(1, frontmatterEndIndex);
-  const pictoIndex = frontmatterLines.findIndex(
+  return lines.slice(1, frontmatterEndIndex);
+}
+
+function pictoFrontmatterValue(
+  contents: string,
+): { source?: string; status?: string } | null {
+  const frontmatter = frontmatterLines(contents);
+  if (!frontmatter) {
+    return null;
+  }
+
+  const pictoIndex = frontmatter.findIndex(
     (line) => line.trim() === "picto:",
   );
   if (pictoIndex === -1) {
@@ -310,8 +358,8 @@ function pictoFrontmatterValue(
   }
 
   const value: { source?: string; status?: string } = {};
-  for (let index = pictoIndex + 1; index < frontmatterLines.length; index++) {
-    const line = frontmatterLines[index];
+  for (let index = pictoIndex + 1; index < frontmatter.length; index++) {
+    const line = frontmatter[index];
     if (!line) {
       continue;
     }
@@ -331,6 +379,59 @@ function pictoFrontmatterValue(
   }
 
   return value;
+}
+
+function validateRequiredContentFrontmatter(
+  relativePath: string,
+  contents: string,
+): string | null {
+  const frontmatter = frontmatterLines(contents);
+  if (!frontmatter) {
+    return `${relativePath}: missing yaml frontmatter`;
+  }
+
+  const declaredKeys = new Set(
+    frontmatter
+      .map((line) => line.match(/^([A-Za-z0-9_-]+):(?:\s|$)/)?.[1])
+      .filter((key): key is string => Boolean(key)),
+  );
+  const missingKeys = ["description", "purpose", "google_doc"].filter(
+    (key) => !declaredKeys.has(key),
+  );
+
+  if (!missingKeys.length) {
+    return null;
+  }
+
+  return `${relativePath}: missing ${missingKeys.join(", ")}`;
+}
+
+function validateNonEmptyContentFrontmatter(
+  relativePath: string,
+  contents: string,
+): string | null {
+  const frontmatter = frontmatterLines(contents);
+  if (!frontmatter) {
+    return null;
+  }
+
+  const emptyKeys = ["description", "purpose"].filter((key) => {
+    const line = frontmatter.find((frontmatterLine) =>
+      frontmatterLine.match(new RegExp(`^${key}:`)),
+    );
+    if (!line) {
+      return false;
+    }
+
+    const value = line.slice(line.indexOf(":") + 1).trim();
+    return value === "" || value === '""' || value === "''";
+  });
+
+  if (!emptyKeys.length) {
+    return null;
+  }
+
+  return `${relativePath}: empty ${emptyKeys.join(", ")}`;
 }
 
 function validatePictographFrontmatter(
@@ -381,6 +482,42 @@ async function findContentPictographWarnings(
       contents,
       config,
     );
+    if (warning) {
+      warnings.push(warning);
+    }
+  }
+
+  return warnings;
+}
+
+async function findContentFrontmatterWarnings(root: string): Promise<string[]> {
+  const markdownPaths = (await listRelativeFiles(root))
+    .filter((relativePath) => relativePath.endsWith(".md"))
+    .sort();
+  const warnings: string[] = [];
+
+  for (const relativePath of markdownPaths) {
+    const contents = await readFile(path.join(root, relativePath), "utf8");
+    const warning = validateRequiredContentFrontmatter(relativePath, contents);
+    if (warning) {
+      warnings.push(warning);
+    }
+  }
+
+  return warnings;
+}
+
+async function findEmptyContentFrontmatterWarnings(
+  root: string,
+): Promise<string[]> {
+  const markdownPaths = (await listRelativeFiles(root))
+    .filter((relativePath) => relativePath.endsWith(".md"))
+    .sort();
+  const warnings: string[] = [];
+
+  for (const relativePath of markdownPaths) {
+    const contents = await readFile(path.join(root, relativePath), "utf8");
+    const warning = validateNonEmptyContentFrontmatter(relativePath, contents);
     if (warning) {
       warnings.push(warning);
     }
@@ -834,6 +971,26 @@ describe("content quality", () => {
     );
 
     expect(Array.isArray(contentPictographWarnings)).toBe(true);
+  });
+
+  test("warns when content markdown is missing required frontmatter fields", async () => {
+    const config = await loadToolConfig();
+    const contentPath = resolveToolPath(config.paths.content);
+
+    contentFrontmatterWarnings =
+      await findContentFrontmatterWarnings(contentPath);
+
+    expect(Array.isArray(contentFrontmatterWarnings)).toBe(true);
+  });
+
+  test("warns when content markdown has empty description or purpose frontmatter", async () => {
+    const config = await loadToolConfig();
+    const contentPath = resolveToolPath(config.paths.content);
+
+    emptyContentFrontmatterWarnings =
+      await findEmptyContentFrontmatterWarnings(contentPath);
+
+    expect(Array.isArray(emptyContentFrontmatterWarnings)).toBe(true);
   });
 
   test("warns when markdown headings are wrapped in bold markers", async () => {

@@ -2,6 +2,8 @@
 title: "Assessors"
 description: "A description of Assessors."
 icon: material/eye-check-outline
+purpose: ""
+google_doc: ""
 picto:
   source: person
   status: placeholder
