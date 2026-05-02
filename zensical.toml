@@ -317,6 +317,9 @@ scheme = "slate"
 toggle.icon = "lucide/moon"
 toggle.name = "Switch to system preference"
 
+[project.validation]
+unresolved_references = false
+
 [project.markdown_extensions]
 abbr = {}
 admonition = {}

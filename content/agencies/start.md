@@ -10,7 +10,7 @@ In addition to a plethora of new terminology and some new concepts, FedRAMP 20x 
 
 Continuous communication between FedRAMP, Cloud Service Providers, and the Agency is critical to the successful implementation of FedRAMPs mission and allows the Agency to get the maximum benefit. The following communication best practices will benefit both the Agency and the FedRAMP community:
 
-- Agencies SHOULD establish and maintain a dedicated, shared FedRAMP agency inbox (e.g., [agency]-fedramp@[agency].gov) to serve as the official point of contact for all communications between FedRAMP and the agency.
+- Agencies SHOULD establish and maintain a dedicated, shared FedRAMP agency inbox (e.g., fedramp@agency.gov) to serve as the official point of contact for all communications between FedRAMP and the agency.
 - The shared FedRAMP agency inbox SHOULD be continuously monitored by agency personnel designated to support FedRAMP certifications.
 - Agencies SHOULD ensure that all correspondence related to FedRAMP certifications and continuous monitoring is routed through the shared FedRAMP agency inbox to enable continuity, accountability, and recordkeeping.
 - The shared FedRAMP agency inbox SHOULD remain active and accessible even during personnel transitions to avoid communication gaps.

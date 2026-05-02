@@ -9,7 +9,7 @@ FedRAMP relies on independent assessment services (also known as independent ass
 
 !!! info "The authority for FedRAMP to use independent assessment services is granted by 44 USC § 3611."
 
-    _"The Administrator [of GSA] may determine whether FedRAMP may use an independent assessment service to analyze, validate, and attest to the quality and compliance of security assessment materials provided by cloud service providers during the course of a determination of whether to use a cloud computing product or service."_
+    _"The Administrator of GSA may determine whether FedRAMP may use an independent assessment service to analyze, validate, and attest to the quality and compliance of security assessment materials provided by cloud service providers during the course of a determination of whether to use a cloud computing product or service."_
 
 **To be used by FedRAMP for this purpose, independent assessment services must first become FedRAMP Recognized.**
 

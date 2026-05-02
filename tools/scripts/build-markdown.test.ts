@@ -34,9 +34,17 @@ const RULES_SCHEMA_FILE = resolveToolPath(
 const WARNING_ORANGE = "\x1b[38;5;208m";
 const WARNING_RESET = "\x1b[0m";
 const WARNING_MARK = "⚠";
+const ERROR_RED = "\x1b[31m";
+const COLOR_RESET = "\x1b[0m";
 let unlinkedMarkdownWarningPaths: string[] = [];
+const humanReadableFailureSummaries: string[] = [];
 
 afterAll(() => {
+  printUnlinkedMarkdownWarnings();
+  printHumanReadableFailureSummaries();
+});
+
+function printUnlinkedMarkdownWarnings(): void {
   if (!unlinkedMarkdownWarningPaths.length) {
     return;
   }
@@ -53,7 +61,40 @@ afterAll(() => {
       "",
     ].join("\n"),
   );
-});
+}
+
+function printHumanReadableFailureSummaries(): void {
+  if (!humanReadableFailureSummaries.length) {
+    return;
+  }
+
+  console.error(
+    [
+      "",
+      `${ERROR_RED}Human-readable failure summary:${COLOR_RESET}`,
+      "",
+      ...humanReadableFailureSummaries.map(
+        (summary, index) =>
+          `${ERROR_RED}${index + 1}. ${summary
+            .trim()
+            .replaceAll("\n", `\n   `)}${COLOR_RESET}`,
+      ),
+      "",
+    ].join("\n"),
+  );
+}
+
+function expectWithFailureSummary(
+  summary: string,
+  assertion: () => void,
+): void {
+  try {
+    assertion();
+  } catch (error) {
+    humanReadableFailureSummaries.push(summary);
+    throw error;
+  }
+}
 
 async function git(args: string[], cwd = REPO_ROOT): Promise<string> {
   const { stdout } = await execFileAsync("git", args, { cwd });
@@ -185,11 +226,17 @@ describe("build-markdown", () => {
 
     const validate = ajv.compile(schema);
     const valid = validate(rules);
-
-    expect(
-      valid,
+    const schemaFailureSummary = [
+      `${path.relative(REPO_ROOT, RULES_FILE)} does not match ${path.relative(
+        REPO_ROOT,
+        RULES_SCHEMA_FILE,
+      )}.`,
       ajv.errorsText(validate.errors, { separator: "\n" }),
-    ).toBe(true);
+    ].join("\n");
+
+    expectWithFailureSummary(schemaFailureSummary, () => {
+      expect(valid, schemaFailureSummary).toBe(true);
+    });
   });
 
   test("the rules submodule is synced to the latest upstream main", async () => {
@@ -207,10 +254,16 @@ describe("build-markdown", () => {
       );
     }
 
-    expect(
-      localHead,
-      `tools/rules is not synced to ${RULES_REMOTE_URL} ${RULES_REMOTE_BRANCH}; run "bun run sync" from tools/ and commit the updated submodule pointer.`,
-    ).toBe(latestRemoteHead);
+    const syncFailureSummary = [
+      `tools/rules is not synced to ${RULES_REMOTE_URL} ${RULES_REMOTE_BRANCH}.`,
+      `Run "bun run sync" from tools/ and commit the updated submodule pointer.`,
+      `Local HEAD: ${localHead}`,
+      `Upstream ${RULES_REMOTE_BRANCH}: ${latestRemoteHead}`,
+    ].join("\n");
+
+    expectWithFailureSummary(syncFailureSummary, () => {
+      expect(localHead, syncFailureSummary).toBe(latestRemoteHead);
+    });
   });
 
   test("builds configured markdown files from the JSON source", async () => {

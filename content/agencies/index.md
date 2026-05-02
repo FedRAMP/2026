@@ -11,7 +11,7 @@ FedRAMP provides a standardized, reusable approach to security assessment and au
 
 FedRAMP is mandatory for federal agencies!
 
-"Agencies must obtain and maintain a FedRAMP authorization when the cloud product or service falls within the scope [of FedRAMP]..." - OMB Memorandum M-24-15, "Modernizing FedRAMP"
+"Agencies must obtain and maintain a FedRAMP authorization when the cloud product or service falls within the scope of FedRAMP..." - OMB Memorandum M-24-15, "Modernizing FedRAMP"
 
 This section outlines all of the requirements and recommendations for agencies to engage with the FedRAMP PMO and use FedRAMP certifications.
 

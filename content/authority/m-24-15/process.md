@@ -288,3 +288,13 @@ requirements.
     Questions regarding acquisition.
 
 [^21]: 44 U.S.C. § 3609(b)(2).
+
+[^22]:
+    NIST SP 800-37, _Risk Management Framework for Information Systems and
+    Organization_, includes discussion of issuing authorizations for a short
+    period of time.
+
+[^23]:
+    FedRAMP will provide additional procedures related to this trial process,
+    and agencies are encouraged to coordinate with FedRAMP to ensure that there
+    is no potential gap in service when the trial period concludes.
