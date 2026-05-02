@@ -1,17 +1,15 @@
 ---
 title: "Agencies"
-description: "A description of Agencies."
 icon: material/bank-outline
-purpose: ""
-google_doc: ""
+description: "Introduction for agencies, how this whole thing plays out for them, and how this page is laid out."
+purpose: "Help agencies understand what the rules are and how to navigate them."
+google_doc: "https://docs.google.com/document/d/1UdOIjketHNMeQrpmDVJdX8KrdKClvVQ7stp97KEYw9I/edit?tab=t.0"
 picto:
   source: person
   status: placeholder
 ---
 
 # Federal Agencies
-
-!!! warning "This contains placeholder content that will change during editing in the Preview Phase."
 
 FedRAMP provides a standardized, reusable approach to security assessment and authorization for cloud computing products and services used by federal agencies.
 

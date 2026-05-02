@@ -1,6 +1,6 @@
 ---
-description: ""
-purpose: ""
+description: "High level timelines for how the Consolidated Rules for 2026 will be produced and take effect."
+purpose: "Help folks understand when all of this will happen."
 google_doc: ""
 picto:
   source: person

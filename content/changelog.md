@@ -1,6 +1,6 @@
 ---
-description: ""
-purpose: ""
+description: "A history of changes to overall rules and this website through the Consolidated Rules for 2026 Public Preview period."
+purpose: "Gives folks a consistent place to come and see summaries of the changes since last visit."
 google_doc: ""
 picto:
   source: person

@@ -1,16 +1,13 @@
 ---
-description: ""
-purpose: ""
-google_doc: ""
+description: "Information about the FedRAMP Liaison Program, why it matters, and how to get involved."
+purpose: "Agencies will know that they should assign a FedRAMP Liaison and what they get out of it, and how to get started communicating with this group, what it's good for, why it's important, etc. They should also be encouraged to use this group instead of just emailing fedramp directly sometimes."
+google_doc: "https://docs.google.com/document/d/1UdOIjketHNMeQrpmDVJdX8KrdKClvVQ7stp97KEYw9I/edit?tab=t.ofiuuv1obobd"
 picto:
   source: person
   status: placeholder
 ---
 
 # The FedRAMP Agency Liaisons Program
-
-!!! warning "This contains placeholder content that will change during editing in the Preview Phase."
-
 
 FedRAMP Agency Liaisons are dedicated points of contact within most federal agencies who serve as the bridge connecting an agency and FedRAMP. The FedRAMP Agency Liaison Program established a voluntary community of trained individuals that will serve as a unified voice across federal agencies as they teach and facilitate FedRAMP processes and procedures. The goals of the FedRAMP Agency Liaison Program are to promote faster and more efficient authorizations and enable agency liaisons to train others within their agencies about the FedRAMP process.
 Program Benefits Include

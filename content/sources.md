@@ -1,6 +1,6 @@
 ---
-description: ""
-purpose: ""
+description: "Information about the underlying sources from which this HTML web page is generated."
+purpose: "Allow folks and agents to go directly to structured or semi-structured text materials instead of scraping the website."
 google_doc: ""
 picto:
   source: person

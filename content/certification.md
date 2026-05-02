@@ -1,6 +1,6 @@
 ---
-description: ""
-purpose: ""
+description: "Explanations of FedRAMP Certification profiles, which involve different types, classes, and paths."
+purpose: "Help folks understand what's up in this brave new world where FedRAMP uses different terms for commercial cloud service certification than agencies use for operating federal information systems."
 google_doc: ""
 picto:
   source: person

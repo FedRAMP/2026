@@ -57,7 +57,7 @@ nav = [
   { Agencies = [
     "agencies/index.md",
     { "Getting Started" = [
-      "agencies/start.md",
+      "agencies/start/index.md",
       { "Getting Support" = "agencies/support/index.md" },
       { "Liaisons Program" = "agencies/support/liaisons.md" },
       { "Support Groups" = "agencies/support/groups.md" },
@@ -66,14 +66,6 @@ nav = [
     ] },
     { "Using a FedRAMP Certified Cloud Service" = [
       "agencies/use/index.md",
-      { "Initial Authorization" = [
-        "agencies/use/initial/index.md",
-        { "Managing Your SSP" = "agencies/use/initial/ssp.md" },
-      ] },
-      { "Ongoing Authorization" = [
-        "agencies/use/ongoing/index.md",
-        { "Managing POA&Ms" = "agencies/use/ongoing/poams.md" },
-      ] },
       { "FedRAMP Marketplace" = "agencies/use/marketplace.md" },
       { "Certification Classes" = "agencies/use/classes.md" },
       { "Certification Packages" = [
@@ -81,6 +73,14 @@ nav = [
         { "20x Certification Packages" = "agencies/use/packages/20x.md" },
         { "Rev5 Certification Packages" = "agencies/use/packages/rev5.md" },
       ] },
+      { "Initial Authorization" = [
+        "agencies/use/initial/index.md",
+        { "Managing Your SSP" = "agencies/use/initial/ssp.md" },
+      ] },
+      { "Ongoing Authorization" = [
+        "agencies/use/ongoing/index.md",
+        { "Managing POA&Ms" = "agencies/use/ongoing/poams.md" },
+      ] }
     ] },
     { "Sponsoring a Cloud Service for FedRAMP Certification" = [
       "agencies/sponsoring/index.md",
@@ -226,6 +226,8 @@ nav = [
     "advisors/index.md",
     { "Getting Started" = [
       "advisors/start.md",
+      { "Getting Support" = "advisors/support.md" },
+
     ] },
     { "Applicable Rules" = [
       "advisors/rules/index.md",

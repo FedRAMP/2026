@@ -1,6 +1,6 @@
 ---
-description: ""
-purpose: ""
+description: "Guidelines and examples for understanding the scope of FedRAMP."
+purpose: "Helps folks understand when a cloud service is within the scope of FedRAMP."
 google_doc: ""
 picto:
   source: person

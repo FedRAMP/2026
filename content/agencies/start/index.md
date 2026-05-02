@@ -1,15 +1,13 @@
 ---
-description: ""
-purpose: ""
-google_doc: ""
+description: "A narrative overview of how to get started using FedRAMP that introduces folks to the rest of this section."
+purpose: "Help folks transition from landing into navigating the rest of the agency getting started section."
+google_doc: "https://docs.google.com/document/d/1UdOIjketHNMeQrpmDVJdX8KrdKClvVQ7stp97KEYw9I/edit?tab=t.zc2jswhzgoka"
 picto:
   source: person
   status: placeholder
 ---
 
 # Getting Started as a Federal Agency
-
-!!! warning "This contains placeholder content that will change during editing in the Preview Phase."
 
 ## Build Agency Policy
 
