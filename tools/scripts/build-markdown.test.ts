@@ -796,6 +796,7 @@ describe("build-markdown", () => {
     expect(deadlines20xContents).toContain(
       "| FRC | [FedRAMP Certification](../../20x/rules/fedramp-certification.md) | 2026-07-04 | 2027-05-04 | 2027-05-04 |",
     );
+    expect(deadlines20xContents).not.toContain("| AGU |");
     expect(deadlines20xContents).not.toContain("Rev5 Deadlines");
     expect(
       deadlines20xContents.indexOf(
@@ -964,6 +965,49 @@ describe("build-markdown", () => {
           artifact.relativePath === "assessors/20x/rules/marketplace-listing.md",
       ),
     ).toBe(false);
+  });
+
+  test("ignores configured deadline documents after resolving the source selection", async () => {
+    const config = await loadToolConfig();
+    const rules = await loadRules(config);
+    const artifacts = collectArtifacts(rules, {
+      ...config,
+      generated: {
+        ...config.generated,
+        definitionDocuments: [],
+        ksiDocuments: [],
+        deadlineDocuments: [
+          {
+            id: "deadlines-with-ignored-marketplace",
+            title: "Important Deadlines",
+            output: "providers/updating/deadlines/{type}.md",
+            status: "stable",
+            template: "templates/deadlines.hbs",
+            source: {
+              collection: "FRR",
+              documents: ["MKT", "FRC"],
+              ignoreDocuments: ["MKT"],
+              types: ["20x"],
+            },
+          },
+        ],
+        ruleDocuments: [],
+      },
+    });
+
+    const deadlineArtifact = artifacts.find(
+      (artifact) =>
+        artifact.documentType === "DEADLINES" &&
+        artifact.relativePath === "providers/updating/deadlines/20x.md",
+    );
+    const shortNames =
+      deadlineArtifact?.context.deadlineTables.flatMap((table) =>
+        table.rows.map((row) => row.shortName),
+      ) ?? [];
+
+    expect(deadlineArtifact).toBeDefined();
+    expect(shortNames).toContain("FRC");
+    expect(shortNames).not.toContain("MKT");
   });
 
   test("adds page info admonitions below content pictograph spans", async () => {

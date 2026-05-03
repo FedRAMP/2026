@@ -8,6 +8,7 @@ nav = [
     { "Shared Responsibility Model" = "shared-responsibilities.md" },
     { "Changelog" = "changelog.md" },
     { "Source Data" = "sources.md" },
+    { "TO DO" = "todo.md" },
     { "FedRAMP's Authority" = [
       { "FedRAMP Authorization Act" = [
         "authority/law/index.md",
@@ -101,12 +102,14 @@ nav = [
       { "Getting Support" = "providers/support.md" },
       { "Finding an Advisor" = "providers/start/advisor.md" },
       { "Choosing a Certification..." = [
+        { "Starting Class" = "providers/start/class.md" },
         { "Type" = "providers/start/type.md" },
         { "Path" = "providers/start/path.md" },
-        { "Class" = "providers/start/class.md" },
       ] },
       { "Preparing" = "providers/start/prepare.md" },
-      { "Getting Listed" = "providers/start/get-listed.md" },
+      { "Getting Listed" = [
+        "providers/start/marketplace/index.md",
+      ]},
       { "Finding an Assessor" = "providers/start/assessor.md" },
       { "Getting Certified" = "providers/start/get-certified.md" },
     ] },
@@ -123,11 +126,11 @@ nav = [
       "providers/20x/index.md",
       { "Initial Certification" = [
         "providers/20x/initial/index.md",
-
       ] },
       { "Ongoing Certification" = [
         "providers/20x/ongoing/index.md",
       ] },
+      { "Changing Class" = "providers/20x/changing-class.md"},
       { "Applicable Rules" = [
         "providers/20x/rules/index.md",
         { "Marketplace Listing" = "providers/20x/rules/marketplace-listing.md" },
@@ -165,6 +168,7 @@ nav = [
       { "Ongoing Certification" = [
         "providers/rev5/ongoing/index.md",
       ] },
+      { "Changing Class" = "providers/rev5/changing-class.md"},
       { "Applicable Rules" = [
         "providers/rev5/rules/index.md",
         { "Marketplace Listing" = "providers/rev5/rules/marketplace-listing.md" },

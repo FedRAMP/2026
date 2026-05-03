@@ -65,6 +65,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
+          "ignoreDocuments": ["AGU", "SDR", "IAP", "IAR"],
           "types": ["20x", "rev5"]
         }
       },
@@ -77,6 +78,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
+          "ignoreDocuments": ["AGU", "SDR", "IAP", "IAR"],
           "types": ["20x", "rev5"]
         }
       }
@@ -197,7 +199,6 @@
         "output": "assessors/recognition/rules/{FRR}.md",
         "outputMode": "documents",
         "status": "placeholder",
-
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../",
         "emptyBehavior": "skip",

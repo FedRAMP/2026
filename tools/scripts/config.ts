@@ -101,6 +101,7 @@ export interface KsiDocumentMappingConfig {
 export interface DeadlineDocumentSourceConfig {
   collection: "FRR";
   documents?: RuleDocumentSelection;
+  ignoreDocuments?: string[];
   types: RuleType[];
 }
 

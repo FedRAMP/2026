@@ -149,6 +149,8 @@ Add an entry to `generated.deadlineDocuments` in `config.json`:
 
 Deadline documents generate one page per configured type. They read each selected FRR document's `info.short_name`, `info.name`, `info.web_name`, and `info.effective` values. The generated table links each rule family name to the matching provider rule page for that type. Use `{type}` or `{version}` in `output` to place each type page explicitly.
 
+Use `source.ignoreDocuments` to remove specific FRR keys after `source.documents` is resolved, including when `source.documents` is `"ALL"`.
+
 ## Adding A Generated Rules Page
 
 Add an entry to `generated.ruleDocuments` in `config.json`:

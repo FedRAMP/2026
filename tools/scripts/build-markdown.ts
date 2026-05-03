@@ -999,7 +999,25 @@ function sourceDocumentKeys(
     );
   }
 
-  const ignoredDocumentKeys = normalizeIgnoredDocumentKeys(mapping);
+  return filterIgnoredDocumentKeys(
+    rules,
+    mapping,
+    selectedDocumentKeys,
+    "Rule document mapping",
+  );
+}
+
+type IgnorableFrrDocumentMapping =
+  | RuleDocumentMappingConfig
+  | DeadlineDocumentMappingConfig;
+
+function filterIgnoredDocumentKeys(
+  rules: RulesDocument,
+  mapping: IgnorableFrrDocumentMapping,
+  selectedDocumentKeys: string[],
+  mappingLabel: string,
+): string[] {
+  const ignoredDocumentKeys = normalizeIgnoredDocumentKeys(mapping, mappingLabel);
   if (!ignoredDocumentKeys.length) {
     return selectedDocumentKeys;
   }
@@ -1015,7 +1033,7 @@ function sourceDocumentKeys(
   );
   if (!filteredDocumentKeys.length) {
     throw new Error(
-      `Rule document mapping "${mapping.id}" ignored every selected FRR document.`,
+      `${mappingLabel} "${mapping.id}" ignored every selected FRR document.`,
     );
   }
 
@@ -1023,20 +1041,21 @@ function sourceDocumentKeys(
 }
 
 function normalizeIgnoredDocumentKeys(
-  mapping: RuleDocumentMappingConfig,
+  mapping: IgnorableFrrDocumentMapping,
+  mappingLabel: string,
 ): string[] {
   const { ignoreDocuments } = mapping.source as { ignoreDocuments?: unknown };
 
   if (Array.isArray(ignoreDocuments)) {
     if (!ignoreDocuments.length) {
       throw new Error(
-        `Rule document mapping "${mapping.id}" must specify at least one ignored source document when source.ignoreDocuments is present.`,
+        `${mappingLabel} "${mapping.id}" must specify at least one ignored source document when source.ignoreDocuments is present.`,
       );
     }
 
     if (!ignoreDocuments.every((documentKey) => typeof documentKey === "string")) {
       throw new Error(
-        `Rule document mapping "${mapping.id}" must specify source.ignoreDocuments as an array of FRR document keys.`,
+        `${mappingLabel} "${mapping.id}" must specify source.ignoreDocuments as an array of FRR document keys.`,
       );
     }
 
@@ -1045,7 +1064,7 @@ function normalizeIgnoredDocumentKeys(
 
   if (ignoreDocuments !== undefined) {
     throw new Error(
-      `Rule document mapping "${mapping.id}" must specify source.ignoreDocuments as an array of FRR document keys.`,
+      `${mappingLabel} "${mapping.id}" must specify source.ignoreDocuments as an array of FRR document keys.`,
     );
   }
 
@@ -1079,23 +1098,29 @@ function deadlineSourceDocumentKeys(
   mapping: DeadlineDocumentMappingConfig,
 ): string[] {
   const { documents } = mapping.source;
+  let selectedDocumentKeys: string[];
 
   if (documents === "ALL") {
-    return Object.keys(rules.FRR);
-  }
-
-  if (Array.isArray(documents)) {
+    selectedDocumentKeys = Object.keys(rules.FRR);
+  } else if (Array.isArray(documents)) {
     if (!documents.length) {
       throw new Error(
         `Deadline document mapping "${mapping.id}" must specify at least one source document.`,
       );
     }
 
-    return documents;
+    selectedDocumentKeys = documents;
+  } else {
+    throw new Error(
+      `Deadline document mapping "${mapping.id}" must specify source.documents or source.documents: "ALL".`,
+    );
   }
 
-  throw new Error(
-    `Deadline document mapping "${mapping.id}" must specify source.documents or source.documents: "ALL".`,
+  return filterIgnoredDocumentKeys(
+    rules,
+    mapping,
+    selectedDocumentKeys,
+    "Deadline document mapping",
   );
 }
 
