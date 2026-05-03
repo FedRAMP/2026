@@ -55,6 +55,7 @@ interface InfoSource {
   name: string;
   short_name?: string;
   web_name: string;
+  purpose?: string;
   status?: string;
   effective?: Partial<Record<EffectiveAudience, EffectiveEntrySource>>;
   labels?: Record<string, { name?: string; description?: string }>;
@@ -266,8 +267,16 @@ interface DefinitionSectionViewModel {
 
 interface SectionViewModel {
   title: string;
+  anchorId: string;
+  anchorAttribute: string;
+  isLabelSection: boolean;
   descriptionParagraphs: string[];
   requirements: RequirementViewModel[];
+}
+
+interface TableOfContentsEntryViewModel {
+  title: string;
+  href: string;
 }
 
 interface DeadlineRowViewModel {
@@ -290,6 +299,8 @@ interface DocumentViewModel {
   title: string;
   statusSpan?: string;
   tags: string[];
+  purposeParagraphs: string[];
+  tableOfContents: TableOfContentsEntryViewModel[];
   effectiveEntries: EffectiveEntryViewModel[];
   isDefinitionDocument: boolean;
   isRequirementsDocument: boolean;
@@ -377,6 +388,35 @@ function slugifyTerm(term: string): string {
     .toLowerCase()
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9-]/g, "");
+}
+
+function slugifyHeading(heading: string): string {
+  return slugifyTerm(heading.replace(/&/g, " and "));
+}
+
+function sectionAnchorId(labelKey: string, title: string): string {
+  return slugifyHeading(title) || slugifyHeading(labelKey);
+}
+
+function sectionAnchorAttribute(labelKey: string, title: string): string {
+  return `{#${sectionAnchorId(labelKey, title)}}`;
+}
+
+function buildSectionTableOfContents(
+  sections: SectionViewModel[],
+): TableOfContentsEntryViewModel[] {
+  const sectionsWithRules = sections.filter(
+    (section) => section.isLabelSection && section.requirements.length > 0,
+  );
+
+  if (sectionsWithRules.length <= 1) {
+    return [];
+  }
+
+  return sectionsWithRules.map((section) => ({
+    title: section.title,
+    href: `#${section.anchorId}`,
+  }));
 }
 
 function buildDoNotLinkTermIndex(
@@ -825,6 +865,12 @@ function buildSectionViewModels(
       const label = document.info.labels?.[labelKey];
       const section = existingSection ?? {
         title: label?.name ?? labelKey,
+        anchorId: sectionAnchorId(labelKey, label?.name ?? labelKey),
+        anchorAttribute: sectionAnchorAttribute(
+          labelKey,
+          label?.name ?? labelKey,
+        ),
+        isLabelSection: true,
         descriptionParagraphs: splitParagraphs(label?.description),
         requirements: [],
       };
@@ -941,6 +987,12 @@ function buildConfiguredSectionViewModels(
       const label = document.info.labels?.[labelKey];
       const section = sections.get(labelKey) ?? {
         title: label?.name ?? labelKey,
+        anchorId: sectionAnchorId(labelKey, label?.name ?? labelKey),
+        anchorAttribute: sectionAnchorAttribute(
+          labelKey,
+          label?.name ?? labelKey,
+        ),
+        isLabelSection: true,
         descriptionParagraphs: splitParagraphs(label?.description),
         requirements: [],
       };
@@ -1015,6 +1067,15 @@ function buildDocumentGroupedSectionViewModel(
 
   return {
     title: document.info.name,
+    anchorId: sectionAnchorId(
+      document.info.short_name ?? document.info.web_name,
+      document.info.name,
+    ),
+    anchorAttribute: sectionAnchorAttribute(
+      document.info.short_name ?? document.info.web_name,
+      document.info.name,
+    ),
+    isLabelSection: false,
     descriptionParagraphs: [],
     requirements,
   };
@@ -1327,6 +1388,8 @@ function buildDocumentContext(
     title,
     statusSpan: options.statusSpan,
     tags: options.tags ?? [],
+    purposeParagraphs: options.purposeParagraphs ?? [],
+    tableOfContents: options.tableOfContents ?? [],
     effectiveEntries: options.effectiveEntries ?? [],
     isDefinitionDocument: options.isDefinitionDocument ?? false,
     isRequirementsDocument: options.isRequirementsDocument ?? false,
@@ -1883,6 +1946,7 @@ function collectDefinitionDocumentArtifact(
         generatedDocumentStatus(config, rules.FRD.info.status, "FRD.info"),
       ),
       tags: versionTags(definitionDocumentTypes(mapping)),
+      purposeParagraphs: splitParagraphs(rules.FRD.info.purpose),
       effectiveEntries,
       isDefinitionDocument: true,
       definitionSections,
@@ -2132,6 +2196,8 @@ function collectSingleRuleDocumentArtifact(
 
   const relativePath = normalizeGeneratedPath(renderRuleDocumentOutput(mapping));
   const title = mapping.title ?? firstDocument.info.name;
+  const purposeParagraphs =
+    documents.length === 1 ? splitParagraphs(firstDocument.info.purpose) : [];
   const effectiveEntries =
     mapping.includeEffectiveDates === false || documents.length !== 1
       ? []
@@ -2160,6 +2226,8 @@ function collectSingleRuleDocumentArtifact(
         ),
       ),
       tags: versionTags(mapping.source.types),
+      purposeParagraphs,
+      tableOfContents: buildSectionTableOfContents(sections),
       effectiveEntries,
       isRequirementsDocument: true,
       sections,
@@ -2207,6 +2275,8 @@ function collectDocumentRuleDocumentArtifacts(
             generatedDocumentStatus(config, document.info.status, `FRR.${key}.info`),
           ),
           tags: versionTags(mapping.source.types),
+          purposeParagraphs: splitParagraphs(document.info.purpose),
+          tableOfContents: buildSectionTableOfContents(sections),
           effectiveEntries,
           isRequirementsDocument: true,
           sections,

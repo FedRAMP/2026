@@ -13,6 +13,18 @@ tags:
 {{/if}}
 # {{title}}
 
+{{#each purposeParagraphs}}
+{{this}}
+
+{{/each}}
+{{#if tableOfContents.length}}
+**Rule Sections**
+
+{{#each tableOfContents}}
+- [{{title}}]({{href}})
+{{/each}}
+
+{{/if}}
 {{#if effectiveEntries.length}}
 {{#each effectiveEntries}}
 !!! info "Effective Date(s) & Overall Applicability for {{audienceLabel}}"
