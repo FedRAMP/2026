@@ -9,6 +9,21 @@ nav = [
     { "Changelog" = "changelog.md" },
     { "Source Data" = "sources.md" },
     { "TO DO" = "todo.md" },
+  ] },
+  { "FedRAMP" = [
+    "responsibilities/index.md",
+    { "Definitions" = "definitions.md" },
+    { "FedRAMP Marketplace" = "marketplace.md" },
+    { "Scope of FedRAMP" = "scope.md" },
+
+    { "FedRAMP's Responsibilities" = [
+      { "FedRAMP Certification" = "responsibilities/fedramp-certification.md" },
+      { "FedRAMP Security Inbox" = "responsibilities/fedramp-security-inbox.md" },
+      { "Incident Communications Procedures" = "responsibilities/incident-communications-procedures.md" },
+      { "Marketplace Listing" = "responsibilities/marketplace-listing.md" },
+      { "Significant Change Notifications" = "responsibilities/significant-change-notifications.md" },
+      { "Vulnerability Detection and Response" = "responsibilities/vulnerability-detection-and-response.md" },
+    ] },
     { "FedRAMP's Authority" = [
       { "FedRAMP Authorization Act" = [
         "authority/law/index.md",
@@ -40,21 +55,6 @@ nav = [
       { "Rescinded 2011 Memo" = "authority/rescinded-2011-fedramp-memo.md" },
     ] },
   ] },
-  { "FedRAMP" = [
-    "responsibilities/index.md",
-    { "Definitions" = "definitions.md" },
-    { "FedRAMP Marketplace" = "marketplace.md" },
-    { "Scope of FedRAMP" = "scope.md" },
-
-    { "FedRAMP's Responsibilities" = [
-      { "FedRAMP Certification" = "responsibilities/fedramp-certification.md" },
-      { "FedRAMP Security Inbox" = "responsibilities/fedramp-security-inbox.md" },
-      { "Incident Communications Procedures" = "responsibilities/incident-communications-procedures.md" },
-      { "Marketplace Listing" = "responsibilities/marketplace-listing.md" },
-      { "Significant Change Notifications" = "responsibilities/significant-change-notifications.md" },
-      { "Vulnerability Detection and Response" = "responsibilities/vulnerability-detection-and-response.md" },
-    ] },
-  ] },
   { Agencies = [
     "agencies/index.md",
     { "Getting Started as a Federal Agency" = [
@@ -81,7 +81,7 @@ nav = [
       { "Ongoing Authorization" = [
         "agencies/use/ongoing/index.md",
         { "Managing POA&Ms" = "agencies/use/ongoing/poams.md" },
-      ] }
+      ] },
     ] },
     { "Sponsoring a Cloud Service for FedRAMP Certification" = [
       "agencies/sponsoring/index.md",
@@ -109,7 +109,7 @@ nav = [
       { "Preparing" = "providers/start/prepare.md" },
       { "Getting Listed" = [
         "providers/start/marketplace/index.md",
-      ]},
+      ] },
       { "Finding an Assessor" = "providers/start/assessor.md" },
       { "Getting Certified" = "providers/start/get-certified.md" },
     ] },
@@ -120,7 +120,7 @@ nav = [
         "providers/updating/deadlines/index.md",
         { "Rev5 Deadlines" = "providers/updating/deadlines/rev5.md" },
         { "20x Deadlines" = "providers/updating/deadlines/20x.md" },
-        ]},
+      ] },
     ] },
     { "FedRAMP 20x Certification Rules" = [
       "providers/20x/index.md",
@@ -130,7 +130,7 @@ nav = [
       { "Ongoing Certification" = [
         "providers/20x/ongoing/index.md",
       ] },
-      { "Changing Class" = "providers/20x/changing-class.md"},
+      { "Changing Class" = "providers/20x/changing-class.md" },
       { "Applicable Rules" = [
         "providers/20x/rules/index.md",
         { "Marketplace Listing" = "providers/20x/rules/marketplace-listing.md" },
@@ -168,7 +168,7 @@ nav = [
       { "Ongoing Certification" = [
         "providers/rev5/ongoing/index.md",
       ] },
-      { "Changing Class" = "providers/rev5/changing-class.md"},
+      { "Changing Class" = "providers/rev5/changing-class.md" },
       { "Applicable Rules" = [
         "providers/rev5/rules/index.md",
         { "Marketplace Listing" = "providers/rev5/rules/marketplace-listing.md" },
@@ -201,7 +201,7 @@ nav = [
         "assessors/updating/deadlines/index.md",
         { "Rev5 Deadlines" = "assessors/updating/deadlines/rev5.md" },
         { "20x Deadlines" = "assessors/updating/deadlines/20x.md" },
-        ]},
+      ] },
     ] },
     { "FedRAMP Recognition" = [
       "assessors/recognition/index.md",
@@ -259,12 +259,12 @@ site_dir = "html/"
 site_url = "https://fedramp.gov/preview/2026/"
 repo_url = "https://github.com/fedramp/2026"
 repo_name = "FedRAMP/2026"
-extra_css = ["stylesheets/custom.css","stylesheets/extra.css"]
+extra_css = ["stylesheets/custom.css", "stylesheets/extra.css"]
 copyright = "fedramp.gov"
 
 extra_javascript = [
-    "https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js",
-    "javascripts/tablesort.js"
+  "https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js",
+  "javascripts/tablesort.js",
 ]
 
 [project.extra]

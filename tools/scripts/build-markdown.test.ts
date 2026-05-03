@@ -213,6 +213,24 @@ function expectFileToStartWith(
   });
 }
 
+function expectTextOrder(
+  contents: string,
+  expectedTexts: string[],
+  description: string,
+): void {
+  expectWithFailureSummary(description, () => {
+    let previousIndex = -1;
+    for (const expectedText of expectedTexts) {
+      const index = contents.indexOf(expectedText, previousIndex + 1);
+      expect(
+        index,
+        `${description}: missing or out-of-order text: ${expectedText}`,
+      ).toBeGreaterThan(previousIndex);
+      previousIndex = index;
+    }
+  });
+}
+
 async function git(args: string[], cwd = REPO_ROOT): Promise<string> {
   const { stdout } = await execFileAsync("git", args, { cwd });
   return stdout.trim();
@@ -733,9 +751,22 @@ describe("build-markdown", () => {
       path.join(OUTPUT_DIR, "definitions.md"),
       "utf8",
     );
+    const definitionsPurpose = rules.FRD.info.purpose;
+    expect(definitionsPurpose).toBeTruthy();
     expect(definitionsContents).toStartWith(
       `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# FedRAMP Definitions`,
     );
+    expectTextOrder(
+      definitionsContents,
+      [
+        "# FedRAMP Definitions",
+        definitionsPurpose ?? "",
+        "\n---",
+        "## General Terms",
+      ],
+      "Generated FRD markdown should place info.purpose before the first body rule",
+    );
+    expect(definitionsContents).not.toContain("**Rule Sections**");
     expect(definitionsContents).not.toContain(
       '??? abstract "Background & Authority"',
     );
@@ -778,6 +809,7 @@ describe("build-markdown", () => {
       `---\ntags:\n  - 20x\n---\n\n${STABLE_STATUS_SPAN}\n\n# Change Management`,
     );
     expect(ksiChangeManagementContents).toContain("# Change Management");
+    expect(ksiChangeManagementContents).not.toContain("**Rule Sections**");
     expect(ksiChangeManagementContents).not.toContain('!!! info ""');
     expect(ksiChangeManagementContents).toContain("KSI-CMT-LMC");
     expect(ksiChangeManagementContents).toContain("### Logging Changes");
@@ -868,8 +900,23 @@ describe("build-markdown", () => {
       ),
       "utf8",
     );
+    const fedrampCertificationPurpose = rules.FRR.FRC?.info.purpose;
+    expect(fedrampCertificationPurpose).toBeTruthy();
     expect(provider20xContents).toStartWith(
       `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# FedRAMP Certification`,
+    );
+    expectTextOrder(
+      provider20xContents,
+      [
+        "# FedRAMP Certification",
+        fedrampCertificationPurpose ?? "",
+        "**Rule Sections**",
+        "- [General Provider Responsibilities](#general-provider-responsibilities)",
+        "- [20x-Specific Provider Responsibilities](#20x-specific-provider-responsibilities)",
+        "\n---",
+        "## General Provider Responsibilities {#general-provider-responsibilities}",
+      ],
+      "Generated FRR markdown should place info.purpose and a multi-section TOC before the first body rule",
     );
     expect(provider20xContents).toContain("# FedRAMP Certification");
     expect(provider20xContents).toContain("FRC-CSO-CDS");
@@ -937,10 +984,23 @@ describe("build-markdown", () => {
       ),
       "utf8",
     );
+    const collaborativeMonitoringPurpose = rules.FRR.CCM?.info.purpose;
+    expect(collaborativeMonitoringPurpose).toBeTruthy();
     expect(agencyCcmContents).toStartWith(
       `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# Collaborative Continuous Monitoring`,
     );
+    expectTextOrder(
+      agencyCcmContents,
+      [
+        "# Collaborative Continuous Monitoring",
+        collaborativeMonitoringPurpose ?? "",
+        "\n---",
+        "## Agency Guidance {#agency-guidance}",
+      ],
+      "Generated single-label FRR markdown should place info.purpose before the first body rule without a TOC",
+    );
     expect(agencyCcmContents).toContain("# Collaborative Continuous Monitoring");
+    expect(agencyCcmContents).not.toContain("**Rule Sections**");
     expect(agencyCcmContents).toContain("## Agency Guidance");
     expect(agencyCcmContents).toContain("CCM-AGM-ROR");
     expect(agencyCcmContents).not.toContain("## Ongoing Certification Reports");
