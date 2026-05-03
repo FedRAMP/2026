@@ -755,9 +755,9 @@ describe("build-markdown", () => {
     ).sort((left, right) => left.localeCompare(right));
     expect(definitionSectionHeaders).toEqual([
       "General Terms",
-      ...definitionTags.map((tag) => `Specific Terms: ${tag}`),
+      ...definitionTags.map((tag) => `Related Terms: ${tag}`),
     ]);
-    expect(definitionsContents).toContain("## Specific Terms: Vulnerabilities");
+    expect(definitionsContents).toContain("## Related Terms: Vulnerability");
 
     const ksiArtifactPaths = relativePaths.filter((relativePath) =>
       relativePath.startsWith("providers/20x/key-security-indicators/"),
@@ -789,6 +789,23 @@ describe("build-markdown", () => {
     );
     expect(ksiChangeManagementContents).toContain(
       "../../../definitions/#cloud-service-offering",
+    );
+    const ksiPolicyInventoryContents = await readFile(
+      path.join(
+        OUTPUT_DIR,
+        "providers",
+        "20x",
+        "key-security-indicators",
+        "policy-and-inventory.md",
+      ),
+      "utf8",
+    );
+    expect(ksiPolicyInventoryContents).toContain("KSI-PIY-RES");
+    expect(ksiPolicyInventoryContents).toContain(
+      "[Persistently](../../../definitions/#persistently){ data-preview }",
+    );
+    expect(ksiPolicyInventoryContents).not.toContain(
+      "[Provider](../../../definitions/#provider){ data-preview }",
     );
 
     const deadlines20xPath = path.join(
@@ -859,6 +876,12 @@ describe("build-markdown", () => {
     expect(provider20xContents).toContain("FRC-CSX-SUM");
     expect(provider20xContents).not.toContain("FRC-CSL-CDE");
     expect(provider20xContents).toContain("../../../definitions/#");
+    expect(provider20xContents).toContain(
+      "[Certification Data](../../../definitions/#certification-data){ data-preview }",
+    );
+    expect(provider20xContents).not.toContain(
+      "[Provider](../../../definitions/#provider){ data-preview }",
+    );
 
     const providerRev5Contents = await readFile(
       path.join(
