@@ -144,6 +144,7 @@ interface DefinitionEntrySource {
   reference_url?: string;
   referenceurl?: string;
   alts?: string[];
+  do_not_link?: boolean;
   updated?: ChangeLogSource[];
   fka?: string;
 }
@@ -283,6 +284,8 @@ interface DeadlineTableViewModel {
   rows: DeadlineRowViewModel[];
 }
 
+type DoNotLinkTermIndex = ReadonlySet<string>;
+
 interface DocumentViewModel {
   title: string;
   statusSpan?: string;
@@ -374,6 +377,29 @@ function slugifyTerm(term: string): string {
     .toLowerCase()
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9-]/g, "");
+}
+
+function buildDoNotLinkTermIndex(
+  definitions: DefinitionsSource,
+): DoNotLinkTermIndex {
+  const terms = new Set<string>();
+
+  for (const bucket of Object.values(definitions.data)) {
+    for (const entry of Object.values(bucket ?? {})) {
+      if (!entry.do_not_link) {
+        continue;
+      }
+
+      for (const term of [entry.term, ...(entry.alts ?? [])]) {
+        const termKey = slugifyTerm(term);
+        if (termKey) {
+          terms.add(termKey);
+        }
+      }
+    }
+  }
+
+  return terms;
 }
 
 function controlUrl(controlId: string): string {
@@ -645,11 +671,14 @@ function buildRequirementReference(
 function buildTermLinks(
   terms: string[] = [],
   definitionsRelativePath: string,
+  doNotLinkTerms: DoNotLinkTermIndex,
 ): TermLinkViewModel[] {
-  return terms.map((term) => ({
-    label: term,
-    href: `${definitionsRelativePath}#${slugifyTerm(term)}`,
-  }));
+  return terms
+    .filter((term) => !doNotLinkTerms.has(slugifyTerm(term)))
+    .map((term) => ({
+      label: term,
+      href: `${definitionsRelativePath}#${slugifyTerm(term)}`,
+    }));
 }
 
 function buildRequirementViewModel(
@@ -657,6 +686,7 @@ function buildRequirementViewModel(
   entry: RequirementEntrySource,
   definitionsRelativePath: string,
   rulesRelativePath: string,
+  doNotLinkTerms: DoNotLinkTermIndex,
 ): RequirementViewModel {
   return {
     id,
@@ -685,7 +715,7 @@ function buildRequirementViewModel(
       keyTests: example.key_tests ?? [],
       examples: example.examples ?? [],
     })),
-    terms: buildTermLinks(entry.terms, definitionsRelativePath),
+    terms: buildTermLinks(entry.terms, definitionsRelativePath, doNotLinkTerms),
   };
 }
 
@@ -744,7 +774,7 @@ function buildDefinitionSectionViewModelsFromEntries(
     ([left], [right]) => left.localeCompare(right),
   )) {
     sections.push({
-      title: `Specific Terms: ${tag}`,
+      title: `Related Terms: ${tag}`,
       definitions,
     });
   }
@@ -780,6 +810,7 @@ function buildSectionViewModels(
   version: Version,
   definitionsRelativePath: string,
   rulesRelativePath: string,
+  doNotLinkTerms: DoNotLinkTermIndex,
 ): SectionViewModel[] {
   const sections = new Map<string, SectionViewModel>();
 
@@ -805,6 +836,7 @@ function buildSectionViewModels(
             requirement,
             definitionsRelativePath,
             rulesRelativePath,
+            doNotLinkTerms,
           ),
         );
       }
@@ -888,6 +920,7 @@ function requirementMatchesMapping(
 function buildConfiguredSectionViewModels(
   document: RequirementDocumentSource,
   mapping: RuleDocumentMappingConfig,
+  doNotLinkTerms: DoNotLinkTermIndex,
 ): SectionViewModel[] {
   const sections = new Map<string, SectionViewModel>();
   const allowedSections = mapping.source.sections;
@@ -918,7 +951,13 @@ function buildConfiguredSectionViewModels(
         }
 
         section.requirements.push(
-          buildRequirementViewModel(id, requirement, definitionsHref, rulesHref),
+          buildRequirementViewModel(
+            id,
+            requirement,
+            definitionsHref,
+            rulesHref,
+            doNotLinkTerms,
+          ),
         );
       }
 
@@ -934,6 +973,7 @@ function buildConfiguredSectionViewModels(
 function buildDocumentGroupedSectionViewModel(
   document: RequirementDocumentSource,
   mapping: RuleDocumentMappingConfig,
+  doNotLinkTerms: DoNotLinkTermIndex,
 ): SectionViewModel | null {
   const requirements: RequirementViewModel[] = [];
   const allowedSections = mapping.source.sections;
@@ -957,7 +997,13 @@ function buildDocumentGroupedSectionViewModel(
         }
 
         requirements.push(
-          buildRequirementViewModel(id, requirement, definitionsHref, rulesHref),
+          buildRequirementViewModel(
+            id,
+            requirement,
+            definitionsHref,
+            rulesHref,
+            doNotLinkTerms,
+          ),
         );
       }
     }
@@ -1246,6 +1292,7 @@ function buildDeadlineTables(
 function buildConfiguredSections(
   documents: RequirementDocumentSource[],
   mapping: RuleDocumentMappingConfig,
+  doNotLinkTerms: DoNotLinkTermIndex,
 ): SectionViewModel[] {
   if (documents.length === 1) {
     const [document] = documents;
@@ -1253,7 +1300,7 @@ function buildConfiguredSections(
       throw new Error(`Rule document mapping "${mapping.id}" matched no FRR documents.`);
     }
 
-    return buildConfiguredSectionViewModels(document, mapping);
+    return buildConfiguredSectionViewModels(document, mapping, doNotLinkTerms);
   }
 
   const groupBy =
@@ -1261,12 +1308,14 @@ function buildConfiguredSections(
 
   if (groupBy === "document") {
     return documents
-      .map((document) => buildDocumentGroupedSectionViewModel(document, mapping))
+      .map((document) =>
+        buildDocumentGroupedSectionViewModel(document, mapping, doNotLinkTerms),
+      )
       .filter((section): section is SectionViewModel => section !== null);
   }
 
   return documents.flatMap((document) =>
-    buildConfiguredSectionViewModels(document, mapping),
+    buildConfiguredSectionViewModels(document, mapping, doNotLinkTerms),
   );
 }
 
@@ -1937,6 +1986,7 @@ function collectKsiDocumentArtifacts(
   rules: RulesDocument,
   config: ToolConfig,
   mapping: KsiDocumentMappingConfig,
+  doNotLinkTerms: DoNotLinkTermIndex,
 ): BuildArtifact[] {
   if (mapping.source.collection !== "KSI") {
     throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
@@ -1951,6 +2001,7 @@ function collectKsiDocumentArtifacts(
             indicator,
             mapping.definitionsHref ?? "definitions/",
             "",
+            doNotLinkTerms,
           ),
       );
 
@@ -1989,9 +2040,10 @@ function collectKsiDocumentArtifacts(
 function collectConfiguredKsiDocumentArtifacts(
   rules: RulesDocument,
   config: ToolConfig,
+  doNotLinkTerms: DoNotLinkTermIndex,
 ): BuildArtifact[] {
   return (config.generated.ksiDocuments ?? []).flatMap((mapping) =>
-    collectKsiDocumentArtifacts(rules, config, mapping),
+    collectKsiDocumentArtifacts(rules, config, mapping, doNotLinkTerms),
   );
 }
 
@@ -2060,6 +2112,7 @@ function collectSingleRuleDocumentArtifact(
   rules: RulesDocument,
   config: ToolConfig,
   mapping: RuleDocumentMappingConfig,
+  doNotLinkTerms: DoNotLinkTermIndex,
 ): BuildArtifact | null {
   if (mapping.source.collection !== "FRR") {
     throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
@@ -2072,7 +2125,7 @@ function collectSingleRuleDocumentArtifact(
   }
 
   const documents = sourceDocumentEntries.map((entry) => entry.document);
-  const sections = buildConfiguredSections(documents, mapping);
+  const sections = buildConfiguredSections(documents, mapping, doNotLinkTerms);
   if (!sections.length && mapping.emptyBehavior === "skip") {
     return null;
   }
@@ -2118,6 +2171,7 @@ function collectDocumentRuleDocumentArtifacts(
   rules: RulesDocument,
   config: ToolConfig,
   mapping: RuleDocumentMappingConfig,
+  doNotLinkTerms: DoNotLinkTermIndex,
 ): BuildArtifact[] {
   if (mapping.source.collection !== "FRR") {
     throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
@@ -2125,7 +2179,7 @@ function collectDocumentRuleDocumentArtifacts(
 
   return sourceDocuments(rules, mapping)
     .map(({ key, document }): BuildArtifact | null => {
-      const sections = buildConfiguredSections([document], mapping);
+      const sections = buildConfiguredSections([document], mapping, doNotLinkTerms);
       if (!sections.length && mapping.emptyBehavior === "skip") {
         return null;
       }
@@ -2166,12 +2220,23 @@ function collectRuleDocumentArtifacts(
   rules: RulesDocument,
   config: ToolConfig,
   mapping: RuleDocumentMappingConfig,
+  doNotLinkTerms: DoNotLinkTermIndex,
 ): BuildArtifact[] {
   if (mapping.outputMode === "documents") {
-    return collectDocumentRuleDocumentArtifacts(rules, config, mapping);
+    return collectDocumentRuleDocumentArtifacts(
+      rules,
+      config,
+      mapping,
+      doNotLinkTerms,
+    );
   }
 
-  const artifact = collectSingleRuleDocumentArtifact(rules, config, mapping);
+  const artifact = collectSingleRuleDocumentArtifact(
+    rules,
+    config,
+    mapping,
+    doNotLinkTerms,
+  );
   return artifact ? [artifact] : [];
 }
 
@@ -2180,12 +2245,18 @@ export function collectArtifacts(
   config: ToolConfig = DEFAULT_CONFIG,
 ): BuildArtifact[] {
   const artifacts: BuildArtifact[] = [];
+  const doNotLinkTerms = buildDoNotLinkTermIndex(rules.FRD);
+
   artifacts.push(...collectDefinitionDocumentArtifacts(rules, config));
-  artifacts.push(...collectConfiguredKsiDocumentArtifacts(rules, config));
+  artifacts.push(
+    ...collectConfiguredKsiDocumentArtifacts(rules, config, doNotLinkTerms),
+  );
   artifacts.push(...collectDeadlineDocumentArtifacts(rules, config));
 
   for (const mapping of config.generated.ruleDocuments) {
-    artifacts.push(...collectRuleDocumentArtifacts(rules, config, mapping));
+    artifacts.push(
+      ...collectRuleDocumentArtifacts(rules, config, mapping, doNotLinkTerms),
+    );
   }
 
   return artifacts;
