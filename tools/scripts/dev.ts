@@ -4,19 +4,25 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildMarkdown } from "./build-markdown";
 import {
+  assertPathInside,
   CONFIG_FILE,
   REPO_ROOT,
   loadToolConfig,
   resolveToolPath,
 } from "./config";
 import { deploy } from "./deploy";
+import { buildTodo } from "./todo-builder";
 
 const BUILD_SCRIPT = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
   "build-markdown.ts",
 );
+const TODO_BUILDER_SCRIPT = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "todo-builder.ts",
+);
 
-interface ContentSnapshot {
+export interface ContentSnapshot {
   exists: boolean;
   kind: "directory" | "file" | "other";
   mtimeMs: number;
@@ -26,15 +32,64 @@ interface ContentSnapshot {
 let isBuilding = false;
 let buildQueued = false;
 let buildTimer: ReturnType<typeof setTimeout> | null = null;
-let pendingDeploy = false;
-let queuedDeploy = false;
-let devReloadTarget: string | null = null;
-const PREVIEW_RELOAD_DELAY_MS = 200;
+type DeployMode = "none" | "content" | "full";
 
-async function runPipeline(reason: string, shouldDeploy: boolean): Promise<void> {
+interface PipelineRequest {
+  contentChanges: ContentChange[];
+  deployMode: DeployMode;
+}
+
+export interface ContentChange {
+  next: ContentSnapshot;
+  previous: ContentSnapshot | undefined;
+  relativePath: string;
+}
+
+export interface ContentSyncSummary {
+  copiedFiles: number;
+  needsFullDeploy: boolean;
+  removedFiles: number;
+  reloadTargets: string[];
+}
+
+let pendingDeployMode: DeployMode = "none";
+let queuedDeployMode: DeployMode = "none";
+const pendingContentChanges = new Map<string, ContentChange>();
+const queuedContentChanges = new Map<string, ContentChange>();
+let devReloadTarget: string | null = null;
+// Zensical can miss a file event that lands while it is rebuilding, so send a
+// second post-build touch to the final src file.
+const PREVIEW_RELOAD_SIGNAL_DELAYS_MS = [200, 1000];
+
+function mergeDeployMode(left: DeployMode, right: DeployMode): DeployMode {
+  if (left === "full" || right === "full") {
+    return "full";
+  }
+
+  if (left === "content" || right === "content") {
+    return "content";
+  }
+
+  return "none";
+}
+
+function addContentChanges(
+  target: Map<string, ContentChange>,
+  changes: ContentChange[],
+): void {
+  for (const change of changes) {
+    target.set(change.relativePath, change);
+  }
+}
+
+async function runPipeline(
+  reason: string,
+  request: PipelineRequest,
+): Promise<void> {
   if (isBuilding) {
     buildQueued = true;
-    queuedDeploy = queuedDeploy || shouldDeploy;
+    queuedDeployMode = mergeDeployMode(queuedDeployMode, request.deployMode);
+    addContentChanges(queuedContentChanges, request.contentChanges);
     return;
   }
 
@@ -42,14 +97,48 @@ async function runPipeline(reason: string, shouldDeploy: boolean): Promise<void>
   console.log(`[dev] rebuilding site inputs (${reason})`);
 
   try {
-    if (shouldDeploy) {
+    const reloadTargets: string[] = [];
+
+    if (request.deployMode === "full") {
       const deploySummary = await deploy({ clearHtml: false });
       console.log(`[dev] copied ${deploySummary.copiedFiles} content files`);
+      reloadTargets.push(
+        ...reloadTargetsForContentChanges(request.contentChanges),
+      );
+    } else if (request.deployMode === "content") {
+      const syncSummary = await syncContentChanges(request.contentChanges);
+
+      if (syncSummary.needsFullDeploy) {
+        const deploySummary = await deploy({ clearHtml: false });
+        console.log(`[dev] copied ${deploySummary.copiedFiles} content files`);
+        reloadTargets.push(
+          ...reloadTargetsForContentChanges(request.contentChanges),
+        );
+      } else {
+        console.log(
+          `[dev] synced ${syncSummary.copiedFiles} changed content file${
+            syncSummary.copiedFiles === 1 ? "" : "s"
+          }`,
+        );
+        if (syncSummary.removedFiles > 0) {
+          console.log(
+            `[dev] removed ${syncSummary.removedFiles} deleted content file${
+              syncSummary.removedFiles === 1 ? "" : "s"
+            }`,
+          );
+        }
+        reloadTargets.push(...syncSummary.reloadTargets);
+      }
     }
 
     const summary = await buildMarkdown();
     console.log(`[dev] generated ${summary.artifactCount} markdown files`);
-    await signalPreviewReload();
+    const todoSummary = await buildTodo();
+    console.log(
+      `[dev] generated ${todoSummary.relativePath} for ${todoSummary.pageCount} pages`,
+    );
+    reloadTargets.push(todoSummary.relativePath);
+    await signalPreviewReload(reloadTargets);
   } catch (error) {
     console.error("[dev] site input build failed");
     console.error(error);
@@ -57,26 +146,39 @@ async function runPipeline(reason: string, shouldDeploy: boolean): Promise<void>
     isBuilding = false;
 
     if (buildQueued) {
-      const nextShouldDeploy = queuedDeploy;
+      const nextRequest: PipelineRequest = {
+        contentChanges: Array.from(queuedContentChanges.values()),
+        deployMode: queuedDeployMode,
+      };
       buildQueued = false;
-      queuedDeploy = false;
-      await runPipeline("queued change", nextShouldDeploy);
+      queuedDeployMode = "none";
+      queuedContentChanges.clear();
+      await runPipeline("queued change", nextRequest);
     }
   }
 }
 
-function schedulePipeline(reason: string, shouldDeploy = false): void {
-  pendingDeploy = pendingDeploy || shouldDeploy;
+function schedulePipeline(
+  reason: string,
+  deployMode: DeployMode = "none",
+  contentChanges: ContentChange[] = [],
+): void {
+  pendingDeployMode = mergeDeployMode(pendingDeployMode, deployMode);
+  addContentChanges(pendingContentChanges, contentChanges);
 
   if (buildTimer) {
     clearTimeout(buildTimer);
   }
 
   buildTimer = setTimeout(() => {
-    const nextShouldDeploy = pendingDeploy;
+    const nextRequest: PipelineRequest = {
+      contentChanges: Array.from(pendingContentChanges.values()),
+      deployMode: pendingDeployMode,
+    };
     buildTimer = null;
-    pendingDeploy = false;
-    void runPipeline(reason, nextShouldDeploy);
+    pendingDeployMode = "none";
+    pendingContentChanges.clear();
+    void runPipeline(reason, nextRequest);
   }, currentWatchDebounceMs);
 }
 
@@ -86,15 +188,54 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function signalPreviewReload(): Promise<void> {
-  if (!devReloadTarget || !fs.existsSync(devReloadTarget)) {
+function resolveChildPath(
+  root: string,
+  relativePath: string,
+  label: string,
+): string {
+  const targetPath = path.resolve(root, relativePath);
+  assertPathInside(root, targetPath, label);
+  return targetPath;
+}
+
+async function signalPreviewReload(relativeTargets: string[] = []): Promise<void> {
+  const config = await loadToolConfig();
+  const srcDir = resolveToolPath(config.paths.src);
+  const targetPaths = new Set<string>();
+
+  for (const relativeTarget of relativeTargets) {
+    const targetPath = resolveChildPath(
+      srcDir,
+      relativeTarget,
+      "Preview reload target",
+    );
+    if (fs.existsSync(targetPath)) {
+      targetPaths.add(targetPath);
+    }
+  }
+
+  if (
+    targetPaths.size === 0 &&
+    devReloadTarget &&
+    fs.existsSync(devReloadTarget)
+  ) {
+    targetPaths.add(devReloadTarget);
+  }
+
+  if (targetPaths.size === 0) {
     return;
   }
 
-  await delay(PREVIEW_RELOAD_DELAY_MS);
+  let previousDelay = 0;
+  for (const delayMs of PREVIEW_RELOAD_SIGNAL_DELAYS_MS) {
+    await delay(delayMs - previousDelay);
+    previousDelay = delayMs;
 
-  const now = new Date();
-  fs.utimesSync(devReloadTarget, now, now);
+    const now = new Date();
+    for (const targetPath of targetPaths) {
+      fs.utimesSync(targetPath, now, now);
+    }
+  }
 }
 
 function contentSnapshotFor(
@@ -161,6 +302,19 @@ function snapshotsAreEqual(
   );
 }
 
+function normalizeContentRelativePath(fileName: string | Buffer): string | null {
+  const relativeFileName = path.normalize(fileName.toString());
+  if (
+    relativeFileName === "." ||
+    relativeFileName.startsWith("..") ||
+    path.isAbsolute(relativeFileName)
+  ) {
+    return null;
+  }
+
+  return relativeFileName;
+}
+
 function primeContentSnapshots(
   contentDir: string,
   snapshots: Map<string, ContentSnapshot>,
@@ -187,18 +341,104 @@ function primeContentSnapshots(
 export function createContentChangeFilter(
   contentDir: string,
 ): (fileName: string | Buffer) => boolean {
+  const trackContentChange = createContentChangeTracker(contentDir);
+
+  return (fileName: string | Buffer): boolean => {
+    return trackContentChange(fileName) !== null;
+  };
+}
+
+export function createContentChangeTracker(
+  contentDir: string,
+): (fileName: string | Buffer) => ContentChange | null {
   const snapshots = new Map<string, ContentSnapshot>();
   primeContentSnapshots(contentDir, snapshots);
 
-  return (fileName: string | Buffer): boolean => {
-    const relativeFileName = path.normalize(fileName.toString());
+  return (fileName: string | Buffer): ContentChange | null => {
+    const relativeFileName = normalizeContentRelativePath(fileName);
+    if (!relativeFileName) {
+      return null;
+    }
+
     const nextSnapshot = contentSnapshotFor(contentDir, relativeFileName);
     const previousSnapshot = snapshots.get(relativeFileName);
 
     snapshots.set(relativeFileName, nextSnapshot);
 
-    return !snapshotsAreEqual(previousSnapshot, nextSnapshot);
+    if (snapshotsAreEqual(previousSnapshot, nextSnapshot)) {
+      return null;
+    }
+
+    return {
+      next: nextSnapshot,
+      previous: previousSnapshot,
+      relativePath: relativeFileName,
+    };
   };
+}
+
+export function syncContentChangesToSrc(
+  contentDir: string,
+  srcDir: string,
+  changes: ContentChange[],
+): ContentSyncSummary {
+  const summary: ContentSyncSummary = {
+    copiedFiles: 0,
+    needsFullDeploy: false,
+    removedFiles: 0,
+    reloadTargets: [],
+  };
+
+  for (const change of changes) {
+    const currentSnapshot = contentSnapshotFor(contentDir, change.relativePath);
+    const contentPath = resolveChildPath(
+      contentDir,
+      change.relativePath,
+      "Content path",
+    );
+    const srcPath = resolveChildPath(srcDir, change.relativePath, "Source path");
+
+    if (currentSnapshot.exists && currentSnapshot.kind === "file") {
+      fs.mkdirSync(path.dirname(srcPath), { recursive: true });
+      fs.copyFileSync(contentPath, srcPath);
+      summary.copiedFiles++;
+      summary.reloadTargets.push(change.relativePath);
+      continue;
+    }
+
+    if (!currentSnapshot.exists && change.previous?.kind === "file") {
+      if (fs.existsSync(srcPath) && fs.statSync(srcPath).isFile()) {
+        fs.unlinkSync(srcPath);
+        summary.removedFiles++;
+      }
+      continue;
+    }
+
+    if (currentSnapshot.exists || change.previous?.kind === "directory") {
+      summary.needsFullDeploy = true;
+    }
+  }
+
+  return summary;
+}
+
+async function syncContentChanges(
+  changes: ContentChange[],
+): Promise<ContentSyncSummary> {
+  const config = await loadToolConfig();
+  return syncContentChangesToSrc(
+    resolveToolPath(config.paths.content),
+    resolveToolPath(config.paths.src),
+    changes,
+  );
+}
+
+function reloadTargetsForContentChanges(changes: ContentChange[]): string[] {
+  return changes
+    .filter((change) => {
+      return change.next.exists && change.next.kind === "file";
+    })
+    .map((change) => change.relativePath);
 }
 
 async function main(): Promise<void> {
@@ -210,11 +450,15 @@ async function main(): Promise<void> {
   const partialsDir = resolveToolPath(config.paths.partials);
   const rulesFile = resolveToolPath(config.paths.rulesFile);
   const zensicalConfig = resolveToolPath(config.paths.zensicalConfig);
+
+  await runPipeline("initial build", {
+    contentChanges: [],
+    deployMode: "full",
+  });
+
   devReloadTarget = path.join(resolveToolPath(config.paths.src), "index.md");
 
-  await runPipeline("initial build", true);
-
-  const hasMeaningfulContentChange = createContentChangeFilter(contentDir);
+  const trackContentChange = createContentChangeTracker(contentDir);
 
   const zensical = spawn("zensical", ["serve", "-f", zensicalConfig], {
     cwd: REPO_ROOT,
@@ -252,11 +496,14 @@ async function main(): Promise<void> {
         return;
       }
 
-      if (!hasMeaningfulContentChange(fileName)) {
+      const contentChange = trackContentChange(fileName);
+      if (!contentChange) {
         return;
       }
 
-      schedulePipeline(`content change: ${fileName}`, true);
+      schedulePipeline(`content change: ${fileName}`, "content", [
+        contentChange,
+      ]);
     },
   );
 
@@ -264,8 +511,12 @@ async function main(): Promise<void> {
     schedulePipeline("generator change");
   });
 
+  const todoBuilderWatcher = watch(TODO_BUILDER_SCRIPT, () => {
+    schedulePipeline("todo builder change");
+  });
+
   const configWatcher = watch(CONFIG_FILE, () => {
-    schedulePipeline("config change", true);
+    schedulePipeline("config change", "full");
   });
 
   const rulesWatcher = watch(rulesFile, () => {
@@ -277,6 +528,7 @@ async function main(): Promise<void> {
     partialsWatcher?.close();
     contentWatcher.close();
     buildWatcher.close();
+    todoBuilderWatcher.close();
     configWatcher.close();
     rulesWatcher.close();
 

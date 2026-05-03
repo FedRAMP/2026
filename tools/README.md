@@ -10,7 +10,7 @@ Run commands from `tools/`.
 bun run dev
 ```
 
-Copies `../content` into `../src`, generates configured Markdown into `../src`, then starts `zensical serve` with `../zensical.toml`. The dev script watches manual content, templates, config, generator code, and the rules JSON. During dev, the copy step leaves `../html` alone so the running Zensical server owns its output directory.
+Copies `../content` into `../src`, generates configured Markdown into `../src`, builds `../src/todo.md`, then starts `zensical serve` with `../zensical.toml`. The dev script watches manual content, templates, config, generator code, the todo builder, and the rules JSON. During dev, the copy step leaves `../html` alone so the running Zensical server owns its output directory.
 
 Watch rebuilds are debounced by `dev.watchDebounceMs` in `config.json`; by default the pipeline waits for 1 second with no further changes before rebuilding.
 
@@ -35,7 +35,8 @@ Runs the full static build pipeline:
 1. `scripts/build.ts` reads `config.json`.
 2. `scripts/deploy.ts` clears `../src` and `../html`, then copies `../content` to `../src`.
 3. `scripts/build-markdown.ts` generates Markdown configured in `config.json`.
-4. `zensical build --clean` builds `../html` using the configured Zensical file.
+4. `scripts/todo-builder.ts` scans the completed `../src` markdown tree and writes `../src/todo.md`.
+5. `zensical build --clean` builds `../html` using the configured Zensical file.
 
 ```bash
 bun sync
@@ -68,6 +69,8 @@ Important path settings:
 - `paths.zensicalConfig`: site configuration used by dev and build.
 
 Generated files are tracked in `generated.manifest` inside `src/`. The generator removes files from the previous manifest before writing the next set, and it refuses to generate a file that would shadow a manual `content/` file.
+
+The generated `todo` entry controls the machine-built TO DO page. The todo builder runs after content has been copied and generated pages have been written, so it can scan the completed `src/**/*.md` set. It writes separate source/status sections with rows containing a linked section-to-page location, combined picto source/status icons, description, purpose, an edit icon link when `google_doc` frontmatter is present, and a Markdown icon when it is not.
 
 ## Adding A Generated Definitions Page
 
@@ -148,6 +151,8 @@ Add an entry to `generated.deadlineDocuments` in `config.json`:
 ```
 
 Deadline documents generate one page per configured type. They read each selected FRR document's `info.short_name`, `info.name`, `info.web_name`, and `info.effective` values. The generated table links each rule family name to the matching provider rule page for that type. Use `{type}` or `{version}` in `output` to place each type page explicitly.
+
+Use `source.ignoreDocuments` to remove specific FRR keys after `source.documents` is resolved, including when `source.documents` is `"ALL"`.
 
 ## Adding A Generated Rules Page
 

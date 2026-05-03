@@ -1,8 +1,8 @@
 ---
 title: "Agencies"
 icon: material/bank-outline
-description: "Introduction for agencies, how this whole thing plays out for them, and how this page is laid out."
-purpose: "Help agencies understand what the rules are and how to navigate them."
+description: "Welcome to federal agencies, explanation of who an agency is, and why FedRAMP matters to them and they need to get in the game."
+purpose: "Help agencies understand if FedRAMP applies and how to get involved and use it to their benefit."
 google_doc: "https://docs.google.com/document/d/1UdOIjketHNMeQrpmDVJdX8KrdKClvVQ7stp97KEYw9I/edit?tab=t.0"
 picto:
   source: person

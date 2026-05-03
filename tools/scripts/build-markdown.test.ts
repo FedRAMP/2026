@@ -29,6 +29,7 @@ import {
   type ToolConfig,
 } from "./config";
 import { deploy } from "./deploy";
+import { buildTodo } from "./todo-builder";
 
 const execFileAsync = promisify(execFile);
 const RULES_REMOTE_URL = "https://github.com/FedRAMP/rules.git";
@@ -36,6 +37,16 @@ const RULES_REMOTE_BRANCH = "main";
 const RULES_SCHEMA_FILE = resolveToolPath(
   "rules/schemas/fedramp-consolidated-rules.schema.json",
 );
+const MACHINE_PICTOGRAPH =
+  ':lucide-computer:{ .machine title="This content is machine-generated from FedRAMP Machine-Readable Rules." }';
+const PERSON_PICTOGRAPH =
+  ':lucide-person-standing:{ .person title="This content was written by a human just for this page." }';
+const STABLE_PICTOGRAPH =
+  ':lucide-book-open-check:{ .stable title="This content is relatively stable and only minor changes are expected." }';
+const PLACEHOLDER_PICTOGRAPH =
+  ':lucide-pencil:{ .placeholder title="This content is a placeholder and is not complete." }';
+const EMPTY_PICTOGRAPH =
+  ':lucide-circle-slash:{ .empty title="This content has not been produced or ported to this website yet." }';
 const STABLE_STATUS_SPAN =
   '<span class="picto">:lucide-computer:{ .machine title="This content is machine-generated from FedRAMP Machine-Readable Rules." } :lucide-book-open-check:{ .stable title="This content is relatively stable and only minor changes are expected." }</span>';
 const PLACEHOLDER_STATUS_SPAN =
@@ -186,6 +197,20 @@ function expectWithFailureSummary(
     humanReadableFailureSummaries.push(summary);
     throw error;
   }
+}
+
+function expectFileToStartWith(
+  filePath: string,
+  contents: string,
+  expectedStart: string,
+  description: string,
+): void {
+  const relativePath = path.relative(REPO_ROOT, filePath);
+  const summary = `${description}: ${relativePath}`;
+
+  expectWithFailureSummary(summary, () => {
+    expect(contents, summary).toStartWith(expectedStart);
+  });
 }
 
 async function git(args: string[], cwd = REPO_ROOT): Promise<string> {
@@ -534,6 +559,7 @@ function generatedMappingStatusFailures(config: ToolConfig): string[] {
   const generatedMappingGroups: Array<
     [string, Array<{ id?: unknown; status?: unknown }>]
   > = [
+    ["todo", config.generated.todo ? [config.generated.todo] : []],
     ["definitionDocuments", config.generated.definitionDocuments ?? []],
     ["ksiDocuments", config.generated.ksiDocuments ?? []],
     ["deadlineDocuments", config.generated.deadlineDocuments ?? []],
@@ -765,16 +791,24 @@ describe("build-markdown", () => {
       "../../../definitions/#cloud-service-offering",
     );
 
-    const deadlines20xContents = await readFile(
-      path.join(OUTPUT_DIR, "providers", "updating", "deadlines", "20x.md"),
-      "utf8",
+    const deadlines20xPath = path.join(
+      OUTPUT_DIR,
+      "providers",
+      "updating",
+      "deadlines",
+      "20x.md",
     );
-    expect(deadlines20xContents).toStartWith(
-      `---\ntags:\n  - 20x\n---\n\n${STABLE_STATUS_SPAN}\n\n# 20x Deadlines`,
+    const deadlines20xContents = await readFile(deadlines20xPath, "utf8");
+    expectFileToStartWith(
+      deadlines20xPath,
+      deadlines20xContents,
+      `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# 20x Deadlines`,
+      "Generated provider 20x deadlines markdown has an unexpected header",
     );
     expect(deadlines20xContents).toContain(
-      "| FRC | [FedRAMP Certification](../../20x/rules/fedramp-certification.md) | 2026-05-04 | 2027-05-04 | 2027-05-04 |",
+      "| FRC | [FedRAMP Certification](../../20x/rules/fedramp-certification.md) | 2026-07-04 | 2027-05-04 | 2027-05-04 |",
     );
+    expect(deadlines20xContents).not.toContain("| AGU |");
     expect(deadlines20xContents).not.toContain("Rev5 Deadlines");
     expect(
       deadlines20xContents.indexOf(
@@ -782,7 +816,7 @@ describe("build-markdown", () => {
       ),
     ).toBeLessThan(
       deadlines20xContents.indexOf(
-        "| MKT | [Marketplace Listing](../../20x/rules/marketplace-listing.md) | 2026-05-04 | 2027-01-01 | 2027-05-04 |",
+        "| MKT | [Marketplace Listing](../../20x/rules/marketplace-listing.md) | 2026-07-04 | 2027-01-01 | 2027-05-04 |",
       ),
     );
 
@@ -791,7 +825,7 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(deadlinesRev5Contents).toStartWith(
-      `---\ntags:\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# Rev5 Deadlines`,
+      `---\ntags:\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Rev5 Deadlines`,
     );
     expect(deadlinesRev5Contents).toContain(
       "| FRC | [FedRAMP Certification](../../rev5/rules/fedramp-certification.md) | 2027-01-01 | 2027-01-01 | 2027-01-01 |",
@@ -818,7 +852,7 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(provider20xContents).toStartWith(
-      `---\ntags:\n  - 20x\n---\n\n${STABLE_STATUS_SPAN}\n\n# FedRAMP Certification`,
+      `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# FedRAMP Certification`,
     );
     expect(provider20xContents).toContain("# FedRAMP Certification");
     expect(provider20xContents).toContain("FRC-CSO-CDS");
@@ -881,7 +915,7 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(agencyCcmContents).toStartWith(
-      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Collaborative Continuous Monitoring`,
+      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# Collaborative Continuous Monitoring`,
     );
     expect(agencyCcmContents).toContain("# Collaborative Continuous Monitoring");
     expect(agencyCcmContents).toContain("## Agency Guidance");
@@ -943,6 +977,49 @@ describe("build-markdown", () => {
           artifact.relativePath === "assessors/20x/rules/marketplace-listing.md",
       ),
     ).toBe(false);
+  });
+
+  test("ignores configured deadline documents after resolving the source selection", async () => {
+    const config = await loadToolConfig();
+    const rules = await loadRules(config);
+    const artifacts = collectArtifacts(rules, {
+      ...config,
+      generated: {
+        ...config.generated,
+        definitionDocuments: [],
+        ksiDocuments: [],
+        deadlineDocuments: [
+          {
+            id: "deadlines-with-ignored-marketplace",
+            title: "Important Deadlines",
+            output: "providers/updating/deadlines/{type}.md",
+            status: "stable",
+            template: "templates/deadlines.hbs",
+            source: {
+              collection: "FRR",
+              documents: ["MKT", "FRC"],
+              ignoreDocuments: ["MKT"],
+              types: ["20x"],
+            },
+          },
+        ],
+        ruleDocuments: [],
+      },
+    });
+
+    const deadlineArtifact = artifacts.find(
+      (artifact) =>
+        artifact.documentType === "DEADLINES" &&
+        artifact.relativePath === "providers/updating/deadlines/20x.md",
+    );
+    const shortNames =
+      deadlineArtifact?.context.deadlineTables.flatMap((table) =>
+        table.rows.map((row) => row.shortName),
+      ) ?? [];
+
+    expect(deadlineArtifact).toBeDefined();
+    expect(shortNames).toContain("FRC");
+    expect(shortNames).not.toContain("MKT");
   });
 
   test("adds page info admonitions below content pictograph spans", async () => {
@@ -1064,6 +1141,138 @@ describe("build-markdown", () => {
     }
   });
 
+  test("builds a todo page from the completed src markdown set", async () => {
+    const config = await loadToolConfig();
+    const tempDir = await mkdtemp(path.join(tmpdir(), "cr26-site-tools-"));
+    const tempContentDir = path.join(tempDir, "content");
+    const tempSrcDir = path.join(tempDir, "src");
+    const tempHtmlDir = path.join(tempDir, "html");
+    const generatedAt = new Date("2026-05-03T12:00:00.000Z");
+
+    try {
+      await mkdir(tempContentDir, { recursive: true });
+      await mkdir(tempSrcDir, { recursive: true });
+      await writeFile(
+        path.join(tempSrcDir, "index.md"),
+        [
+          "---",
+          'description: "Manual description"',
+          'purpose: "Manual purpose"',
+          'google_doc: "https://docs.google.com/document/d/example/edit"',
+          "picto:",
+          "  source: person",
+          "  status: empty",
+          "---",
+          "",
+          "# Manual Page",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      await mkdir(path.join(tempSrcDir, "authority", "law"), {
+        recursive: true,
+      });
+      await writeFile(
+        path.join(tempSrcDir, "authority", "law", "index.md"),
+        [
+          "---",
+          "picto:",
+          "  source: person",
+          "  status: stable",
+          "---",
+          "",
+          "# Authority Page",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      await writeFile(
+        path.join(tempSrcDir, "generated.md"),
+        [
+          "---",
+          "tags:",
+          "  - 20x",
+          "---",
+          "",
+          STABLE_STATUS_SPAN,
+          "",
+          "# Generated Page",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+
+      const summary = await buildTodo(
+        {
+          ...config,
+          paths: {
+            ...config.paths,
+            content: path.relative(resolveToolPath("."), tempContentDir),
+            src: path.relative(resolveToolPath("."), tempSrcDir),
+            html: path.relative(resolveToolPath("."), tempHtmlDir),
+          },
+        },
+        { generatedAt },
+      );
+
+      expect(summary.relativePath).toBe("todo.md");
+      expect(summary.pageCount).toBe(3);
+
+      const contents = await readFile(path.join(tempSrcDir, "todo.md"), "utf8");
+      expect(contents).toStartWith(
+        [
+          "---",
+          `description: ${JSON.stringify(config.generated.todo?.description)}`,
+          `purpose: ${JSON.stringify(config.generated.todo?.purpose)}`,
+          'google_doc: ""',
+          "picto:",
+          "  source: machine",
+          "  status: placeholder",
+          "---",
+          "",
+          PLACEHOLDER_STATUS_SPAN,
+        ].join("\n"),
+      );
+      expect(contents).toContain("**Generated:** 2026-05-03T12:00:00.000Z");
+      expect(contents).toContain(
+        `## Stable Human-Written Pages ${PERSON_PICTOGRAPH} ${STABLE_PICTOGRAPH}`,
+      );
+      expect(contents).toContain(
+        `## Placeholder Human-Written Pages ${PERSON_PICTOGRAPH} ${PLACEHOLDER_PICTOGRAPH}`,
+      );
+      expect(contents).toContain(
+        `## Empty Human-Written Pages ${PERSON_PICTOGRAPH} ${EMPTY_PICTOGRAPH}`,
+      );
+      expect(contents).toContain(
+        `## Stable Machine-Generated Pages ${MACHINE_PICTOGRAPH} ${STABLE_PICTOGRAPH}`,
+      );
+      expect(contents).toContain(
+        `## Placeholder Machine-Generated Pages ${MACHINE_PICTOGRAPH} ${PLACEHOLDER_PICTOGRAPH}`,
+      );
+      expect(contents).toContain(
+        `## Empty Machine-Generated Pages ${MACHINE_PICTOGRAPH} ${EMPTY_PICTOGRAPH}`,
+      );
+      expect(contents).toContain(
+        `| [Overview](index.md) :lucide-circle-arrow-out-down-right:<br> [Manual Page](index.md) | ${PERSON_PICTOGRAPH} ${EMPTY_PICTOGRAPH} | Manual description | Manual purpose | [:material-file-edit-outline:](https://docs.google.com/document/d/example/edit){ title="Link to FedRAMP Internal Google Doc" } |`,
+      );
+      expect(contents).toContain(
+        `| Unlinked :lucide-circle-arrow-out-down-right:<br> [Generated Page](generated.md) | ${MACHINE_PICTOGRAPH} ${STABLE_PICTOGRAPH} |  |  | :material-language-markdown-outline: |`,
+      );
+      expect(contents).toContain(
+        `| [Overview](index.md) :lucide-circle-arrow-out-down-right:<br> [TO DO](todo.md) | ${MACHINE_PICTOGRAPH} ${PLACEHOLDER_PICTOGRAPH} | A table showing all pages, their source, and their progress along with links to internal documentation only available to FedRAMP. | The FedRAMP team will have a simple place to see progress that is machine-generated. | :material-language-markdown-outline: |`,
+      );
+      expect(contents).not.toContain("Authority Page");
+      expect(contents).not.toContain("authority/law/index.md");
+
+      const manifest = await readJson<{ files: string[] }>(
+        path.join(tempSrcDir, config.generated.manifest),
+      );
+      expect(manifest.files).toEqual(["todo.md"]);
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
   test("builds configured FRD definition document mappings", async () => {
     const config = await loadToolConfig();
     const tempDir = await mkdtemp(path.join(tmpdir(), "cr26-site-tools-"));
@@ -1090,7 +1299,7 @@ describe("build-markdown", () => {
               id: "custom-definitions",
               title: "Custom FedRAMP Definitions",
               output: "reference/fedramp-definitions.md",
-              status: "stable",
+              status: "placeholder",
               includeEffectiveDates: false,
               source: {
                 collection: "FRD",
@@ -1117,6 +1326,9 @@ describe("build-markdown", () => {
         "utf8",
       );
       expect(contents).toContain("# Custom FedRAMP Definitions");
+      expect(contents).toStartWith(
+        `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# Custom FedRAMP Definitions`,
+      );
       expect(contents).toContain("## General Terms");
       expect(contents).not.toContain("Effective Date(s)");
     } finally {
@@ -1207,6 +1419,7 @@ describe("build pipeline", () => {
     const expectedArtifacts = collectArtifacts(rules, config);
     const expectedGeneratedFiles = expectedArtifacts
       .map((artifact) => artifact.relativePath)
+      .concat(config.generated.todo?.output ?? "todo.md")
       .sort();
     const srcPath = resolveToolPath(config.paths.src);
     const contentPath = resolveToolPath(config.paths.content);
@@ -1221,6 +1434,7 @@ describe("build pipeline", () => {
     expect(stdout).toContain(
       `Generated ${expectedArtifacts.length} markdown files.`,
     );
+    expect(stdout).toContain("Generated todo.md with ");
     expect(stdout).toContain("Build finished");
 
     const manifest = await readJson<{ files: string[] }>(
@@ -1289,6 +1503,31 @@ describe("build pipeline", () => {
       expect(generatedMarkdown).not.toContain("[object Object]");
     }
 
+    const todoMarkdown = await readFile(path.join(srcPath, "todo.md"), "utf8");
+    expect(todoMarkdown).toContain("# TO DO");
+    expect(todoMarkdown).toContain("**Generated:**");
+    expect(todoMarkdown).toContain(
+      "| Location | Picto | Description | Purpose | :lucide-file-cog: |",
+    );
+    expect(todoMarkdown).toContain(
+      `## Stable Human-Written Pages ${PERSON_PICTOGRAPH} ${STABLE_PICTOGRAPH}`,
+    );
+    expect(todoMarkdown).toContain(
+      `## Placeholder Machine-Generated Pages ${MACHINE_PICTOGRAPH} ${PLACEHOLDER_PICTOGRAPH}`,
+    );
+    expect(todoMarkdown).toContain("[Public Preview](index.md)");
+    expect(todoMarkdown).toContain("[FedRAMP Definitions](definitions.md)");
+    expect(todoMarkdown).toContain("[FedRAMP](responsibilities/index.md)");
+    expect(todoMarkdown).toContain(
+      "[FedRAMP](responsibilities/index.md) :lucide-circle-arrow-out-down-right:<br> [FedRAMP Definitions](definitions.md)",
+    );
+    expect(todoMarkdown).not.toContain("authority/");
+    expect(todoMarkdown).toContain(
+      "A table showing all pages, their source, and their progress along with links to internal documentation only available to FedRAMP.",
+    );
+    expect(todoMarkdown).not.toContain("{{");
+    expect(todoMarkdown).not.toContain("[object Object]");
+
     for (const relativePath of [
       "index.html",
       "search.json",
@@ -1320,6 +1559,10 @@ describe("build pipeline", () => {
       {
         path: "agencies/rules/agency-use/index.html",
         expectedText: ["Agency Use of FedRAMP Certified Cloud Services"],
+      },
+      {
+        path: "todo/index.html",
+        expectedText: ["TO DO", "Public Preview", "FedRAMP Definitions"],
       },
     ];
 

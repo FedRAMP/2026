@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { buildMarkdown } from "./build-markdown";
 import { REPO_ROOT, loadToolConfig, resolveToolPath } from "./config";
 import { deploy } from "./deploy";
+import { buildTodo } from "./todo-builder";
 
 function runCommand(command: string, args: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -38,6 +39,11 @@ async function main(): Promise<void> {
   for (const artifact of buildSummary.artifacts) {
     console.log(`- ${artifact.relativePath}`);
   }
+
+  const todoSummary = await buildTodo(config);
+  console.log(
+    `Generated ${todoSummary.relativePath} with ${todoSummary.pageCount} pages.`,
+  );
 
   await runCommand("zensical", [
     "build",
