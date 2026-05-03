@@ -6,19 +6,53 @@ purpose: "Folks know why it's IAS instead of 3PAO and how to dig into this secti
 google_doc: ""
 picto:
   source: person
-  status: placeholder
+  status: stable
 ---
 
 # Independent Assessment Services
 
-FedRAMP relies on independent assessment services (also known as independent assessors, formerly referred to as Third-Party Assessment Organizations or 3PAOs) to scale initial assessment capabilities based on industry need instead of directly operating an end-to-end assessment organization within FedRAMP itself. Relying on third-parties that are contracted by cloud service providers reduces cost for the tax payer by placing the burden for initial assessment on the cloud service provider.
+FedRAMP relies on independent assessment services (also known as independent assessors, formerly referred to as Third-Party Assessment Organizations or 3PAOs) to scale initial assessment capabilities based on industry need instead of directly operating an end-to-end assessment organization within FedRAMP itself. Relying on third-parties that are contracted by cloud service providers reduces cost for taxpayers by placing the burden for initial assessment on the cloud service provider.
 
-!!! info "The authority for FedRAMP to use independent assessment services is granted by 44 USC § 3611."
+This section helps independent assessment services understand the expectations for their participation in the FedRAMP Certification process.
 
-    _"The Administrator of GSA may determine whether FedRAMP may use an independent assessment service to analyze, validate, and attest to the quality and compliance of security assessment materials provided by cloud service providers during the course of a determination of whether to use a cloud computing product or service."_
+!!! warning "FedRAMP only accepts independent assessments that have been performed by **FedRAMP Recognized** independent assessment services."
 
-**To be used by FedRAMP for this purpose, independent assessment services must first become FedRAMP Recognized.**
+    FedRAMP Recognized independent assessment services can be found in the [FedRAMP Marketplace](https://fedramp.gov/marketplace).
 
-This section explains how to become a FedRAMP Recognized independent assessor and the specific rules that FedRAMP Recognized independent assessors must meet to successfully operate as an independent assessor for FedRAMP Certifications.
+---
 
-Meeting FedRAMP rules to receive FedRAMP Recognition is a fully optional process for any business. FedRAMP is not a regulator, and FedRAMP does not require any independent assessment service to perform any action or activity. Companies may choose at any time to stop complying with FedRAMP rules without any penalty other than the revocation of FedRAMP Recognition.
+<div class="grid cards" markdown>
+
+-   :lucide-shield-question-mark:{ .xl .middle .stable } **Need support?**
+
+    ---
+
+    Learn how to get involved with the FedRAMP Community and what kind of support FedRAMP offers in public vs in private.
+
+    [Getting Started](start/index.md){ data-preview }
+
+-   :material-update:{ .xl .middle .empty } **Been here awhile?**
+
+    ---
+
+    Things are changing and you'll need to do things differently from here on out.
+
+    [Updating to 2026 Rules](updating/index.md){ data-preview }
+
+-   :material-dice-d20-outline:{ .xl .middle .placeholder } **FedRAMP 20x Rules!**
+
+    ---
+
+    The expectations for independent verification and validation under FedRAMP 20x are very different from Rev5, requiring different skills and a new approach.
+
+    [Performing FedRAMP 20x Assessments](20x/index.md){ data-preview }
+
+-   :material-rewind-5:{ .xl .middle .machine } **FedRAMP Rev5**
+
+    ---
+
+    FedRAMP Rev5 isn't new but the expectations for independent verification and validation have still shifted and you'll need to review the rules.
+
+    [Performing FedRAMP Rev5 Assessments](rev5/index.md){ data-preview }
+
+</div>
