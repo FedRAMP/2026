@@ -114,8 +114,18 @@ export interface DeadlineDocumentMappingConfig {
   source: DeadlineDocumentSourceConfig;
 }
 
+export interface TodoDocumentConfig {
+  title?: string;
+  output: string;
+  description: string;
+  purpose: string;
+  source: GeneratedDocumentSource;
+  status: GeneratedDocumentStatus;
+}
+
 export interface GeneratedConfig {
   manifest: string;
+  todo?: TodoDocumentConfig;
   definitions?: DefinitionsMappingConfig;
   definitionDocuments?: DefinitionDocumentMappingConfig[];
   ksiDocuments?: KsiDocumentMappingConfig[];
