@@ -1561,7 +1561,7 @@ function pictoFrontmatterValue(
 
 function frontmatterScalarValue(
   frontmatterLines: string[],
-  key: "description" | "purpose",
+  key: "description" | "google_doc" | "purpose",
 ): string | undefined {
   const keyPattern = new RegExp(`^${key}:\\s*(.*)$`);
   const keyIndex = frontmatterLines.findIndex((line) => keyPattern.test(line));
@@ -1609,8 +1609,9 @@ function renderPageInfoAdmonition(
 ): string[] {
   const description = frontmatterScalarValue(frontmatterLines, "description");
   const purpose = frontmatterScalarValue(frontmatterLines, "purpose");
+  const googleDoc = frontmatterScalarValue(frontmatterLines, "google_doc");
 
-  if (!description && !purpose) {
+  if (!description && !purpose && !googleDoc) {
     return [];
   }
 
@@ -1625,6 +1626,14 @@ function renderPageInfoAdmonition(
 
   if (purpose) {
     lines.push(`    **Purpose:** ${purpose.replace(/\s+/g, " ")}`);
+  }
+
+  if (googleDoc) {
+    if (description || purpose) {
+      lines.push("    ");
+    }
+    const escapedHref = googleDoc.replaceAll("(", "%28").replaceAll(")", "%29");
+    lines.push(`    **Edit:** [:material-file-edit-outline:](${escapedHref}){ title="Link to FedRAMP Internal Google Doc" }`);
   }
 
   return lines;
