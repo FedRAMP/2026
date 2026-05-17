@@ -9,6 +9,11 @@ picto:
 
 # Changelog
 
+## 2026.05.17.01-preview
+
+**Release Date:** May 17, 2026
+
+- Moved Definitions from the FedRAMP section to the Overview section as they apply to all stakeholders.
 
 ## 2026.05.04.01-preview
 

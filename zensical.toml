@@ -6,13 +6,13 @@ nav = [
     { "Release Timeline" = "timeline.md" },
     { "FedRAMP Certification" = "certification.md" },
     { "Shared Responsibility Model" = "shared-responsibilities.md" },
+    { "FedRAMP Definitions" = "definitions.md" },
     { "Changelog" = "changelog.md" },
     { "Source Data" = "sources.md" },
     { "TO DO" = "todo.md" },
   ] },
   { "FedRAMP" = [
     "responsibilities/index.md",
-    { "Definitions" = "definitions.md" },
     { "FedRAMP Marketplace" = "marketplace.md" },
     { "Scope of FedRAMP" = "scope.md" },
 
