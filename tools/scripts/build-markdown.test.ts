@@ -348,6 +348,69 @@ function markdownPathsInZensicalConfig(source: string): string[] {
   );
 }
 
+interface ZensicalNavLocation {
+  sectionHref?: string;
+  sectionLabel: string;
+}
+
+function navLocationsInZensicalConfig(
+  source: string,
+): Map<string, ZensicalNavLocation> {
+  const locationByPath = new Map<string, ZensicalNavLocation>();
+  const sectionHrefByLabel = new Map<string, string>();
+  let currentSectionLabel: string | null = null;
+  const topLevelSectionPattern =
+    /^  \{\s*(?:"([^"]+)"|([A-Za-z][A-Za-z0-9 _'-]*))\s*=/;
+
+  for (const line of source.split(/\r?\n/)) {
+    const sectionMatch = line.match(topLevelSectionPattern);
+    if (sectionMatch) {
+      currentSectionLabel = (sectionMatch[1] ?? sectionMatch[2] ?? "").trim();
+    }
+
+    if (!currentSectionLabel) {
+      continue;
+    }
+
+    for (const pathMatch of line.matchAll(/"([^"]+\.md)"/g)) {
+      const relativePath = pathMatch[1];
+      if (!relativePath) {
+        continue;
+      }
+
+      if (!sectionHrefByLabel.has(currentSectionLabel)) {
+        sectionHrefByLabel.set(currentSectionLabel, relativePath);
+      }
+
+      if (!locationByPath.has(relativePath)) {
+        locationByPath.set(relativePath, {
+          sectionHref: sectionHrefByLabel.get(currentSectionLabel),
+          sectionLabel: currentSectionLabel,
+        });
+      }
+    }
+  }
+
+  return locationByPath;
+}
+
+function expectedTodoLocationFromZensicalConfig(
+  zensicalConfig: string,
+  pageTitle: string,
+  relativePath: string,
+): string {
+  const location = navLocationsInZensicalConfig(zensicalConfig).get(relativePath);
+  if (!location) {
+    throw new Error(`${relativePath} must be linked in zensical.toml`);
+  }
+
+  const sectionLink = location.sectionHref
+    ? `[${location.sectionLabel}](${location.sectionHref})`
+    : location.sectionLabel;
+
+  return `${sectionLink} :lucide-circle-arrow-out-down-right:<br> [${pageTitle}](${relativePath})`;
+}
+
 async function findBoldMarkdownHeadingWarnings(root: string): Promise<string[]> {
   const markdownPaths = (await listRelativeFiles(root))
     .filter((relativePath) => relativePath.endsWith(".md"))
@@ -1602,7 +1665,11 @@ describe("build pipeline", () => {
     expect(todoMarkdown).toContain("[FedRAMP Definitions](definitions.md)");
     expect(todoMarkdown).toContain("[FedRAMP](responsibilities/index.md)");
     expect(todoMarkdown).toContain(
-      "[FedRAMP](responsibilities/index.md) :lucide-circle-arrow-out-down-right:<br> [FedRAMP Definitions](definitions.md)",
+      expectedTodoLocationFromZensicalConfig(
+        zensicalConfig,
+        "FedRAMP Definitions",
+        "definitions.md",
+      ),
     );
     expect(todoMarkdown).not.toContain("authority/");
     expect(todoMarkdown).toContain(
