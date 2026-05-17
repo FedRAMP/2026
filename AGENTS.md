@@ -5,7 +5,7 @@ Instructions for Codex, Claude Code, and other agents working in this repository
 This repository builds the Zensical static site for the FedRAMP Consolidated Rules for 2026 preview. The public preview is published at:
 
 ```text
-https://fedramp.gov/preview/2026
+https://preview.fedramp.gov/2026
 ```
 
 ## Source Of Truth
