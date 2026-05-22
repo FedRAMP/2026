@@ -55,6 +55,23 @@ tags:
 {{/each}}
 {{/if}}
 
+{{#if flows.length}}
+{{#each flows}}
+## Activity Workflow: {{title}}
+
+{{#each descriptionParagraphs}}
+{{this}}
+
+{{/each}}
+``` mermaid
+{{#each mermaidLines}}
+{{this}}
+{{/each}}
+```
+
+{{/each}}
+{{/if}}
+
 {{#unless isKsiDocument}}
 ---
 {{/unless}}

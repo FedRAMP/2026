@@ -152,8 +152,8 @@ Add an entry to `generated.definitionDocuments` in `config.json`:
   "source": {
     "collection": "FRD",
     "types": ["20x", "rev5"],
-    "includeBoth": true,
-    "bothPosition": "first"
+    "includeAll": true,
+    "allPosition": "first"
   }
 }
 ```
@@ -169,8 +169,8 @@ Definition mapping fields:
 - `status`: pictograph status for generated frontmatter.
 - `source.collection`: must be `FRD`.
 - `source.types`: one or more certification types, such as `["20x"]` or `["rev5"]`.
-- `source.includeBoth`: include `data.both` definitions with each selected type.
-- `source.bothPosition`: place `data.both` definitions `first` or `last`.
+- `source.includeAll`: include `data.all` definitions with each selected type.
+- `source.allPosition`: place `data.all` definitions `first` or `last`.
 
 ## Generated KSI Pages
 
@@ -220,7 +220,7 @@ Add an entry to `generated.deadlineDocuments` in `config.json`:
 }
 ```
 
-Deadline documents generate one page per configured type. They read each selected FRR document's `info.short_name`, `info.name`, `info.web_name`, and `info.effective` values. The generated table links each rule family name to the matching provider rule page for that type.
+Deadline documents generate one page per configured type. They read each selected FRR document's `info.short_name`, `info.name`, `info.web_name`, and common or certification-specific `effective` values. The generated table links each rule family name to the matching provider rule page for that type.
 
 Use `{type}` or `{version}` in `output` to place each type page explicitly. Use `source.ignoreDocuments` to remove specific FRR keys after `source.documents` is resolved, including when `source.documents` is `"ALL"`.
 Use `source.affects` to omit selected FRR documents that do not contain any rule affecting that audience, such as excluding assessor-only recognition rules from provider deadline pages.
@@ -242,8 +242,8 @@ Add an entry to `generated.ruleDocuments` in `config.json`:
     "document": "FRC",
     "types": ["20x"],
     "affects": ["Providers"],
-    "includeBoth": true,
-    "bothPosition": "first"
+    "includeAll": true,
+    "allPosition": "first"
   }
 }
 ```
@@ -265,9 +265,9 @@ Mapping fields:
 - `source.ignoreDocuments`: optional array of FRR keys to remove after `source.document` or `source.documents` is resolved.
 - `source.types`: one or more certification types, such as `["20x"]` or `["rev5"]`.
 - `source.affects`: optional filter matched against each rule's `affects` list.
-- `source.sections`: optional list of section keys to include, such as `["CSO", "CSX"]`.
-- `source.includeBoth`: include `data.both` rules with each selected type.
-- `source.bothPosition`: place `data.both` rules `first` or `last`.
+- `source.sections`: optional list of section keys to include, such as `["CSO", "CSX", "CSF"]`.
+- `source.includeAll`: include `data.all` rules with each selected type.
+- `source.allPosition`: place `data.all` rules `first` or `last`.
 - `source.groupBy`: for multi-FRR mappings, `section` keeps source label sections and `document` groups matches under each FRR document title. Single-FRR mappings always render source label sections so the page title is not repeated as the first section heading.
 
 For example, this mapping processes every FRR and generates one page per rule family for rules that affect FedRAMP:
@@ -286,10 +286,10 @@ For example, this mapping processes every FRR and generates one page per rule fa
     "documents": "ALL",
     "types": ["20x", "rev5"],
     "affects": ["FedRAMP"],
-    "includeBoth": true,
-    "bothPosition": "first"
+    "includeAll": true,
+    "allPosition": "first"
   }
 }
 ```
 
-The default template is `templates/template.hbs`, with partials in `templates/partials/`. New templates can use the same view model as the default template: effective entries, sections, requirements, definitions, and requirement metadata such as terms, controls, notes, examples, and references.
+The default template is `templates/template.hbs`, with partials in `templates/partials/`. New templates can use the same view model as the default template: effective entries, flows, sections, requirements, definitions, and requirement metadata such as terms, controls, notes, examples, and references.

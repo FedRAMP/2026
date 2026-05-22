@@ -46,8 +46,8 @@
         "source": {
           "collection": "FRD",
           "types": ["20x", "rev5"],
-          "includeBoth": true,
-          "bothPosition": "first"
+          "includeAll": true,
+          "allPosition": "first"
         }
       }
     ],
@@ -108,8 +108,8 @@
           "documents": "ALL",
           "types": ["20x", "rev5"],
           "affects": ["FedRAMP"],
-          "includeBoth": true,
-          "bothPosition": "first"
+          "includeAll": true,
+          "allPosition": "first"
         }
       },
       {
@@ -126,8 +126,8 @@
           "documents": "ALL",
           "types": ["20x", "rev5"],
           "affects": ["Agencies"],
-          "includeBoth": true,
-          "bothPosition": "first"
+          "includeAll": true,
+          "allPosition": "first"
         }
       },
       {
@@ -144,8 +144,8 @@
           "documents": "ALL",
           "types": ["20x"],
           "affects": ["Providers"],
-          "includeBoth": true,
-          "bothPosition": "first"
+          "includeAll": true,
+          "allPosition": "first"
         }
       },
       {
@@ -162,8 +162,8 @@
           "documents": "ALL",
           "types": ["rev5"],
           "affects": ["Providers"],
-          "includeBoth": true,
-          "bothPosition": "first"
+          "includeAll": true,
+          "allPosition": "first"
         }
       },
       {
@@ -181,8 +181,8 @@
           "ignoreDocuments": ["MKT", "REC"],
           "types": ["20x"],
           "affects": ["Assessors"],
-          "includeBoth": true,
-          "bothPosition": "first"
+          "includeAll": true,
+          "allPosition": "first"
         }
       },
       {
@@ -200,8 +200,8 @@
           "ignoreDocuments": ["MKT", "REC"],
           "types": ["rev5"],
           "affects": ["Assessors"],
-          "includeBoth": true,
-          "bothPosition": "first"
+          "includeAll": true,
+          "allPosition": "first"
         }
       },
       {
@@ -218,8 +218,8 @@
           "documents": ["MKT", "REC"],
           "types": ["20x", "rev5"],
           "affects": ["Assessors"],
-          "includeBoth": true,
-          "bothPosition": "first"
+          "includeAll": true,
+          "allPosition": "first"
         }
       },
       {
@@ -237,8 +237,8 @@
           "documents": ["MKT"],
           "types": ["20x", "rev5"],
           "affects": ["Advisors"],
-          "includeBoth": true,
-          "bothPosition": "first"
+          "includeAll": true,
+          "allPosition": "first"
         }
       }
     ]

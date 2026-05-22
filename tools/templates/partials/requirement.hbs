@@ -51,6 +51,12 @@
         **Timeframe:** {{timeframe}}
 
 {{/if}}
+{{#if numberedItems.length}}
+{{#each numberedItems}}
+        1. {{this}}
+{{/each}}
+
+{{/if}}
 {{#if effectiveDateLines.length}}
         **Effective Date(s):**
 {{#each effectiveDateLines}}
@@ -65,6 +71,21 @@
         | N{{pain}} |{{#each cells}} {{this}} |{{/each}}
 {{/each}}
 
+{{/if}}
+{{#if noteParagraphs.length}}
+        ---
+
+        _**Note:** {{#each noteParagraphs}}{{this}}{{#unless @last}} {{/unless}}{{/each}}_
+
+{{/if}}
+{{#if notes.length}}
+        ---
+
+        _**Notes:**_
+
+{{#each notes}}
+        - _{{this}}_
+{{/each}}
 {{/if}}
 {{/each}}
 {{#if numberedItems.length}}

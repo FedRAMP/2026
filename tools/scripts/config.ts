@@ -5,7 +5,7 @@ import defaultConfig from "../config.json";
 
 export type RuleType = "20x" | "rev5";
 export type GeneratedEmptyBehavior = "write" | "skip";
-export type BothRulesPosition = "first" | "last";
+export type AllRulesPosition = "first" | "last";
 export type RuleDocumentSelection = string[] | "ALL";
 export type KsiThemeSelection = string[] | "ALL";
 export type RuleDocumentGrouping = "section" | "document";
@@ -39,8 +39,8 @@ export interface DefinitionsMappingConfig {
 export interface DefinitionDocumentSourceConfig {
   collection: "FRD";
   types?: RuleType[];
-  includeBoth?: boolean;
-  bothPosition?: BothRulesPosition;
+  includeAll?: boolean;
+  allPosition?: AllRulesPosition;
 }
 
 export interface DefinitionDocumentMappingConfig {
@@ -62,8 +62,8 @@ export interface RuleDocumentSourceConfig {
   types: RuleType[];
   affects?: string[];
   sections?: string[];
-  includeBoth?: boolean;
-  bothPosition?: BothRulesPosition;
+  includeAll?: boolean;
+  allPosition?: AllRulesPosition;
   groupBy?: RuleDocumentGrouping;
 }
 

@@ -842,7 +842,7 @@ describe("build-markdown", () => {
     );
     const definitionTags = Array.from(
       new Set(
-        Object.values(rules.FRD.data.both ?? {})
+        Object.values(rules.FRD.data.all ?? {})
           .map((entry) => entry.tag?.trim())
           .filter((tag): tag is string => Boolean(tag)),
       ),
@@ -1017,7 +1017,7 @@ describe("build-markdown", () => {
     expect(provider20xContents).toContain("# FedRAMP Certification");
     expect(provider20xContents).toContain("FRC-CSO-CDS");
     expect(provider20xContents).toContain("FRC-CSX-SUM");
-    expect(provider20xContents).not.toContain("FRC-CSL-CDE");
+    expect(provider20xContents).not.toContain("FRC-CSF-CDE");
     expect(provider20xContents).toContain("../../../definitions/#");
     expect(provider20xContents).toContain(
       "[Certification Data](../../../definitions/#certification-data){ data-preview }",
@@ -1039,8 +1039,39 @@ describe("build-markdown", () => {
     expect(providerRev5Contents).toStartWith(
       `---\ntags:\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# FedRAMP Certification`,
     );
-    expect(providerRev5Contents).toContain("FRC-CSL-CDE");
+    expect(providerRev5Contents).toContain("FRC-CSF-CDE");
     expect(providerRev5Contents).not.toContain("FRC-CSX-SUM");
+
+    const provider20xIcpContents = await readFile(
+      path.join(
+        OUTPUT_DIR,
+        "providers",
+        "20x",
+        "rules",
+        "incident-communications-procedures.md",
+      ),
+      "utf8",
+    );
+    expect(provider20xIcpContents).toContain(
+      "## Activity Workflow: Incident Communications",
+    );
+    expect(provider20xIcpContents).toContain("``` mermaid");
+    expect(provider20xIcpContents).toContain("flowchart TD");
+    expect(provider20xIcpContents).toContain(
+      'node_icp_cso_efr{"ICP-CSO-EFR<br/>Evaluate Federal Reportability"}',
+    );
+    expect(provider20xIcpContents).toContain(
+      'node_incident -->|"Is it a FedRAMP Reportable Incident?"| node_icp_cso_efr',
+    );
+    expect(provider20xIcpContents).toContain(
+      'click node_icp_cso_efr href "#evaluate-federal-reportability" "Jump to ICP-CSO-EFR"',
+    );
+    expect(provider20xIcpContents).toContain(
+      "Notify Agency Customers by update using contract agreements.",
+    );
+    expect(provider20xIcpContents).toContain(
+      "1. Contact information for the federal incident response coordinator.",
+    );
 
     const fedrampFsiContents = await readFile(
       path.join(OUTPUT_DIR, "responsibilities", "fedramp-security-inbox.md"),
@@ -1139,8 +1170,8 @@ describe("build-markdown", () => {
               ignoreDocuments: ["MKT"],
               types: ["20x"],
               affects: ["Assessors"],
-              includeBoth: true,
-              bothPosition: "first",
+              includeAll: true,
+              allPosition: "first",
             },
           },
         ],
@@ -1525,8 +1556,8 @@ describe("build-markdown", () => {
               source: {
                 collection: "FRD",
                 types: ["20x", "rev5"],
-                includeBoth: true,
-                bothPosition: "first",
+                includeAll: true,
+                allPosition: "first",
               },
             },
           ],

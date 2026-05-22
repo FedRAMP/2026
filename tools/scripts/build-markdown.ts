@@ -21,7 +21,8 @@ export const RULES_FILE = resolveToolPath(DEFAULT_CONFIG.paths.rulesFile);
 export const OUTPUT_DIR = resolveToolPath(DEFAULT_CONFIG.paths.src);
 
 type Version = RuleType;
-type EffectiveAudience = Version | "both";
+type SharedApplicabilityBucket = "all";
+type DataBucket = Version | SharedApplicabilityBucket;
 
 interface RulesDocument {
   info?: {
@@ -51,14 +52,41 @@ interface EffectiveEntrySource {
   warnings?: string[];
 }
 
+interface LabelSource {
+  name?: string;
+  description?: string;
+}
+
+interface FlowStepSource {
+  from?: string;
+  to?: string;
+  if?: string;
+  description?: string;
+}
+
+interface FlowSource {
+  activity?: string;
+  description?: string;
+  steps?: FlowStepSource[];
+}
+
+interface CertificationInfoSource {
+  effective?: EffectiveEntrySource;
+  labels?: Record<string, LabelSource>;
+  flows?: FlowSource[];
+}
+
 interface InfoSource {
   name: string;
   short_name?: string;
   web_name: string;
   purpose?: string;
   status?: string;
-  effective?: Partial<Record<EffectiveAudience, EffectiveEntrySource>>;
-  labels?: Record<string, { name?: string; description?: string }>;
+  effective?: EffectiveEntrySource;
+  labels?: Record<string, LabelSource>;
+  flows?: FlowSource[];
+  "20x"?: CertificationInfoSource;
+  rev5?: CertificationInfoSource;
 }
 
 interface ChangeLogSource {
@@ -92,10 +120,13 @@ type PainTimeframesSource =
 
 interface VariantSource {
   statement?: string;
+  following_information?: string[];
   effective_date?: Record<string, number | string>;
   timeframe_type?: string;
   timeframe_num?: number | string;
   pain_timeframes?: PainTimeframesSource;
+  note?: string;
+  notes?: string[];
 }
 
 interface NotificationSource {
@@ -132,7 +163,7 @@ interface RequirementEntrySource {
 
 interface DefinitionsSource {
   info: InfoSource;
-  data: Partial<Record<Version | "both", Record<string, DefinitionEntrySource>>>;
+  data: Partial<Record<DataBucket, Record<string, DefinitionEntrySource>>>;
 }
 
 interface DefinitionEntrySource {
@@ -154,7 +185,7 @@ interface RequirementDocumentSource {
   info: InfoSource;
   data: Partial<
     Record<
-      Version | "both",
+      DataBucket,
       Record<string, Record<string, RequirementEntrySource>>
     >
   >;
@@ -193,10 +224,13 @@ interface PainTimeframeRowViewModel {
 interface VariantViewModel {
   title: string;
   statementParagraphs: string[];
+  numberedItems: string[];
   effectiveDateLines: Array<{ label: string; value: string }>;
   timeframe?: string;
   painTimeframeColumns: PainTimeframeColumnViewModel[];
   painTimeframeRows: PainTimeframeRowViewModel[];
+  noteParagraphs: string[];
+  notes: string[];
 }
 
 interface ExampleViewModel {
@@ -218,6 +252,7 @@ interface NotificationViewModel {
 
 interface RequirementViewModel {
   id: string;
+  anchorId: string;
   title: string;
   formerId?: string;
   changelog: Array<{
@@ -293,6 +328,17 @@ interface DeadlineTableViewModel {
   rows: DeadlineRowViewModel[];
 }
 
+interface FlowStepViewModel {
+  line: string;
+}
+
+interface FlowViewModel {
+  title: string;
+  descriptionParagraphs: string[];
+  steps: FlowStepViewModel[];
+  mermaidLines: string[];
+}
+
 type DoNotLinkTermIndex = ReadonlySet<string>;
 
 interface DocumentViewModel {
@@ -302,6 +348,7 @@ interface DocumentViewModel {
   purposeParagraphs: string[];
   tableOfContents: TableOfContentsEntryViewModel[];
   effectiveEntries: EffectiveEntryViewModel[];
+  flows: FlowViewModel[];
   isDefinitionDocument: boolean;
   isRequirementsDocument: boolean;
   isKsiDocument: boolean;
@@ -374,13 +421,35 @@ function isApplicable(entry?: EffectiveEntrySource): boolean {
   return Boolean(entry?.is && entry.is.toLowerCase() !== "no");
 }
 
+function commonEffectiveEntry(info: InfoSource): EffectiveEntrySource | undefined {
+  return info.effective;
+}
+
 function effectiveEntryForVersion(
-  effective:
-    | Partial<Record<EffectiveAudience, EffectiveEntrySource>>
-    | undefined,
+  info: InfoSource,
   version: Version,
 ): EffectiveEntrySource | undefined {
-  return effective?.both ?? effective?.[version];
+  return commonEffectiveEntry(info) ?? info[version]?.effective;
+}
+
+function labelsForVersions(
+  info: InfoSource,
+  versions: Version[],
+): Record<string, LabelSource> {
+  const labels: Record<string, LabelSource> = { ...(info.labels ?? {}) };
+
+  for (const version of versions) {
+    Object.assign(labels, info[version]?.labels ?? {});
+  }
+
+  return labels;
+}
+
+function flowsForVersions(info: InfoSource, versions: Version[]): FlowSource[] {
+  return [
+    ...(info.flows ?? []),
+    ...versions.flatMap((version) => info[version]?.flows ?? []),
+  ];
 }
 
 function slugifyTerm(term: string): string {
@@ -400,6 +469,10 @@ function sectionAnchorId(labelKey: string, title: string): string {
 
 function sectionAnchorAttribute(labelKey: string, title: string): string {
   return `{#${sectionAnchorId(labelKey, title)}}`;
+}
+
+function requirementAnchorId(title: string): string {
+  return slugifyHeading(title);
 }
 
 function buildSectionTableOfContents(
@@ -475,20 +548,17 @@ function toClassApplicabilityLines(
 }
 
 function toEffectiveEntries(
-  effective:
-    | Partial<Record<EffectiveAudience, EffectiveEntrySource>>
-    | undefined,
+  info: InfoSource,
   versions: Version[],
 ): EffectiveEntryViewModel[] {
-  if (effective?.both) {
-    return [
-      toEffectiveEntryViewModel(effective.both, humanizeVersions(versions)),
-    ];
+  const commonEntry = commonEffectiveEntry(info);
+  if (commonEntry) {
+    return [toEffectiveEntryViewModel(commonEntry, humanizeVersions(versions))];
   }
 
   return versions
     .map((version): EffectiveEntryViewModel | null => {
-      const entry = effective?.[version];
+      const entry = info[version]?.effective;
       if (!entry) {
         return null;
       }
@@ -520,6 +590,177 @@ function toEffectiveEntryViewModel(
   }
 
   return viewModel;
+}
+
+function mermaidNodeId(value: string): string {
+  const normalized = value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  return `node_${normalized || "unnamed"}`;
+}
+
+function mermaidQuotedValue(value: string): string {
+  return value
+    .replaceAll("\\", "\\\\")
+    .replaceAll('"', '\\"')
+    .replaceAll("\r", " ")
+    .replaceAll("\n", "<br/>");
+}
+
+function mermaidEdgeLabel(step: FlowStepSource): string {
+  return [step.if, step.description]
+    .map((value) => value?.trim())
+    .filter((value): value is string => Boolean(value))
+    .join(": ");
+}
+
+function mermaidNodeShape(
+  nodeId: string,
+  label: string,
+  shape: "decision" | "terminal" | "standard",
+): string {
+  const quotedLabel = mermaidQuotedValue(label);
+
+  if (shape === "decision") {
+    return `  ${nodeId}{"${quotedLabel}"}`;
+  }
+
+  if (shape === "terminal") {
+    return `  ${nodeId}(["${quotedLabel}"])`;
+  }
+
+  return `  ${nodeId}["${quotedLabel}"]`;
+}
+
+function flowNodeShape(
+  label: string,
+  outgoingSteps: FlowStepSource[],
+  incomingSteps: FlowStepSource[],
+): "decision" | "terminal" | "standard" {
+  if (outgoingSteps.some((step) => step.if?.trim())) {
+    return "decision";
+  }
+
+  if (!outgoingSteps.length || label.toLowerCase().includes("complete")) {
+    return "terminal";
+  }
+
+  if (!incomingSteps.length) {
+    return "terminal";
+  }
+
+  return "standard";
+}
+
+function buildRequirementIndex(
+  sections: SectionViewModel[],
+): Map<string, RequirementViewModel> {
+  const requirements = new Map<string, RequirementViewModel>();
+
+  for (const section of sections) {
+    for (const requirement of section.requirements) {
+      requirements.set(requirement.id, requirement);
+    }
+  }
+
+  return requirements;
+}
+
+function buildFlowMermaidLines(
+  flow: FlowSource,
+  requirementIndex: ReadonlyMap<string, RequirementViewModel>,
+): string[] {
+  const steps = (flow.steps ?? []).filter((step) => step.from || step.to);
+  const nodeLabels = Array.from(
+    new Set(
+      steps.flatMap((step) => [step.from, step.to]).filter((value): value is string =>
+        Boolean(value?.trim()),
+      ),
+    ),
+  );
+  const nodeIds = new Map(
+    nodeLabels.map((label) => [label, mermaidNodeId(label)] as const),
+  );
+  const lines = ["flowchart TD"];
+
+  for (const label of nodeLabels) {
+    const nodeId = nodeIds.get(label);
+    if (!nodeId) {
+      continue;
+    }
+
+    const outgoingSteps = steps.filter((step) => step.from === label);
+    const incomingSteps = steps.filter((step) => step.to === label);
+    const requirement = requirementIndex.get(label);
+    const displayLabel = requirement ? `${label}<br/>${requirement.title}` : label;
+
+    lines.push(
+      mermaidNodeShape(
+        nodeId,
+        displayLabel,
+        flowNodeShape(label, outgoingSteps, incomingSteps),
+      ),
+    );
+  }
+
+  for (const step of steps) {
+    const from = step.from ? nodeIds.get(step.from) : undefined;
+    const to = step.to ? nodeIds.get(step.to) : undefined;
+    if (!from || !to) {
+      continue;
+    }
+
+    const label = mermaidEdgeLabel(step);
+    lines.push(
+      label
+        ? `  ${from} -->|"${mermaidQuotedValue(label)}"| ${to}`
+        : `  ${from} --> ${to}`,
+    );
+  }
+
+  for (const [label, requirement] of requirementIndex) {
+    const nodeId = nodeIds.get(label);
+    if (!nodeId) {
+      continue;
+    }
+
+    lines.push(
+      `  click ${nodeId} href "#${requirement.anchorId}" "${mermaidQuotedValue(`Jump to ${label}`)}"`,
+    );
+  }
+
+  return lines;
+}
+
+function buildFlowViewModels(
+  info: InfoSource,
+  versions: Version[],
+  requirementIndex: ReadonlyMap<string, RequirementViewModel>,
+): FlowViewModel[] {
+  return flowsForVersions(info, versions)
+    .map((flow, index): FlowViewModel | null => {
+      const steps = (flow.steps ?? [])
+        .map((step) => ({
+          line: [step.from, step.if, step.to, step.description]
+            .filter((value): value is string => Boolean(value?.trim()))
+            .join(" -> "),
+        }))
+        .filter((step) => step.line);
+
+      if (!steps.length) {
+        return null;
+      }
+
+      return {
+        title: flow.activity ?? `Flow ${index + 1}`,
+        descriptionParagraphs: splitParagraphs(flow.description),
+        steps,
+        mermaidLines: buildFlowMermaidLines(flow, requirementIndex),
+      };
+    })
+    .filter((flow): flow is FlowViewModel => flow !== null);
 }
 
 function toChangeLog(updated: ChangeLogSource[] = []) {
@@ -650,9 +891,12 @@ function buildVariantSections(
     sections.push({
       title: `Class ${className.toUpperCase()}`,
       statementParagraphs: splitParagraphs(classEntry.statement),
+      numberedItems: classEntry.following_information ?? [],
       effectiveDateLines: toDateLines(classEntry.effective_date),
       timeframe: formatDuration(classEntry.timeframe_type, classEntry.timeframe_num),
       ...painTimeframes,
+      noteParagraphs: splitParagraphs(classEntry.note),
+      notes: classEntry.notes ?? [],
     });
   }
 
@@ -664,9 +908,12 @@ function buildVariantSections(
     sections.push({
       title: titleCase(levelName),
       statementParagraphs: splitParagraphs(levelEntry.statement),
+      numberedItems: levelEntry.following_information ?? [],
       effectiveDateLines: toDateLines(levelEntry.effective_date),
       timeframe: formatDuration(levelEntry.timeframe_type, levelEntry.timeframe_num),
       ...painTimeframes,
+      noteParagraphs: splitParagraphs(levelEntry.note),
+      notes: levelEntry.notes ?? [],
     });
   }
 
@@ -728,9 +975,12 @@ function buildRequirementViewModel(
   rulesRelativePath: string,
   doNotLinkTerms: DoNotLinkTermIndex,
 ): RequirementViewModel {
+  const title = entry.name ?? id;
+
   return {
     id,
-    title: entry.name ?? id,
+    anchorId: requirementAnchorId(title),
+    title,
     formerId: entry.fka,
     changelog: toChangeLog(entry.updated),
     statementParagraphs: splitParagraphs(entry.statement),
@@ -836,8 +1086,8 @@ function buildConfiguredDefinitionSectionViewModels(
 
   for (const bucketName of configuredTypeBuckets(
     definitionDocumentTypes(mapping),
-    mapping.source.includeBoth,
-    mapping.source.bothPosition,
+    mapping.source.includeAll,
+    mapping.source.allPosition,
   )) {
     entries.push(...Object.entries(definitions.data[bucketName] ?? {}));
   }
@@ -854,7 +1104,9 @@ function buildSectionViewModels(
 ): SectionViewModel[] {
   const sections = new Map<string, SectionViewModel>();
 
-  for (const bucketName of [version, "both"] as const) {
+  const labels = labelsForVersions(document.info, [version]);
+
+  for (const bucketName of [version, "all"] as const) {
     const bucket = document.data[bucketName];
     if (!bucket) {
       continue;
@@ -862,7 +1114,7 @@ function buildSectionViewModels(
 
     for (const [labelKey, requirements] of Object.entries(bucket)) {
       const existingSection = sections.get(labelKey);
-      const label = document.info.labels?.[labelKey];
+      const label = labels[labelKey];
       const section = existingSection ?? {
         title: label?.name ?? labelKey,
         anchorId: sectionAnchorId(labelKey, label?.name ?? labelKey),
@@ -923,24 +1175,24 @@ function resolveGeneratedOutputPath(
 
 function configuredBuckets(
   mapping: RuleDocumentMappingConfig,
-): Array<Version | "both"> {
+): DataBucket[] {
   return configuredTypeBuckets(
     mapping.source.types,
-    mapping.source.includeBoth,
-    mapping.source.bothPosition,
+    mapping.source.includeAll,
+    mapping.source.allPosition,
   );
 }
 
 function configuredTypeBuckets(
   types: Version[],
-  includeBoth = true,
-  bothPosition: "first" | "last" = "last",
-): Array<Version | "both"> {
-  if (!includeBoth) {
+  includeAll = true,
+  allPosition: "first" | "last" = "last",
+): DataBucket[] {
+  if (!includeAll) {
     return types;
   }
 
-  return bothPosition === "first" ? ["both", ...types] : [...types, "both"];
+  return allPosition === "first" ? ["all", ...types] : [...types, "all"];
 }
 
 function matchesAny(value: string, allowedValues: string[]): boolean {
@@ -985,6 +1237,7 @@ function buildConfiguredSectionViewModels(
   const allowedSections = mapping.source.sections;
   const definitionsHref = mapping.definitionsHref ?? "definitions/";
   const rulesHref = mapping.rulesHref ?? "";
+  const labels = labelsForVersions(document.info, mapping.source.types);
 
   for (const bucketName of configuredBuckets(mapping)) {
     const bucket = document.data[bucketName];
@@ -997,7 +1250,7 @@ function buildConfiguredSectionViewModels(
         continue;
       }
 
-      const label = document.info.labels?.[labelKey];
+      const label = labels[labelKey];
       const section = sections.get(labelKey) ?? {
         title: label?.name ?? labelKey,
         anchorId: sectionAnchorId(labelKey, label?.name ?? labelKey),
@@ -1409,7 +1662,7 @@ function buildDeadlineRowViewModel(
   mapping: DeadlineDocumentMappingConfig,
 ): DeadlineRowViewModel | null {
   const { document } = sourceDocument;
-  const entry = effectiveEntryForVersion(document.info.effective, version);
+  const entry = effectiveEntryForVersion(document.info, version);
   if (!entry) {
     return null;
   }
@@ -1534,6 +1787,7 @@ function buildDocumentContext(
     purposeParagraphs: options.purposeParagraphs ?? [],
     tableOfContents: options.tableOfContents ?? [],
     effectiveEntries: options.effectiveEntries ?? [],
+    flows: options.flows ?? [],
     isDefinitionDocument: options.isDefinitionDocument ?? false,
     isRequirementsDocument: options.isRequirementsDocument ?? false,
     isKsiDocument: options.isKsiDocument ?? false,
@@ -2080,10 +2334,7 @@ function collectDefinitionDocumentArtifact(
   const effectiveEntries =
     mapping.includeEffectiveDates === false
       ? []
-      : toEffectiveEntries(
-          rules.FRD.info.effective,
-          definitionDocumentTypes(mapping),
-        );
+      : toEffectiveEntries(rules.FRD.info, definitionDocumentTypes(mapping));
 
   return {
     relativePath,
@@ -2124,8 +2375,8 @@ function collectLegacyDefinitionsArtifact(
     source: {
       collection: "FRD",
       types: ["20x", "rev5"],
-      includeBoth: true,
-      bothPosition: "first",
+      includeAll: true,
+      allPosition: "first",
     },
   });
 }
@@ -2356,10 +2607,18 @@ function collectSingleRuleDocumentArtifact(
   const title = mapping.title ?? firstDocument.info.name;
   const purposeParagraphs =
     documents.length === 1 ? splitParagraphs(firstDocument.info.purpose) : [];
+  const flows =
+    documents.length === 1
+      ? buildFlowViewModels(
+          firstDocument.info,
+          mapping.source.types,
+          buildRequirementIndex(sections),
+        )
+      : [];
   const effectiveEntries =
     mapping.includeEffectiveDates === false || documents.length !== 1
       ? []
-      : toEffectiveEntries(firstDocument.info.effective, mapping.source.types);
+      : toEffectiveEntries(firstDocument.info, mapping.source.types);
 
   return {
     relativePath,
@@ -2387,6 +2646,7 @@ function collectSingleRuleDocumentArtifact(
       purposeParagraphs,
       tableOfContents: buildSectionTableOfContents(sections),
       effectiveEntries,
+      flows,
       isRequirementsDocument: true,
       sections,
     }),
@@ -2417,7 +2677,7 @@ function collectDocumentRuleDocumentArtifacts(
       const effectiveEntries =
         mapping.includeEffectiveDates === false
           ? []
-          : toEffectiveEntries(document.info.effective, mapping.source.types);
+          : toEffectiveEntries(document.info, mapping.source.types);
 
       return {
         relativePath,
@@ -2436,6 +2696,11 @@ function collectDocumentRuleDocumentArtifacts(
           purposeParagraphs: splitParagraphs(document.info.purpose),
           tableOfContents: buildSectionTableOfContents(sections),
           effectiveEntries,
+          flows: buildFlowViewModels(
+            document.info,
+            mapping.source.types,
+            buildRequirementIndex(sections),
+          ),
           isRequirementsDocument: true,
           sections,
         }),
