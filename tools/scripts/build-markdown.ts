@@ -123,6 +123,7 @@ type PainTimeframesSource =
 interface VariantSource {
   statement?: string;
   following_information?: string[];
+  following_information_bullets?: string[];
   effective_date?: Record<string, number | string>;
   timeframe_type?: string;
   timeframe_num?: number | string;
@@ -161,6 +162,7 @@ interface RequirementEntrySource {
   examples?: ExampleSource[];
   updated?: ChangeLogSource[];
   fka?: string;
+  related?: string[];
 }
 
 interface DefinitionsSource {
@@ -227,6 +229,7 @@ interface VariantViewModel {
   title: string;
   statementParagraphs: string[];
   numberedItems: string[];
+  bulletItems: string[];
   effectiveDateLines: Array<{ label: string; value: string }>;
   timeframe?: string;
   painTimeframeColumns: PainTimeframeColumnViewModel[];
@@ -342,6 +345,34 @@ interface FlowViewModel {
 }
 
 type DoNotLinkTermIndex = ReadonlySet<string>;
+
+interface RuleIndexEntry {
+  id: string;
+  name: string;
+  anchorId: string;
+  documentKey: string;
+  bucketName: DataBucket;
+  sectionKey: string;
+  requirement: RequirementEntrySource;
+}
+
+type RuleIndex = ReadonlyMap<string, RuleIndexEntry>;
+
+interface RulePageCandidate {
+  mappingId: string;
+  relativePath: string;
+  types: Version[];
+  affects: string[];
+}
+
+type RulePageIndex = ReadonlyMap<string, RulePageCandidate[]>;
+
+interface RuleLinkContext {
+  currentMapping: RuleDocumentMappingConfig;
+  currentRelativePath: string;
+  ruleIndex: RuleIndex;
+  rulePageIndex: RulePageIndex;
+}
 
 interface DocumentViewModel {
   title: string;
@@ -515,6 +546,277 @@ function buildDoNotLinkTermIndex(
   }
 
   return terms;
+}
+
+function buildRuleIndex(rules: RulesDocument): RuleIndex {
+  const index = new Map<string, RuleIndexEntry>();
+
+  for (const [documentKey, document] of Object.entries(rules.FRR)) {
+    for (const [bucketName, bucket] of Object.entries(document.data) as Array<
+      [DataBucket, Record<string, Record<string, RequirementEntrySource>>]
+    >) {
+      for (const [sectionKey, requirements] of Object.entries(bucket ?? {})) {
+        for (const [id, requirement] of Object.entries(requirements)) {
+          if (index.has(id)) {
+            throw new Error(`Duplicate FRR rule id: ${id}`);
+          }
+
+          const name = requirement.name ?? id;
+          index.set(id, {
+            id,
+            name,
+            anchorId: requirementAnchorId(name),
+            documentKey,
+            bucketName,
+            sectionKey,
+            requirement,
+          });
+        }
+      }
+    }
+  }
+
+  return index;
+}
+
+function ruleBucketMatchesMapping(
+  bucketName: DataBucket,
+  mapping: RuleDocumentMappingConfig,
+): boolean {
+  return configuredBuckets(mapping).includes(bucketName);
+}
+
+function ruleSectionMatchesMapping(
+  sectionKey: string,
+  mapping: RuleDocumentMappingConfig,
+): boolean {
+  return !mapping.source.sections || mapping.source.sections.includes(sectionKey);
+}
+
+function renderRuleCandidatePath(
+  mapping: RuleDocumentMappingConfig,
+  document: RequirementDocumentSource,
+): string {
+  const needsDocumentKey =
+    mapping.outputMode === "documents" ||
+    mapping.output.includes("{FRR}") ||
+    mapping.output.includes("{document}");
+
+  return normalizeGeneratedPath(
+    renderRuleDocumentOutput(
+      mapping,
+      needsDocumentKey ? document.info.web_name : undefined,
+    ),
+  );
+}
+
+function addRulePageCandidate(
+  index: Map<string, RulePageCandidate[]>,
+  ruleId: string,
+  candidate: RulePageCandidate,
+): void {
+  const candidates = index.get(ruleId) ?? [];
+  if (
+    candidates.some(
+      (existingCandidate) =>
+        existingCandidate.mappingId === candidate.mappingId &&
+        existingCandidate.relativePath === candidate.relativePath,
+    )
+  ) {
+    return;
+  }
+
+  candidates.push(candidate);
+  index.set(ruleId, candidates);
+}
+
+function buildRulePageIndex(
+  rules: RulesDocument,
+  config: ToolConfig,
+  ruleIndex: RuleIndex,
+): RulePageIndex {
+  const index = new Map<string, RulePageCandidate[]>();
+
+  for (const mapping of config.generated.ruleDocuments) {
+    if (mapping.source.collection !== "FRR") {
+      continue;
+    }
+
+    for (const { key, document } of sourceDocuments(rules, mapping)) {
+      const relativePath = renderRuleCandidatePath(mapping, document);
+
+      for (const [id, rule] of ruleIndex) {
+        if (rule.documentKey !== key) {
+          continue;
+        }
+
+        if (!ruleBucketMatchesMapping(rule.bucketName, mapping)) {
+          continue;
+        }
+
+        if (!ruleSectionMatchesMapping(rule.sectionKey, mapping)) {
+          continue;
+        }
+
+        if (!requirementMatchesMapping(rule.requirement, mapping)) {
+          continue;
+        }
+
+        addRulePageCandidate(index, id, {
+          mappingId: mapping.id,
+          relativePath,
+          types: mapping.source.types,
+          affects: mapping.source.affects ?? [],
+        });
+      }
+    }
+  }
+
+  return index;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function versionsOverlap(left: Version[], right: Version[]): boolean {
+  return left.some((value) => right.includes(value));
+}
+
+function candidateScore(
+  candidate: RulePageCandidate,
+  targetRule: RuleIndexEntry,
+  context: RuleLinkContext,
+): number {
+  let score = 0;
+
+  if (candidate.relativePath === context.currentRelativePath) {
+    score += 1000;
+  }
+
+  if (candidate.mappingId === context.currentMapping.id) {
+    score += 500;
+  }
+
+  if (versionsOverlap(candidate.types, context.currentMapping.source.types)) {
+    score += 100;
+  }
+
+  if (
+    candidate.types.length === context.currentMapping.source.types.length &&
+    candidate.types.every((version) =>
+      context.currentMapping.source.types.includes(version),
+    )
+  ) {
+    score += 25;
+  }
+
+  const currentAffects = context.currentMapping.source.affects ?? [];
+  if (
+    candidate.affects.length &&
+    affectsFiltersOverlap(candidate.affects, currentAffects)
+  ) {
+    score += 75;
+  }
+
+  const targetAffects = targetRule.requirement.affects ?? [];
+  if (
+    candidate.affects.length &&
+    affectsFiltersOverlap(candidate.affects, targetAffects)
+  ) {
+    score += 50;
+  }
+
+  return score;
+}
+
+function resolveRelatedRuleHref(
+  targetRule: RuleIndexEntry,
+  context: RuleLinkContext,
+): string | undefined {
+  const candidates = context.rulePageIndex.get(targetRule.id) ?? [];
+  if (!candidates.length) {
+    return undefined;
+  }
+
+  const bestCandidate = candidates
+    .map((candidate, index) => ({
+      candidate,
+      index,
+      score: candidateScore(candidate, targetRule, context),
+    }))
+    .sort(
+      (left, right) => right.score - left.score || left.index - right.index,
+    )[0]
+    ?.candidate;
+
+  if (!bestCandidate) {
+    return undefined;
+  }
+
+  if (bestCandidate.relativePath === context.currentRelativePath) {
+    return `#${targetRule.anchorId}`;
+  }
+
+  const relativePath = toPosixPath(
+    path.posix.relative(
+      path.posix.dirname(context.currentRelativePath),
+      bestCandidate.relativePath,
+    ),
+  );
+
+  return `${relativePath}#${targetRule.anchorId}`;
+}
+
+function linkRelatedRuleReferences(
+  value: string,
+  relatedRuleIds: string[] | undefined,
+  context: RuleLinkContext | undefined,
+): string {
+  if (!context || !relatedRuleIds?.length) {
+    return value;
+  }
+
+  let linkedValue = value;
+  for (const relatedRuleId of relatedRuleIds) {
+    const targetRule = context.ruleIndex.get(relatedRuleId);
+    if (!targetRule) {
+      continue;
+    }
+
+    const href = resolveRelatedRuleHref(targetRule, context);
+    if (!href) {
+      continue;
+    }
+
+    const label = `${relatedRuleId} (${targetRule.name})`;
+    linkedValue = linkedValue.replace(
+      new RegExp(`(?<!\\[)${escapeRegExp(label)}`, "g"),
+      `[${label}](${href}){ data-preview }`,
+    );
+  }
+
+  return linkedValue;
+}
+
+function linkRelatedRuleReferencesInList(
+  values: string[] | undefined,
+  relatedRuleIds: string[] | undefined,
+  context: RuleLinkContext | undefined,
+): string[] {
+  return (values ?? []).map((value) =>
+    linkRelatedRuleReferences(value, relatedRuleIds, context),
+  );
+}
+
+function linkRelatedRuleReferenceParagraphs(
+  value: string | undefined,
+  relatedRuleIds: string[] | undefined,
+  context: RuleLinkContext | undefined,
+): string[] {
+  return splitParagraphs(
+    linkRelatedRuleReferences(value ?? "", relatedRuleIds, context),
+  );
 }
 
 function controlUrl(controlId: string): string {
@@ -895,43 +1197,78 @@ function normalizePainTimeframes(
   };
 }
 
+function buildVariantViewModel(
+  title: string,
+  entry: VariantSource,
+  relatedRuleIds: string[] | undefined,
+  ruleLinkContext: RuleLinkContext | undefined,
+): VariantViewModel {
+  const painTimeframes = normalizePainTimeframes(entry.pain_timeframes);
+
+  return {
+    title,
+    statementParagraphs: linkRelatedRuleReferenceParagraphs(
+      entry.statement,
+      relatedRuleIds,
+      ruleLinkContext,
+    ),
+    numberedItems: linkRelatedRuleReferencesInList(
+      entry.following_information,
+      relatedRuleIds,
+      ruleLinkContext,
+    ),
+    bulletItems: linkRelatedRuleReferencesInList(
+      entry.following_information_bullets,
+      relatedRuleIds,
+      ruleLinkContext,
+    ),
+    effectiveDateLines: toDateLines(entry.effective_date),
+    timeframe: formatDuration(entry.timeframe_type, entry.timeframe_num),
+    ...painTimeframes,
+    noteParagraphs: linkRelatedRuleReferenceParagraphs(
+      entry.note,
+      relatedRuleIds,
+      ruleLinkContext,
+    ),
+    notes: linkRelatedRuleReferencesInList(
+      entry.notes,
+      relatedRuleIds,
+      ruleLinkContext,
+    ),
+  };
+}
+
 function buildVariantSections(
   entry: RequirementEntrySource,
+  ruleLinkContext?: RuleLinkContext,
 ): VariantViewModel[] {
   const sections: VariantViewModel[] = [];
+  const relatedRuleIds = entry.related;
 
   for (const [className, classEntry] of Object.entries(
     entry.varies_by_class ?? {},
   )) {
-    const painTimeframes = normalizePainTimeframes(classEntry.pain_timeframes);
-
-    sections.push({
-      title: `Class ${className.toUpperCase()}`,
-      statementParagraphs: splitParagraphs(classEntry.statement),
-      numberedItems: classEntry.following_information ?? [],
-      effectiveDateLines: toDateLines(classEntry.effective_date),
-      timeframe: formatDuration(classEntry.timeframe_type, classEntry.timeframe_num),
-      ...painTimeframes,
-      noteParagraphs: splitParagraphs(classEntry.note),
-      notes: classEntry.notes ?? [],
-    });
+    sections.push(
+      buildVariantViewModel(
+        `Class ${className.toUpperCase()}`,
+        classEntry,
+        relatedRuleIds,
+        ruleLinkContext,
+      ),
+    );
   }
 
   for (const [levelName, levelEntry] of Object.entries(
     entry.varies_by_level ?? {},
   )) {
-    const painTimeframes = normalizePainTimeframes(levelEntry.pain_timeframes);
-
-    sections.push({
-      title: titleCase(levelName),
-      statementParagraphs: splitParagraphs(levelEntry.statement),
-      numberedItems: levelEntry.following_information ?? [],
-      effectiveDateLines: toDateLines(levelEntry.effective_date),
-      timeframe: formatDuration(levelEntry.timeframe_type, levelEntry.timeframe_num),
-      ...painTimeframes,
-      noteParagraphs: splitParagraphs(levelEntry.note),
-      notes: levelEntry.notes ?? [],
-    });
+    sections.push(
+      buildVariantViewModel(
+        titleCase(levelName),
+        levelEntry,
+        relatedRuleIds,
+        ruleLinkContext,
+      ),
+    );
   }
 
   return sections;
@@ -991,8 +1328,10 @@ function buildRequirementViewModel(
   definitionsRelativePath: string,
   rulesRelativePath: string,
   doNotLinkTerms: DoNotLinkTermIndex,
+  ruleLinkContext?: RuleLinkContext,
 ): RequirementViewModel {
   const title = entry.name ?? id;
+  const relatedRuleIds = entry.related;
 
   return {
     id,
@@ -1000,14 +1339,34 @@ function buildRequirementViewModel(
     title,
     formerId: entry.fka,
     changelog: toChangeLog(entry.updated),
-    statementParagraphs: splitParagraphs(entry.statement),
-    variantSections: buildVariantSections(entry),
+    statementParagraphs: linkRelatedRuleReferenceParagraphs(
+      entry.statement,
+      relatedRuleIds,
+      ruleLinkContext,
+    ),
+    variantSections: buildVariantSections(entry, ruleLinkContext),
     effectiveDateLines: toDateLines(entry.effective_date),
     timeframe: formatDuration(entry.timeframe_type, entry.timeframe_num),
-    numberedItems: entry.following_information ?? [],
-    bulletItems: entry.following_information_bullets ?? [],
-    noteParagraphs: splitParagraphs(entry.note),
-    notes: entry.notes ?? [],
+    numberedItems: linkRelatedRuleReferencesInList(
+      entry.following_information,
+      relatedRuleIds,
+      ruleLinkContext,
+    ),
+    bulletItems: linkRelatedRuleReferencesInList(
+      entry.following_information_bullets,
+      relatedRuleIds,
+      ruleLinkContext,
+    ),
+    noteParagraphs: linkRelatedRuleReferenceParagraphs(
+      entry.note,
+      relatedRuleIds,
+      ruleLinkContext,
+    ),
+    notes: linkRelatedRuleReferencesInList(
+      entry.notes,
+      relatedRuleIds,
+      ruleLinkContext,
+    ),
     dangerParagraphs: splitParagraphs(entry.danger),
     notifications: toNotifications(entry.notification),
     correctiveActions: entry.corrective_actions ?? [],
@@ -1249,6 +1608,7 @@ function buildConfiguredSectionViewModels(
   document: RequirementDocumentSource,
   mapping: RuleDocumentMappingConfig,
   doNotLinkTerms: DoNotLinkTermIndex,
+  ruleLinkContext: RuleLinkContext,
 ): SectionViewModel[] {
   const sections = new Map<string, SectionViewModel>();
   const allowedSections = mapping.source.sections;
@@ -1292,6 +1652,7 @@ function buildConfiguredSectionViewModels(
             definitionsHref,
             rulesHref,
             doNotLinkTerms,
+            ruleLinkContext,
           ),
         );
       }
@@ -1341,6 +1702,7 @@ function buildDocumentGroupedSectionViewModel(
   document: RequirementDocumentSource,
   mapping: RuleDocumentMappingConfig,
   doNotLinkTerms: DoNotLinkTermIndex,
+  ruleLinkContext: RuleLinkContext,
 ): SectionViewModel | null {
   const requirements: RequirementViewModel[] = [];
   const allowedSections = mapping.source.sections;
@@ -1370,6 +1732,7 @@ function buildDocumentGroupedSectionViewModel(
             definitionsHref,
             rulesHref,
             doNotLinkTerms,
+            ruleLinkContext,
           ),
         );
       }
@@ -1767,6 +2130,7 @@ function buildConfiguredSections(
   documents: RequirementDocumentSource[],
   mapping: RuleDocumentMappingConfig,
   doNotLinkTerms: DoNotLinkTermIndex,
+  ruleLinkContext: RuleLinkContext,
 ): SectionViewModel[] {
   if (documents.length === 1) {
     const [document] = documents;
@@ -1774,7 +2138,12 @@ function buildConfiguredSections(
       throw new Error(`Rule document mapping "${mapping.id}" matched no FRR documents.`);
     }
 
-    return buildConfiguredSectionViewModels(document, mapping, doNotLinkTerms);
+    return buildConfiguredSectionViewModels(
+      document,
+      mapping,
+      doNotLinkTerms,
+      ruleLinkContext,
+    );
   }
 
   const groupBy =
@@ -1783,13 +2152,23 @@ function buildConfiguredSections(
   if (groupBy === "document") {
     return documents
       .map((document) =>
-        buildDocumentGroupedSectionViewModel(document, mapping, doNotLinkTerms),
+        buildDocumentGroupedSectionViewModel(
+          document,
+          mapping,
+          doNotLinkTerms,
+          ruleLinkContext,
+        ),
       )
       .filter((section): section is SectionViewModel => section !== null);
   }
 
   return documents.flatMap((document) =>
-    buildConfiguredSectionViewModels(document, mapping, doNotLinkTerms),
+    buildConfiguredSectionViewModels(
+      document,
+      mapping,
+      doNotLinkTerms,
+      ruleLinkContext,
+    ),
   );
 }
 
@@ -2603,6 +2982,8 @@ function collectSingleRuleDocumentArtifact(
   config: ToolConfig,
   mapping: RuleDocumentMappingConfig,
   doNotLinkTerms: DoNotLinkTermIndex,
+  ruleIndex: RuleIndex,
+  rulePageIndex: RulePageIndex,
 ): BuildArtifact | null {
   if (mapping.source.collection !== "FRR") {
     throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
@@ -2615,12 +2996,22 @@ function collectSingleRuleDocumentArtifact(
   }
 
   const documents = sourceDocumentEntries.map((entry) => entry.document);
-  const sections = buildConfiguredSections(documents, mapping, doNotLinkTerms);
+  const relativePath = normalizeGeneratedPath(renderRuleDocumentOutput(mapping));
+  const sections = buildConfiguredSections(
+    documents,
+    mapping,
+    doNotLinkTerms,
+    {
+      currentMapping: mapping,
+      currentRelativePath: relativePath,
+      ruleIndex,
+      rulePageIndex,
+    },
+  );
   if (!sections.length && mapping.emptyBehavior === "skip") {
     return null;
   }
 
-  const relativePath = normalizeGeneratedPath(renderRuleDocumentOutput(mapping));
   const title = mapping.title ?? firstDocument.info.name;
   const purposeParagraphs =
     documents.length === 1 ? splitParagraphs(firstDocument.info.purpose) : [];
@@ -2675,6 +3066,8 @@ function collectDocumentRuleDocumentArtifacts(
   config: ToolConfig,
   mapping: RuleDocumentMappingConfig,
   doNotLinkTerms: DoNotLinkTermIndex,
+  ruleIndex: RuleIndex,
+  rulePageIndex: RulePageIndex,
 ): BuildArtifact[] {
   if (mapping.source.collection !== "FRR") {
     throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
@@ -2682,14 +3075,24 @@ function collectDocumentRuleDocumentArtifacts(
 
   return sourceDocuments(rules, mapping)
     .map(({ key, document }): BuildArtifact | null => {
-      const sections = buildConfiguredSections([document], mapping, doNotLinkTerms);
+      const relativePath = normalizeGeneratedPath(
+        renderRuleDocumentOutput(mapping, document.info.web_name),
+      );
+      const sections = buildConfiguredSections(
+        [document],
+        mapping,
+        doNotLinkTerms,
+        {
+          currentMapping: mapping,
+          currentRelativePath: relativePath,
+          ruleIndex,
+          rulePageIndex,
+        },
+      );
       if (!sections.length && mapping.emptyBehavior === "skip") {
         return null;
       }
 
-      const relativePath = normalizeGeneratedPath(
-        renderRuleDocumentOutput(mapping, document.info.web_name),
-      );
       const title = document.info.name;
       const effectiveEntries =
         mapping.includeEffectiveDates === false
@@ -2731,6 +3134,8 @@ function collectRuleDocumentArtifacts(
   config: ToolConfig,
   mapping: RuleDocumentMappingConfig,
   doNotLinkTerms: DoNotLinkTermIndex,
+  ruleIndex: RuleIndex,
+  rulePageIndex: RulePageIndex,
 ): BuildArtifact[] {
   if (mapping.outputMode === "documents") {
     return collectDocumentRuleDocumentArtifacts(
@@ -2738,6 +3143,8 @@ function collectRuleDocumentArtifacts(
       config,
       mapping,
       doNotLinkTerms,
+      ruleIndex,
+      rulePageIndex,
     );
   }
 
@@ -2746,6 +3153,8 @@ function collectRuleDocumentArtifacts(
     config,
     mapping,
     doNotLinkTerms,
+    ruleIndex,
+    rulePageIndex,
   );
   return artifact ? [artifact] : [];
 }
@@ -2756,6 +3165,8 @@ export function collectArtifacts(
 ): BuildArtifact[] {
   const artifacts: BuildArtifact[] = [];
   const doNotLinkTerms = buildDoNotLinkTermIndex(rules.FRD);
+  const ruleIndex = buildRuleIndex(rules);
+  const rulePageIndex = buildRulePageIndex(rules, config, ruleIndex);
 
   artifacts.push(...collectDefinitionDocumentArtifacts(rules, config));
   artifacts.push(
@@ -2765,7 +3176,14 @@ export function collectArtifacts(
 
   for (const mapping of config.generated.ruleDocuments) {
     artifacts.push(
-      ...collectRuleDocumentArtifacts(rules, config, mapping, doNotLinkTerms),
+      ...collectRuleDocumentArtifacts(
+        rules,
+        config,
+        mapping,
+        doNotLinkTerms,
+        ruleIndex,
+        rulePageIndex,
+      ),
     );
   }
 

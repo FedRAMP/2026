@@ -1089,6 +1089,15 @@ describe("build-markdown", () => {
     expect(provider20xContents).not.toContain(
       "[Provider](../../../definitions/#provider){ data-preview }",
     );
+    expect(provider20xContents).toContain(
+      "[FRC-CSO-POP (Pick One Program Certification Type)](#pick-one-program-certification-type){ data-preview }",
+    );
+    expect(provider20xContents).toContain(
+      "[MAS-CSO-IIR (Identify Information Resources)](minimum-assessment-scope.md#identify-information-resources){ data-preview }",
+    );
+    expect(provider20xContents).toContain(
+      "[CCM-OCR-NRD (Next Report Date)](collaborative-continuous-monitoring.md#next-report-date){ data-preview }",
+    );
 
     const providerRev5Contents = await readFile(
       path.join(
@@ -1160,6 +1169,29 @@ describe("build-markdown", () => {
     );
     expect(provider20xIcpContents).toContain(
       "1. Contact information for the federal incident response coordinator.",
+    );
+    expect(provider20xIcpContents).toContain(
+      "following the rule in [ICP-CSO-EFI (Estimate Federal Impact)](#estimate-federal-impact){ data-preview }",
+    );
+    expect(provider20xIcpContents).toContain(
+      "following the requirements in [ICP-CSO-EFI (Estimate Federal Impact)](#estimate-federal-impact){ data-preview }",
+    );
+    expect(provider20xIcpContents).toContain(
+      "assigned a default PAIN-5 as required by [ICP-CSO-DPR (Default PAIN Rating)](#default-pain-rating){ data-preview }",
+    );
+
+    const provider20xFsiContents = await readFile(
+      path.join(
+        OUTPUT_DIR,
+        "providers",
+        "20x",
+        "rules",
+        "fedramp-security-inbox.md",
+      ),
+      "utf8",
+    );
+    expect(provider20xFsiContents).toContain(
+      "[FSI-CSO-NOC (Notification of Changes)](#notification-of-changes){ data-preview }",
     );
 
     const fedrampFsiContents = await readFile(
@@ -1276,6 +1308,29 @@ describe("build-markdown", () => {
           artifact.relativePath === "assessors/20x/rules/marketplace-listing.md",
       ),
     ).toBe(false);
+  });
+
+  test("resolves related FRR links to the matching generated audience page", async () => {
+    const config = await loadToolConfig();
+    const rules = structuredClone(await loadRules(config));
+    const providerRule = rules.FRR.FRC?.data.all?.CSO?.["FRC-CSO-RAA"];
+    expect(providerRule).toBeTruthy();
+
+    providerRule!.statement = `${providerRule!.statement ?? ""} See FRC-IAS-SUM (Assessment Summary).`;
+    providerRule!.related = ["FRC-IAS-SUM"];
+
+    const artifacts = collectArtifacts(rules, config);
+    const providerFrcArtifact = artifacts.find(
+      (artifact) =>
+        artifact.relativePath === "providers/20x/rules/fedramp-certification.md",
+    );
+    const linkedRule = providerFrcArtifact?.context.sections
+      .flatMap((section) => section.requirements)
+      .find((requirement) => requirement.id === "FRC-CSO-RAA");
+
+    expect(linkedRule?.statementParagraphs.join("\n")).toContain(
+      "[FRC-IAS-SUM (Assessment Summary)](../../../assessors/20x/rules/fedramp-certification.md#assessment-summary){ data-preview }",
+    );
   });
 
   test("ignores configured deadline documents after resolving the source selection", async () => {
