@@ -59,6 +59,11 @@ bun run sync
 ```
 
 Syncs the `rules` submodule from the `main` branch of `https://github.com/FedRAMP/rules.git`.
+Pass a branch name to sync the submodule from that branch instead:
+
+```bash
+bun run sync pwx-523
+```
 
 ```bash
 bun run fix

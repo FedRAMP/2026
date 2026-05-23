@@ -65,10 +65,15 @@
 
 {{/if}}
 {{#if painTimeframeRows.length}}
-        | Potential Adverse Impact |{{#each painTimeframeColumns}} {{label}} |{{/each}}
+
+        ---
+
+        **Potential Agency Impact N-rating (PAIN) Timeframes:**
+
+        | PAIN Rating |{{#each painTimeframeColumns}} {{label}} |{{/each}}
         |--------------------------|{{#each painTimeframeColumns}}---|{{/each}}
 {{#each painTimeframeRows}}
-        | N{{pain}} |{{#each cells}} {{this}} |{{/each}}
+        | PAIN-{{pain}} |{{#each cells}} {{this}} |{{/each}}
 {{/each}}
 
 {{/if}}

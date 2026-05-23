@@ -1061,7 +1061,16 @@ describe("build-markdown", () => {
       'node_icp_cso_efr{"ICP-CSO-EFR<br/>Evaluate Federal Reportability"}',
     );
     expect(provider20xIcpContents).toContain(
-      'node_incident -->|"Is it a FedRAMP Reportable Incident?"| node_icp_cso_efr',
+      'node_an_incident_is_identified(["An incident is identified."])',
+    );
+    expect(provider20xIcpContents).toContain(
+      'node_icp_cso_efi{"ICP-CSO-EFI<br/>Estimate Federal Impact"}',
+    );
+    expect(provider20xIcpContents).toContain(
+      'node_icp_cso_dpr("ICP-CSO-DPR<br/>Default PAIN Rating")',
+    );
+    expect(provider20xIcpContents).toContain(
+      'node_an_incident_is_identified -->|"Determine if it is a FedRAMP Reportable Incident."| node_icp_cso_efr',
     );
     expect(provider20xIcpContents).toContain(
       'click node_icp_cso_efr href "#evaluate-federal-reportability" "Jump to ICP-CSO-EFR"',

@@ -60,7 +60,6 @@ interface LabelSource {
 interface FlowStepSource {
   from?: string;
   to?: string;
-  if?: string;
   description?: string;
 }
 
@@ -68,7 +67,10 @@ interface FlowSource {
   activity?: string;
   description?: string;
   steps?: FlowStepSource[];
+  nodes?: Record<string, FlowNodeType>;
 }
+
+type FlowNodeType = "decision" | "end" | "process" | "start";
 
 interface CertificationInfoSource {
   effective?: EffectiveEntrySource;
@@ -610,48 +612,63 @@ function mermaidQuotedValue(value: string): string {
 }
 
 function mermaidEdgeLabel(step: FlowStepSource): string {
-  return [step.if, step.description]
-    .map((value) => value?.trim())
-    .filter((value): value is string => Boolean(value))
-    .join(": ");
+  return step.description?.trim() ?? "";
 }
 
 function mermaidNodeShape(
   nodeId: string,
   label: string,
-  shape: "decision" | "terminal" | "standard",
+  nodeType: FlowNodeType,
 ): string {
   const quotedLabel = mermaidQuotedValue(label);
 
-  if (shape === "decision") {
+  if (nodeType === "decision") {
     return `  ${nodeId}{"${quotedLabel}"}`;
   }
 
-  if (shape === "terminal") {
+  if (nodeType === "start" || nodeType === "end") {
     return `  ${nodeId}(["${quotedLabel}"])`;
   }
 
-  return `  ${nodeId}["${quotedLabel}"]`;
+  return `  ${nodeId}("${quotedLabel}")`;
 }
 
-function flowNodeShape(
+function normalizeFlowNodeLabel(label: string): string {
+  return label.trim().replace(/[.]+$/g, "").toLowerCase();
+}
+
+function flowNodeType(
+  flow: FlowSource,
   label: string,
   outgoingSteps: FlowStepSource[],
   incomingSteps: FlowStepSource[],
-): "decision" | "terminal" | "standard" {
-  if (outgoingSteps.some((step) => step.if?.trim())) {
+): FlowNodeType {
+  const configuredNodeType = flow.nodes?.[label];
+  if (configuredNodeType) {
+    return configuredNodeType;
+  }
+
+  const normalizedLabel = normalizeFlowNodeLabel(label);
+  const matchedNodeType = Object.entries(flow.nodes ?? {}).find(
+    ([nodeLabel]) => normalizeFlowNodeLabel(nodeLabel) === normalizedLabel,
+  )?.[1];
+  if (matchedNodeType) {
+    return matchedNodeType;
+  }
+
+  if (outgoingSteps.length > 1) {
     return "decision";
   }
 
   if (!outgoingSteps.length || label.toLowerCase().includes("complete")) {
-    return "terminal";
+    return "end";
   }
 
   if (!incomingSteps.length) {
-    return "terminal";
+    return "start";
   }
 
-  return "standard";
+  return "process";
 }
 
 function buildRequirementIndex(
@@ -700,7 +717,7 @@ function buildFlowMermaidLines(
       mermaidNodeShape(
         nodeId,
         displayLabel,
-        flowNodeShape(label, outgoingSteps, incomingSteps),
+        flowNodeType(flow, label, outgoingSteps, incomingSteps),
       ),
     );
   }
@@ -743,7 +760,7 @@ function buildFlowViewModels(
     .map((flow, index): FlowViewModel | null => {
       const steps = (flow.steps ?? [])
         .map((step) => ({
-          line: [step.from, step.if, step.to, step.description]
+          line: [step.from, step.description, step.to]
             .filter((value): value is string => Boolean(value?.trim()))
             .join(" -> "),
         }))

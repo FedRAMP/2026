@@ -8,7 +8,18 @@ readonly REPO_ROOT="$(git -C "${TOOLS_DIR}" rev-parse --show-toplevel)"
 readonly RULES_PATH="tools/rules"
 readonly RULES_WORKTREE="${REPO_ROOT}/${RULES_PATH}"
 readonly RULES_MODULE="tools/rules"
-readonly RULES_BRANCH="main"
+
+if (( $# > 1 )); then
+  printf 'Usage: bun run sync [rules-branch]\n' >&2
+  exit 2
+fi
+
+readonly RULES_BRANCH="${1:-main}"
+
+if ! git check-ref-format --branch "${RULES_BRANCH}" >/dev/null; then
+  printf 'Invalid rules branch name: %s\n' "${RULES_BRANCH}" >&2
+  exit 2
+fi
 
 git -C "${REPO_ROOT}" submodule sync --recursive "${RULES_PATH}"
 git -C "${REPO_ROOT}" config --remove-section "submodule.fedramp-rules" 2>/dev/null || true
