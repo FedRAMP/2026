@@ -61,6 +61,18 @@ bunx tsc -p tsconfig.json --noEmit
 
 It is fine to inspect the repository from the root with generic read-only commands such as `git`, `rg`, `find`, and `sed`.
 
+## TypeScript Quality
+
+Treat TypeScript diagnostics in `tools/scripts/**/*.ts` as real problems even when the Bun scripts appear to run correctly. These scripts are Bun/Node programs, and `tools/tsconfig.json` must continue to declare the Bun type environment so imports such as `node:fs/promises`, `process`, `console`, `NodeJS`, and `import.meta.main` are checked consistently by both CLI tooling and editors.
+
+When changing TypeScript tooling or script types, run from `tools/`:
+
+```bash
+bunx tsc -p tsconfig.json --noEmit
+```
+
+If the change could affect generated content, also run a build before and after the change, or otherwise compare the generated `src/` tree, and confirm that any `src/` changes are intentional.
+
 ## Common Commands
 
 - `bun run dev`: starts the local development pipeline and Zensical preview.
