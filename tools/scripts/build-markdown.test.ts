@@ -256,8 +256,102 @@ async function git(args: string[], cwd = REPO_ROOT): Promise<string> {
   return stdout.trim();
 }
 
+async function optionalGit(
+  args: string[],
+  cwd = REPO_ROOT,
+): Promise<string | null> {
+  try {
+    return await git(args, cwd);
+  } catch {
+    return null;
+  }
+}
+
+async function expectedRulesHead(
+  rulesPath: string,
+  branch: string,
+): Promise<{ head: string; source: string }> {
+  const shouldCheckRemote =
+    process.env.CI === "true" || process.env.CHECK_RULES_REMOTE === "1";
+
+  if (!shouldCheckRemote) {
+    const localRemoteHead = await optionalGit(
+      ["rev-parse", "--verify", `refs/remotes/origin/${branch}`],
+      rulesPath,
+    );
+    if (localRemoteHead) {
+      return {
+        head: localRemoteHead,
+        source: `local origin/${branch}`,
+      };
+    }
+  }
+
+  const latestRemoteRef = await git([
+    "ls-remote",
+    RULES_REMOTE_URL,
+    `refs/heads/${branch}`,
+  ]);
+  const latestRemoteHead = latestRemoteRef.split(/\s+/)[0];
+  if (!latestRemoteHead) {
+    throw new Error(`Could not resolve ${RULES_REMOTE_URL} ${branch}.`);
+  }
+
+  return {
+    head: latestRemoteHead,
+    source: `${RULES_REMOTE_URL} ${branch}`,
+  };
+}
+
 async function readJson<T>(filePath: string): Promise<T> {
   return JSON.parse(await readFile(filePath, "utf8")) as T;
+}
+
+function runCommand(
+  command: string,
+  args: string[],
+  cwd: string,
+): Promise<{ stdout: string; stderr: string }> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.setEncoding("utf8");
+    child.stderr.setEncoding("utf8");
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk;
+    });
+    child.on("error", reject);
+    child.on("close", (code, signal) => {
+      if (signal) {
+        reject(new Error(`${command} exited from signal ${signal}`));
+        return;
+      }
+
+      if (code && code !== 0) {
+        const details = [stderr.trim(), stdout.trim()]
+          .filter(Boolean)
+          .join("\n\n");
+        reject(
+          new Error(
+            `${command} ${args.join(" ")} exited with code ${code}${
+              details ? `\n\n${details}` : ""
+            }`,
+          ),
+        );
+        return;
+      }
+
+      resolve({ stdout, stderr });
+    });
+  });
 }
 
 async function runCommandWithSpinner(
@@ -265,6 +359,10 @@ async function runCommandWithSpinner(
   args: string[],
   cwd: string,
 ): Promise<{ stdout: string; stderr: string }> {
+  if (!process.stderr.isTTY) {
+    return runCommand(command, args, cwd);
+  }
+
   const spinnerFrames = ["-", "\\", "|", "/"];
   let frameIndex = 0;
   const renderSpinner = () => {
@@ -277,46 +375,7 @@ async function runCommandWithSpinner(
   const spinner = setInterval(renderSpinner, 120);
 
   try {
-    return await new Promise((resolve, reject) => {
-      const child = spawn(command, args, {
-        cwd,
-        stdio: ["ignore", "pipe", "pipe"],
-      });
-      let stdout = "";
-      let stderr = "";
-
-      child.stdout.setEncoding("utf8");
-      child.stderr.setEncoding("utf8");
-      child.stdout.on("data", (chunk) => {
-        stdout += chunk;
-      });
-      child.stderr.on("data", (chunk) => {
-        stderr += chunk;
-      });
-      child.on("error", reject);
-      child.on("close", (code, signal) => {
-        if (signal) {
-          reject(new Error(`${command} exited from signal ${signal}`));
-          return;
-        }
-
-        if (code && code !== 0) {
-          const details = [stderr.trim(), stdout.trim()]
-            .filter(Boolean)
-            .join("\n\n");
-          reject(
-            new Error(
-              `${command} ${args.join(" ")} exited with code ${code}${
-                details ? `\n\n${details}` : ""
-              }`,
-            ),
-          );
-          return;
-        }
-
-        resolve({ stdout, stderr });
-      });
-    });
+    return await runCommand(command, args, cwd);
   } finally {
     clearInterval(spinner);
     process.stderr.write("\r\x1b[2K");
@@ -761,12 +820,11 @@ describe("build-markdown", () => {
 
   test("the rules submodule is synced to an allowed upstream branch", async () => {
     const rulesPath = resolveToolPath("rules");
-    const siteBranch = await git(["rev-parse", "--abbrev-ref", "HEAD"]);
-    const rulesBranch = await git(
-      ["rev-parse", "--abbrev-ref", "HEAD"],
-      rulesPath,
-    );
-    const localHead = await git(["rev-parse", "HEAD"], rulesPath);
+    const [siteBranch, rulesBranch, localHead] = await Promise.all([
+      git(["rev-parse", "--abbrev-ref", "HEAD"]),
+      git(["rev-parse", "--abbrev-ref", "HEAD"], rulesPath),
+      git(["rev-parse", "HEAD"], rulesPath),
+    ]);
     const usesDefaultRulesBranch =
       rulesBranch === "HEAD" || rulesBranch === DEFAULT_RULES_REMOTE_BRANCH;
     const expectedRulesBranch = usesDefaultRulesBranch
@@ -792,20 +850,10 @@ describe("build-markdown", () => {
       });
     }
 
-    const latestRemoteRef = await git([
-      "ls-remote",
-      RULES_REMOTE_URL,
-      `refs/heads/${expectedRulesBranch}`,
-    ]);
-    const latestRemoteHead = latestRemoteRef.split(/\s+/)[0];
-    if (!latestRemoteHead) {
-      throw new Error(
-        `Could not resolve ${RULES_REMOTE_URL} ${expectedRulesBranch}.`,
-      );
-    }
+    const expectedHead = await expectedRulesHead(rulesPath, expectedRulesBranch);
 
     const syncFailureSummary = [
-      `tools/rules is not synced to ${RULES_REMOTE_URL} ${expectedRulesBranch}.`,
+      `tools/rules is not synced to ${expectedHead.source}.`,
       `Run "${
         expectedRulesBranch === DEFAULT_RULES_REMOTE_BRANCH
           ? "bun run sync"
@@ -814,11 +862,11 @@ describe("build-markdown", () => {
       `Site branch: ${siteBranch}`,
       `Rules branch: ${rulesBranch}`,
       `Local HEAD: ${localHead}`,
-      `Upstream ${expectedRulesBranch}: ${latestRemoteHead}`,
+      `Expected HEAD: ${expectedHead.head}`,
     ].join("\n");
 
     if (usesDefaultRulesBranch) {
-      if (localHead !== latestRemoteHead) {
+      if (localHead !== expectedHead.head) {
         rulesSubmoduleSyncWarnings.push(syncFailureSummary);
       }
       expect(Array.isArray(rulesSubmoduleSyncWarnings)).toBe(true);
@@ -826,7 +874,7 @@ describe("build-markdown", () => {
     }
 
     expectWithFailureSummary(syncFailureSummary, () => {
-      expect(localHead, syncFailureSummary).toBe(latestRemoteHead);
+      expect(localHead, syncFailureSummary).toBe(expectedHead.head);
     });
   });
 
