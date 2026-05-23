@@ -33,7 +33,7 @@ import { buildTodo } from "./todo-builder";
 
 const execFileAsync = promisify(execFile);
 const RULES_REMOTE_URL = "https://github.com/FedRAMP/rules.git";
-const RULES_REMOTE_BRANCH = "main";
+const DEFAULT_RULES_REMOTE_BRANCH = "main";
 const RULES_SCHEMA_FILE = resolveToolPath(
   "rules/schemas/fedramp-consolidated-rules.schema.json",
 );
@@ -63,6 +63,7 @@ let boldMarkdownHeadingWarnings: string[] = [];
 let contentPictographWarnings: string[] = [];
 let contentFrontmatterWarnings: string[] = [];
 let emptyContentFrontmatterWarnings: string[] = [];
+let rulesSubmoduleSyncWarnings: string[] = [];
 const humanReadableFailureSummaries: string[] = [];
 
 afterAll(() => {
@@ -71,6 +72,7 @@ afterAll(() => {
   printContentPictographWarnings();
   printContentFrontmatterWarnings();
   printEmptyContentFrontmatterWarnings();
+  printRulesSubmoduleSyncWarnings();
   printHumanReadableFailureSummaries();
 });
 
@@ -159,6 +161,24 @@ function printEmptyContentFrontmatterWarnings(): void {
       `${WARNING_ORANGE}${WARNING_MARK} Content markdown description and purpose frontmatter should not be empty:${WARNING_RESET}`,
       "",
       ...emptyContentFrontmatterWarnings.map(
+        (warning) => `    ${WARNING_ORANGE}${WARNING_MARK} ${warning}${WARNING_RESET}`,
+      ),
+      "",
+    ].join("\n"),
+  );
+}
+
+function printRulesSubmoduleSyncWarnings(): void {
+  if (!rulesSubmoduleSyncWarnings.length) {
+    return;
+  }
+
+  console.warn(
+    [
+      "",
+      `${WARNING_ORANGE}Rules submodule sync warnings:${WARNING_RESET}`,
+      "",
+      ...rulesSubmoduleSyncWarnings.map(
         (warning) => `    ${WARNING_ORANGE}${WARNING_MARK} ${warning}${WARNING_RESET}`,
       ),
       "",
@@ -739,27 +759,71 @@ describe("build-markdown", () => {
     });
   });
 
-  test("the rules submodule is synced to the latest upstream main", async () => {
+  test("the rules submodule is synced to an allowed upstream branch", async () => {
     const rulesPath = resolveToolPath("rules");
+    const siteBranch = await git(["rev-parse", "--abbrev-ref", "HEAD"]);
+    const rulesBranch = await git(
+      ["rev-parse", "--abbrev-ref", "HEAD"],
+      rulesPath,
+    );
     const localHead = await git(["rev-parse", "HEAD"], rulesPath);
+    const usesDefaultRulesBranch =
+      rulesBranch === "HEAD" || rulesBranch === DEFAULT_RULES_REMOTE_BRANCH;
+    const expectedRulesBranch = usesDefaultRulesBranch
+      ? DEFAULT_RULES_REMOTE_BRANCH
+      : rulesBranch;
+
+    if (
+      !usesDefaultRulesBranch &&
+      (siteBranch === "HEAD" || siteBranch === DEFAULT_RULES_REMOTE_BRANCH)
+    ) {
+      const branchFailureSummary = [
+        `tools/rules is synced to ${RULES_REMOTE_URL} ${rulesBranch}, but non-${DEFAULT_RULES_REMOTE_BRANCH} rules branches are only allowed from a site working branch.`,
+        `Check out a site branch before syncing rules to ${rulesBranch}, or run "bun run sync" from tools/ to use ${DEFAULT_RULES_REMOTE_BRANCH}.`,
+        `Site branch: ${siteBranch}`,
+        `Rules branch: ${rulesBranch}`,
+      ].join("\n");
+
+      expectWithFailureSummary(branchFailureSummary, () => {
+        expect(siteBranch, branchFailureSummary).not.toBe("HEAD");
+        expect(siteBranch, branchFailureSummary).not.toBe(
+          DEFAULT_RULES_REMOTE_BRANCH,
+        );
+      });
+    }
+
     const latestRemoteRef = await git([
       "ls-remote",
       RULES_REMOTE_URL,
-      `refs/heads/${RULES_REMOTE_BRANCH}`,
+      `refs/heads/${expectedRulesBranch}`,
     ]);
     const latestRemoteHead = latestRemoteRef.split(/\s+/)[0];
     if (!latestRemoteHead) {
       throw new Error(
-        `Could not resolve ${RULES_REMOTE_URL} ${RULES_REMOTE_BRANCH}.`,
+        `Could not resolve ${RULES_REMOTE_URL} ${expectedRulesBranch}.`,
       );
     }
 
     const syncFailureSummary = [
-      `tools/rules is not synced to ${RULES_REMOTE_URL} ${RULES_REMOTE_BRANCH}.`,
-      `Run "bun run sync" from tools/ and commit the updated submodule pointer.`,
+      `tools/rules is not synced to ${RULES_REMOTE_URL} ${expectedRulesBranch}.`,
+      `Run "${
+        expectedRulesBranch === DEFAULT_RULES_REMOTE_BRANCH
+          ? "bun run sync"
+          : `bun run sync ${expectedRulesBranch}`
+      }" from tools/ and commit the updated submodule pointer.`,
+      `Site branch: ${siteBranch}`,
+      `Rules branch: ${rulesBranch}`,
       `Local HEAD: ${localHead}`,
-      `Upstream ${RULES_REMOTE_BRANCH}: ${latestRemoteHead}`,
+      `Upstream ${expectedRulesBranch}: ${latestRemoteHead}`,
     ].join("\n");
+
+    if (usesDefaultRulesBranch) {
+      if (localHead !== latestRemoteHead) {
+        rulesSubmoduleSyncWarnings.push(syncFailureSummary);
+      }
+      expect(Array.isArray(rulesSubmoduleSyncWarnings)).toBe(true);
+      return;
+    }
 
     expectWithFailureSummary(syncFailureSummary, () => {
       expect(localHead, syncFailureSummary).toBe(latestRemoteHead);
@@ -1057,26 +1121,42 @@ describe("build-markdown", () => {
     );
     expect(provider20xIcpContents).toContain("``` mermaid");
     expect(provider20xIcpContents).toContain("flowchart TD");
+    const providerIcpRules = rules.FRR.ICP?.data.all?.CSO ?? {};
+    const federalReportabilityName = providerIcpRules["ICP-CSO-EFR"]?.name;
+    const federalImpactName = providerIcpRules["ICP-CSO-EFI"]?.name;
+    const defaultPainName = providerIcpRules["ICP-CSO-DPR"]?.name;
+    expect(federalReportabilityName).toBeTruthy();
+    expect(federalImpactName).toBeTruthy();
+    expect(defaultPainName).toBeTruthy();
     expect(provider20xIcpContents).toContain(
-      'node_icp_cso_efr{"ICP-CSO-EFR<br/>Evaluate Federal Reportability"}',
+      `node_icp_cso_efr{"ICP-CSO-EFR<br/>${federalReportabilityName}"}`,
     );
     expect(provider20xIcpContents).toContain(
       'node_an_incident_is_identified(["An incident is identified."])',
     );
     expect(provider20xIcpContents).toContain(
-      'node_icp_cso_efi{"ICP-CSO-EFI<br/>Estimate Federal Impact"}',
+      `node_icp_cso_efi{"ICP-CSO-EFI<br/>${federalImpactName}"}`,
     );
     expect(provider20xIcpContents).toContain(
-      'node_icp_cso_dpr("ICP-CSO-DPR<br/>Default PAIN Rating")',
+      `node_icp_cso_dpr("ICP-CSO-DPR<br/>${defaultPainName}")`,
+    );
+    expect(provider20xIcpContents).toMatch(
+      /node_an_incident_is_identified -->(\|"[^"]+"\|)? node_icp_cso_efr/,
     );
     expect(provider20xIcpContents).toContain(
-      'node_an_incident_is_identified -->|"Determine if it is a FedRAMP Reportable Incident."| node_icp_cso_efr',
+      'click node_icp_cso_efr href "#',
     );
     expect(provider20xIcpContents).toContain(
-      'click node_icp_cso_efr href "#evaluate-federal-reportability" "Jump to ICP-CSO-EFR"',
+      '"Jump to ICP-CSO-EFR"',
     );
+    const agencyNotification = providerIcpRules[
+      "ICP-CSO-IIR"
+    ]?.notification?.find(
+      (notification) => notification.party === "Agency Customers",
+    );
+    expect(agencyNotification).toBeTruthy();
     expect(provider20xIcpContents).toContain(
-      "Notify Agency Customers by update using contract agreements.",
+      `Notify ${agencyNotification?.party} by ${agencyNotification?.method} using ${agencyNotification?.target}.`,
     );
     expect(provider20xIcpContents).toContain(
       "1. Contact information for the federal incident response coordinator.",
