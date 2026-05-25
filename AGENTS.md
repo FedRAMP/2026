@@ -96,10 +96,13 @@ Before changing generated output behavior, inspect:
 - `tools/config.json`
 - `tools/scripts/build-markdown.ts`
 - `tools/templates/template.hbs`
+- `tools/templates/reference-index.hbs` when working on the complete ruleset reference index.
 - `tools/templates/partials/`
 - `tools/rules/fedramp-consolidated-rules.json`
 
 Keep `src/` and `html/` in mind as generated artifacts. If they change after a build, verify that the change follows from `content/`, `tools/config.json`, templates, scripts, or the rules JSON.
+
+Generated definitions are intentionally rendered as one alphabetical list with `##` term headings. Definitions with a `tag` also appear in the top **Important Related Terms** table, and each definition links its related terms group back to the corresponding table row. Keep that behavior in `tools/scripts/build-markdown.ts`, `tools/templates/template.hbs`, and `tools/templates/partials/definition.hbs` in sync.
 
 ## Public Branch Changelog Workflow
 

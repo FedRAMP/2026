@@ -54,7 +54,7 @@ interface EffectiveEntrySource {
   warnings?: string[];
 }
 
-interface LabelSource {
+interface SubsetSource {
   name?: string;
   description?: string;
 }
@@ -76,7 +76,7 @@ type FlowNodeType = "decision" | "end" | "process" | "start";
 
 interface CertificationInfoSource {
   effective?: EffectiveEntrySource;
-  labels?: Record<string, LabelSource>;
+  subsets?: Record<string, SubsetSource>;
   flows?: FlowSource[];
 }
 
@@ -87,7 +87,7 @@ interface InfoSource {
   purpose?: string;
   status?: string;
   effective?: EffectiveEntrySource;
-  labels?: Record<string, LabelSource>;
+  subsets?: Record<string, SubsetSource>;
   flows?: FlowSource[];
   "20x"?: CertificationInfoSource;
   rev5?: CertificationInfoSource;
@@ -313,7 +313,7 @@ interface SectionViewModel {
   title: string;
   anchorId: string;
   anchorAttribute: string;
-  isLabelSection: boolean;
+  isSubsetSection: boolean;
   descriptionParagraphs: string[];
   requirements: RequirementViewModel[];
 }
@@ -365,7 +365,7 @@ interface RuleIndexEntry {
   anchorId: string;
   documentKey: string;
   bucketName: DataBucket;
-  sectionKey: string;
+  subsetKey: string;
   requirement: RequirementEntrySource;
 }
 
@@ -485,17 +485,17 @@ function effectiveEntryForVersion(
   return commonEffectiveEntry(info) ?? info[version]?.effective;
 }
 
-function labelsForVersions(
+function subsetsForVersions(
   info: InfoSource,
   versions: Version[],
-): Record<string, LabelSource> {
-  const labels: Record<string, LabelSource> = { ...(info.labels ?? {}) };
+): Record<string, SubsetSource> {
+  const subsets: Record<string, SubsetSource> = { ...(info.subsets ?? {}) };
 
   for (const version of versions) {
-    Object.assign(labels, info[version]?.labels ?? {});
+    Object.assign(subsets, info[version]?.subsets ?? {});
   }
 
-  return labels;
+  return subsets;
 }
 
 function flowsForVersions(info: InfoSource, versions: Version[]): FlowSource[] {
@@ -536,7 +536,7 @@ function buildSectionTableOfContents(
   sections: SectionViewModel[],
 ): TableOfContentsEntryViewModel[] {
   const sectionsWithRules = sections.filter(
-    (section) => section.isLabelSection && section.requirements.length > 0,
+    (section) => section.isSubsetSection && section.requirements.length > 0,
   );
 
   if (sectionsWithRules.length <= 1) {
@@ -579,7 +579,7 @@ function buildRuleIndex(rules: RulesDocument): RuleIndex {
     for (const [bucketName, bucket] of Object.entries(document.data) as Array<
       [DataBucket, Record<string, Record<string, RequirementEntrySource>>]
     >) {
-      for (const [sectionKey, requirements] of Object.entries(bucket ?? {})) {
+      for (const [subsetKey, requirements] of Object.entries(bucket ?? {})) {
         for (const [id, requirement] of Object.entries(requirements)) {
           if (index.has(id)) {
             throw new Error(`Duplicate FRR rule id: ${id}`);
@@ -592,7 +592,7 @@ function buildRuleIndex(rules: RulesDocument): RuleIndex {
             anchorId: requirementAnchorId(name),
             documentKey,
             bucketName,
-            sectionKey,
+            subsetKey,
             requirement,
           });
         }
@@ -610,11 +610,11 @@ function ruleBucketMatchesMapping(
   return configuredBuckets(mapping).includes(bucketName);
 }
 
-function ruleSectionMatchesMapping(
-  sectionKey: string,
+function ruleSubsetMatchesMapping(
+  subsetKey: string,
   mapping: RuleDocumentMappingConfig,
 ): boolean {
-  return !mapping.source.sections || mapping.source.sections.includes(sectionKey);
+  return !mapping.source.sections || mapping.source.sections.includes(subsetKey);
 }
 
 function renderRuleCandidatePath(
@@ -678,7 +678,7 @@ function buildRulePageIndex(
           continue;
         }
 
-        if (!ruleSectionMatchesMapping(rule.sectionKey, mapping)) {
+        if (!ruleSubsetMatchesMapping(rule.subsetKey, mapping)) {
           continue;
         }
 
@@ -1526,7 +1526,7 @@ function buildSectionViewModels(
 ): SectionViewModel[] {
   const sections = new Map<string, SectionViewModel>();
 
-  const labels = labelsForVersions(document.info, [version]);
+  const subsets = subsetsForVersions(document.info, [version]);
 
   for (const bucketName of [version, "all"] as const) {
     const bucket = document.data[bucketName];
@@ -1534,18 +1534,18 @@ function buildSectionViewModels(
       continue;
     }
 
-    for (const [labelKey, requirements] of Object.entries(bucket)) {
-      const existingSection = sections.get(labelKey);
-      const label = labels[labelKey];
+    for (const [subsetKey, requirements] of Object.entries(bucket)) {
+      const existingSection = sections.get(subsetKey);
+      const subset = subsets[subsetKey];
       const section = existingSection ?? {
-        title: label?.name ?? labelKey,
-        anchorId: sectionAnchorId(labelKey, label?.name ?? labelKey),
+        title: subset?.name ?? subsetKey,
+        anchorId: sectionAnchorId(subsetKey, subset?.name ?? subsetKey),
         anchorAttribute: sectionAnchorAttribute(
-          labelKey,
-          label?.name ?? labelKey,
+          subsetKey,
+          subset?.name ?? subsetKey,
         ),
-        isLabelSection: true,
-        descriptionParagraphs: splitParagraphs(label?.description),
+        isSubsetSection: true,
+        descriptionParagraphs: splitParagraphs(subset?.description),
         requirements: [],
       };
 
@@ -1561,7 +1561,7 @@ function buildSectionViewModels(
         );
       }
 
-      sections.set(labelKey, section);
+      sections.set(subsetKey, section);
     }
   }
 
@@ -1660,7 +1660,7 @@ function buildConfiguredSectionViewModels(
   const allowedSections = mapping.source.sections;
   const definitionsHref = mapping.definitionsHref ?? "definitions/";
   const rulesHref = mapping.rulesHref ?? "";
-  const labels = labelsForVersions(document.info, mapping.source.types);
+  const subsets = subsetsForVersions(document.info, mapping.source.types);
 
   for (const bucketName of configuredBuckets(mapping)) {
     const bucket = document.data[bucketName];
@@ -1668,21 +1668,21 @@ function buildConfiguredSectionViewModels(
       continue;
     }
 
-    for (const [labelKey, requirements] of Object.entries(bucket)) {
-      if (allowedSections && !allowedSections.includes(labelKey)) {
+    for (const [subsetKey, requirements] of Object.entries(bucket)) {
+      if (allowedSections && !allowedSections.includes(subsetKey)) {
         continue;
       }
 
-      const label = labels[labelKey];
-      const section = sections.get(labelKey) ?? {
-        title: label?.name ?? labelKey,
-        anchorId: sectionAnchorId(labelKey, label?.name ?? labelKey),
+      const subset = subsets[subsetKey];
+      const section = sections.get(subsetKey) ?? {
+        title: subset?.name ?? subsetKey,
+        anchorId: sectionAnchorId(subsetKey, subset?.name ?? subsetKey),
         anchorAttribute: sectionAnchorAttribute(
-          labelKey,
-          label?.name ?? labelKey,
+          subsetKey,
+          subset?.name ?? subsetKey,
         ),
-        isLabelSection: true,
-        descriptionParagraphs: splitParagraphs(label?.description),
+        isSubsetSection: true,
+        descriptionParagraphs: splitParagraphs(subset?.description),
         requirements: [],
       };
 
@@ -1704,7 +1704,7 @@ function buildConfiguredSectionViewModels(
       }
 
       if (section.requirements.length) {
-        sections.set(labelKey, section);
+        sections.set(subsetKey, section);
       }
     }
   }
@@ -1728,8 +1728,8 @@ function documentHasRequirementAffecting(
       continue;
     }
 
-    for (const [labelKey, sectionRequirements] of Object.entries(bucket)) {
-      if (allowedSections && !allowedSections.includes(labelKey)) {
+    for (const [subsetKey, sectionRequirements] of Object.entries(bucket)) {
+      if (allowedSections && !allowedSections.includes(subsetKey)) {
         continue;
       }
 
@@ -1761,8 +1761,8 @@ function buildDocumentGroupedSectionViewModel(
       continue;
     }
 
-    for (const [labelKey, sectionRequirements] of Object.entries(bucket)) {
-      if (allowedSections && !allowedSections.includes(labelKey)) {
+    for (const [subsetKey, sectionRequirements] of Object.entries(bucket)) {
+      if (allowedSections && !allowedSections.includes(subsetKey)) {
         continue;
       }
 
@@ -1799,7 +1799,7 @@ function buildDocumentGroupedSectionViewModel(
       document.info.short_name ?? document.info.web_name,
       document.info.name,
     ),
-    isLabelSection: false,
+    isSubsetSection: false,
     descriptionParagraphs: [],
     requirements,
   };

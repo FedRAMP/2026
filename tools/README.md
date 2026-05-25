@@ -177,6 +177,8 @@ Definition mapping fields:
 - `source.includeAll`: include `data.all` definitions with each selected type.
 - `source.allPosition`: place `data.all` definitions `first` or `last`.
 
+Generated definition pages render the FRD purpose first, then an **Important Related Terms** table for definitions with a `tag` value. Each table row has a stable anchor, and each definition that belongs to a group links back to that table row. Definitions themselves render as a single alphabetical list of `##` headings, regardless of whether they have a `tag`.
+
 ## Generated KSI Pages
 
 Add an entry to `generated.ksiDocuments` in `config.json`:
@@ -253,6 +255,8 @@ Add an entry to `generated.referenceIndexDocuments` in `config.json`:
 
 Reference index mappings generate a table of FRR rulesets with links, status, subset and rule counts, and the most recent rule update date. Use `introduction` for the visible narrative text above the table. Use `source.documents: "ALL"` to include every FRR ruleset from the rules JSON; use `source.ignoreDocuments` to remove specific FRR keys after selection.
 
+The complete ruleset reference is usually paired with rule document mappings that use `outputMode: "documents"` and `output: "reference/{FRR}.md"` so each FRR ruleset has a standalone generated page.
+
 ## Generated Rule Pages
 
 Add an entry to `generated.ruleDocuments` in `config.json`:
@@ -294,10 +298,18 @@ Mapping fields:
 - `source.ignoreDocuments`: optional array of FRR keys to remove after `source.document` or `source.documents` is resolved.
 - `source.types`: one or more certification types, such as `["20x"]` or `["rev5"]`.
 - `source.affects`: optional filter matched against each rule's `affects` list.
-- `source.sections`: optional list of section keys to include, such as `["CSO", "CSX", "CSF"]`.
+- `source.sections`: optional list of subset keys to include, such as `["CSO", "CSX", "CSF"]`.
 - `source.includeAll`: include `data.all` rules with each selected type.
 - `source.allPosition`: place `data.all` rules `first` or `last`.
-- `source.groupBy`: for multi-FRR mappings, `section` keeps source label sections and `document` groups matches under each FRR document title. Single-FRR mappings always render source label sections so the page title is not repeated as the first section heading.
+- `source.groupBy`: for multi-FRR mappings, `section` keeps source subset sections and `document` groups matches under each FRR document title. Single-FRR mappings always render source subset sections so the page title is not repeated as the first section heading.
+
+Generated rule pages also support selected rich rule metadata:
+
+- `info.flows` and certification-specific flows render as Mermaid activity workflow diagrams above the rules. Flow nodes link to matching rule headings when the flow node label matches a generated rule heading.
+- Rule `related` IDs are linked in statements, notes, variants, and following-information lists when the referenced rule appears in a compatible generated page. `linkTargetScope: "sameMappingOnly"` keeps complete reference pages from becoming fallback link targets for stakeholder-specific pages.
+- `following_information` renders as numbered items and `following_information_bullets` renders as bullet items.
+- `reference_url_web_name` links a rule reference to another generated ruleset page through `rulesHref`.
+- `pain_timeframes` renders a PAIN timeframe table inside applicable rule variants.
 
 For example, this mapping processes every FRR and generates one page per rule family for rules that affect FedRAMP:
 

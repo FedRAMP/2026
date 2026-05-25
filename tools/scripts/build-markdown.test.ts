@@ -1019,7 +1019,7 @@ describe("build-markdown", () => {
       ],
       "Generated FRD markdown should place info.purpose and related terms table before the definitions",
     );
-    expect(definitionsContents).not.toContain("**Rule Sections**");
+    expect(definitionsContents).not.toContain("**Subsets**");
     expect(definitionsContents).not.toContain(
       '??? abstract "Background & Authority"',
     );
@@ -1062,7 +1062,7 @@ describe("build-markdown", () => {
       `---\ntags:\n  - 20x\n---\n\n${STABLE_STATUS_SPAN}\n\n# Change Management`,
     );
     expect(ksiChangeManagementContents).toContain("# Change Management");
-    expect(ksiChangeManagementContents).not.toContain("**Rule Sections**");
+    expect(ksiChangeManagementContents).not.toContain("**Subsets**");
     expect(ksiChangeManagementContents).not.toContain('!!! info ""');
     expect(ksiChangeManagementContents).toContain("KSI-CMT-LMC");
     expect(ksiChangeManagementContents).toContain("### Logging Changes");
@@ -1196,7 +1196,7 @@ describe("build-markdown", () => {
       [
         "# FedRAMP Certification",
         fedrampCertificationPurpose ?? "",
-        "**Rule Sections**",
+        "**Subsets**",
         "- [General Provider Responsibilities](#general-provider-responsibilities)",
         "- [20x-Specific Provider Responsibilities](#20x-specific-provider-responsibilities)",
         "\n---",
@@ -1371,10 +1371,10 @@ describe("build-markdown", () => {
         "\n---",
         "## Agency Guidance {#agency-guidance}",
       ],
-      "Generated single-label FRR markdown should place info.purpose before the first body rule without a TOC",
+      "Generated single-subset FRR markdown should place info.purpose before the first body rule without a TOC",
     );
     expect(agencyCcmContents).toContain("# Collaborative Continuous Monitoring");
-    expect(agencyCcmContents).not.toContain("**Rule Sections**");
+    expect(agencyCcmContents).not.toContain("**Subsets**");
     expect(agencyCcmContents).toContain("## Agency Guidance");
     expect(agencyCcmContents).toContain("CCM-AGM-ROR");
     expect(agencyCcmContents).not.toContain("## Ongoing Certification Reports");
