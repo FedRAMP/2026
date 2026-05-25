@@ -23,7 +23,7 @@ picto:
 - [Federal Agencies](https://preview.fedramp.gov/2026/agencies/): Updated the landing page cards so agencies are directed to the support page and the card labels read more consistently.
 - [Advisory Services](https://preview.fedramp.gov/2026/advisors/): Removed internal source-document metadata without changing the public page text.
 
-## Rules Changes
+### Rules Changes
 
 - A [significant number of underlying Rules changes were made on May 25 and earlier](https://github.com/FedRAMP/rules/pull/11).
 - [Incident Communications Procedures](https://preview.fedramp.gov/2026/reference/incident-communications-procedures) were updated based on the outcome from RFC-0031.
