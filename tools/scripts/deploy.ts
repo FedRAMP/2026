@@ -24,20 +24,8 @@ function ensureDirectory(dirPath: string): void {
 }
 
 function clearDirectory(dirPath: string): void {
-  if (fs.existsSync(dirPath)) {
-    const files = fs.readdirSync(dirPath);
-    if (files.length > 0) {
-      for (const file of files) {
-        const filePath = path.join(dirPath, file);
-        const stat = fs.statSync(filePath);
-        if (stat.isDirectory()) {
-          fs.rmSync(filePath, { recursive: true });
-        } else {
-          fs.unlinkSync(filePath);
-        }
-      }
-    }
-  }
+  fs.rmSync(dirPath, { force: true, recursive: true });
+  fs.mkdirSync(dirPath, { recursive: true });
 }
 
 function copyRecursive(
@@ -45,19 +33,18 @@ function copyRecursive(
   dest: string,
   stats: CopyStats,
 ): void {
-  const files = fs.readdirSync(src);
+  const entries = fs.readdirSync(src, { withFileTypes: true });
 
-  for (const file of files) {
-    const srcPath = path.join(src, file);
-    const destPath = path.join(dest, file);
-    const stat = fs.statSync(srcPath);
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
 
-    if (stat.isDirectory()) {
+    if (entry.isDirectory()) {
       if (!fs.existsSync(destPath)) {
         fs.mkdirSync(destPath, { recursive: true });
       }
       copyRecursive(srcPath, destPath, stats);
-    } else {
+    } else if (entry.isFile()) {
       fs.copyFileSync(srcPath, destPath);
       stats.count++;
     }
@@ -74,12 +61,12 @@ export async function deploy(options: DeployOptions = {}): Promise<DeploySummary
   const contentPath = resolveToolPath(config.paths.content);
   const htmlPath = resolveToolPath(config.paths.html);
 
-  ensureDirectory(srcPath);
   clearDirectory(srcPath);
 
-  ensureDirectory(htmlPath);
   if (clearHtmlOutput) {
     clearDirectory(htmlPath);
+  } else {
+    ensureDirectory(htmlPath);
   }
 
   copyRecursive(contentPath, srcPath, stats);

@@ -12,6 +12,8 @@ import {
   type GeneratedDocumentSource,
   type GeneratedDocumentStatus,
   type KsiDocumentMappingConfig,
+  type ReferenceIndexDocumentMappingConfig,
+  type RuleDocumentLinkTargetScope,
   type RuleDocumentMappingConfig,
   type RuleType,
   type ToolConfig,
@@ -21,7 +23,8 @@ export const RULES_FILE = resolveToolPath(DEFAULT_CONFIG.paths.rulesFile);
 export const OUTPUT_DIR = resolveToolPath(DEFAULT_CONFIG.paths.src);
 
 type Version = RuleType;
-type EffectiveAudience = Version | "both";
+type SharedApplicabilityBucket = "all";
+type DataBucket = Version | SharedApplicabilityBucket;
 
 interface RulesDocument {
   info?: {
@@ -51,14 +54,43 @@ interface EffectiveEntrySource {
   warnings?: string[];
 }
 
+interface SubsetSource {
+  name?: string;
+  description?: string;
+}
+
+interface FlowStepSource {
+  from?: string;
+  to?: string;
+  description?: string;
+}
+
+interface FlowSource {
+  activity?: string;
+  description?: string;
+  steps?: FlowStepSource[];
+  nodes?: Record<string, FlowNodeType>;
+}
+
+type FlowNodeType = "decision" | "end" | "process" | "start";
+
+interface CertificationInfoSource {
+  effective?: EffectiveEntrySource;
+  subsets?: Record<string, SubsetSource>;
+  flows?: FlowSource[];
+}
+
 interface InfoSource {
   name: string;
   short_name?: string;
   web_name: string;
   purpose?: string;
   status?: string;
-  effective?: Partial<Record<EffectiveAudience, EffectiveEntrySource>>;
-  labels?: Record<string, { name?: string; description?: string }>;
+  effective?: EffectiveEntrySource;
+  subsets?: Record<string, SubsetSource>;
+  flows?: FlowSource[];
+  "20x"?: CertificationInfoSource;
+  rev5?: CertificationInfoSource;
 }
 
 interface ChangeLogSource {
@@ -92,10 +124,14 @@ type PainTimeframesSource =
 
 interface VariantSource {
   statement?: string;
+  following_information?: string[];
+  following_information_bullets?: string[];
   effective_date?: Record<string, number | string>;
   timeframe_type?: string;
   timeframe_num?: number | string;
   pain_timeframes?: PainTimeframesSource;
+  note?: string;
+  notes?: string[];
 }
 
 interface NotificationSource {
@@ -128,11 +164,12 @@ interface RequirementEntrySource {
   examples?: ExampleSource[];
   updated?: ChangeLogSource[];
   fka?: string;
+  related?: string[];
 }
 
 interface DefinitionsSource {
   info: InfoSource;
-  data: Partial<Record<Version | "both", Record<string, DefinitionEntrySource>>>;
+  data: Partial<Record<DataBucket, Record<string, DefinitionEntrySource>>>;
 }
 
 interface DefinitionEntrySource {
@@ -154,7 +191,7 @@ interface RequirementDocumentSource {
   info: InfoSource;
   data: Partial<
     Record<
-      Version | "both",
+      DataBucket,
       Record<string, Record<string, RequirementEntrySource>>
     >
   >;
@@ -193,10 +230,14 @@ interface PainTimeframeRowViewModel {
 interface VariantViewModel {
   title: string;
   statementParagraphs: string[];
+  numberedItems: string[];
+  bulletItems: string[];
   effectiveDateLines: Array<{ label: string; value: string }>;
   timeframe?: string;
   painTimeframeColumns: PainTimeframeColumnViewModel[];
   painTimeframeRows: PainTimeframeRowViewModel[];
+  noteParagraphs: string[];
+  notes: string[];
 }
 
 interface ExampleViewModel {
@@ -218,6 +259,7 @@ interface NotificationViewModel {
 
 interface RequirementViewModel {
   id: string;
+  anchorId: string;
   title: string;
   formerId?: string;
   changelog: Array<{
@@ -257,19 +299,21 @@ interface DefinitionViewModel {
   noteParagraphs: string[];
   notes: string[];
   reference?: { label: string; url: string };
+  relatedTermsGroup?: TermLinkViewModel;
   alternateTerms: string[];
 }
 
-interface DefinitionSectionViewModel {
-  title: string;
-  definitions: DefinitionViewModel[];
+interface ImportantRelatedTermViewModel {
+  tag: string;
+  anchorId: string;
+  terms: TermLinkViewModel[];
 }
 
 interface SectionViewModel {
   title: string;
   anchorId: string;
   anchorAttribute: string;
-  isLabelSection: boolean;
+  isSubsetSection: boolean;
   descriptionParagraphs: string[];
   requirements: RequirementViewModel[];
 }
@@ -293,24 +337,80 @@ interface DeadlineTableViewModel {
   rows: DeadlineRowViewModel[];
 }
 
+interface ReferenceIndexRowViewModel {
+  acronym: string;
+  name: string;
+  href: string;
+  status: string;
+  counts: string;
+  updated: string;
+}
+
+interface FlowStepViewModel {
+  line: string;
+}
+
+interface FlowViewModel {
+  title: string;
+  descriptionParagraphs: string[];
+  steps: FlowStepViewModel[];
+  mermaidLines: string[];
+}
+
 type DoNotLinkTermIndex = ReadonlySet<string>;
+
+interface RuleIndexEntry {
+  id: string;
+  name: string;
+  anchorId: string;
+  documentKey: string;
+  bucketName: DataBucket;
+  subsetKey: string;
+  requirement: RequirementEntrySource;
+}
+
+type RuleIndex = ReadonlyMap<string, RuleIndexEntry>;
+
+interface RulePageCandidate {
+  mappingId: string;
+  relativePath: string;
+  types: Version[];
+  affects: string[];
+  linkTargetScope: RuleDocumentLinkTargetScope;
+}
+
+type RulePageIndex = ReadonlyMap<string, RulePageCandidate[]>;
+
+interface RuleLinkContext {
+  currentMapping: RuleDocumentMappingConfig;
+  currentRelativePath: string;
+  ruleIndex: RuleIndex;
+  rulePageIndex: RulePageIndex;
+}
 
 interface DocumentViewModel {
   title: string;
+  description?: string;
+  purpose?: string;
+  pictoSource?: GeneratedDocumentSource;
+  pictoStatus?: GeneratedDocumentStatus;
   statusSpan?: string;
   tags: string[];
   purposeParagraphs: string[];
   tableOfContents: TableOfContentsEntryViewModel[];
   effectiveEntries: EffectiveEntryViewModel[];
+  flows: FlowViewModel[];
   isDefinitionDocument: boolean;
   isRequirementsDocument: boolean;
   isKsiDocument: boolean;
   isDeadlineDocument: boolean;
-  definitionSections: DefinitionSectionViewModel[];
+  definitions: DefinitionViewModel[];
+  importantRelatedTerms: ImportantRelatedTermViewModel[];
   sections: SectionViewModel[];
   themeParagraphs: string[];
   indicators: RequirementViewModel[];
   deadlineTables: DeadlineTableViewModel[];
+  referenceIndexRows: ReferenceIndexRowViewModel[];
 }
 
 export interface BuildArtifact {
@@ -320,7 +420,7 @@ export interface BuildArtifact {
   mappingId: string;
   sourceDocument?: string;
   title: string;
-  documentType: "FRD" | "FRR" | "KSI" | "DEADLINES";
+  documentType: "FRD" | "FRR" | "KSI" | "DEADLINES" | "FRR_REFERENCE_INDEX";
   context: DocumentViewModel;
 }
 
@@ -374,13 +474,35 @@ function isApplicable(entry?: EffectiveEntrySource): boolean {
   return Boolean(entry?.is && entry.is.toLowerCase() !== "no");
 }
 
+function commonEffectiveEntry(info: InfoSource): EffectiveEntrySource | undefined {
+  return info.effective;
+}
+
 function effectiveEntryForVersion(
-  effective:
-    | Partial<Record<EffectiveAudience, EffectiveEntrySource>>
-    | undefined,
+  info: InfoSource,
   version: Version,
 ): EffectiveEntrySource | undefined {
-  return effective?.both ?? effective?.[version];
+  return commonEffectiveEntry(info) ?? info[version]?.effective;
+}
+
+function subsetsForVersions(
+  info: InfoSource,
+  versions: Version[],
+): Record<string, SubsetSource> {
+  const subsets: Record<string, SubsetSource> = { ...(info.subsets ?? {}) };
+
+  for (const version of versions) {
+    Object.assign(subsets, info[version]?.subsets ?? {});
+  }
+
+  return subsets;
+}
+
+function flowsForVersions(info: InfoSource, versions: Version[]): FlowSource[] {
+  return [
+    ...(info.flows ?? []),
+    ...versions.flatMap((version) => info[version]?.flows ?? []),
+  ];
 }
 
 function slugifyTerm(term: string): string {
@@ -388,6 +510,10 @@ function slugifyTerm(term: string): string {
     .toLowerCase()
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9-]/g, "");
+}
+
+function relatedTermsGroupAnchorId(tag: string): string {
+  return `related-terms-group-${slugifyTerm(tag)}`;
 }
 
 function slugifyHeading(heading: string): string {
@@ -402,11 +528,15 @@ function sectionAnchorAttribute(labelKey: string, title: string): string {
   return `{#${sectionAnchorId(labelKey, title)}}`;
 }
 
+function requirementAnchorId(title: string): string {
+  return slugifyHeading(title);
+}
+
 function buildSectionTableOfContents(
   sections: SectionViewModel[],
 ): TableOfContentsEntryViewModel[] {
   const sectionsWithRules = sections.filter(
-    (section) => section.isLabelSection && section.requirements.length > 0,
+    (section) => section.isSubsetSection && section.requirements.length > 0,
   );
 
   if (sectionsWithRules.length <= 1) {
@@ -442,6 +572,282 @@ function buildDoNotLinkTermIndex(
   return terms;
 }
 
+function buildRuleIndex(rules: RulesDocument): RuleIndex {
+  const index = new Map<string, RuleIndexEntry>();
+
+  for (const [documentKey, document] of Object.entries(rules.FRR)) {
+    for (const [bucketName, bucket] of Object.entries(document.data) as Array<
+      [DataBucket, Record<string, Record<string, RequirementEntrySource>>]
+    >) {
+      for (const [subsetKey, requirements] of Object.entries(bucket ?? {})) {
+        for (const [id, requirement] of Object.entries(requirements)) {
+          if (index.has(id)) {
+            throw new Error(`Duplicate FRR rule id: ${id}`);
+          }
+
+          const name = requirement.name ?? id;
+          index.set(id, {
+            id,
+            name,
+            anchorId: requirementAnchorId(name),
+            documentKey,
+            bucketName,
+            subsetKey,
+            requirement,
+          });
+        }
+      }
+    }
+  }
+
+  return index;
+}
+
+function ruleBucketMatchesMapping(
+  bucketName: DataBucket,
+  mapping: RuleDocumentMappingConfig,
+): boolean {
+  return configuredBuckets(mapping).includes(bucketName);
+}
+
+function ruleSubsetMatchesMapping(
+  subsetKey: string,
+  mapping: RuleDocumentMappingConfig,
+): boolean {
+  return !mapping.source.sections || mapping.source.sections.includes(subsetKey);
+}
+
+function renderRuleCandidatePath(
+  mapping: RuleDocumentMappingConfig,
+  document: RequirementDocumentSource,
+): string {
+  const needsDocumentKey =
+    mapping.outputMode === "documents" ||
+    mapping.output.includes("{FRR}") ||
+    mapping.output.includes("{document}");
+
+  return normalizeGeneratedPath(
+    renderRuleDocumentOutput(
+      mapping,
+      needsDocumentKey ? document.info.web_name : undefined,
+    ),
+  );
+}
+
+function addRulePageCandidate(
+  index: Map<string, RulePageCandidate[]>,
+  ruleId: string,
+  candidate: RulePageCandidate,
+): void {
+  const candidates = index.get(ruleId) ?? [];
+  if (
+    candidates.some(
+      (existingCandidate) =>
+        existingCandidate.mappingId === candidate.mappingId &&
+        existingCandidate.relativePath === candidate.relativePath,
+    )
+  ) {
+    return;
+  }
+
+  candidates.push(candidate);
+  index.set(ruleId, candidates);
+}
+
+function buildRulePageIndex(
+  rules: RulesDocument,
+  config: ToolConfig,
+  ruleIndex: RuleIndex,
+): RulePageIndex {
+  const index = new Map<string, RulePageCandidate[]>();
+
+  for (const mapping of config.generated.ruleDocuments) {
+    if (mapping.source.collection !== "FRR") {
+      continue;
+    }
+
+    for (const { key, document } of sourceDocuments(rules, mapping)) {
+      const relativePath = renderRuleCandidatePath(mapping, document);
+
+      for (const [id, rule] of ruleIndex) {
+        if (rule.documentKey !== key) {
+          continue;
+        }
+
+        if (!ruleBucketMatchesMapping(rule.bucketName, mapping)) {
+          continue;
+        }
+
+        if (!ruleSubsetMatchesMapping(rule.subsetKey, mapping)) {
+          continue;
+        }
+
+        if (!requirementMatchesMapping(rule.requirement, mapping)) {
+          continue;
+        }
+
+        addRulePageCandidate(index, id, {
+          mappingId: mapping.id,
+          relativePath,
+          types: mapping.source.types,
+          affects: mapping.source.affects ?? [],
+          linkTargetScope: mapping.linkTargetScope ?? "default",
+        });
+      }
+    }
+  }
+
+  return index;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function versionsOverlap(left: Version[], right: Version[]): boolean {
+  return left.some((value) => right.includes(value));
+}
+
+function candidateScore(
+  candidate: RulePageCandidate,
+  targetRule: RuleIndexEntry,
+  context: RuleLinkContext,
+): number {
+  let score = 0;
+
+  if (candidate.relativePath === context.currentRelativePath) {
+    score += 1000;
+  }
+
+  if (candidate.mappingId === context.currentMapping.id) {
+    score += 500;
+  }
+
+  if (versionsOverlap(candidate.types, context.currentMapping.source.types)) {
+    score += 100;
+  }
+
+  if (
+    candidate.types.length === context.currentMapping.source.types.length &&
+    candidate.types.every((version) =>
+      context.currentMapping.source.types.includes(version),
+    )
+  ) {
+    score += 25;
+  }
+
+  const currentAffects = context.currentMapping.source.affects ?? [];
+  if (
+    candidate.affects.length &&
+    affectsFiltersOverlap(candidate.affects, currentAffects)
+  ) {
+    score += 75;
+  }
+
+  const targetAffects = targetRule.requirement.affects ?? [];
+  if (
+    candidate.affects.length &&
+    affectsFiltersOverlap(candidate.affects, targetAffects)
+  ) {
+    score += 50;
+  }
+
+  return score;
+}
+
+function resolveRelatedRuleHref(
+  targetRule: RuleIndexEntry,
+  context: RuleLinkContext,
+): string | undefined {
+  const candidates = (context.rulePageIndex.get(targetRule.id) ?? []).filter(
+    (candidate) =>
+      candidate.linkTargetScope !== "sameMappingOnly" ||
+      candidate.mappingId === context.currentMapping.id,
+  );
+  if (!candidates.length) {
+    return undefined;
+  }
+
+  const bestCandidate = candidates
+    .map((candidate, index) => ({
+      candidate,
+      index,
+      score: candidateScore(candidate, targetRule, context),
+    }))
+    .sort(
+      (left, right) => right.score - left.score || left.index - right.index,
+    )[0]
+    ?.candidate;
+
+  if (!bestCandidate) {
+    return undefined;
+  }
+
+  if (bestCandidate.relativePath === context.currentRelativePath) {
+    return `#${targetRule.anchorId}`;
+  }
+
+  const relativePath = toPosixPath(
+    path.posix.relative(
+      path.posix.dirname(context.currentRelativePath),
+      bestCandidate.relativePath,
+    ),
+  );
+
+  return `${relativePath}#${targetRule.anchorId}`;
+}
+
+function linkRelatedRuleReferences(
+  value: string,
+  relatedRuleIds: string[] | undefined,
+  context: RuleLinkContext | undefined,
+): string {
+  if (!context || !relatedRuleIds?.length) {
+    return value;
+  }
+
+  let linkedValue = value;
+  for (const relatedRuleId of relatedRuleIds) {
+    const targetRule = context.ruleIndex.get(relatedRuleId);
+    if (!targetRule) {
+      continue;
+    }
+
+    const href = resolveRelatedRuleHref(targetRule, context);
+    if (!href) {
+      continue;
+    }
+
+    const label = `${relatedRuleId} (${targetRule.name})`;
+    linkedValue = linkedValue.replace(
+      new RegExp(`(?<!\\[)${escapeRegExp(label)}`, "g"),
+      `[${label}](${href}){ data-preview }`,
+    );
+  }
+
+  return linkedValue;
+}
+
+function linkRelatedRuleReferencesInList(
+  values: string[] | undefined,
+  relatedRuleIds: string[] | undefined,
+  context: RuleLinkContext | undefined,
+): string[] {
+  return (values ?? []).map((value) =>
+    linkRelatedRuleReferences(value, relatedRuleIds, context),
+  );
+}
+
+function linkRelatedRuleReferenceParagraphs(
+  value: string | undefined,
+  relatedRuleIds: string[] | undefined,
+  context: RuleLinkContext | undefined,
+): string[] {
+  return splitParagraphs(
+    linkRelatedRuleReferences(value ?? "", relatedRuleIds, context),
+  );
+}
+
 function controlUrl(controlId: string): string {
   if (controlId.includes(".")) {
     const [main = "", sub = ""] = controlId.split(".");
@@ -475,20 +881,17 @@ function toClassApplicabilityLines(
 }
 
 function toEffectiveEntries(
-  effective:
-    | Partial<Record<EffectiveAudience, EffectiveEntrySource>>
-    | undefined,
+  info: InfoSource,
   versions: Version[],
 ): EffectiveEntryViewModel[] {
-  if (effective?.both) {
-    return [
-      toEffectiveEntryViewModel(effective.both, humanizeVersions(versions)),
-    ];
+  const commonEntry = commonEffectiveEntry(info);
+  if (commonEntry) {
+    return [toEffectiveEntryViewModel(commonEntry, humanizeVersions(versions))];
   }
 
   return versions
     .map((version): EffectiveEntryViewModel | null => {
-      const entry = effective?.[version];
+      const entry = info[version]?.effective;
       if (!entry) {
         return null;
       }
@@ -520,6 +923,192 @@ function toEffectiveEntryViewModel(
   }
 
   return viewModel;
+}
+
+function mermaidNodeId(value: string): string {
+  const normalized = value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  return `node_${normalized || "unnamed"}`;
+}
+
+function mermaidQuotedValue(value: string): string {
+  return value
+    .replaceAll("\\", "\\\\")
+    .replaceAll('"', '\\"')
+    .replaceAll("\r", " ")
+    .replaceAll("\n", "<br/>");
+}
+
+function mermaidEdgeLabel(step: FlowStepSource): string {
+  return step.description?.trim() ?? "";
+}
+
+function mermaidNodeShape(
+  nodeId: string,
+  label: string,
+  nodeType: FlowNodeType,
+): string {
+  const quotedLabel = mermaidQuotedValue(label);
+
+  if (nodeType === "decision") {
+    return `  ${nodeId}{"${quotedLabel}"}`;
+  }
+
+  if (nodeType === "start" || nodeType === "end") {
+    return `  ${nodeId}(["${quotedLabel}"])`;
+  }
+
+  return `  ${nodeId}("${quotedLabel}")`;
+}
+
+function normalizeFlowNodeLabel(label: string): string {
+  return label.trim().replace(/[.]+$/g, "").toLowerCase();
+}
+
+function flowNodeType(
+  flow: FlowSource,
+  label: string,
+  outgoingSteps: FlowStepSource[],
+  incomingSteps: FlowStepSource[],
+): FlowNodeType {
+  const configuredNodeType = flow.nodes?.[label];
+  if (configuredNodeType) {
+    return configuredNodeType;
+  }
+
+  const normalizedLabel = normalizeFlowNodeLabel(label);
+  const matchedNodeType = Object.entries(flow.nodes ?? {}).find(
+    ([nodeLabel]) => normalizeFlowNodeLabel(nodeLabel) === normalizedLabel,
+  )?.[1];
+  if (matchedNodeType) {
+    return matchedNodeType;
+  }
+
+  if (outgoingSteps.length > 1) {
+    return "decision";
+  }
+
+  if (!outgoingSteps.length || label.toLowerCase().includes("complete")) {
+    return "end";
+  }
+
+  if (!incomingSteps.length) {
+    return "start";
+  }
+
+  return "process";
+}
+
+function buildRequirementIndex(
+  sections: SectionViewModel[],
+): Map<string, RequirementViewModel> {
+  const requirements = new Map<string, RequirementViewModel>();
+
+  for (const section of sections) {
+    for (const requirement of section.requirements) {
+      requirements.set(requirement.id, requirement);
+    }
+  }
+
+  return requirements;
+}
+
+function buildFlowMermaidLines(
+  flow: FlowSource,
+  requirementIndex: ReadonlyMap<string, RequirementViewModel>,
+): string[] {
+  const steps = (flow.steps ?? []).filter((step) => step.from || step.to);
+  const nodeLabels = Array.from(
+    new Set(
+      steps.flatMap((step) => [step.from, step.to]).filter((value): value is string =>
+        Boolean(value?.trim()),
+      ),
+    ),
+  );
+  const nodeIds = new Map(
+    nodeLabels.map((label) => [label, mermaidNodeId(label)] as const),
+  );
+  const lines = ["flowchart TD"];
+
+  for (const label of nodeLabels) {
+    const nodeId = nodeIds.get(label);
+    if (!nodeId) {
+      continue;
+    }
+
+    const outgoingSteps = steps.filter((step) => step.from === label);
+    const incomingSteps = steps.filter((step) => step.to === label);
+    const requirement = requirementIndex.get(label);
+    const displayLabel = requirement ? `${label}<br/>${requirement.title}` : label;
+
+    lines.push(
+      mermaidNodeShape(
+        nodeId,
+        displayLabel,
+        flowNodeType(flow, label, outgoingSteps, incomingSteps),
+      ),
+    );
+  }
+
+  for (const step of steps) {
+    const from = step.from ? nodeIds.get(step.from) : undefined;
+    const to = step.to ? nodeIds.get(step.to) : undefined;
+    if (!from || !to) {
+      continue;
+    }
+
+    const label = mermaidEdgeLabel(step);
+    lines.push(
+      label
+        ? `  ${from} -->|"${mermaidQuotedValue(label)}"| ${to}`
+        : `  ${from} --> ${to}`,
+    );
+  }
+
+  for (const [label, requirement] of requirementIndex) {
+    const nodeId = nodeIds.get(label);
+    if (!nodeId) {
+      continue;
+    }
+
+    lines.push(
+      `  click ${nodeId} href "#${requirement.anchorId}" "${mermaidQuotedValue(`Jump to ${label}`)}"`,
+    );
+  }
+
+  return lines;
+}
+
+function buildFlowViewModels(
+  info: InfoSource,
+  versions: Version[],
+  requirementIndex: ReadonlyMap<string, RequirementViewModel>,
+): FlowViewModel[] {
+  return flowsForVersions(info, versions)
+    .map((flow, index): FlowViewModel | null => {
+      const steps = (flow.steps ?? [])
+        .map((step) => ({
+          line: [step.from, step.description, step.to]
+            .filter((value): value is string => Boolean(value?.trim()))
+            .join(" -> "),
+        }))
+        .filter((step) => step.line);
+
+      if (!steps.length) {
+        return null;
+      }
+
+      return {
+        title: flow.activity ?? `Flow ${index + 1}`,
+        descriptionParagraphs: splitParagraphs(flow.description),
+        steps,
+        mermaidLines: buildFlowMermaidLines(flow, requirementIndex),
+      };
+    })
+    .filter((flow): flow is FlowViewModel => flow !== null);
 }
 
 function toChangeLog(updated: ChangeLogSource[] = []) {
@@ -637,37 +1226,78 @@ function normalizePainTimeframes(
   };
 }
 
+function buildVariantViewModel(
+  title: string,
+  entry: VariantSource,
+  relatedRuleIds: string[] | undefined,
+  ruleLinkContext: RuleLinkContext | undefined,
+): VariantViewModel {
+  const painTimeframes = normalizePainTimeframes(entry.pain_timeframes);
+
+  return {
+    title,
+    statementParagraphs: linkRelatedRuleReferenceParagraphs(
+      entry.statement,
+      relatedRuleIds,
+      ruleLinkContext,
+    ),
+    numberedItems: linkRelatedRuleReferencesInList(
+      entry.following_information,
+      relatedRuleIds,
+      ruleLinkContext,
+    ),
+    bulletItems: linkRelatedRuleReferencesInList(
+      entry.following_information_bullets,
+      relatedRuleIds,
+      ruleLinkContext,
+    ),
+    effectiveDateLines: toDateLines(entry.effective_date),
+    timeframe: formatDuration(entry.timeframe_type, entry.timeframe_num),
+    ...painTimeframes,
+    noteParagraphs: linkRelatedRuleReferenceParagraphs(
+      entry.note,
+      relatedRuleIds,
+      ruleLinkContext,
+    ),
+    notes: linkRelatedRuleReferencesInList(
+      entry.notes,
+      relatedRuleIds,
+      ruleLinkContext,
+    ),
+  };
+}
+
 function buildVariantSections(
   entry: RequirementEntrySource,
+  ruleLinkContext?: RuleLinkContext,
 ): VariantViewModel[] {
   const sections: VariantViewModel[] = [];
+  const relatedRuleIds = entry.related;
 
   for (const [className, classEntry] of Object.entries(
     entry.varies_by_class ?? {},
   )) {
-    const painTimeframes = normalizePainTimeframes(classEntry.pain_timeframes);
-
-    sections.push({
-      title: `Class ${className.toUpperCase()}`,
-      statementParagraphs: splitParagraphs(classEntry.statement),
-      effectiveDateLines: toDateLines(classEntry.effective_date),
-      timeframe: formatDuration(classEntry.timeframe_type, classEntry.timeframe_num),
-      ...painTimeframes,
-    });
+    sections.push(
+      buildVariantViewModel(
+        `Class ${className.toUpperCase()}`,
+        classEntry,
+        relatedRuleIds,
+        ruleLinkContext,
+      ),
+    );
   }
 
   for (const [levelName, levelEntry] of Object.entries(
     entry.varies_by_level ?? {},
   )) {
-    const painTimeframes = normalizePainTimeframes(levelEntry.pain_timeframes);
-
-    sections.push({
-      title: titleCase(levelName),
-      statementParagraphs: splitParagraphs(levelEntry.statement),
-      effectiveDateLines: toDateLines(levelEntry.effective_date),
-      timeframe: formatDuration(levelEntry.timeframe_type, levelEntry.timeframe_num),
-      ...painTimeframes,
-    });
+    sections.push(
+      buildVariantViewModel(
+        titleCase(levelName),
+        levelEntry,
+        relatedRuleIds,
+        ruleLinkContext,
+      ),
+    );
   }
 
   return sections;
@@ -727,20 +1357,45 @@ function buildRequirementViewModel(
   definitionsRelativePath: string,
   rulesRelativePath: string,
   doNotLinkTerms: DoNotLinkTermIndex,
+  ruleLinkContext?: RuleLinkContext,
 ): RequirementViewModel {
+  const title = entry.name ?? id;
+  const relatedRuleIds = entry.related;
+
   return {
     id,
-    title: entry.name ?? id,
+    anchorId: requirementAnchorId(title),
+    title,
     formerId: entry.fka,
     changelog: toChangeLog(entry.updated),
-    statementParagraphs: splitParagraphs(entry.statement),
-    variantSections: buildVariantSections(entry),
+    statementParagraphs: linkRelatedRuleReferenceParagraphs(
+      entry.statement,
+      relatedRuleIds,
+      ruleLinkContext,
+    ),
+    variantSections: buildVariantSections(entry, ruleLinkContext),
     effectiveDateLines: toDateLines(entry.effective_date),
     timeframe: formatDuration(entry.timeframe_type, entry.timeframe_num),
-    numberedItems: entry.following_information ?? [],
-    bulletItems: entry.following_information_bullets ?? [],
-    noteParagraphs: splitParagraphs(entry.note),
-    notes: entry.notes ?? [],
+    numberedItems: linkRelatedRuleReferencesInList(
+      entry.following_information,
+      relatedRuleIds,
+      ruleLinkContext,
+    ),
+    bulletItems: linkRelatedRuleReferencesInList(
+      entry.following_information_bullets,
+      relatedRuleIds,
+      ruleLinkContext,
+    ),
+    noteParagraphs: linkRelatedRuleReferenceParagraphs(
+      entry.note,
+      relatedRuleIds,
+      ruleLinkContext,
+    ),
+    notes: linkRelatedRuleReferencesInList(
+      entry.notes,
+      relatedRuleIds,
+      ruleLinkContext,
+    ),
     dangerParagraphs: splitParagraphs(entry.danger),
     notifications: toNotifications(entry.notification),
     correctiveActions: entry.corrective_actions ?? [],
@@ -763,6 +1418,8 @@ function buildDefinitionViewModel(
   id: string,
   entry: DefinitionEntrySource,
 ): DefinitionViewModel {
+  const relatedTermsGroup = entry.tag?.trim();
+
   return {
     id,
     anchorId: slugifyTerm(entry.term),
@@ -779,47 +1436,62 @@ function buildDefinitionViewModel(
             url: entry.reference_url ?? entry.referenceurl ?? "",
           }
         : undefined,
+    relatedTermsGroup: relatedTermsGroup
+      ? {
+          label: relatedTermsGroup,
+          href: `#${relatedTermsGroupAnchorId(relatedTermsGroup)}`,
+        }
+      : undefined,
     alternateTerms: entry.alts ?? [],
   };
 }
 
-function buildDefinitionSectionViewModelsFromEntries(
-  entries: Array<[string, DefinitionEntrySource]>,
-): DefinitionSectionViewModel[] {
-  const generalDefinitions: DefinitionViewModel[] = [];
-  const taggedDefinitions = new Map<string, DefinitionViewModel[]>();
+function sortDefinitionViewModels(
+  definitions: DefinitionViewModel[],
+): DefinitionViewModel[] {
+  return definitions.sort(
+    (left, right) =>
+      left.term.localeCompare(right.term) || left.id.localeCompare(right.id),
+  );
+}
 
-  for (const [id, entry] of entries) {
-    const definition = buildDefinitionViewModel(id, entry);
+function buildDefinitionViewModelsFromEntries(
+  entries: Array<[string, DefinitionEntrySource]>,
+): DefinitionViewModel[] {
+  return sortDefinitionViewModels(
+    entries.map(([id, entry]) => buildDefinitionViewModel(id, entry)),
+  );
+}
+
+function buildImportantRelatedTermViewModelsFromEntries(
+  entries: Array<[string, DefinitionEntrySource]>,
+): ImportantRelatedTermViewModel[] {
+  const taggedTerms = new Map<string, TermLinkViewModel[]>();
+
+  for (const [, entry] of entries) {
     const tag = entry.tag?.trim();
 
     if (!tag) {
-      generalDefinitions.push(definition);
       continue;
     }
 
-    const definitions = taggedDefinitions.get(tag) ?? [];
-    definitions.push(definition);
-    taggedDefinitions.set(tag, definitions);
-  }
-
-  const sections: DefinitionSectionViewModel[] = [
-    {
-      title: "General Terms",
-      definitions: generalDefinitions,
-    },
-  ];
-
-  for (const [tag, definitions] of Array.from(taggedDefinitions.entries()).sort(
-    ([left], [right]) => left.localeCompare(right),
-  )) {
-    sections.push({
-      title: `Related Terms: ${tag}`,
-      definitions,
+    const terms = taggedTerms.get(tag) ?? [];
+    terms.push({
+      label: entry.term,
+      href: `#${slugifyTerm(entry.term)}`,
     });
+    taggedTerms.set(tag, terms);
   }
 
-  return sections;
+  return Array.from(taggedTerms.entries())
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([tag, terms]) => ({
+      tag,
+      anchorId: relatedTermsGroupAnchorId(tag),
+      terms: terms.sort((left, right) =>
+        left.label.localeCompare(right.label),
+      ),
+    }));
 }
 
 function definitionDocumentTypes(
@@ -828,21 +1500,21 @@ function definitionDocumentTypes(
   return mapping.source.types ?? ["20x", "rev5"];
 }
 
-function buildConfiguredDefinitionSectionViewModels(
+function configuredDefinitionEntries(
   definitions: DefinitionsSource,
   mapping: DefinitionDocumentMappingConfig,
-): DefinitionSectionViewModel[] {
+): Array<[string, DefinitionEntrySource]> {
   const entries: Array<[string, DefinitionEntrySource]> = [];
 
   for (const bucketName of configuredTypeBuckets(
     definitionDocumentTypes(mapping),
-    mapping.source.includeBoth,
-    mapping.source.bothPosition,
+    mapping.source.includeAll,
+    mapping.source.allPosition,
   )) {
     entries.push(...Object.entries(definitions.data[bucketName] ?? {}));
   }
 
-  return buildDefinitionSectionViewModelsFromEntries(entries);
+  return entries;
 }
 
 function buildSectionViewModels(
@@ -854,24 +1526,26 @@ function buildSectionViewModels(
 ): SectionViewModel[] {
   const sections = new Map<string, SectionViewModel>();
 
-  for (const bucketName of [version, "both"] as const) {
+  const subsets = subsetsForVersions(document.info, [version]);
+
+  for (const bucketName of [version, "all"] as const) {
     const bucket = document.data[bucketName];
     if (!bucket) {
       continue;
     }
 
-    for (const [labelKey, requirements] of Object.entries(bucket)) {
-      const existingSection = sections.get(labelKey);
-      const label = document.info.labels?.[labelKey];
+    for (const [subsetKey, requirements] of Object.entries(bucket)) {
+      const existingSection = sections.get(subsetKey);
+      const subset = subsets[subsetKey];
       const section = existingSection ?? {
-        title: label?.name ?? labelKey,
-        anchorId: sectionAnchorId(labelKey, label?.name ?? labelKey),
+        title: subset?.name ?? subsetKey,
+        anchorId: sectionAnchorId(subsetKey, subset?.name ?? subsetKey),
         anchorAttribute: sectionAnchorAttribute(
-          labelKey,
-          label?.name ?? labelKey,
+          subsetKey,
+          subset?.name ?? subsetKey,
         ),
-        isLabelSection: true,
-        descriptionParagraphs: splitParagraphs(label?.description),
+        isSubsetSection: true,
+        descriptionParagraphs: splitParagraphs(subset?.description),
         requirements: [],
       };
 
@@ -887,7 +1561,7 @@ function buildSectionViewModels(
         );
       }
 
-      sections.set(labelKey, section);
+      sections.set(subsetKey, section);
     }
   }
 
@@ -923,24 +1597,24 @@ function resolveGeneratedOutputPath(
 
 function configuredBuckets(
   mapping: RuleDocumentMappingConfig,
-): Array<Version | "both"> {
+): DataBucket[] {
   return configuredTypeBuckets(
     mapping.source.types,
-    mapping.source.includeBoth,
-    mapping.source.bothPosition,
+    mapping.source.includeAll,
+    mapping.source.allPosition,
   );
 }
 
 function configuredTypeBuckets(
   types: Version[],
-  includeBoth = true,
-  bothPosition: "first" | "last" = "last",
-): Array<Version | "both"> {
-  if (!includeBoth) {
+  includeAll = true,
+  allPosition: "first" | "last" = "last",
+): DataBucket[] {
+  if (!includeAll) {
     return types;
   }
 
-  return bothPosition === "first" ? ["both", ...types] : [...types, "both"];
+  return allPosition === "first" ? ["all", ...types] : [...types, "all"];
 }
 
 function matchesAny(value: string, allowedValues: string[]): boolean {
@@ -980,11 +1654,13 @@ function buildConfiguredSectionViewModels(
   document: RequirementDocumentSource,
   mapping: RuleDocumentMappingConfig,
   doNotLinkTerms: DoNotLinkTermIndex,
+  ruleLinkContext: RuleLinkContext,
 ): SectionViewModel[] {
   const sections = new Map<string, SectionViewModel>();
   const allowedSections = mapping.source.sections;
   const definitionsHref = mapping.definitionsHref ?? "definitions/";
   const rulesHref = mapping.rulesHref ?? "";
+  const subsets = subsetsForVersions(document.info, mapping.source.types);
 
   for (const bucketName of configuredBuckets(mapping)) {
     const bucket = document.data[bucketName];
@@ -992,21 +1668,21 @@ function buildConfiguredSectionViewModels(
       continue;
     }
 
-    for (const [labelKey, requirements] of Object.entries(bucket)) {
-      if (allowedSections && !allowedSections.includes(labelKey)) {
+    for (const [subsetKey, requirements] of Object.entries(bucket)) {
+      if (allowedSections && !allowedSections.includes(subsetKey)) {
         continue;
       }
 
-      const label = document.info.labels?.[labelKey];
-      const section = sections.get(labelKey) ?? {
-        title: label?.name ?? labelKey,
-        anchorId: sectionAnchorId(labelKey, label?.name ?? labelKey),
+      const subset = subsets[subsetKey];
+      const section = sections.get(subsetKey) ?? {
+        title: subset?.name ?? subsetKey,
+        anchorId: sectionAnchorId(subsetKey, subset?.name ?? subsetKey),
         anchorAttribute: sectionAnchorAttribute(
-          labelKey,
-          label?.name ?? labelKey,
+          subsetKey,
+          subset?.name ?? subsetKey,
         ),
-        isLabelSection: true,
-        descriptionParagraphs: splitParagraphs(label?.description),
+        isSubsetSection: true,
+        descriptionParagraphs: splitParagraphs(subset?.description),
         requirements: [],
       };
 
@@ -1022,12 +1698,13 @@ function buildConfiguredSectionViewModels(
             definitionsHref,
             rulesHref,
             doNotLinkTerms,
+            ruleLinkContext,
           ),
         );
       }
 
       if (section.requirements.length) {
-        sections.set(labelKey, section);
+        sections.set(subsetKey, section);
       }
     }
   }
@@ -1051,8 +1728,8 @@ function documentHasRequirementAffecting(
       continue;
     }
 
-    for (const [labelKey, sectionRequirements] of Object.entries(bucket)) {
-      if (allowedSections && !allowedSections.includes(labelKey)) {
+    for (const [subsetKey, sectionRequirements] of Object.entries(bucket)) {
+      if (allowedSections && !allowedSections.includes(subsetKey)) {
         continue;
       }
 
@@ -1071,6 +1748,7 @@ function buildDocumentGroupedSectionViewModel(
   document: RequirementDocumentSource,
   mapping: RuleDocumentMappingConfig,
   doNotLinkTerms: DoNotLinkTermIndex,
+  ruleLinkContext: RuleLinkContext,
 ): SectionViewModel | null {
   const requirements: RequirementViewModel[] = [];
   const allowedSections = mapping.source.sections;
@@ -1083,8 +1761,8 @@ function buildDocumentGroupedSectionViewModel(
       continue;
     }
 
-    for (const [labelKey, sectionRequirements] of Object.entries(bucket)) {
-      if (allowedSections && !allowedSections.includes(labelKey)) {
+    for (const [subsetKey, sectionRequirements] of Object.entries(bucket)) {
+      if (allowedSections && !allowedSections.includes(subsetKey)) {
         continue;
       }
 
@@ -1100,6 +1778,7 @@ function buildDocumentGroupedSectionViewModel(
             definitionsHref,
             rulesHref,
             doNotLinkTerms,
+            ruleLinkContext,
           ),
         );
       }
@@ -1120,7 +1799,7 @@ function buildDocumentGroupedSectionViewModel(
       document.info.short_name ?? document.info.web_name,
       document.info.name,
     ),
-    isLabelSection: false,
+    isSubsetSection: false,
     descriptionParagraphs: [],
     requirements,
   };
@@ -1161,7 +1840,8 @@ function sourceDocumentKeys(
 
 type IgnorableFrrDocumentMapping =
   | RuleDocumentMappingConfig
-  | DeadlineDocumentMappingConfig;
+  | DeadlineDocumentMappingConfig
+  | ReferenceIndexDocumentMappingConfig;
 
 function filterIgnoredDocumentKeys(
   rules: RulesDocument,
@@ -1301,6 +1981,54 @@ function sourceDeadlineDocuments(
     );
 }
 
+function referenceIndexSourceDocumentKeys(
+  rules: RulesDocument,
+  mapping: ReferenceIndexDocumentMappingConfig,
+): string[] {
+  const { documents } = mapping.source;
+  let selectedDocumentKeys: string[];
+
+  if (documents === "ALL" || documents === undefined) {
+    selectedDocumentKeys = Object.keys(rules.FRR);
+  } else if (Array.isArray(documents)) {
+    if (!documents.length) {
+      throw new Error(
+        `Reference index document mapping "${mapping.id}" must specify at least one source document.`,
+      );
+    }
+
+    selectedDocumentKeys = documents;
+  } else {
+    throw new Error(
+      `Reference index document mapping "${mapping.id}" must specify source.documents as an array of FRR document keys or "ALL".`,
+    );
+  }
+
+  return filterIgnoredDocumentKeys(
+    rules,
+    mapping,
+    selectedDocumentKeys,
+    "Reference index document mapping",
+  );
+}
+
+function sourceReferenceIndexDocuments(
+  rules: RulesDocument,
+  mapping: ReferenceIndexDocumentMappingConfig,
+): SourceDocument[] {
+  return referenceIndexSourceDocumentKeys(rules, mapping).map((documentKey) => {
+    const document = rules.FRR[documentKey];
+    if (!document) {
+      throw new Error(`Unknown FRR document: ${documentKey}`);
+    }
+
+    return {
+      key: documentKey,
+      document,
+    };
+  });
+}
+
 function markdownTableCell(value: string): string {
   return value.replace(/\s+/g, " ").replace(/\|/g, "\\|").trim();
 }
@@ -1400,6 +2128,67 @@ function deadlineGraceEnds(entry: EffectiveEntrySource): string {
   return `Within ${graceByAssessmentMonths} months of the next annual assessment after ${maintain}`;
 }
 
+function documentSubsetCount(document: RequirementDocumentSource): number {
+  const subsetKeys = new Set<string>();
+
+  for (const bucket of Object.values(document.data)) {
+    for (const subsetKey of Object.keys(bucket ?? {})) {
+      subsetKeys.add(subsetKey);
+    }
+  }
+
+  return subsetKeys.size;
+}
+
+function documentRuleCount(document: RequirementDocumentSource): number {
+  const ruleIds = new Set<string>();
+
+  for (const bucket of Object.values(document.data)) {
+    for (const requirements of Object.values(bucket ?? {})) {
+      for (const ruleId of Object.keys(requirements ?? {})) {
+        ruleIds.add(ruleId);
+      }
+    }
+  }
+
+  return ruleIds.size;
+}
+
+function latestRequirementUpdateDate(
+  document: RequirementDocumentSource,
+): string {
+  const dates: string[] = [];
+
+  for (const bucket of Object.values(document.data)) {
+    for (const requirements of Object.values(bucket ?? {})) {
+      for (const requirement of Object.values(requirements ?? {})) {
+        for (const change of requirement.updated ?? []) {
+          if (change.date) {
+            dates.push(change.date);
+          }
+        }
+      }
+    }
+  }
+
+  return dates.sort().at(-1) ?? "";
+}
+
+function buildReferenceIndexRows(
+  sourceDocuments: SourceDocument[],
+): ReferenceIndexRowViewModel[] {
+  return sourceDocuments
+    .map(({ document }) => ({
+      acronym: markdownTableCell(document.info.short_name ?? ""),
+      name: markdownTableCell(document.info.name),
+      href: `${document.info.web_name}.md`,
+      status: markdownTableCell(humanizeStatus(document.info.status)),
+      counts: `Subsets: ${documentSubsetCount(document)}<br>Rules: ${documentRuleCount(document)}`,
+      updated: markdownTableCell(latestRequirementUpdateDate(document)),
+    }))
+    .sort((left, right) => left.acronym.localeCompare(right.acronym));
+}
+
 function buildDeadlineRowViewModel(
   sourceDocument: SourceDocument,
   version: Version,
@@ -1409,7 +2198,7 @@ function buildDeadlineRowViewModel(
   mapping: DeadlineDocumentMappingConfig,
 ): DeadlineRowViewModel | null {
   const { document } = sourceDocument;
-  const entry = effectiveEntryForVersion(document.info.effective, version);
+  const entry = effectiveEntryForVersion(document.info, version);
   if (!entry) {
     return null;
   }
@@ -1497,6 +2286,7 @@ function buildConfiguredSections(
   documents: RequirementDocumentSource[],
   mapping: RuleDocumentMappingConfig,
   doNotLinkTerms: DoNotLinkTermIndex,
+  ruleLinkContext: RuleLinkContext,
 ): SectionViewModel[] {
   if (documents.length === 1) {
     const [document] = documents;
@@ -1504,7 +2294,12 @@ function buildConfiguredSections(
       throw new Error(`Rule document mapping "${mapping.id}" matched no FRR documents.`);
     }
 
-    return buildConfiguredSectionViewModels(document, mapping, doNotLinkTerms);
+    return buildConfiguredSectionViewModels(
+      document,
+      mapping,
+      doNotLinkTerms,
+      ruleLinkContext,
+    );
   }
 
   const groupBy =
@@ -1513,13 +2308,23 @@ function buildConfiguredSections(
   if (groupBy === "document") {
     return documents
       .map((document) =>
-        buildDocumentGroupedSectionViewModel(document, mapping, doNotLinkTerms),
+        buildDocumentGroupedSectionViewModel(
+          document,
+          mapping,
+          doNotLinkTerms,
+          ruleLinkContext,
+        ),
       )
       .filter((section): section is SectionViewModel => section !== null);
   }
 
   return documents.flatMap((document) =>
-    buildConfiguredSectionViewModels(document, mapping, doNotLinkTerms),
+    buildConfiguredSectionViewModels(
+      document,
+      mapping,
+      doNotLinkTerms,
+      ruleLinkContext,
+    ),
   );
 }
 
@@ -1529,20 +2334,27 @@ function buildDocumentContext(
 ): DocumentViewModel {
   return {
     title,
+    description: options.description,
+    purpose: options.purpose,
+    pictoSource: options.pictoSource,
+    pictoStatus: options.pictoStatus,
     statusSpan: options.statusSpan,
     tags: options.tags ?? [],
     purposeParagraphs: options.purposeParagraphs ?? [],
     tableOfContents: options.tableOfContents ?? [],
     effectiveEntries: options.effectiveEntries ?? [],
+    flows: options.flows ?? [],
     isDefinitionDocument: options.isDefinitionDocument ?? false,
     isRequirementsDocument: options.isRequirementsDocument ?? false,
     isKsiDocument: options.isKsiDocument ?? false,
     isDeadlineDocument: options.isDeadlineDocument ?? false,
-    definitionSections: options.definitionSections ?? [],
+    definitions: options.definitions ?? [],
+    importantRelatedTerms: options.importantRelatedTerms ?? [],
     sections: options.sections ?? [],
     themeParagraphs: options.themeParagraphs ?? [],
     indicators: options.indicators ?? [],
     deadlineTables: options.deadlineTables ?? [],
+    referenceIndexRows: options.referenceIndexRows ?? [],
   };
 }
 
@@ -2067,11 +2879,12 @@ function collectDefinitionDocumentArtifact(
     throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
   }
 
-  const definitionSections = buildConfiguredDefinitionSectionViewModels(
-    rules.FRD,
-    mapping,
-  );
-  if (!definitionSections.length && mapping.emptyBehavior === "skip") {
+  const definitionEntries = configuredDefinitionEntries(rules.FRD, mapping);
+  const definitions = buildDefinitionViewModelsFromEntries(definitionEntries);
+  const importantRelatedTerms =
+    buildImportantRelatedTermViewModelsFromEntries(definitionEntries);
+
+  if (!definitions.length && mapping.emptyBehavior === "skip") {
     return null;
   }
 
@@ -2080,10 +2893,7 @@ function collectDefinitionDocumentArtifact(
   const effectiveEntries =
     mapping.includeEffectiveDates === false
       ? []
-      : toEffectiveEntries(
-          rules.FRD.info.effective,
-          definitionDocumentTypes(mapping),
-        );
+      : toEffectiveEntries(rules.FRD.info, definitionDocumentTypes(mapping));
 
   return {
     relativePath,
@@ -2101,7 +2911,8 @@ function collectDefinitionDocumentArtifact(
       purposeParagraphs: splitParagraphs(rules.FRD.info.purpose),
       effectiveEntries,
       isDefinitionDocument: true,
-      definitionSections,
+      definitions,
+      importantRelatedTerms,
     }),
   };
 }
@@ -2124,8 +2935,8 @@ function collectLegacyDefinitionsArtifact(
     source: {
       collection: "FRD",
       types: ["20x", "rev5"],
-      includeBoth: true,
-      bothPosition: "first",
+      includeAll: true,
+      allPosition: "first",
     },
   });
 }
@@ -2330,11 +3141,57 @@ function collectDeadlineDocumentArtifacts(
   );
 }
 
+function collectReferenceIndexDocumentArtifact(
+  rules: RulesDocument,
+  config: ToolConfig,
+  mapping: ReferenceIndexDocumentMappingConfig,
+): BuildArtifact | null {
+  if (mapping.source.collection !== "FRR") {
+    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+  }
+
+  const sourceDocumentEntries = sourceReferenceIndexDocuments(rules, mapping);
+  if (!sourceDocumentEntries.length) {
+    return null;
+  }
+
+  const relativePath = normalizeGeneratedPath(mapping.output);
+
+  return {
+    relativePath,
+    outputPath: resolveGeneratedOutputPath(config, relativePath),
+    templatePath: resolveToolPath(mapping.template ?? config.paths.template),
+    mappingId: mapping.id,
+    title: mapping.title,
+    documentType: "FRR_REFERENCE_INDEX",
+    context: buildDocumentContext(mapping.title, {
+      description: mapping.description,
+      purpose: mapping.purpose,
+      pictoSource: "machine",
+      pictoStatus: mapping.status,
+      statusSpan: pictographSpan(config, mapping.status),
+      purposeParagraphs: splitParagraphs(mapping.introduction),
+      referenceIndexRows: buildReferenceIndexRows(sourceDocumentEntries),
+    }),
+  };
+}
+
+function collectReferenceIndexDocumentArtifacts(
+  rules: RulesDocument,
+  config: ToolConfig,
+): BuildArtifact[] {
+  return (config.generated.referenceIndexDocuments ?? [])
+    .map((mapping) => collectReferenceIndexDocumentArtifact(rules, config, mapping))
+    .filter((artifact): artifact is BuildArtifact => artifact !== null);
+}
+
 function collectSingleRuleDocumentArtifact(
   rules: RulesDocument,
   config: ToolConfig,
   mapping: RuleDocumentMappingConfig,
   doNotLinkTerms: DoNotLinkTermIndex,
+  ruleIndex: RuleIndex,
+  rulePageIndex: RulePageIndex,
 ): BuildArtifact | null {
   if (mapping.source.collection !== "FRR") {
     throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
@@ -2347,19 +3204,37 @@ function collectSingleRuleDocumentArtifact(
   }
 
   const documents = sourceDocumentEntries.map((entry) => entry.document);
-  const sections = buildConfiguredSections(documents, mapping, doNotLinkTerms);
+  const relativePath = normalizeGeneratedPath(renderRuleDocumentOutput(mapping));
+  const sections = buildConfiguredSections(
+    documents,
+    mapping,
+    doNotLinkTerms,
+    {
+      currentMapping: mapping,
+      currentRelativePath: relativePath,
+      ruleIndex,
+      rulePageIndex,
+    },
+  );
   if (!sections.length && mapping.emptyBehavior === "skip") {
     return null;
   }
 
-  const relativePath = normalizeGeneratedPath(renderRuleDocumentOutput(mapping));
   const title = mapping.title ?? firstDocument.info.name;
   const purposeParagraphs =
     documents.length === 1 ? splitParagraphs(firstDocument.info.purpose) : [];
+  const flows =
+    documents.length === 1
+      ? buildFlowViewModels(
+          firstDocument.info,
+          mapping.source.types,
+          buildRequirementIndex(sections),
+        )
+      : [];
   const effectiveEntries =
     mapping.includeEffectiveDates === false || documents.length !== 1
       ? []
-      : toEffectiveEntries(firstDocument.info.effective, mapping.source.types);
+      : toEffectiveEntries(firstDocument.info, mapping.source.types);
 
   return {
     relativePath,
@@ -2387,6 +3262,7 @@ function collectSingleRuleDocumentArtifact(
       purposeParagraphs,
       tableOfContents: buildSectionTableOfContents(sections),
       effectiveEntries,
+      flows,
       isRequirementsDocument: true,
       sections,
     }),
@@ -2398,6 +3274,8 @@ function collectDocumentRuleDocumentArtifacts(
   config: ToolConfig,
   mapping: RuleDocumentMappingConfig,
   doNotLinkTerms: DoNotLinkTermIndex,
+  ruleIndex: RuleIndex,
+  rulePageIndex: RulePageIndex,
 ): BuildArtifact[] {
   if (mapping.source.collection !== "FRR") {
     throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
@@ -2405,19 +3283,29 @@ function collectDocumentRuleDocumentArtifacts(
 
   return sourceDocuments(rules, mapping)
     .map(({ key, document }): BuildArtifact | null => {
-      const sections = buildConfiguredSections([document], mapping, doNotLinkTerms);
+      const relativePath = normalizeGeneratedPath(
+        renderRuleDocumentOutput(mapping, document.info.web_name),
+      );
+      const sections = buildConfiguredSections(
+        [document],
+        mapping,
+        doNotLinkTerms,
+        {
+          currentMapping: mapping,
+          currentRelativePath: relativePath,
+          ruleIndex,
+          rulePageIndex,
+        },
+      );
       if (!sections.length && mapping.emptyBehavior === "skip") {
         return null;
       }
 
-      const relativePath = normalizeGeneratedPath(
-        renderRuleDocumentOutput(mapping, document.info.web_name),
-      );
       const title = document.info.name;
       const effectiveEntries =
         mapping.includeEffectiveDates === false
           ? []
-          : toEffectiveEntries(document.info.effective, mapping.source.types);
+          : toEffectiveEntries(document.info, mapping.source.types);
 
       return {
         relativePath,
@@ -2436,6 +3324,11 @@ function collectDocumentRuleDocumentArtifacts(
           purposeParagraphs: splitParagraphs(document.info.purpose),
           tableOfContents: buildSectionTableOfContents(sections),
           effectiveEntries,
+          flows: buildFlowViewModels(
+            document.info,
+            mapping.source.types,
+            buildRequirementIndex(sections),
+          ),
           isRequirementsDocument: true,
           sections,
         }),
@@ -2449,6 +3342,8 @@ function collectRuleDocumentArtifacts(
   config: ToolConfig,
   mapping: RuleDocumentMappingConfig,
   doNotLinkTerms: DoNotLinkTermIndex,
+  ruleIndex: RuleIndex,
+  rulePageIndex: RulePageIndex,
 ): BuildArtifact[] {
   if (mapping.outputMode === "documents") {
     return collectDocumentRuleDocumentArtifacts(
@@ -2456,6 +3351,8 @@ function collectRuleDocumentArtifacts(
       config,
       mapping,
       doNotLinkTerms,
+      ruleIndex,
+      rulePageIndex,
     );
   }
 
@@ -2464,6 +3361,8 @@ function collectRuleDocumentArtifacts(
     config,
     mapping,
     doNotLinkTerms,
+    ruleIndex,
+    rulePageIndex,
   );
   return artifact ? [artifact] : [];
 }
@@ -2474,16 +3373,26 @@ export function collectArtifacts(
 ): BuildArtifact[] {
   const artifacts: BuildArtifact[] = [];
   const doNotLinkTerms = buildDoNotLinkTermIndex(rules.FRD);
+  const ruleIndex = buildRuleIndex(rules);
+  const rulePageIndex = buildRulePageIndex(rules, config, ruleIndex);
 
   artifacts.push(...collectDefinitionDocumentArtifacts(rules, config));
   artifacts.push(
     ...collectConfiguredKsiDocumentArtifacts(rules, config, doNotLinkTerms),
   );
   artifacts.push(...collectDeadlineDocumentArtifacts(rules, config));
+  artifacts.push(...collectReferenceIndexDocumentArtifacts(rules, config));
 
   for (const mapping of config.generated.ruleDocuments) {
     artifacts.push(
-      ...collectRuleDocumentArtifacts(rules, config, mapping, doNotLinkTerms),
+      ...collectRuleDocumentArtifacts(
+        rules,
+        config,
+        mapping,
+        doNotLinkTerms,
+        ruleIndex,
+        rulePageIndex,
+      ),
     );
   }
 

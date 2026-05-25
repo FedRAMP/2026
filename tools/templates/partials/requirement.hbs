@@ -51,6 +51,18 @@
         **Timeframe:** {{timeframe}}
 
 {{/if}}
+{{#if numberedItems.length}}
+{{#each numberedItems}}
+        1. {{this}}
+{{/each}}
+
+{{/if}}
+{{#if bulletItems.length}}
+{{#each bulletItems}}
+        - {{this}}
+{{/each}}
+
+{{/if}}
 {{#if effectiveDateLines.length}}
         **Effective Date(s):**
 {{#each effectiveDateLines}}
@@ -59,12 +71,32 @@
 
 {{/if}}
 {{#if painTimeframeRows.length}}
-        | Potential Adverse Impact |{{#each painTimeframeColumns}} {{label}} |{{/each}}
+
+        ---
+
+        **Potential Agency Impact N-rating (PAIN) Timeframes:**
+
+        | PAIN Rating |{{#each painTimeframeColumns}} {{label}} |{{/each}}
         |--------------------------|{{#each painTimeframeColumns}}---|{{/each}}
 {{#each painTimeframeRows}}
-        | N{{pain}} |{{#each cells}} {{this}} |{{/each}}
+        | PAIN-{{pain}} |{{#each cells}} {{this}} |{{/each}}
 {{/each}}
 
+{{/if}}
+{{#if noteParagraphs.length}}
+        ---
+
+        _**Note:** {{#each noteParagraphs}}{{this}}{{#unless @last}} {{/unless}}{{/each}}_
+
+{{/if}}
+{{#if notes.length}}
+        ---
+
+        _**Notes:**_
+
+{{#each notes}}
+        - _{{this}}_
+{{/each}}
 {{/if}}
 {{/each}}
 {{#if numberedItems.length}}

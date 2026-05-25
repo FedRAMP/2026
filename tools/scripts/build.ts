@@ -30,7 +30,7 @@ function runCommand(command: string, args: string[]): Promise<void> {
 
 async function main(): Promise<void> {
   const config = await loadToolConfig();
-  const deploySummary = await deploy();
+  const deploySummary = await deploy({ clearHtml: false });
   console.log(`Files copied: ${deploySummary.copiedFiles}`);
   console.log(`Deploy execution time: ${deploySummary.executionTimeMs}ms`);
 

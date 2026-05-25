@@ -18,7 +18,7 @@ tags:
 
 {{/each}}
 {{#if tableOfContents.length}}
-**Rule Sections**
+**Subsets**
 
 {{#each tableOfContents}}
 - [{{title}}]({{href}})
@@ -55,20 +55,42 @@ tags:
 {{/each}}
 {{/if}}
 
+{{#if flows.length}}
+{{#each flows}}
+## Activity Workflow: {{title}}
+
+{{#each descriptionParagraphs}}
+{{this}}
+
+{{/each}}
+``` mermaid
+{{#each mermaidLines}}
+{{this}}
+{{/each}}
+```
+
+{{/each}}
+{{/if}}
+
 {{#unless isKsiDocument}}
 ---
 {{/unless}}
 
 {{#if isDefinitionDocument}}
-{{#each definitionSections}}
-## {{title}}
+{{#if importantRelatedTerms.length}}
+## Important Related Terms
+
+| Related Terms Group | Terms |
+| --- | --- |
+{{#each importantRelatedTerms}}
+| <span id="{{anchorId}}"></span>{{tag}} | {{#each terms}}[{{label}}]({{href}}){ data-preview }{{#unless @last}}<br>{{/unless}}{{/each}} |
+{{/each}}
 
 ---
 
-
+{{/if}}
 {{#each definitions}}
 {{> definition}}
-{{/each}}
 {{/each}}
 {{/if}}
 
@@ -83,7 +105,7 @@ tags:
 !!! info ""
 {{#each themeParagraphs}}
     {{this}}
-    
+
 {{/each}}
 
 {{/if}}

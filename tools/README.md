@@ -59,6 +59,11 @@ bun run sync
 ```
 
 Syncs the `rules` submodule from the `main` branch of `https://github.com/FedRAMP/rules.git`.
+Pass a branch name to sync the submodule from that branch instead:
+
+```bash
+bun run sync pwx-523
+```
 
 ```bash
 bun run fix
@@ -152,8 +157,8 @@ Add an entry to `generated.definitionDocuments` in `config.json`:
   "source": {
     "collection": "FRD",
     "types": ["20x", "rev5"],
-    "includeBoth": true,
-    "bothPosition": "first"
+    "includeAll": true,
+    "allPosition": "first"
   }
 }
 ```
@@ -169,8 +174,10 @@ Definition mapping fields:
 - `status`: pictograph status for generated frontmatter.
 - `source.collection`: must be `FRD`.
 - `source.types`: one or more certification types, such as `["20x"]` or `["rev5"]`.
-- `source.includeBoth`: include `data.both` definitions with each selected type.
-- `source.bothPosition`: place `data.both` definitions `first` or `last`.
+- `source.includeAll`: include `data.all` definitions with each selected type.
+- `source.allPosition`: place `data.all` definitions `first` or `last`.
+
+Generated definition pages render the FRD purpose first, then an **Important Related Terms** table for definitions with a `tag` value. Each table row has a stable anchor, and each definition that belongs to a group links back to that table row. Definitions themselves render as a single alphabetical list of `##` headings, regardless of whether they have a `tag`.
 
 ## Generated KSI Pages
 
@@ -220,10 +227,35 @@ Add an entry to `generated.deadlineDocuments` in `config.json`:
 }
 ```
 
-Deadline documents generate one page per configured type. They read each selected FRR document's `info.short_name`, `info.name`, `info.web_name`, and `info.effective` values. The generated table links each rule family name to the matching provider rule page for that type.
+Deadline documents generate one page per configured type. They read each selected FRR document's `info.short_name`, `info.name`, `info.web_name`, and common or certification-specific `effective` values. The generated table links each rule family name to the matching provider rule page for that type.
 
 Use `{type}` or `{version}` in `output` to place each type page explicitly. Use `source.ignoreDocuments` to remove specific FRR keys after `source.documents` is resolved, including when `source.documents` is `"ALL"`.
 Use `source.affects` to omit selected FRR documents that do not contain any rule affecting that audience, such as excluding assessor-only recognition rules from provider deadline pages.
+
+## Generated FRR Reference Index
+
+Add an entry to `generated.referenceIndexDocuments` in `config.json`:
+
+```json
+{
+  "id": "complete-ruleset-reference-index",
+  "title": "Complete Ruleset Reference",
+  "description": "This section contains the entire Consolidated Rules for 2026 as a standalone reference for each ruleset.",
+  "purpose": "This content allows folks to see the full rules together without them broken apart by stakeholder.",
+  "introduction": "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset with all related content in a single rule as an overall reference. The individual stakeholder sections of this site contain only the specific rules that apply in different circumstances for different stakeholders, while the reference rulesets are entirely unabridged.",
+  "output": "reference/index.md",
+  "status": "stable",
+  "template": "templates/reference-index.hbs",
+  "source": {
+    "collection": "FRR",
+    "documents": "ALL"
+  }
+}
+```
+
+Reference index mappings generate a table of FRR rulesets with links, status, subset and rule counts, and the most recent rule update date. Use `introduction` for the visible narrative text above the table. Use `source.documents: "ALL"` to include every FRR ruleset from the rules JSON; use `source.ignoreDocuments` to remove specific FRR keys after selection.
+
+The complete ruleset reference is usually paired with rule document mappings that use `outputMode: "documents"` and `output: "reference/{FRR}.md"` so each FRR ruleset has a standalone generated page.
 
 ## Generated Rule Pages
 
@@ -242,8 +274,8 @@ Add an entry to `generated.ruleDocuments` in `config.json`:
     "document": "FRC",
     "types": ["20x"],
     "affects": ["Providers"],
-    "includeBoth": true,
-    "bothPosition": "first"
+    "includeAll": true,
+    "allPosition": "first"
   }
 }
 ```
@@ -257,6 +289,7 @@ Mapping fields:
 - `template`: optional Handlebars template path relative to `tools/`; defaults to `paths.template`.
 - `definitionsHref`: relative link prefix for generated term links.
 - `rulesHref`: relative link prefix for `reference_url_web_name` references.
+- `linkTargetScope`: optional related-rule link visibility. Use `sameMappingOnly` for complete reference mappings that should not become fallback link targets for stakeholder-specific pages.
 - `emptyBehavior`: `write` keeps an empty page, `skip` omits it when no rules match.
 - `includeEffectiveDates`: set to `false` to omit the top applicability block.
 - `status`: pictograph status for generated frontmatter.
@@ -265,10 +298,18 @@ Mapping fields:
 - `source.ignoreDocuments`: optional array of FRR keys to remove after `source.document` or `source.documents` is resolved.
 - `source.types`: one or more certification types, such as `["20x"]` or `["rev5"]`.
 - `source.affects`: optional filter matched against each rule's `affects` list.
-- `source.sections`: optional list of section keys to include, such as `["CSO", "CSX"]`.
-- `source.includeBoth`: include `data.both` rules with each selected type.
-- `source.bothPosition`: place `data.both` rules `first` or `last`.
-- `source.groupBy`: for multi-FRR mappings, `section` keeps source label sections and `document` groups matches under each FRR document title. Single-FRR mappings always render source label sections so the page title is not repeated as the first section heading.
+- `source.sections`: optional list of subset keys to include, such as `["CSO", "CSX", "CSF"]`.
+- `source.includeAll`: include `data.all` rules with each selected type.
+- `source.allPosition`: place `data.all` rules `first` or `last`.
+- `source.groupBy`: for multi-FRR mappings, `section` keeps source subset sections and `document` groups matches under each FRR document title. Single-FRR mappings always render source subset sections so the page title is not repeated as the first section heading.
+
+Generated rule pages also support selected rich rule metadata:
+
+- `info.flows` and certification-specific flows render as Mermaid activity workflow diagrams above the rules. Flow nodes link to matching rule headings when the flow node label matches a generated rule heading.
+- Rule `related` IDs are linked in statements, notes, variants, and following-information lists when the referenced rule appears in a compatible generated page. `linkTargetScope: "sameMappingOnly"` keeps complete reference pages from becoming fallback link targets for stakeholder-specific pages.
+- `following_information` renders as numbered items and `following_information_bullets` renders as bullet items.
+- `reference_url_web_name` links a rule reference to another generated ruleset page through `rulesHref`.
+- `pain_timeframes` renders a PAIN timeframe table inside applicable rule variants.
 
 For example, this mapping processes every FRR and generates one page per rule family for rules that affect FedRAMP:
 
@@ -286,10 +327,10 @@ For example, this mapping processes every FRR and generates one page per rule fa
     "documents": "ALL",
     "types": ["20x", "rev5"],
     "affects": ["FedRAMP"],
-    "includeBoth": true,
-    "bothPosition": "first"
+    "includeAll": true,
+    "allPosition": "first"
   }
 }
 ```
 
-The default template is `templates/template.hbs`, with partials in `templates/partials/`. New templates can use the same view model as the default template: effective entries, sections, requirements, definitions, and requirement metadata such as terms, controls, notes, examples, and references.
+The default template is `templates/template.hbs`, with partials in `templates/partials/`. New templates can use the same view model as the default template: effective entries, flows, sections, requirements, definitions, and requirement metadata such as terms, controls, notes, examples, and references.

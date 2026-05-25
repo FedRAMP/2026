@@ -46,8 +46,8 @@
         "source": {
           "collection": "FRD",
           "types": ["20x", "rev5"],
-          "includeBoth": true,
-          "bothPosition": "first"
+          "includeAll": true,
+          "allPosition": "first"
         }
       }
     ],
@@ -93,7 +93,40 @@
         }
       }
     ],
+    "referenceIndexDocuments": [
+      {
+        "id": "complete-ruleset-reference-index",
+        "title": "Complete Ruleset Reference",
+        "description": "This section contains the entire Consolidated Rules for 2026 as a standalone reference for each ruleset.",
+        "purpose": "This content allows folks to see the full rules together without them broken apart by stakeholder.",
+        "introduction": "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset with all related content in a single rule as an overall reference. The individual stakeholder sections of this site contain only the specific rules that apply in different circumstances for different stakeholders, while the reference rulesets are entirely unabridged.",
+        "output": "reference/index.md",
+        "status": "stable",
+        "template": "templates/reference-index.hbs",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL"
+        }
+      }
+    ],
     "ruleDocuments": [
+      {
+        "id": "complete-ruleset-reference",
+        "output": "reference/{FRR}.md",
+        "outputMode": "documents",
+        "status": "stable",
+        "definitionsHref": "../definitions/",
+        "rulesHref": "../",
+        "linkTargetScope": "sameMappingOnly",
+        "emptyBehavior": "write",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x", "rev5"],
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
       {
         "id": "fedramp-responsibilities",
         "output": "responsibilities/{FRR}.md",
@@ -108,8 +141,8 @@
           "documents": "ALL",
           "types": ["20x", "rev5"],
           "affects": ["FedRAMP"],
-          "includeBoth": true,
-          "bothPosition": "first"
+          "includeAll": true,
+          "allPosition": "first"
         }
       },
       {
@@ -126,8 +159,8 @@
           "documents": "ALL",
           "types": ["20x", "rev5"],
           "affects": ["Agencies"],
-          "includeBoth": true,
-          "bothPosition": "first"
+          "includeAll": true,
+          "allPosition": "first"
         }
       },
       {
@@ -144,8 +177,8 @@
           "documents": "ALL",
           "types": ["20x"],
           "affects": ["Providers"],
-          "includeBoth": true,
-          "bothPosition": "first"
+          "includeAll": true,
+          "allPosition": "first"
         }
       },
       {
@@ -162,8 +195,8 @@
           "documents": "ALL",
           "types": ["rev5"],
           "affects": ["Providers"],
-          "includeBoth": true,
-          "bothPosition": "first"
+          "includeAll": true,
+          "allPosition": "first"
         }
       },
       {
@@ -181,8 +214,8 @@
           "ignoreDocuments": ["MKT", "REC"],
           "types": ["20x"],
           "affects": ["Assessors"],
-          "includeBoth": true,
-          "bothPosition": "first"
+          "includeAll": true,
+          "allPosition": "first"
         }
       },
       {
@@ -200,8 +233,8 @@
           "ignoreDocuments": ["MKT", "REC"],
           "types": ["rev5"],
           "affects": ["Assessors"],
-          "includeBoth": true,
-          "bothPosition": "first"
+          "includeAll": true,
+          "allPosition": "first"
         }
       },
       {
@@ -218,8 +251,8 @@
           "documents": ["MKT", "REC"],
           "types": ["20x", "rev5"],
           "affects": ["Assessors"],
-          "includeBoth": true,
-          "bothPosition": "first"
+          "includeAll": true,
+          "allPosition": "first"
         }
       },
       {
@@ -237,8 +270,8 @@
           "documents": ["MKT"],
           "types": ["20x", "rev5"],
           "affects": ["Advisors"],
-          "includeBoth": true,
-          "bothPosition": "first"
+          "includeAll": true,
+          "allPosition": "first"
         }
       }
     ]

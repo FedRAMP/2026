@@ -10,8 +10,8 @@ The content and implementation are under active development. Treat this reposito
 
 This is a Zensical site that combines:
 
-- Manually maintained Markdown and assets in `content/`.
-- Generated Markdown produced from `tools/rules/fedramp-consolidated-rules.json`.
+- Manually maintained Markdown and assets in `content/`, including overview and stakeholder guidance pages.
+- Generated Markdown produced from `tools/rules/fedramp-consolidated-rules.json`, including definitions, stakeholder-specific rule pages, deadline pages, key security indicator pages, and the complete ruleset reference.
 - Static output built into `html/`.
 
 The machine-readable source of truth for consolidated rules, definitions, deadlines, responsibilities, and key security indicators is:
@@ -38,6 +38,7 @@ bun run dev
 bun test
 bun run check
 bun run build
+bun run sync
 ```
 
-See `tools/README.md` for the detailed pipeline, configuration, generated page mappings, and content safety notes.
+Use `bun run sync` to update the `tools/rules` submodule from the FedRAMP rules repository. See `tools/README.md` for the detailed pipeline, configuration, generated page mappings, and content safety notes.

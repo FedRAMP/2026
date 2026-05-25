@@ -1,0 +1,31 @@
+---
+title: "{{title}}"
+description: "{{description}}"
+purpose: "{{purpose}}"
+google_doc: ""
+picto:
+  source: {{pictoSource}}
+  status: {{pictoStatus}}
+---
+
+{{#if statusSpan}}
+{{statusSpan}}
+
+{{/if}}
+??? info inline end "Page Info"
+
+    **Description:** {{description}}
+    
+    **Purpose:** {{purpose}}
+
+# {{title}}
+
+{{#each purposeParagraphs}}
+{{this}}
+
+{{/each}}
+| Acronym | Ruleset | Status | Counts | Most Recently Updated |
+| --- | --- | --- | --- | --- |
+{{#each referenceIndexRows}}
+| {{acronym}} | [{{name}}]({{href}}) | {{status}} | {{counts}} | {{updated}} |
+{{/each}}

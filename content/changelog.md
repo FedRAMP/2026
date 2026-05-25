@@ -9,6 +9,44 @@ picto:
 
 # Changelog
 
+## 2026.05.25.01-preview
+
+**Release Date:** May 25, 2026
+
+### Content Updates
+
+- [Using the Consolidated Rules](https://preview.fedramp.gov/2026/rules/): Added a new overview page that explains how FedRAMP rulesets, subsets, rules, definitions, applicability, rule force, and rule identifiers fit together.
+- [Getting Started as a Cloud Service Provider](https://preview.fedramp.gov/2026/providers/start/): Expanded the page with a step-by-step path for providers, from finding support through choosing a certification class, type, and path.
+- [Getting Support](https://preview.fedramp.gov/2026/providers/support/): Added guidance on where providers should look for help, including documentation, public community channels, FedRAMP.gov updates, the help desk, and limits on what FedRAMP can do for private stakeholders.
+- [Getting Support from FedRAMP](https://preview.fedramp.gov/2026/agencies/support/): Expanded the agency support page with direct contact guidance and links to the Agency Liaison Program, support groups, concern reporting, and CISA directive support.
+- [Certification Classes](https://preview.fedramp.gov/2026/agencies/use/classes/): Added an explanation of how FedRAMP Certification classes differ from FIPS 199 security categories and how agencies should use that distinction in risk decisions.
+- [Federal Agencies](https://preview.fedramp.gov/2026/agencies/): Updated the landing page cards so agencies are directed to the support page and the card labels read more consistently.
+- [Advisory Services](https://preview.fedramp.gov/2026/advisors/): Removed internal source-document metadata without changing the public page text.
+
+## Rules Changes
+
+- A [significant number of underlying Rules changes were made on May 25 and earlier](https://github.com/FedRAMP/rules/pull/11).
+- [Incident Communications Procedures](https://preview.fedramp.gov/2026/reference/incident-communications-procedures) were updated based on the outcome from RFC-0031.
+
+### Site Structure
+
+- Reorganized the overview navigation into clearer groups for understanding FedRAMP, preview information, and the complete ruleset reference.
+- Added a [Complete Ruleset Reference](https://preview.fedramp.gov/2026/reference/) section with standalone generated pages for each ruleset.
+- Added [Using the Consolidated Rules](https://preview.fedramp.gov/2026/rules/) to the overview navigation.
+- Replaced the separate agency getting-started page with the expanded [Getting Support as a Federal Agency](https://preview.fedramp.gov/2026/agencies/support/) section.
+
+### Generated Page Experience
+
+- Added complete generated reference pages for each ruleset, with a reference index that lists ruleset status, subset counts, rule counts, and most recent update dates. Examples: [Complete Ruleset Reference](https://preview.fedramp.gov/2026/reference/) and [Incident Communications Procedures](https://preview.fedramp.gov/2026/reference/incident-communications-procedures/).
+- Improved generated rule pages with subset navigation, activity workflow diagrams, PAIN timeframe tables, notes, following-information lists, source references, and links between related rules.
+- Updated [FedRAMP Definitions](https://preview.fedramp.gov/2026/definitions/) so definitions render as one alphabetical list with an Important Related Terms table and links back to the relevant related-terms group.
+
+### Tooling
+
+- Updated the Markdown generation pipeline, templates, and tests for the new reference pages, definitions layout, workflow diagrams, related-rule links, and richer rule metadata.
+- Improved build and deployment scripts, TypeScript checking, and documentation for generated page mappings.
+- Updated the rules sync workflow so maintainers can sync the rules submodule from a named branch.
+
 ## 2026.05.17.01-preview
 
 **Release Date:** May 17, 2026

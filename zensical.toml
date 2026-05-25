@@ -2,14 +2,38 @@
 [project]
 nav = [
   { "Overview" = [
-    { "Overview" = "index.md" },
-    { "Release Timeline" = "timeline.md" },
-    { "FedRAMP Certification" = "certification.md" },
-    { "Shared Responsibility Model" = "shared-responsibilities.md" },
-    { "FedRAMP Definitions" = "definitions.md" },
-    { "Changelog" = "changelog.md" },
-    { "Source Data" = "sources.md" },
-    { "TO DO" = "todo.md" },
+    "index.md",
+    { "Understanding FedRAMP" = [
+      { "FedRAMP Certification" = "certification.md" },
+      { "Shared Responsibility Model" = "shared-responsibilities.md" },
+      { "FedRAMP Definitions" = "definitions.md" },
+      { "Using the Consolidated Rules" = "rules.md" },
+    ] },
+    { "About This Preview" = [
+      { "Release Timeline" = "timeline.md" },
+      { "Source Data" = "sources.md" },
+      { "Changelog" = "changelog.md" },
+      { "TO DO" = "todo.md" },
+    ] },
+      { "Complete Ruleset Reference" = [
+        "reference/index.md",
+        { "Agency Use of FedRAMP Certified Cloud Services (Needs Review)" = "reference/agency-use.md" },
+        { "Certification Data Sharing" = "reference/certification-data-sharing.md" },
+        { "Collaborative Continuous Monitoring" = "reference/collaborative-continuous-monitoring.md" },
+        { "FedRAMP Certification" = "reference/fedramp-certification.md" },
+        { "FedRAMP Recognition of Independent Assessment Services" = "reference/fedramp-recognition.md" },
+        { "FedRAMP Security Inbox" = "reference/fedramp-security-inbox.md" },
+        { "Incident Communications Procedures" = "reference/incident-communications-procedures.md" },
+        { "Independent Assessment Plan" = "reference/independent-assessment-plan.md" },
+        { "Independent Assessment Report" = "reference/independent-assessment-report.md" },
+        { "Marketplace Listing" = "reference/marketplace-listing.md" },
+        { "Minimum Assessment Scope" = "reference/minimum-assessment-scope.md" },
+        { "Secure Configuration Guide" = "reference/secure-configuration-guide.md" },
+        { "Security Decision Record" = "reference/security-decision-record.md" },
+        { "Significant Change Notifications" = "reference/significant-change-notifications.md" },
+        { "Using Cryptographic Modules" = "reference/using-cryptographic-modules.md" },
+        { "Vulnerability Detection and Response" = "reference/vulnerability-detection-and-response.md" },
+      ] },
   ] },
   { "FedRAMP" = [
     "responsibilities/index.md",
@@ -57,9 +81,8 @@ nav = [
   ] },
   { Agencies = [
     "agencies/index.md",
-    { "Getting Started as a Federal Agency" = [
-      "agencies/start/index.md",
-      { "Getting Support" = "agencies/support/index.md" },
+    { "Getting Support as a Federal Agency" = [
+      "agencies/support/index.md",
       { "Liaisons Program" = "agencies/support/liaisons.md" },
       { "Support Groups" = "agencies/support/groups.md" },
       { "Reporting Concerns" = "agencies/support/concerns.md" },
@@ -144,7 +167,6 @@ nav = [
         { "Significant Change Notifications" = "providers/20x/rules/significant-change-notifications.md" },
         { "Vulnerability Detection and Response" = "providers/20x/rules/vulnerability-detection-and-response.md" },
         { "Collaborative Continuous Monitoring" = "providers/20x/rules/collaborative-continuous-monitoring.md" },
-
       ] },
       { "Key Security Indicators" = [
         "providers/20x/key-security-indicators/index.md",
@@ -353,6 +375,9 @@ permalink = true
 [project.markdown_extensions.pymdownx.mark]
 [project.markdown_extensions.pymdownx.details]
 [project.markdown_extensions.pymdownx.superfences]
+custom_fences = [
+  { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" },
+]
 [project.markdown_extensions.pymdownx.tabbed]
 alternate_style = true
 [project.markdown_extensions.pymdownx.emoji]
