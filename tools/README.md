@@ -230,6 +230,29 @@ Deadline documents generate one page per configured type. They read each selecte
 Use `{type}` or `{version}` in `output` to place each type page explicitly. Use `source.ignoreDocuments` to remove specific FRR keys after `source.documents` is resolved, including when `source.documents` is `"ALL"`.
 Use `source.affects` to omit selected FRR documents that do not contain any rule affecting that audience, such as excluding assessor-only recognition rules from provider deadline pages.
 
+## Generated FRR Reference Index
+
+Add an entry to `generated.referenceIndexDocuments` in `config.json`:
+
+```json
+{
+  "id": "complete-ruleset-reference-index",
+  "title": "Complete Ruleset Reference",
+  "description": "This section contains the entire Consolidated Rules for 2026 as a standalone reference for each ruleset.",
+  "purpose": "This content allows folks to see the full rules together without them broken apart by stakeholder.",
+  "introduction": "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset with all related content in a single rule as an overall reference. The individual stakeholder sections of this site contain only the specific rules that apply in different circumstances for different stakeholders, while the reference rulesets are entirely unabridged.",
+  "output": "reference/index.md",
+  "status": "stable",
+  "template": "templates/reference-index.hbs",
+  "source": {
+    "collection": "FRR",
+    "documents": "ALL"
+  }
+}
+```
+
+Reference index mappings generate a table of FRR rulesets with links, status, subset and rule counts, and the most recent rule update date. Use `introduction` for the visible narrative text above the table. Use `source.documents: "ALL"` to include every FRR ruleset from the rules JSON; use `source.ignoreDocuments` to remove specific FRR keys after selection.
+
 ## Generated Rule Pages
 
 Add an entry to `generated.ruleDocuments` in `config.json`:
@@ -262,6 +285,7 @@ Mapping fields:
 - `template`: optional Handlebars template path relative to `tools/`; defaults to `paths.template`.
 - `definitionsHref`: relative link prefix for generated term links.
 - `rulesHref`: relative link prefix for `reference_url_web_name` references.
+- `linkTargetScope`: optional related-rule link visibility. Use `sameMappingOnly` for complete reference mappings that should not become fallback link targets for stakeholder-specific pages.
 - `emptyBehavior`: `write` keeps an empty page, `skip` omits it when no rules match.
 - `includeEffectiveDates`: set to `false` to omit the top applicability block.
 - `status`: pictograph status for generated frontmatter.

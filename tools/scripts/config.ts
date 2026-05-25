@@ -10,6 +10,7 @@ export type RuleDocumentSelection = string[] | "ALL";
 export type KsiThemeSelection = string[] | "ALL";
 export type RuleDocumentGrouping = "section" | "document";
 export type RuleDocumentOutputMode = "single" | "documents";
+export type RuleDocumentLinkTargetScope = "default" | "sameMappingOnly";
 export type GeneratedDocumentStatus = "stable" | "placeholder" | "empty";
 export type GeneratedDocumentSource = "machine" | "person";
 
@@ -76,6 +77,7 @@ export interface RuleDocumentMappingConfig {
   template?: string;
   definitionsHref?: string;
   rulesHref?: string;
+  linkTargetScope?: RuleDocumentLinkTargetScope;
   emptyBehavior?: GeneratedEmptyBehavior;
   includeEffectiveDates?: boolean;
   source: RuleDocumentSourceConfig;
@@ -115,6 +117,24 @@ export interface DeadlineDocumentMappingConfig {
   source: DeadlineDocumentSourceConfig;
 }
 
+export interface ReferenceIndexDocumentSourceConfig {
+  collection: "FRR";
+  documents?: RuleDocumentSelection;
+  ignoreDocuments?: string[];
+}
+
+export interface ReferenceIndexDocumentMappingConfig {
+  id: string;
+  title: string;
+  description: string;
+  purpose: string;
+  introduction?: string;
+  output: string;
+  status: GeneratedDocumentStatus;
+  template?: string;
+  source: ReferenceIndexDocumentSourceConfig;
+}
+
 export interface TodoDocumentConfig {
   title?: string;
   output: string;
@@ -131,6 +151,7 @@ export interface GeneratedConfig {
   definitionDocuments?: DefinitionDocumentMappingConfig[];
   ksiDocuments?: KsiDocumentMappingConfig[];
   deadlineDocuments?: DeadlineDocumentMappingConfig[];
+  referenceIndexDocuments?: ReferenceIndexDocumentMappingConfig[];
   ruleDocuments: RuleDocumentMappingConfig[];
 }
 

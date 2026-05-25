@@ -12,6 +12,8 @@ import {
   type GeneratedDocumentSource,
   type GeneratedDocumentStatus,
   type KsiDocumentMappingConfig,
+  type ReferenceIndexDocumentMappingConfig,
+  type RuleDocumentLinkTargetScope,
   type RuleDocumentMappingConfig,
   type RuleType,
   type ToolConfig,
@@ -333,6 +335,15 @@ interface DeadlineTableViewModel {
   rows: DeadlineRowViewModel[];
 }
 
+interface ReferenceIndexRowViewModel {
+  acronym: string;
+  name: string;
+  href: string;
+  status: string;
+  counts: string;
+  updated: string;
+}
+
 interface FlowStepViewModel {
   line: string;
 }
@@ -363,6 +374,7 @@ interface RulePageCandidate {
   relativePath: string;
   types: Version[];
   affects: string[];
+  linkTargetScope: RuleDocumentLinkTargetScope;
 }
 
 type RulePageIndex = ReadonlyMap<string, RulePageCandidate[]>;
@@ -376,6 +388,10 @@ interface RuleLinkContext {
 
 interface DocumentViewModel {
   title: string;
+  description?: string;
+  purpose?: string;
+  pictoSource?: GeneratedDocumentSource;
+  pictoStatus?: GeneratedDocumentStatus;
   statusSpan?: string;
   tags: string[];
   purposeParagraphs: string[];
@@ -391,6 +407,7 @@ interface DocumentViewModel {
   themeParagraphs: string[];
   indicators: RequirementViewModel[];
   deadlineTables: DeadlineTableViewModel[];
+  referenceIndexRows: ReferenceIndexRowViewModel[];
 }
 
 export interface BuildArtifact {
@@ -400,7 +417,7 @@ export interface BuildArtifact {
   mappingId: string;
   sourceDocument?: string;
   title: string;
-  documentType: "FRD" | "FRR" | "KSI" | "DEADLINES";
+  documentType: "FRD" | "FRR" | "KSI" | "DEADLINES" | "FRR_REFERENCE_INDEX";
   context: DocumentViewModel;
 }
 
@@ -667,6 +684,7 @@ function buildRulePageIndex(
           relativePath,
           types: mapping.source.types,
           affects: mapping.source.affects ?? [],
+          linkTargetScope: mapping.linkTargetScope ?? "default",
         });
       }
     }
@@ -734,7 +752,11 @@ function resolveRelatedRuleHref(
   targetRule: RuleIndexEntry,
   context: RuleLinkContext,
 ): string | undefined {
-  const candidates = context.rulePageIndex.get(targetRule.id) ?? [];
+  const candidates = (context.rulePageIndex.get(targetRule.id) ?? []).filter(
+    (candidate) =>
+      candidate.linkTargetScope !== "sameMappingOnly" ||
+      candidate.mappingId === context.currentMapping.id,
+  );
   if (!candidates.length) {
     return undefined;
   }
@@ -1794,7 +1816,8 @@ function sourceDocumentKeys(
 
 type IgnorableFrrDocumentMapping =
   | RuleDocumentMappingConfig
-  | DeadlineDocumentMappingConfig;
+  | DeadlineDocumentMappingConfig
+  | ReferenceIndexDocumentMappingConfig;
 
 function filterIgnoredDocumentKeys(
   rules: RulesDocument,
@@ -1934,6 +1957,54 @@ function sourceDeadlineDocuments(
     );
 }
 
+function referenceIndexSourceDocumentKeys(
+  rules: RulesDocument,
+  mapping: ReferenceIndexDocumentMappingConfig,
+): string[] {
+  const { documents } = mapping.source;
+  let selectedDocumentKeys: string[];
+
+  if (documents === "ALL" || documents === undefined) {
+    selectedDocumentKeys = Object.keys(rules.FRR);
+  } else if (Array.isArray(documents)) {
+    if (!documents.length) {
+      throw new Error(
+        `Reference index document mapping "${mapping.id}" must specify at least one source document.`,
+      );
+    }
+
+    selectedDocumentKeys = documents;
+  } else {
+    throw new Error(
+      `Reference index document mapping "${mapping.id}" must specify source.documents as an array of FRR document keys or "ALL".`,
+    );
+  }
+
+  return filterIgnoredDocumentKeys(
+    rules,
+    mapping,
+    selectedDocumentKeys,
+    "Reference index document mapping",
+  );
+}
+
+function sourceReferenceIndexDocuments(
+  rules: RulesDocument,
+  mapping: ReferenceIndexDocumentMappingConfig,
+): SourceDocument[] {
+  return referenceIndexSourceDocumentKeys(rules, mapping).map((documentKey) => {
+    const document = rules.FRR[documentKey];
+    if (!document) {
+      throw new Error(`Unknown FRR document: ${documentKey}`);
+    }
+
+    return {
+      key: documentKey,
+      document,
+    };
+  });
+}
+
 function markdownTableCell(value: string): string {
   return value.replace(/\s+/g, " ").replace(/\|/g, "\\|").trim();
 }
@@ -2031,6 +2102,67 @@ function deadlineGraceEnds(entry: EffectiveEntrySource): string {
 
   const maintain = deadlineDate(entry, "maintain") || "Maintain";
   return `Within ${graceByAssessmentMonths} months of the next annual assessment after ${maintain}`;
+}
+
+function documentSubsetCount(document: RequirementDocumentSource): number {
+  const subsetKeys = new Set<string>();
+
+  for (const bucket of Object.values(document.data)) {
+    for (const subsetKey of Object.keys(bucket ?? {})) {
+      subsetKeys.add(subsetKey);
+    }
+  }
+
+  return subsetKeys.size;
+}
+
+function documentRuleCount(document: RequirementDocumentSource): number {
+  const ruleIds = new Set<string>();
+
+  for (const bucket of Object.values(document.data)) {
+    for (const requirements of Object.values(bucket ?? {})) {
+      for (const ruleId of Object.keys(requirements ?? {})) {
+        ruleIds.add(ruleId);
+      }
+    }
+  }
+
+  return ruleIds.size;
+}
+
+function latestRequirementUpdateDate(
+  document: RequirementDocumentSource,
+): string {
+  const dates: string[] = [];
+
+  for (const bucket of Object.values(document.data)) {
+    for (const requirements of Object.values(bucket ?? {})) {
+      for (const requirement of Object.values(requirements ?? {})) {
+        for (const change of requirement.updated ?? []) {
+          if (change.date) {
+            dates.push(change.date);
+          }
+        }
+      }
+    }
+  }
+
+  return dates.sort().at(-1) ?? "";
+}
+
+function buildReferenceIndexRows(
+  sourceDocuments: SourceDocument[],
+): ReferenceIndexRowViewModel[] {
+  return sourceDocuments
+    .map(({ document }) => ({
+      acronym: markdownTableCell(document.info.short_name ?? ""),
+      name: markdownTableCell(document.info.name),
+      href: `${document.info.web_name}.md`,
+      status: markdownTableCell(humanizeStatus(document.info.status)),
+      counts: `Subsets: ${documentSubsetCount(document)}<br>Rules: ${documentRuleCount(document)}`,
+      updated: markdownTableCell(latestRequirementUpdateDate(document)),
+    }))
+    .sort((left, right) => left.acronym.localeCompare(right.acronym));
 }
 
 function buildDeadlineRowViewModel(
@@ -2178,6 +2310,10 @@ function buildDocumentContext(
 ): DocumentViewModel {
   return {
     title,
+    description: options.description,
+    purpose: options.purpose,
+    pictoSource: options.pictoSource,
+    pictoStatus: options.pictoStatus,
     statusSpan: options.statusSpan,
     tags: options.tags ?? [],
     purposeParagraphs: options.purposeParagraphs ?? [],
@@ -2193,6 +2329,7 @@ function buildDocumentContext(
     themeParagraphs: options.themeParagraphs ?? [],
     indicators: options.indicators ?? [],
     deadlineTables: options.deadlineTables ?? [],
+    referenceIndexRows: options.referenceIndexRows ?? [],
   };
 }
 
@@ -2977,6 +3114,50 @@ function collectDeadlineDocumentArtifacts(
   );
 }
 
+function collectReferenceIndexDocumentArtifact(
+  rules: RulesDocument,
+  config: ToolConfig,
+  mapping: ReferenceIndexDocumentMappingConfig,
+): BuildArtifact | null {
+  if (mapping.source.collection !== "FRR") {
+    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+  }
+
+  const sourceDocumentEntries = sourceReferenceIndexDocuments(rules, mapping);
+  if (!sourceDocumentEntries.length) {
+    return null;
+  }
+
+  const relativePath = normalizeGeneratedPath(mapping.output);
+
+  return {
+    relativePath,
+    outputPath: resolveGeneratedOutputPath(config, relativePath),
+    templatePath: resolveToolPath(mapping.template ?? config.paths.template),
+    mappingId: mapping.id,
+    title: mapping.title,
+    documentType: "FRR_REFERENCE_INDEX",
+    context: buildDocumentContext(mapping.title, {
+      description: mapping.description,
+      purpose: mapping.purpose,
+      pictoSource: "machine",
+      pictoStatus: mapping.status,
+      statusSpan: pictographSpan(config, mapping.status),
+      purposeParagraphs: splitParagraphs(mapping.introduction),
+      referenceIndexRows: buildReferenceIndexRows(sourceDocumentEntries),
+    }),
+  };
+}
+
+function collectReferenceIndexDocumentArtifacts(
+  rules: RulesDocument,
+  config: ToolConfig,
+): BuildArtifact[] {
+  return (config.generated.referenceIndexDocuments ?? [])
+    .map((mapping) => collectReferenceIndexDocumentArtifact(rules, config, mapping))
+    .filter((artifact): artifact is BuildArtifact => artifact !== null);
+}
+
 function collectSingleRuleDocumentArtifact(
   rules: RulesDocument,
   config: ToolConfig,
@@ -3173,6 +3354,7 @@ export function collectArtifacts(
     ...collectConfiguredKsiDocumentArtifacts(rules, config, doNotLinkTerms),
   );
   artifacts.push(...collectDeadlineDocumentArtifacts(rules, config));
+  artifacts.push(...collectReferenceIndexDocumentArtifacts(rules, config));
 
   for (const mapping of config.generated.ruleDocuments) {
     artifacts.push(

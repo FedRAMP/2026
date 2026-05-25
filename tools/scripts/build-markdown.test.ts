@@ -723,6 +723,7 @@ function generatedMappingStatusFailures(config: ToolConfig): string[] {
     ["definitionDocuments", config.generated.definitionDocuments ?? []],
     ["ksiDocuments", config.generated.ksiDocuments ?? []],
     ["deadlineDocuments", config.generated.deadlineDocuments ?? []],
+    ["referenceIndexDocuments", config.generated.referenceIndexDocuments ?? []],
     ["ruleDocuments", config.generated.ruleDocuments],
   ];
   const failures: string[] = [];
@@ -902,6 +903,10 @@ describe("build-markdown", () => {
       "providers/20x/rules/fedramp-certification.md",
       "providers/updating/deadlines/20x.md",
       "providers/updating/deadlines/rev5.md",
+      "reference/agency-use.md",
+      "reference/fedramp-certification.md",
+      "reference/index.md",
+      "reference/security-decision-record.md",
       "responsibilities/fedramp-security-inbox.md",
       "responsibilities/incident-communications-procedures.md",
       "responsibilities/marketplace-listing.md",
@@ -914,6 +919,11 @@ describe("build-markdown", () => {
       "assessors/20x/rules/marketplace-listing.md",
     );
 
+    const referenceArtifactPaths = relativePaths.filter((relativePath) =>
+      relativePath.startsWith("reference/"),
+    );
+    expect(referenceArtifactPaths).toHaveLength(Object.keys(rules.FRR).length + 1);
+
     for (const artifact of expectedArtifacts) {
       await access(artifact.outputPath);
       const contents = await readFile(artifact.outputPath, "utf8");
@@ -921,6 +931,73 @@ describe("build-markdown", () => {
       expect(contents).toContain(`# ${artifact.title}`);
       expect(contents.trim().length).toBeGreaterThan(0);
     }
+
+    const referenceIndexContents = await readFile(
+      path.join(OUTPUT_DIR, "reference", "index.md"),
+      "utf8",
+    );
+    expect(referenceIndexContents).toStartWith(
+      [
+        "---",
+        'title: "Complete Ruleset Reference"',
+        'description: "This section contains the entire Consolidated Rules for 2026 as a standalone reference for each ruleset."',
+        'purpose: "This content allows folks to see the full rules together without them broken apart by stakeholder."',
+        'google_doc: ""',
+        "picto:",
+        "  source: machine",
+        "  status: stable",
+        "---",
+        "",
+        STABLE_STATUS_SPAN,
+        "",
+        '??? info inline end "Page Info"',
+        "",
+        "    **Description:** This section contains the entire Consolidated Rules for 2026 as a standalone reference for each ruleset.",
+        "    ",
+        "    **Purpose:** This content allows folks to see the full rules together without them broken apart by stakeholder.",
+        "",
+        "# Complete Ruleset Reference",
+      ].join("\n"),
+    );
+    expect(referenceIndexContents).toContain(
+      "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset with all related content in a single rule as an overall reference. The individual stakeholder sections of this site contain only the specific rules that apply in different circumstances for different stakeholders, while the reference rulesets are entirely unabridged.",
+    );
+    expectTextOrder(
+      referenceIndexContents,
+      [
+        "# Complete Ruleset Reference",
+        "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset",
+        "| Acronym | Ruleset | Status | Counts | Most Recently Updated |",
+      ],
+      "Generated reference index should place configured introduction before the table",
+    );
+    expect(referenceIndexContents).toContain(
+      "| Acronym | Ruleset | Status | Counts | Most Recently Updated |",
+    );
+    expect(referenceIndexContents).toContain(
+      "| FRC | [FedRAMP Certification](fedramp-certification.md) | Placeholder | Subsets: 9<br>Rules: 45 | 2026-05-04 |",
+    );
+    expect(referenceIndexContents).toContain(
+      "| SDR | [Security Decision Record](security-decision-record.md) | Empty | Subsets: 0<br>Rules: 0 |  |",
+    );
+    expect(referenceIndexContents).toContain(
+      "| AGU | [Agency Use of FedRAMP Certified Cloud Services (Needs Review)](agency-use.md) | Placeholder | Subsets: 3<br>Rules: 18 | 2026-05-04 |",
+    );
+
+    const referenceFrcContents = await readFile(
+      path.join(OUTPUT_DIR, "reference", "fedramp-certification.md"),
+      "utf8",
+    );
+    expect(referenceFrcContents).toStartWith(
+      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# FedRAMP Certification`,
+    );
+    expect(referenceFrcContents).toContain("FRC-CSX-SUM");
+    expect(referenceFrcContents).toContain("FRC-CSF-CDE");
+    expect(referenceFrcContents).toContain("FRC-FRP-MCM");
+    expect(referenceFrcContents).toContain("../definitions/#");
+    expect(referenceFrcContents).toContain(
+      "[MAS-CSO-IIR (Identify Information Resources)](minimum-assessment-scope.md#identify-information-resources){ data-preview }",
+    );
 
     const definitionsContents = await readFile(
       path.join(OUTPUT_DIR, "definitions.md"),
@@ -1326,6 +1403,7 @@ describe("build-markdown", () => {
         definitionDocuments: [],
         ksiDocuments: [],
         deadlineDocuments: [],
+        referenceIndexDocuments: [],
         ruleDocuments: [
           {
             id: "assessor-20x-with-ignored-marketplace",
@@ -1405,6 +1483,7 @@ describe("build-markdown", () => {
             },
           },
         ],
+        referenceIndexDocuments: [],
         ruleDocuments: [],
       },
     });
@@ -1448,6 +1527,7 @@ describe("build-markdown", () => {
             },
           },
         ],
+        referenceIndexDocuments: [],
         ruleDocuments: [],
       },
     });
@@ -1539,6 +1619,7 @@ describe("build-markdown", () => {
           definitionDocuments: [],
           ksiDocuments: [],
           deadlineDocuments: [],
+          referenceIndexDocuments: [],
           ruleDocuments: [],
         },
       });
@@ -1755,6 +1836,7 @@ describe("build-markdown", () => {
           ],
           ksiDocuments: [],
           deadlineDocuments: [],
+          referenceIndexDocuments: [],
           ruleDocuments: [],
         },
       });
