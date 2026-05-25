@@ -2,14 +2,19 @@
 [project]
 nav = [
   { "Overview" = [
-    { "Overview" = "index.md" },
-    { "Release Timeline" = "timeline.md" },
+    "index.md",
+    { "Understanding FedRAMP"  = [
     { "FedRAMP Certification" = "certification.md" },
     { "Shared Responsibility Model" = "shared-responsibilities.md" },
     { "FedRAMP Definitions" = "definitions.md" },
-    { "Changelog" = "changelog.md" },
+    { "Using the Consolidated Rules" = "rules.md" },
+    ]},
+    { "About This Preview"  = [
+    { "Release Timeline" = "timeline.md" },
     { "Source Data" = "sources.md" },
+    { "Changelog" = "changelog.md" },
     { "TO DO" = "todo.md" },
+    ]}
   ] },
   { "FedRAMP" = [
     "responsibilities/index.md",

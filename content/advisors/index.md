@@ -3,7 +3,7 @@ title: "Advisors"
 icon: material/head-question-outline
 description: "An overview of the advisory services section."
 purpose: "Helps advisory services understand how to navigate effectively."
-google_doc: "https://docs.google.com/document/d/1nSRpwatLOygdL9Lz6V5nVYR8kb4kZGGy_IplBA1bU2c/edit?tab=t.rf9a2b8v46iv"
+google_doc: ""
 picto:
   source: person
   status: stable
