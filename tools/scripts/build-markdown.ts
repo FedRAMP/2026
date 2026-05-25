@@ -299,12 +299,14 @@ interface DefinitionViewModel {
   noteParagraphs: string[];
   notes: string[];
   reference?: { label: string; url: string };
+  relatedTermsGroup?: TermLinkViewModel;
   alternateTerms: string[];
 }
 
-interface DefinitionSectionViewModel {
-  title: string;
-  definitions: DefinitionViewModel[];
+interface ImportantRelatedTermViewModel {
+  tag: string;
+  anchorId: string;
+  terms: TermLinkViewModel[];
 }
 
 interface SectionViewModel {
@@ -402,7 +404,8 @@ interface DocumentViewModel {
   isRequirementsDocument: boolean;
   isKsiDocument: boolean;
   isDeadlineDocument: boolean;
-  definitionSections: DefinitionSectionViewModel[];
+  definitions: DefinitionViewModel[];
+  importantRelatedTerms: ImportantRelatedTermViewModel[];
   sections: SectionViewModel[];
   themeParagraphs: string[];
   indicators: RequirementViewModel[];
@@ -507,6 +510,10 @@ function slugifyTerm(term: string): string {
     .toLowerCase()
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9-]/g, "");
+}
+
+function relatedTermsGroupAnchorId(tag: string): string {
+  return `related-terms-group-${slugifyTerm(tag)}`;
 }
 
 function slugifyHeading(heading: string): string {
@@ -1411,6 +1418,8 @@ function buildDefinitionViewModel(
   id: string,
   entry: DefinitionEntrySource,
 ): DefinitionViewModel {
+  const relatedTermsGroup = entry.tag?.trim();
+
   return {
     id,
     anchorId: slugifyTerm(entry.term),
@@ -1427,47 +1436,62 @@ function buildDefinitionViewModel(
             url: entry.reference_url ?? entry.referenceurl ?? "",
           }
         : undefined,
+    relatedTermsGroup: relatedTermsGroup
+      ? {
+          label: relatedTermsGroup,
+          href: `#${relatedTermsGroupAnchorId(relatedTermsGroup)}`,
+        }
+      : undefined,
     alternateTerms: entry.alts ?? [],
   };
 }
 
-function buildDefinitionSectionViewModelsFromEntries(
-  entries: Array<[string, DefinitionEntrySource]>,
-): DefinitionSectionViewModel[] {
-  const generalDefinitions: DefinitionViewModel[] = [];
-  const taggedDefinitions = new Map<string, DefinitionViewModel[]>();
+function sortDefinitionViewModels(
+  definitions: DefinitionViewModel[],
+): DefinitionViewModel[] {
+  return definitions.sort(
+    (left, right) =>
+      left.term.localeCompare(right.term) || left.id.localeCompare(right.id),
+  );
+}
 
-  for (const [id, entry] of entries) {
-    const definition = buildDefinitionViewModel(id, entry);
+function buildDefinitionViewModelsFromEntries(
+  entries: Array<[string, DefinitionEntrySource]>,
+): DefinitionViewModel[] {
+  return sortDefinitionViewModels(
+    entries.map(([id, entry]) => buildDefinitionViewModel(id, entry)),
+  );
+}
+
+function buildImportantRelatedTermViewModelsFromEntries(
+  entries: Array<[string, DefinitionEntrySource]>,
+): ImportantRelatedTermViewModel[] {
+  const taggedTerms = new Map<string, TermLinkViewModel[]>();
+
+  for (const [, entry] of entries) {
     const tag = entry.tag?.trim();
 
     if (!tag) {
-      generalDefinitions.push(definition);
       continue;
     }
 
-    const definitions = taggedDefinitions.get(tag) ?? [];
-    definitions.push(definition);
-    taggedDefinitions.set(tag, definitions);
-  }
-
-  const sections: DefinitionSectionViewModel[] = [
-    {
-      title: "General Terms",
-      definitions: generalDefinitions,
-    },
-  ];
-
-  for (const [tag, definitions] of Array.from(taggedDefinitions.entries()).sort(
-    ([left], [right]) => left.localeCompare(right),
-  )) {
-    sections.push({
-      title: `Related Terms: ${tag}`,
-      definitions,
+    const terms = taggedTerms.get(tag) ?? [];
+    terms.push({
+      label: entry.term,
+      href: `#${slugifyTerm(entry.term)}`,
     });
+    taggedTerms.set(tag, terms);
   }
 
-  return sections;
+  return Array.from(taggedTerms.entries())
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([tag, terms]) => ({
+      tag,
+      anchorId: relatedTermsGroupAnchorId(tag),
+      terms: terms.sort((left, right) =>
+        left.label.localeCompare(right.label),
+      ),
+    }));
 }
 
 function definitionDocumentTypes(
@@ -1476,10 +1500,10 @@ function definitionDocumentTypes(
   return mapping.source.types ?? ["20x", "rev5"];
 }
 
-function buildConfiguredDefinitionSectionViewModels(
+function configuredDefinitionEntries(
   definitions: DefinitionsSource,
   mapping: DefinitionDocumentMappingConfig,
-): DefinitionSectionViewModel[] {
+): Array<[string, DefinitionEntrySource]> {
   const entries: Array<[string, DefinitionEntrySource]> = [];
 
   for (const bucketName of configuredTypeBuckets(
@@ -1490,7 +1514,7 @@ function buildConfiguredDefinitionSectionViewModels(
     entries.push(...Object.entries(definitions.data[bucketName] ?? {}));
   }
 
-  return buildDefinitionSectionViewModelsFromEntries(entries);
+  return entries;
 }
 
 function buildSectionViewModels(
@@ -2324,7 +2348,8 @@ function buildDocumentContext(
     isRequirementsDocument: options.isRequirementsDocument ?? false,
     isKsiDocument: options.isKsiDocument ?? false,
     isDeadlineDocument: options.isDeadlineDocument ?? false,
-    definitionSections: options.definitionSections ?? [],
+    definitions: options.definitions ?? [],
+    importantRelatedTerms: options.importantRelatedTerms ?? [],
     sections: options.sections ?? [],
     themeParagraphs: options.themeParagraphs ?? [],
     indicators: options.indicators ?? [],
@@ -2854,11 +2879,12 @@ function collectDefinitionDocumentArtifact(
     throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
   }
 
-  const definitionSections = buildConfiguredDefinitionSectionViewModels(
-    rules.FRD,
-    mapping,
-  );
-  if (!definitionSections.length && mapping.emptyBehavior === "skip") {
+  const definitionEntries = configuredDefinitionEntries(rules.FRD, mapping);
+  const definitions = buildDefinitionViewModelsFromEntries(definitionEntries);
+  const importantRelatedTerms =
+    buildImportantRelatedTermViewModelsFromEntries(definitionEntries);
+
+  if (!definitions.length && mapping.emptyBehavior === "skip") {
     return null;
   }
 
@@ -2885,7 +2911,8 @@ function collectDefinitionDocumentArtifact(
       purposeParagraphs: splitParagraphs(rules.FRD.info.purpose),
       effectiveEntries,
       isDefinitionDocument: true,
-      definitionSections,
+      definitions,
+      importantRelatedTerms,
     }),
   };
 }

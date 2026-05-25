@@ -77,15 +77,20 @@ tags:
 {{/unless}}
 
 {{#if isDefinitionDocument}}
-{{#each definitionSections}}
-## {{title}}
+{{#if importantRelatedTerms.length}}
+## Important Related Terms
+
+| Related Terms Group | Terms |
+| --- | --- |
+{{#each importantRelatedTerms}}
+| <span id="{{anchorId}}"></span>{{tag}} | {{#each terms}}[{{label}}]({{href}}){ data-preview }{{#unless @last}}<br>{{/unless}}{{/each}} |
+{{/each}}
 
 ---
 
-
+{{/if}}
 {{#each definitions}}
 {{> definition}}
-{{/each}}
 {{/each}}
 {{/if}}
 

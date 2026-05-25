@@ -1,4 +1,4 @@
-### {{term}}
+## {{term}}
 
 {{#if changelog.length}}
 ??? abstract "**ID:** {{id}}"
@@ -38,8 +38,11 @@
 
     **Reference:** [{{reference.label}}]({{reference.url}})
 {{/if}}
+{{#if relatedTermsGroup}}
+
+    **Related Terms Group:** [{{relatedTermsGroup.label}}]({{relatedTermsGroup.href}})
+{{/if}}
 {{#if alternateTerms.length}}
 
     **Also:** {{#each alternateTerms}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
 {{/if}}
-

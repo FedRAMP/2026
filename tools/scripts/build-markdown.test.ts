@@ -1013,10 +1013,11 @@ describe("build-markdown", () => {
       [
         "# FedRAMP Definitions",
         definitionsPurpose ?? "",
-        "\n---",
-        "## General Terms",
+        "## Important Related Terms",
+        "| Related Terms Group | Terms |",
+        "## Accepted Vulnerability",
       ],
-      "Generated FRD markdown should place info.purpose before the first body rule",
+      "Generated FRD markdown should place info.purpose and related terms table before the definitions",
     );
     expect(definitionsContents).not.toContain("**Rule Sections**");
     expect(definitionsContents).not.toContain(
@@ -1025,22 +1026,22 @@ describe("build-markdown", () => {
     expect(definitionsContents).not.toContain("Effective Date(s)");
     expect(definitionsContents).not.toContain("Overall Applicability");
     expect(definitionsContents).toContain('!!! quote ""');
-    const definitionSectionHeaders = Array.from(
+    expect(definitionsContents).not.toContain("## General Terms");
+    expect(definitionsContents).not.toContain("## Related Terms:");
+    expect(definitionsContents).toContain(
+      '| <span id="related-terms-group-vulnerability"></span>Vulnerability | [Accepted Vulnerability](#accepted-vulnerability){ data-preview }<br>[False Positive Vulnerability](#false-positive-vulnerability){ data-preview }',
+    );
+    expect(definitionsContents).toContain(
+      "**Related Terms Group:** [Vulnerability](#related-terms-group-vulnerability)",
+    );
+    const definitionHeaders = Array.from(
       definitionsContents.matchAll(/^## (.+)$/gm),
       (match) => match[1],
-    );
-    const definitionTags = Array.from(
-      new Set(
-        Object.values(rules.FRD.data.all ?? {})
-          .map((entry) => entry.tag?.trim())
-          .filter((tag): tag is string => Boolean(tag)),
-      ),
-    ).sort((left, right) => left.localeCompare(right));
-    expect(definitionSectionHeaders).toEqual([
-      "General Terms",
-      ...definitionTags.map((tag) => `Related Terms: ${tag}`),
-    ]);
-    expect(definitionsContents).toContain("## Related Terms: Vulnerability");
+    ).filter((heading) => heading !== "Important Related Terms");
+    const definitionTerms = Object.values(rules.FRD.data.all ?? {})
+      .map((entry) => entry.term)
+      .sort((left, right) => left.localeCompare(right));
+    expect(definitionHeaders).toEqual(definitionTerms);
 
     const ksiArtifactPaths = relativePaths.filter((relativePath) =>
       relativePath.startsWith("providers/20x/key-security-indicators/"),
@@ -1855,7 +1856,8 @@ describe("build-markdown", () => {
       expect(contents).toStartWith(
         `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# Custom FedRAMP Definitions`,
       );
-      expect(contents).toContain("## General Terms");
+      expect(contents).toContain("## Important Related Terms");
+      expect(contents).not.toContain("## General Terms");
       expect(contents).not.toContain("Effective Date(s)");
     } finally {
       await rm(tempDir, { recursive: true, force: true });
