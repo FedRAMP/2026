@@ -4,7 +4,7 @@ purpose: "Explains the structure of the FedRAMP Consolidated Rules, how to read 
 google_doc: ""
 picto:
   source: person
-  status: placeholder
+  status: stable
 ---
 
 # Using the FedRAMP Consolidated Rules

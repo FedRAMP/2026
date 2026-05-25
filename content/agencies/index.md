@@ -56,15 +56,15 @@ the FedRAMP process.
 
 <div class="grid cards" markdown>
 
--   :lucide-heart-handshake:{ .xl .middle .stable } **Get Help with FedRAMP.**
+-   :lucide-heart-handshake:{ .xl .middle .stable } **Get Help with FedRAMP**
 
     ---
 
     Learn about our support systems, the Liaison Program, and all the other ways FedRAMP will help your agency deliver.
 
-    [Getting Started as a Federal Agency](start/index.md){ data-preview }
+    [Getting Support as a Federal Agency](support/index.md){ data-preview }
 
--   :lucide-scan:{  .xl .middle .machine } **When does FedRAMP apply?**
+-   :lucide-scan:{  .xl .middle .machine } **When FedRAMP Applies**
 
     ---
 
@@ -72,7 +72,7 @@ the FedRAMP process.
 
     [The Scope of FedRAMP](../scope.md){ data-preview }
 
--   :lucide-cloud-backup:{  .xl .middle .person } **How to use FedRAMP.**
+-   :lucide-cloud-backup:{  .xl .middle .person } **How to use FedRAMP**
 
     ---
 
@@ -80,7 +80,7 @@ the FedRAMP process.
 
     [Using a FedRAMP Certified cloud service](use/index.md){ data-preview }
 
--   :lucide-gavel:{  .xl .middle .placeholder } **Follow the rules.**
+-   :lucide-gavel:{  .xl .middle .placeholder } **Follow the rules**
 
     ---
 

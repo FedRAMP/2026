@@ -62,9 +62,8 @@ nav = [
   ] },
   { Agencies = [
     "agencies/index.md",
-    { "Getting Started as a Federal Agency" = [
-      "agencies/start/index.md",
-      { "Getting Support" = "agencies/support/index.md" },
+    { "Getting Support as a Federal Agency" = [
+      "agencies/support/index.md",
       { "Liaisons Program" = "agencies/support/liaisons.md" },
       { "Support Groups" = "agencies/support/groups.md" },
       { "Reporting Concerns" = "agencies/support/concerns.md" },
