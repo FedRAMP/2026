@@ -9,6 +9,7 @@ import {
   toPosixPath,
   type DefinitionDocumentMappingConfig,
   type DeadlineDocumentMappingConfig,
+  type FrrCollectionDocumentMappingConfig,
   type GeneratedDocumentSource,
   type GeneratedDocumentStatus,
   type KsiDocumentMappingConfig,
@@ -370,6 +371,9 @@ interface RuleIndexEntry {
 }
 
 type RuleIndex = ReadonlyMap<string, RuleIndexEntry>;
+type FrrRuleSourceMappingConfig =
+  | RuleDocumentMappingConfig
+  | FrrCollectionDocumentMappingConfig;
 
 interface RulePageCandidate {
   mappingId: string;
@@ -382,7 +386,7 @@ interface RulePageCandidate {
 type RulePageIndex = ReadonlyMap<string, RulePageCandidate[]>;
 
 interface RuleLinkContext {
-  currentMapping: RuleDocumentMappingConfig;
+  currentMapping: FrrRuleSourceMappingConfig;
   currentRelativePath: string;
   ruleIndex: RuleIndex;
   rulePageIndex: RulePageIndex;
@@ -605,14 +609,14 @@ function buildRuleIndex(rules: RulesDocument): RuleIndex {
 
 function ruleBucketMatchesMapping(
   bucketName: DataBucket,
-  mapping: RuleDocumentMappingConfig,
+  mapping: FrrRuleSourceMappingConfig,
 ): boolean {
   return configuredBuckets(mapping).includes(bucketName);
 }
 
 function ruleSubsetMatchesMapping(
   subsetKey: string,
-  mapping: RuleDocumentMappingConfig,
+  mapping: FrrRuleSourceMappingConfig,
 ): boolean {
   return !mapping.source.sections || mapping.source.sections.includes(subsetKey);
 }
@@ -660,14 +664,28 @@ function buildRulePageIndex(
   ruleIndex: RuleIndex,
 ): RulePageIndex {
   const index = new Map<string, RulePageCandidate[]>();
+  const mappings: Array<{
+    mapping: FrrRuleSourceMappingConfig;
+    relativePathForDocument: (document: RequirementDocumentSource) => string;
+  }> = [
+    ...config.generated.ruleDocuments.map((mapping) => ({
+      mapping,
+      relativePathForDocument: (document: RequirementDocumentSource) =>
+        renderRuleCandidatePath(mapping, document),
+    })),
+    ...(config.generated.frrCollectionDocuments ?? []).map((mapping) => ({
+      mapping,
+      relativePathForDocument: () => normalizeGeneratedPath(mapping.output),
+    })),
+  ];
 
-  for (const mapping of config.generated.ruleDocuments) {
+  for (const { mapping, relativePathForDocument } of mappings) {
     if (mapping.source.collection !== "FRR") {
       continue;
     }
 
     for (const { key, document } of sourceDocuments(rules, mapping)) {
-      const relativePath = renderRuleCandidatePath(mapping, document);
+      const relativePath = relativePathForDocument(document);
 
       for (const [id, rule] of ruleIndex) {
         if (rule.documentKey !== key) {
@@ -1596,7 +1614,7 @@ function resolveGeneratedOutputPath(
 }
 
 function configuredBuckets(
-  mapping: RuleDocumentMappingConfig,
+  mapping: FrrRuleSourceMappingConfig,
 ): DataBucket[] {
   return configuredTypeBuckets(
     mapping.source.types,
@@ -1629,7 +1647,7 @@ function affectsFiltersOverlap(left: string[], right: string[]): boolean {
 
 function requirementMatchesMapping(
   requirement: RequirementEntrySource,
-  mapping: RuleDocumentMappingConfig,
+  mapping: FrrRuleSourceMappingConfig,
 ): boolean {
   return requirementMatchesAffectedParties(
     requirement,
@@ -1652,7 +1670,7 @@ function requirementMatchesAffectedParties(
 
 function buildConfiguredSectionViewModels(
   document: RequirementDocumentSource,
-  mapping: RuleDocumentMappingConfig,
+  mapping: FrrRuleSourceMappingConfig,
   doNotLinkTerms: DoNotLinkTermIndex,
   ruleLinkContext: RuleLinkContext,
 ): SectionViewModel[] {
@@ -1746,7 +1764,7 @@ function documentHasRequirementAffecting(
 
 function buildDocumentGroupedSectionViewModel(
   document: RequirementDocumentSource,
-  mapping: RuleDocumentMappingConfig,
+  mapping: FrrRuleSourceMappingConfig,
   doNotLinkTerms: DoNotLinkTermIndex,
   ruleLinkContext: RuleLinkContext,
 ): SectionViewModel | null {
@@ -1807,7 +1825,7 @@ function buildDocumentGroupedSectionViewModel(
 
 function sourceDocumentKeys(
   rules: RulesDocument,
-  mapping: RuleDocumentMappingConfig,
+  mapping: FrrRuleSourceMappingConfig,
 ): string[] {
   const { document, documents } = mapping.source;
   let selectedDocumentKeys: string[];
@@ -1840,6 +1858,7 @@ function sourceDocumentKeys(
 
 type IgnorableFrrDocumentMapping =
   | RuleDocumentMappingConfig
+  | FrrCollectionDocumentMappingConfig
   | DeadlineDocumentMappingConfig
   | ReferenceIndexDocumentMappingConfig;
 
@@ -1910,7 +1929,7 @@ interface SourceDocument {
 
 function sourceDocuments(
   rules: RulesDocument,
-  mapping: RuleDocumentMappingConfig,
+  mapping: FrrRuleSourceMappingConfig,
 ): SourceDocument[] {
   return sourceDocumentKeys(rules, mapping).map((documentKey) => {
     const document = rules.FRR[documentKey];
@@ -2284,7 +2303,7 @@ function buildDeadlineTables(
 
 function buildConfiguredSections(
   documents: RequirementDocumentSource[],
-  mapping: RuleDocumentMappingConfig,
+  mapping: FrrRuleSourceMappingConfig,
   doNotLinkTerms: DoNotLinkTermIndex,
   ruleLinkContext: RuleLinkContext,
 ): SectionViewModel[] {
@@ -3185,6 +3204,161 @@ function collectReferenceIndexDocumentArtifacts(
     .filter((artifact): artifact is BuildArtifact => artifact !== null);
 }
 
+function addUniqueParagraphs(target: string[], paragraphs: string[]): void {
+  const existingParagraphs = new Set(target);
+
+  for (const paragraph of paragraphs) {
+    if (existingParagraphs.has(paragraph)) {
+      continue;
+    }
+
+    target.push(paragraph);
+    existingParagraphs.add(paragraph);
+  }
+}
+
+function buildFrrCollectionSectionViewModel(
+  document: RequirementDocumentSource,
+  mapping: FrrCollectionDocumentMappingConfig,
+  doNotLinkTerms: DoNotLinkTermIndex,
+  ruleLinkContext: RuleLinkContext,
+): SectionViewModel | null {
+  const requirements: RequirementViewModel[] = [];
+  const descriptionParagraphs = splitParagraphs(document.info.purpose);
+  const allowedSections = mapping.source.sections;
+  const definitionsHref = mapping.definitionsHref ?? "definitions/";
+  const rulesHref = mapping.rulesHref ?? "";
+  const subsets = subsetsForVersions(document.info, mapping.source.types);
+
+  for (const bucketName of configuredBuckets(mapping)) {
+    const bucket = document.data[bucketName];
+    if (!bucket) {
+      continue;
+    }
+
+    for (const [subsetKey, sectionRequirements] of Object.entries(bucket)) {
+      if (allowedSections && !allowedSections.includes(subsetKey)) {
+        continue;
+      }
+
+      const matchingRequirements = Object.entries(sectionRequirements).filter(
+        ([, requirement]) => requirementMatchesMapping(requirement, mapping),
+      );
+      if (!matchingRequirements.length) {
+        continue;
+      }
+
+      addUniqueParagraphs(
+        descriptionParagraphs,
+        splitParagraphs(subsets[subsetKey]?.description),
+      );
+
+      for (const [id, requirement] of matchingRequirements) {
+        requirements.push(
+          buildRequirementViewModel(
+            id,
+            requirement,
+            definitionsHref,
+            rulesHref,
+            doNotLinkTerms,
+            ruleLinkContext,
+          ),
+        );
+      }
+    }
+  }
+
+  if (!requirements.length) {
+    return null;
+  }
+
+  return {
+    title: document.info.name,
+    anchorId: sectionAnchorId(
+      document.info.short_name ?? document.info.web_name,
+      document.info.name,
+    ),
+    anchorAttribute: sectionAnchorAttribute(
+      document.info.short_name ?? document.info.web_name,
+      document.info.name,
+    ),
+    isSubsetSection: false,
+    descriptionParagraphs,
+    requirements,
+  };
+}
+
+function collectFrrCollectionDocumentArtifact(
+  rules: RulesDocument,
+  config: ToolConfig,
+  mapping: FrrCollectionDocumentMappingConfig,
+  doNotLinkTerms: DoNotLinkTermIndex,
+  ruleIndex: RuleIndex,
+  rulePageIndex: RulePageIndex,
+): BuildArtifact | null {
+  if (mapping.source.collection !== "FRR") {
+    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+  }
+
+  const relativePath = normalizeGeneratedPath(mapping.output);
+  const sourceDocumentEntries = sourceDocuments(rules, mapping);
+  const sections = sourceDocumentEntries
+    .map(({ document }) =>
+      buildFrrCollectionSectionViewModel(
+        document,
+        mapping,
+        doNotLinkTerms,
+        {
+          currentMapping: mapping,
+          currentRelativePath: relativePath,
+          ruleIndex,
+          rulePageIndex,
+        },
+      ),
+    )
+    .filter((section): section is SectionViewModel => section !== null);
+
+  if (!sections.length && mapping.emptyBehavior === "skip") {
+    return null;
+  }
+
+  return {
+    relativePath,
+    outputPath: resolveGeneratedOutputPath(config, relativePath),
+    templatePath: resolveToolPath(mapping.template ?? config.paths.template),
+    mappingId: mapping.id,
+    title: mapping.title,
+    documentType: "FRR",
+    context: buildDocumentContext(mapping.title, {
+      statusSpan: pictographSpan(config, mapping.status),
+      tags: versionTags(mapping.source.types),
+      isRequirementsDocument: true,
+      sections,
+    }),
+  };
+}
+
+function collectFrrCollectionDocumentArtifacts(
+  rules: RulesDocument,
+  config: ToolConfig,
+  doNotLinkTerms: DoNotLinkTermIndex,
+  ruleIndex: RuleIndex,
+  rulePageIndex: RulePageIndex,
+): BuildArtifact[] {
+  return (config.generated.frrCollectionDocuments ?? [])
+    .map((mapping) =>
+      collectFrrCollectionDocumentArtifact(
+        rules,
+        config,
+        mapping,
+        doNotLinkTerms,
+        ruleIndex,
+        rulePageIndex,
+      ),
+    )
+    .filter((artifact): artifact is BuildArtifact => artifact !== null);
+}
+
 function collectSingleRuleDocumentArtifact(
   rules: RulesDocument,
   config: ToolConfig,
@@ -3382,6 +3556,15 @@ export function collectArtifacts(
   );
   artifacts.push(...collectDeadlineDocumentArtifacts(rules, config));
   artifacts.push(...collectReferenceIndexDocumentArtifacts(rules, config));
+  artifacts.push(
+    ...collectFrrCollectionDocumentArtifacts(
+      rules,
+      config,
+      doNotLinkTerms,
+      ruleIndex,
+      rulePageIndex,
+    ),
+  );
 
   for (const mapping of config.generated.ruleDocuments) {
     artifacts.push(

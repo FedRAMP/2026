@@ -83,6 +83,19 @@ export interface RuleDocumentMappingConfig {
   source: RuleDocumentSourceConfig;
 }
 
+export interface FrrCollectionDocumentMappingConfig {
+  id: string;
+  title: string;
+  output: string;
+  status: GeneratedDocumentStatus;
+  template?: string;
+  definitionsHref?: string;
+  rulesHref?: string;
+  linkTargetScope?: RuleDocumentLinkTargetScope;
+  emptyBehavior?: GeneratedEmptyBehavior;
+  source: RuleDocumentSourceConfig;
+}
+
 export interface KsiDocumentSourceConfig {
   collection: "KSI";
   theme?: string;
@@ -152,6 +165,7 @@ export interface GeneratedConfig {
   ksiDocuments?: KsiDocumentMappingConfig[];
   deadlineDocuments?: DeadlineDocumentMappingConfig[];
   referenceIndexDocuments?: ReferenceIndexDocumentMappingConfig[];
+  frrCollectionDocuments?: FrrCollectionDocumentMappingConfig[];
   ruleDocuments: RuleDocumentMappingConfig[];
 }
 

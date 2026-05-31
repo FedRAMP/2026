@@ -13,7 +13,7 @@ picto:
 
 FedRAMP provides a standardized, reusable approach to security assessment and authorization for cloud computing products and services used by federal agencies. Federal agencies are
 required by both [the law](../authority/law/agencies.md){ data-preview } and [OMB policy](../authority/m-24-15/roles.md) to follow the processes and rules established by FedRAMP
-for the use of cloud services in agency information systems. This authority builds on "FISMA" requirements in the law and policy and may not be ignored;
+when using cloud services in agency information systems. This authority builds on "FISMA" requirements in the law and policy and may not be ignored;
 [M-24-15](../authority/m-24-15/implementation.md){ data-preview } explicitly requires agencies to update their agency policies to align with FedRAMP.
 
 !!! tip "FedRAMP was established to support agency mission delivery by standardizing how agencies use commercial cloud services."
@@ -22,6 +22,17 @@ for the use of cloud services in agency information systems. This authority buil
     framework for using commercial cloud services within federal information systems that lowers the burden for adoption
     significantly. FedRAMP is not an oversight or enforcement body, it exists to be the primary point of connection between
     agencies and commercial services to enable adoption.
+
+!!! danger "Oversight and enforcement is still performed!"
+
+    Failure to follow processes outlined by FedRAMP, in alignment with the law and policy, will expose agency officials
+    to audit by the Office of Management and Budget, Inspectors General, and the Government Accountability Office.
+    FedRAMP has participated in multiple audits by each of these bodies that has resulted in findings against agencies
+    for following legacy processes or failing to properly adopt FedRAMP processes.
+
+    A [March 2026 Best Practices for Cloud Computing](https://www.ignet.gov/sites/default/files/files/CIGIE-OIG%20Best%20Practices%20for%20Cloud%20Computing.pdf)
+    report from the Council of the Inspectors General highlights many failures by agencies to meet their responsibilities
+    for the use of cloud services.
 
 ---
 

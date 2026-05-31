@@ -21,6 +21,15 @@ The Consolidated Rules for 2026 reflect that vision, establishing a full new set
     of that historical information no longer applies after FedRAMP was rescinded and replaced in 2024. Stakeholders should be extremely
     careful to avoid outdated information, especially that provided by Large Language Models and AI services.
 
+!!! tip "Point AI services at the source material for FedRAMP Rules"
+
+    The [Source Data](../sources.md) page in the Overview contains links to the raw source data used to
+    generate the FedRAMP Consolidated Rules for 2026. Each of the repositories that contain source data
+    also contain instructions for AI Agents to help them process this information.
+
+    Whenever possible, the original [Source Data](../sources.md) should be explicitly specified with
+    any AI service to ensure it is primary source of truth.
+
 ---
 
 <!--
@@ -77,7 +86,7 @@ intended to be a snapshot that will apply throughout the effective period for th
 
     Review the specific rules that FedRAMP has created for our involvement in certain processes to understand our commitment to consistency.
 
-    [FedRAMP's Responsibilities](fedramp-certification.md){ data-preview }
+    [FedRAMP's Responsibilities](rules.md){ data-preview }
 
 -   :lucide-gavel:{ .xl .middle .empty } **Who put FedRAMP in charge?**
 
