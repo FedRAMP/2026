@@ -26,6 +26,7 @@ import {
   loadToolConfig,
   REPO_ROOT,
   resolveToolPath,
+  type RuleType,
   type ToolConfig,
 } from "./config";
 import { deploy } from "./deploy";
@@ -249,6 +250,350 @@ function expectTextOrder(
       previousIndex = index;
     }
   });
+}
+
+type RulesForTest = Awaited<ReturnType<typeof loadRules>>;
+type RequirementDocumentForTest = RulesForTest["FRR"][string];
+type RequirementEntryForTest =
+  NonNullable<
+    NonNullable<RequirementDocumentForTest["data"]["all"]>[string]
+  >[string];
+type RuleBucketForTest = "all" | RuleType;
+type ArtifactForTest = ReturnType<typeof collectArtifacts>[number];
+
+function markdownTableCell(value: string): string {
+  return value.replace(/\s+/g, " ").replace(/\|/g, "\\|").trim();
+}
+
+function humanizeStatus(value?: string): string {
+  if (!value) {
+    return "Unknown";
+  }
+
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function slugifyTerm(term: string): string {
+  return term
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+}
+
+function slugifyHeading(heading: string): string {
+  return slugifyTerm(heading.replace(/&/g, " and "));
+}
+
+function mermaidNodeId(value: string): string {
+  const normalized = value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  return `node_${normalized || "unnamed"}`;
+}
+
+function mermaidQuotedValue(value: string): string {
+  return value
+    .replaceAll("\\", "\\\\")
+    .replaceAll('"', '\\"')
+    .replaceAll("\r", " ")
+    .replaceAll("\n", "<br/>");
+}
+
+function relatedTermsGroupAnchorId(tag: string): string {
+  return `related-terms-group-${slugifyTerm(tag)}`;
+}
+
+function documentSubsetCount(document: RequirementDocumentForTest): number {
+  const subsetKeys = new Set<string>();
+
+  for (const bucket of Object.values(document.data)) {
+    for (const subsetKey of Object.keys(bucket ?? {})) {
+      subsetKeys.add(subsetKey);
+    }
+  }
+
+  return subsetKeys.size;
+}
+
+function documentRuleCount(document: RequirementDocumentForTest): number {
+  const ruleIds = new Set<string>();
+
+  for (const bucket of Object.values(document.data)) {
+    for (const requirements of Object.values(bucket ?? {})) {
+      for (const ruleId of Object.keys(requirements ?? {})) {
+        ruleIds.add(ruleId);
+      }
+    }
+  }
+
+  return ruleIds.size;
+}
+
+function latestRequirementUpdateDate(
+  document: RequirementDocumentForTest,
+): string {
+  const dates: string[] = [];
+
+  for (const bucket of Object.values(document.data)) {
+    for (const requirements of Object.values(bucket ?? {})) {
+      for (const requirement of Object.values(requirements ?? {})) {
+        for (const change of requirement.updated ?? []) {
+          if (change.date) {
+            dates.push(change.date);
+          }
+        }
+      }
+    }
+  }
+
+  return dates.sort().at(-1) ?? "";
+}
+
+function expectedReferenceIndexRows(rules: RulesForTest): string[] {
+  return Object.values(rules.FRR)
+    .map((document) => {
+      const acronym = markdownTableCell(document.info.short_name ?? "");
+      const name = markdownTableCell(document.info.name);
+      const href = `${document.info.web_name}.md`;
+      const status = markdownTableCell(humanizeStatus(document.info.status));
+      const counts = `Subsets: ${documentSubsetCount(
+        document,
+      )}<br>Rules: ${documentRuleCount(document)}`;
+      const updated = markdownTableCell(latestRequirementUpdateDate(document));
+
+      return {
+        acronym,
+        row: `| ${acronym} | [${name}](${href}) | ${status} | ${counts} | ${updated} |`,
+      };
+    })
+    .sort((left, right) => left.acronym.localeCompare(right.acronym))
+    .map((entry) => entry.row);
+}
+
+function expectedImportantRelatedTermRows(rules: RulesForTest): string[] {
+  const taggedTerms = new Map<string, string[]>();
+
+  for (const entry of Object.values(rules.FRD.data.all ?? {})) {
+    const tag = entry.tag?.trim();
+    if (!tag) {
+      continue;
+    }
+
+    const terms = taggedTerms.get(tag) ?? [];
+    terms.push(entry.term);
+    taggedTerms.set(tag, terms);
+  }
+
+  return Array.from(taggedTerms.entries())
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([tag, terms]) => {
+      const linkedTerms = terms
+        .sort((left, right) => left.localeCompare(right))
+        .map((term) => `[${term}](#${slugifyTerm(term)}){ data-preview }`)
+        .join("<br>");
+
+      return `| <span id="${relatedTermsGroupAnchorId(
+        tag,
+      )}"></span>${tag} | ${linkedTerms} |`;
+    });
+}
+
+function matchesAffectedParties(
+  requirement: RequirementEntryForTest,
+  affects: string[],
+): boolean {
+  if (!affects.length) {
+    return true;
+  }
+
+  return (requirement.affects ?? []).some((affectedParty) =>
+    affects.some(
+      (allowedParty) =>
+        allowedParty.toLowerCase() === affectedParty.toLowerCase(),
+    ),
+  );
+}
+
+function firstRuleSelection(
+  document: RequirementDocumentForTest | undefined,
+  bucketNames: RuleBucketForTest[],
+  affects: string[] = [],
+): {
+  id: string;
+  requirement: RequirementEntryForTest;
+  bucketName: RuleBucketForTest;
+  subsetKey: string;
+} {
+  if (!document) {
+    throw new Error("Expected source document to exist in rules JSON.");
+  }
+
+  for (const bucketName of bucketNames) {
+    const bucket = document.data[bucketName];
+    if (!bucket) {
+      continue;
+    }
+
+    for (const [subsetKey, requirements] of Object.entries(bucket)) {
+      for (const [id, requirement] of Object.entries(requirements)) {
+        if (matchesAffectedParties(requirement, affects)) {
+          return { id, requirement, bucketName, subsetKey };
+        }
+      }
+    }
+  }
+
+  throw new Error(
+    `Expected ${document.info.short_name ?? document.info.name} to include a ${bucketNames.join(
+      "/",
+    )} rule${affects.length ? ` affecting ${affects.join(", ")}` : ""}.`,
+  );
+}
+
+function firstRuleId(
+  document: RequirementDocumentForTest | undefined,
+  bucketNames: RuleBucketForTest[],
+  affects: string[] = [],
+): string {
+  return firstRuleSelection(document, bucketNames, affects).id;
+}
+
+function subsetTitle(
+  document: RequirementDocumentForTest | undefined,
+  bucketName: RuleBucketForTest,
+  subsetKey: string,
+): string {
+  if (!document) {
+    throw new Error("Expected source document to exist in rules JSON.");
+  }
+
+  const versionSubset =
+    bucketName === "all"
+      ? undefined
+      : document.info[bucketName]?.subsets?.[subsetKey];
+
+  return (
+    versionSubset?.name ?? document.info.subsets?.[subsetKey]?.name ?? subsetKey
+  );
+}
+
+function firstRuleIdsByBucket(
+  document: RequirementDocumentForTest | undefined,
+): string[] {
+  if (!document) {
+    throw new Error("Expected source document to exist in rules JSON.");
+  }
+
+  const ids = new Set<string>();
+  for (const bucketName of Object.keys(document.data) as RuleBucketForTest[]) {
+    ids.add(firstRuleSelection(document, [bucketName]).id);
+  }
+
+  return Array.from(ids);
+}
+
+function findArtifact(
+  artifacts: ArtifactForTest[],
+  relativePath: string,
+): ArtifactForTest {
+  const artifact = artifacts.find((entry) => entry.relativePath === relativePath);
+  if (!artifact) {
+    throw new Error(`Expected generated artifact: ${relativePath}`);
+  }
+
+  return artifact;
+}
+
+function deadlineRowMarkdown(row: {
+  shortName: string;
+  name: string;
+  href: string;
+  obtain: string;
+  maintain: string;
+  graceEnds: string;
+}): string {
+  return `| ${row.shortName} | [${row.name}](${row.href}) | ${row.obtain} | ${row.maintain} | ${row.graceEnds} |`;
+}
+
+function controlUrl(controlId: string): string {
+  if (controlId.includes(".")) {
+    const [main = "", sub = ""] = controlId.split(".");
+    const [prefix = "", number = ""] = main.split("-");
+
+    return `https://controlfreak.risk-redux.io/controls/${prefix.toUpperCase()}-${number.padStart(
+      2,
+      "0",
+    )}(${sub.padStart(2, "0")})`;
+  }
+
+  const [prefix = "", number = ""] = controlId.split("-");
+  return `https://controlfreak.risk-redux.io/controls/${prefix.toUpperCase()}-${number.padStart(
+    2,
+    "0",
+  )}`;
+}
+
+function expectDeadlineRowsFromArtifact(
+  contents: string,
+  artifact: ArtifactForTest,
+  description: string,
+): void {
+  const expectedRows = artifact.context.deadlineTables.flatMap((table) =>
+    table.rows.map(deadlineRowMarkdown),
+  );
+  expect(expectedRows.length).toBeGreaterThan(0);
+
+  expectTextOrder(contents, expectedRows, description);
+}
+
+function expectNoDeadlineRowsForDocuments(
+  contents: string,
+  rules: RulesForTest,
+  documentKeys: string[],
+): void {
+  for (const documentKey of documentKeys) {
+    const shortName = rules.FRR[documentKey]?.info.short_name;
+    if (shortName) {
+      expect(contents).not.toContain(`| ${shortName} |`);
+    }
+  }
+}
+
+function testRequirementDocument(options: {
+  name: string;
+  shortName: string;
+  webName: string;
+  affects: string[];
+}): RequirementDocumentForTest {
+  return {
+    info: {
+      name: options.name,
+      short_name: options.shortName,
+      web_name: options.webName,
+      status: "stable",
+      effective: {
+        is: "required",
+        date: {
+          obtain: "2026-01-01",
+          maintain: "2026-02-01",
+          grace_ends: "2026-03-01",
+        },
+      },
+    },
+    data: {
+      all: {
+        GEN: {
+          [`${options.shortName}-GEN-ONE`]: {
+            name: "Synthetic Requirement",
+            statement: "Synthetic requirement used by tests.",
+            affects: options.affects,
+          },
+        },
+      },
+    },
+  };
 }
 
 async function git(args: string[], cwd = REPO_ROOT): Promise<string> {
@@ -974,49 +1319,60 @@ describe("build-markdown", () => {
     expect(referenceIndexContents).toContain(
       "| Acronym | Ruleset | Status | Counts | Most Recently Updated |",
     );
-    expect(referenceIndexContents).toContain(
-      "| FRC | [FedRAMP Certification](fedramp-certification.md) | Placeholder | Subsets: 9<br>Rules: 45 | 2026-05-04 |",
-    );
-    expect(referenceIndexContents).toContain(
-      "| SDR | [Security Decision Record](security-decision-record.md) | Empty | Subsets: 0<br>Rules: 0 |  |",
-    );
-    expect(referenceIndexContents).toContain(
-      "| AGU | [Agency Use of FedRAMP Certified Cloud Services (Needs Review)](agency-use.md) | Placeholder | Subsets: 3<br>Rules: 18 | 2026-05-04 |",
+    expectTextOrder(
+      referenceIndexContents,
+      expectedReferenceIndexRows(rules),
+      "Generated reference index should render source-derived rows in acronym order",
     );
 
     const referenceFrcContents = await readFile(
       path.join(OUTPUT_DIR, "reference", "fedramp-certification.md"),
       "utf8",
     );
+    const fedrampCertificationName = rules.FRR.FRC?.info.name;
+    expect(fedrampCertificationName).toBeTruthy();
     expect(referenceFrcContents).toStartWith(
-      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# FedRAMP Certification`,
+      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# ${fedrampCertificationName}`,
     );
-    expect(referenceFrcContents).toContain("FRC-CSX-SUM");
-    expect(referenceFrcContents).toContain("FRC-CSF-CDE");
-    expect(referenceFrcContents).toContain("FRC-FRP-MCM");
+    for (const ruleId of firstRuleIdsByBucket(rules.FRR.FRC)) {
+      expect(referenceFrcContents).toContain(ruleId);
+    }
     expect(referenceFrcContents).toContain("../definitions/#");
-    expect(referenceFrcContents).toContain(
-      "[MAS-CSO-IIR (Identify Information Resources)](minimum-assessment-scope.md#identify-information-resources){ data-preview }",
-    );
 
     const definitionsContents = await readFile(
       path.join(OUTPUT_DIR, "definitions.md"),
       "utf8",
     );
     const definitionsPurpose = rules.FRD.info.purpose;
+    const definitionHeaders = Array.from(
+      definitionsContents.matchAll(/^## (.+)$/gm),
+      (match) => match[1],
+    ).filter((heading) => heading !== "Important Related Terms");
+    const definitionTerms = Object.values(rules.FRD.data.all ?? {})
+      .map((entry) => entry.term)
+      .sort((left, right) => left.localeCompare(right));
+    const relatedTermRows = expectedImportantRelatedTermRows(rules);
+    const definitionIntroOrder = [
+      "# FedRAMP Definitions",
+      definitionsPurpose ?? "",
+    ];
+    if (relatedTermRows.length) {
+      definitionIntroOrder.push(
+        "## Important Related Terms",
+        "| Related Terms Group | Terms |",
+      );
+    }
+    if (definitionTerms[0]) {
+      definitionIntroOrder.push(`## ${definitionTerms[0]}`);
+    }
+
     expect(definitionsPurpose).toBeTruthy();
     expect(definitionsContents).toStartWith(
       `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# FedRAMP Definitions`,
     );
     expectTextOrder(
       definitionsContents,
-      [
-        "# FedRAMP Definitions",
-        definitionsPurpose ?? "",
-        "## Important Related Terms",
-        "| Related Terms Group | Terms |",
-        "## Accepted Vulnerability",
-      ],
+      definitionIntroOrder,
       "Generated FRD markdown should place info.purpose and related terms table before the definitions",
     );
     expect(definitionsContents).not.toContain("**Subsets**");
@@ -1028,25 +1384,40 @@ describe("build-markdown", () => {
     expect(definitionsContents).toContain('!!! quote ""');
     expect(definitionsContents).not.toContain("## General Terms");
     expect(definitionsContents).not.toContain("## Related Terms:");
-    expect(definitionsContents).toContain(
-      '| <span id="related-terms-group-vulnerability"></span>Vulnerability | [Accepted Vulnerability](#accepted-vulnerability){ data-preview }<br>[False Positive Vulnerability](#false-positive-vulnerability){ data-preview }',
+    for (const row of relatedTermRows) {
+      expect(definitionsContents).toContain(row);
+    }
+    const firstTaggedDefinition = Object.values(rules.FRD.data.all ?? {}).find(
+      (entry) => entry.tag?.trim(),
     );
-    expect(definitionsContents).toContain(
-      "**Related Terms Group:** [Vulnerability](#related-terms-group-vulnerability)",
-    );
-    const definitionHeaders = Array.from(
-      definitionsContents.matchAll(/^## (.+)$/gm),
-      (match) => match[1],
-    ).filter((heading) => heading !== "Important Related Terms");
-    const definitionTerms = Object.values(rules.FRD.data.all ?? {})
-      .map((entry) => entry.term)
-      .sort((left, right) => left.localeCompare(right));
+    if (firstTaggedDefinition?.tag) {
+      expect(definitionsContents).toContain(
+        `**Related Terms Group:** [${firstTaggedDefinition.tag}](#${relatedTermsGroupAnchorId(
+          firstTaggedDefinition.tag,
+        )})`,
+      );
+    }
     expect(definitionHeaders).toEqual(definitionTerms);
 
     const ksiArtifactPaths = relativePaths.filter((relativePath) =>
       relativePath.startsWith("providers/20x/key-security-indicators/"),
     );
     expect(ksiArtifactPaths).toHaveLength(Object.keys(rules.KSI).length);
+
+    const changeManagementTheme = Object.values(rules.KSI).find(
+      (theme) => theme.web_name === "change-management",
+    );
+    if (!changeManagementTheme) {
+      throw new Error(
+        'Expected a KSI theme with web_name "change-management" in the rules JSON.',
+      );
+    }
+    const [changeManagementIndicatorId, changeManagementIndicator] =
+      Object.entries(changeManagementTheme.indicators)[0] ?? [];
+    if (!changeManagementIndicatorId || !changeManagementIndicator) {
+      throw new Error("Expected Change Management to include a KSI indicator.");
+    }
+    const changeManagementControl = changeManagementIndicator.controls?.[0];
 
     const ksiChangeManagementContents = await readFile(
       path.join(
@@ -1059,22 +1430,27 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(ksiChangeManagementContents).toStartWith(
-      `---\ntags:\n  - 20x\n---\n\n${STABLE_STATUS_SPAN}\n\n# Change Management`,
+      `---\ntags:\n  - 20x\n---\n\n${STABLE_STATUS_SPAN}\n\n# ${changeManagementTheme.name}`,
     );
-    expect(ksiChangeManagementContents).toContain("# Change Management");
+    expect(ksiChangeManagementContents).toContain(
+      `# ${changeManagementTheme.name}`,
+    );
     expect(ksiChangeManagementContents).not.toContain("**Subsets**");
     expect(ksiChangeManagementContents).not.toContain('!!! info ""');
-    expect(ksiChangeManagementContents).toContain("KSI-CMT-LMC");
-    expect(ksiChangeManagementContents).toContain("### Logging Changes");
+    expect(ksiChangeManagementContents).toContain(changeManagementIndicatorId);
     expect(ksiChangeManagementContents).toContain(
-      "**Related SP 800-53 Controls:**",
+      `### ${changeManagementIndicator.name ?? changeManagementIndicatorId}`,
     );
-    expect(ksiChangeManagementContents).toContain(
-      "[AU-2](https://controlfreak.risk-redux.io/controls/AU-02)",
-    );
-    expect(ksiChangeManagementContents).toContain(
-      "../../../definitions/#cloud-service-offering",
-    );
+    if (changeManagementControl) {
+      expect(ksiChangeManagementContents).toContain(
+        "**Related SP 800-53 Controls:**",
+      );
+      expect(ksiChangeManagementContents).toContain(
+        `[${changeManagementControl.toUpperCase()}](${controlUrl(
+          changeManagementControl,
+        )})`,
+      );
+    }
     const ksiPolicyInventoryContents = await readFile(
       path.join(
         OUTPUT_DIR,
@@ -1085,13 +1461,20 @@ describe("build-markdown", () => {
       ),
       "utf8",
     );
-    expect(ksiPolicyInventoryContents).toContain("KSI-PIY-RES");
-    expect(ksiPolicyInventoryContents).toContain(
-      "[Persistently](../../../definitions/#persistently){ data-preview }",
+    const policyInventoryTheme = Object.values(rules.KSI).find(
+      (theme) => theme.web_name === "policy-and-inventory",
     );
-    expect(ksiPolicyInventoryContents).not.toContain(
-      "[Provider](../../../definitions/#provider){ data-preview }",
-    );
+    if (!policyInventoryTheme) {
+      throw new Error(
+        'Expected a KSI theme with web_name "policy-and-inventory" in the rules JSON.',
+      );
+    }
+    const [policyInventoryIndicatorId] =
+      Object.entries(policyInventoryTheme.indicators)[0] ?? [];
+    if (!policyInventoryIndicatorId) {
+      throw new Error("Expected Policy and Inventory to include a KSI indicator.");
+    }
+    expect(ksiPolicyInventoryContents).toContain(policyInventoryIndicatorId);
 
     const deadlines20xPath = path.join(
       OUTPUT_DIR,
@@ -1101,27 +1484,27 @@ describe("build-markdown", () => {
       "20x.md",
     );
     const deadlines20xContents = await readFile(deadlines20xPath, "utf8");
+    const providerDeadlineIgnoredDocuments =
+      (config.generated.deadlineDocuments ?? []).find(
+        (mapping) => mapping.id === "provider-important-deadlines",
+      )?.source.ignoreDocuments ?? [];
     expectFileToStartWith(
       deadlines20xPath,
       deadlines20xContents,
       `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# 20x Deadlines`,
       "Generated provider 20x deadlines markdown has an unexpected header",
     );
-    expect(deadlines20xContents).toContain(
-      "| FRC | [FedRAMP Certification](../../20x/rules/fedramp-certification.md) | 2026-07-04 | 2027-05-04 | 2027-05-04 |",
+    expectDeadlineRowsFromArtifact(
+      deadlines20xContents,
+      findArtifact(expectedArtifacts, "providers/updating/deadlines/20x.md"),
+      "Generated provider 20x deadlines should render source-derived rows in artifact order",
     );
-    expect(deadlines20xContents).not.toContain("| AGU |");
-    expect(deadlines20xContents).not.toContain("| REC |");
+    expectNoDeadlineRowsForDocuments(
+      deadlines20xContents,
+      rules,
+      providerDeadlineIgnoredDocuments,
+    );
     expect(deadlines20xContents).not.toContain("Rev5 Deadlines");
-    expect(
-      deadlines20xContents.indexOf(
-        "| SCG | [Secure Configuration Guide](../../20x/rules/secure-configuration-guide.md) | 2026-03-01 | 2026-03-01 | 2026-07-01 |",
-      ),
-    ).toBeLessThan(
-      deadlines20xContents.indexOf(
-        "| MKT | [Marketplace Listing](../../20x/rules/marketplace-listing.md) | 2026-07-04 | 2027-01-01 | 2027-05-04 |",
-      ),
-    );
 
     const deadlinesRev5Contents = await readFile(
       path.join(OUTPUT_DIR, "providers", "updating", "deadlines", "rev5.md"),
@@ -1130,27 +1513,26 @@ describe("build-markdown", () => {
     expect(deadlinesRev5Contents).toStartWith(
       `---\ntags:\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Rev5 Deadlines`,
     );
-    expect(deadlinesRev5Contents).toContain(
-      "| FRC | [FedRAMP Certification](../../rev5/rules/fedramp-certification.md) | 2027-01-01 | 2027-01-01 | 2027-01-01 |",
+    expectDeadlineRowsFromArtifact(
+      deadlinesRev5Contents,
+      findArtifact(expectedArtifacts, "providers/updating/deadlines/rev5.md"),
+      "Generated provider Rev5 deadlines should render source-derived rows in artifact order",
     );
-    expect(deadlinesRev5Contents).toContain(
-      "| MAS | [Minimum Assessment Scope](../../rev5/rules/minimum-assessment-scope.md) | 2027-01-01 | 2027-01-01 | Within 2 months of the next annual assessment after 2027-01-01 |",
+    expectNoDeadlineRowsForDocuments(
+      deadlinesRev5Contents,
+      rules,
+      providerDeadlineIgnoredDocuments,
     );
-    expect(deadlinesRev5Contents).not.toContain("| REC |");
     expect(deadlinesRev5Contents).not.toContain("20x Deadlines");
 
     const assessorDeadlines20xContents = await readFile(
       path.join(OUTPUT_DIR, "assessors", "updating", "deadlines", "20x.md"),
       "utf8",
     );
-    expect(assessorDeadlines20xContents).toContain(
-      "| FRC | [FedRAMP Certification](../../20x/rules/fedramp-certification.md) |",
-    );
-    expect(assessorDeadlines20xContents).toContain(
-      "| MKT | [Marketplace Listing](../../recognition/rules/marketplace-listing.md) |",
-    );
-    expect(assessorDeadlines20xContents).toContain(
-      "| REC | [FedRAMP Recognition of Independent Assessment Services](../../recognition/rules/fedramp-recognition.md) |",
+    expectDeadlineRowsFromArtifact(
+      assessorDeadlines20xContents,
+      findArtifact(expectedArtifacts, "assessors/updating/deadlines/20x.md"),
+      "Generated assessor 20x deadlines should render source-derived rows in artifact order",
     );
     expect(assessorDeadlines20xContents).not.toContain(
       "../../../providers/20x/rules/",
@@ -1160,11 +1542,10 @@ describe("build-markdown", () => {
       path.join(OUTPUT_DIR, "assessors", "updating", "deadlines", "rev5.md"),
       "utf8",
     );
-    expect(assessorDeadlinesRev5Contents).toContain(
-      "| FRC | [FedRAMP Certification](../../rev5/rules/fedramp-certification.md) |",
-    );
-    expect(assessorDeadlinesRev5Contents).toContain(
-      "| REC | [FedRAMP Recognition of Independent Assessment Services](../../recognition/rules/fedramp-recognition.md) |",
+    expectDeadlineRowsFromArtifact(
+      assessorDeadlinesRev5Contents,
+      findArtifact(expectedArtifacts, "assessors/updating/deadlines/rev5.md"),
+      "Generated assessor Rev5 deadlines should render source-derived rows in artifact order",
     );
     expect(assessorDeadlinesRev5Contents).not.toContain(
       "../../../providers/rev5/rules/",
@@ -1187,43 +1568,53 @@ describe("build-markdown", () => {
       "utf8",
     );
     const fedrampCertificationPurpose = rules.FRR.FRC?.info.purpose;
+    const provider20xCommonRule = firstRuleSelection(rules.FRR.FRC, ["all"], [
+      "Providers",
+    ]);
+    const provider20xSpecificRule = firstRuleSelection(rules.FRR.FRC, ["20x"], [
+      "Providers",
+    ]);
+    const providerRev5SpecificRuleId = firstRuleId(rules.FRR.FRC, ["rev5"], [
+      "Providers",
+    ]);
+    const provider20xCommonSubsetTitle = subsetTitle(
+      rules.FRR.FRC,
+      provider20xCommonRule.bucketName,
+      provider20xCommonRule.subsetKey,
+    );
+    const provider20xSpecificSubsetTitle = subsetTitle(
+      rules.FRR.FRC,
+      provider20xSpecificRule.bucketName,
+      provider20xSpecificRule.subsetKey,
+    );
     expect(fedrampCertificationPurpose).toBeTruthy();
     expect(provider20xContents).toStartWith(
-      `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# FedRAMP Certification`,
+      `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# ${fedrampCertificationName}`,
     );
     expectTextOrder(
       provider20xContents,
       [
-        "# FedRAMP Certification",
+        `# ${fedrampCertificationName}`,
         fedrampCertificationPurpose ?? "",
         "**Subsets**",
-        "- [General Provider Responsibilities](#general-provider-responsibilities)",
-        "- [20x-Specific Provider Responsibilities](#20x-specific-provider-responsibilities)",
+        `- [${provider20xCommonSubsetTitle}](#${slugifyHeading(
+          provider20xCommonSubsetTitle,
+        )})`,
+        `- [${provider20xSpecificSubsetTitle}](#${slugifyHeading(
+          provider20xSpecificSubsetTitle,
+        )})`,
         "\n---",
-        "## General Provider Responsibilities {#general-provider-responsibilities}",
+        `## ${provider20xCommonSubsetTitle} {#${slugifyHeading(
+          provider20xCommonSubsetTitle,
+        )}}`,
       ],
       "Generated FRR markdown should place info.purpose and a multi-section TOC before the first body rule",
     );
-    expect(provider20xContents).toContain("# FedRAMP Certification");
-    expect(provider20xContents).toContain("FRC-CSO-CDS");
-    expect(provider20xContents).toContain("FRC-CSX-SUM");
-    expect(provider20xContents).not.toContain("FRC-CSF-CDE");
+    expect(provider20xContents).toContain(`# ${fedrampCertificationName}`);
+    expect(provider20xContents).toContain(provider20xCommonRule.id);
+    expect(provider20xContents).toContain(provider20xSpecificRule.id);
+    expect(provider20xContents).not.toContain(providerRev5SpecificRuleId);
     expect(provider20xContents).toContain("../../../definitions/#");
-    expect(provider20xContents).toContain(
-      "[Certification Data](../../../definitions/#certification-data){ data-preview }",
-    );
-    expect(provider20xContents).not.toContain(
-      "[Provider](../../../definitions/#provider){ data-preview }",
-    );
-    expect(provider20xContents).toContain(
-      "[FRC-CSO-POP (Pick One Program Certification Type)](#pick-one-program-certification-type){ data-preview }",
-    );
-    expect(provider20xContents).toContain(
-      "[MAS-CSO-IIR (Identify Information Resources)](minimum-assessment-scope.md#identify-information-resources){ data-preview }",
-    );
-    expect(provider20xContents).toContain(
-      "[CCM-OCR-NRD (Next Report Date)](collaborative-continuous-monitoring.md#next-report-date){ data-preview }",
-    );
 
     const providerRev5Contents = await readFile(
       path.join(
@@ -1236,10 +1627,10 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(providerRev5Contents).toStartWith(
-      `---\ntags:\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# FedRAMP Certification`,
+      `---\ntags:\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# ${fedrampCertificationName}`,
     );
-    expect(providerRev5Contents).toContain("FRC-CSF-CDE");
-    expect(providerRev5Contents).not.toContain("FRC-CSX-SUM");
+    expect(providerRev5Contents).toContain(providerRev5SpecificRuleId);
+    expect(providerRev5Contents).not.toContain(provider20xSpecificRule.id);
 
     const provider20xIcpContents = await readFile(
       path.join(
@@ -1251,59 +1642,62 @@ describe("build-markdown", () => {
       ),
       "utf8",
     );
+    const providerIcpRules = rules.FRR.ICP?.data.all?.CSO ?? {};
+    const incidentFlow = rules.FRR.ICP?.info.flows?.[0];
+    if (!incidentFlow?.steps?.length) {
+      throw new Error("Expected ICP to include a workflow in the rules JSON.");
+    }
+    const firstRuleStep = incidentFlow.steps.find(
+      (step) => step.to && providerIcpRules[step.to],
+    );
+    if (!firstRuleStep?.from || !firstRuleStep.to) {
+      throw new Error(
+        "Expected ICP workflow to include a step from a start node to a rule.",
+      );
+    }
+    const firstWorkflowRule = providerIcpRules[firstRuleStep.to];
+    if (!firstWorkflowRule?.name) {
+      throw new Error(
+        `Expected ICP workflow rule ${firstRuleStep.to} to exist in the provider rules.`,
+      );
+    }
+    const firstWorkflowStartNode = mermaidNodeId(firstRuleStep.from);
+    const firstWorkflowRuleNode = mermaidNodeId(firstRuleStep.to);
     expect(provider20xIcpContents).toContain(
-      "## Activity Workflow: Incident Communications",
+      `## Activity Workflow: ${incidentFlow.activity ?? "Flow 1"}`,
     );
     expect(provider20xIcpContents).toContain("``` mermaid");
     expect(provider20xIcpContents).toContain("flowchart TD");
-    const providerIcpRules = rules.FRR.ICP?.data.all?.CSO ?? {};
-    const federalReportabilityName = providerIcpRules["ICP-CSO-EFR"]?.name;
-    const federalImpactName = providerIcpRules["ICP-CSO-EFI"]?.name;
-    const defaultPainName = providerIcpRules["ICP-CSO-DPR"]?.name;
-    expect(federalReportabilityName).toBeTruthy();
-    expect(federalImpactName).toBeTruthy();
-    expect(defaultPainName).toBeTruthy();
     expect(provider20xIcpContents).toContain(
-      `node_icp_cso_efr{"ICP-CSO-EFR<br/>${federalReportabilityName}"}`,
+      `${firstRuleStep.to}<br/>${firstWorkflowRule.name}`,
     );
     expect(provider20xIcpContents).toContain(
-      'node_an_incident_is_identified(["An incident is identified."])',
-    );
-    expect(provider20xIcpContents).toContain(
-      `node_icp_cso_efi{"ICP-CSO-EFI<br/>${federalImpactName}"}`,
-    );
-    expect(provider20xIcpContents).toContain(
-      `node_icp_cso_dpr("ICP-CSO-DPR<br/>${defaultPainName}")`,
+      `${firstWorkflowStartNode}(["${mermaidQuotedValue(firstRuleStep.from)}"])`,
     );
     expect(provider20xIcpContents).toMatch(
-      /node_an_incident_is_identified -->(\|"[^"]+"\|)? node_icp_cso_efr/,
+      new RegExp(
+        `${firstWorkflowStartNode} -->(\\|"[^"]+"\\|)? ${firstWorkflowRuleNode}`,
+      ),
     );
     expect(provider20xIcpContents).toContain(
-      'click node_icp_cso_efr href "#',
+      `click ${firstWorkflowRuleNode} href "#`,
     );
     expect(provider20xIcpContents).toContain(
-      '"Jump to ICP-CSO-EFR"',
+      `"Jump to ${firstRuleStep.to}"`,
     );
-    const agencyNotification = providerIcpRules[
-      "ICP-CSO-IIR"
-    ]?.notification?.find(
-      (notification) => notification.party === "Agency Customers",
+    const notificationRule = Object.values(providerIcpRules).find((rule) =>
+      rule.notification?.some(
+        (notification) =>
+          notification.party && notification.method && notification.target,
+      ),
     );
-    expect(agencyNotification).toBeTruthy();
+    const notification = notificationRule?.notification?.find(
+      (entry) => entry.party && entry.method && entry.target,
+    );
+    expect(notificationRule).toBeTruthy();
+    expect(notification).toBeTruthy();
     expect(provider20xIcpContents).toContain(
-      `Notify ${agencyNotification?.party} by ${agencyNotification?.method} using ${agencyNotification?.target}.`,
-    );
-    expect(provider20xIcpContents).toContain(
-      "1. Contact information for the federal incident response coordinator.",
-    );
-    expect(provider20xIcpContents).toContain(
-      "following the rule in [ICP-CSO-EFI (Estimate Federal Impact)](#estimate-federal-impact){ data-preview }",
-    );
-    expect(provider20xIcpContents).toContain(
-      "following the requirements in [ICP-CSO-EFI (Estimate Federal Impact)](#estimate-federal-impact){ data-preview }",
-    );
-    expect(provider20xIcpContents).toContain(
-      "assigned a default PAIN-5 as required by [ICP-CSO-DPR (Default PAIN Rating)](#default-pain-rating){ data-preview }",
+      `Notify ${notification?.party} by ${notification?.method} using ${notification?.target}.`,
     );
 
     const provider20xFsiContents = await readFile(
@@ -1317,20 +1711,26 @@ describe("build-markdown", () => {
       "utf8",
     );
     expect(provider20xFsiContents).toContain(
-      "[FSI-CSO-NOC (Notification of Changes)](#notification-of-changes){ data-preview }",
+      firstRuleId(rules.FRR.FSI, ["all", "20x", "rev5"], ["Providers"]),
     );
 
     const fedrampFsiContents = await readFile(
       path.join(OUTPUT_DIR, "responsibilities", "fedramp-security-inbox.md"),
       "utf8",
     );
+    const fedrampSecurityInboxName = rules.FRR.FSI?.info.name;
+    expect(fedrampSecurityInboxName).toBeTruthy();
     expect(fedrampFsiContents).toStartWith(
-      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# FedRAMP Security Inbox`,
+      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# ${fedrampSecurityInboxName}`,
     );
-    expect(fedrampFsiContents).toContain("# FedRAMP Security Inbox");
+    expect(fedrampFsiContents).toContain(`# ${fedrampSecurityInboxName}`);
     expect(fedrampFsiContents).not.toContain("Effective Date(s)");
-    expect(fedrampFsiContents).toContain("FSI-FRP-VRE");
-    expect(fedrampFsiContents).not.toContain("FRC-CSO-CDS");
+    expect(fedrampFsiContents).toContain(
+      firstRuleId(rules.FRR.FSI, ["all", "20x", "rev5"], ["FedRAMP"]),
+    );
+    expect(fedrampFsiContents).not.toContain(
+      firstRuleId(rules.FRR.FRC, ["all", "20x", "rev5"], ["Providers"]),
+    );
 
     const fedrampVdrContents = await readFile(
       path.join(
@@ -1340,14 +1740,24 @@ describe("build-markdown", () => {
       ),
       "utf8",
     );
-    expect(fedrampVdrContents).toContain(
-      "# Vulnerability Detection and Response",
+    const vulnerabilityDetectionName = rules.FRR.VDR?.info.name;
+    const fedrampVdrRule = firstRuleSelection(
+      rules.FRR.VDR,
+      ["all", "20x", "rev5"],
+      ["FedRAMP"],
     );
-    expect(fedrampVdrContents).toContain("## FedRAMP Responsibilities");
+    const fedrampVdrSubsetTitle = subsetTitle(
+      rules.FRR.VDR,
+      fedrampVdrRule.bucketName,
+      fedrampVdrRule.subsetKey,
+    );
+    expect(vulnerabilityDetectionName).toBeTruthy();
+    expect(fedrampVdrContents).toContain(`# ${vulnerabilityDetectionName}`);
+    expect(fedrampVdrContents).toContain(`## ${fedrampVdrSubsetTitle}`);
     expect(fedrampVdrContents).not.toContain(
-      "## Vulnerability Detection and Response",
+      `## ${vulnerabilityDetectionName}`,
     );
-    expect(fedrampVdrContents).toContain("VDR-FRP-ARP");
+    expect(fedrampVdrContents).toContain(fedrampVdrRule.id);
 
     const agencyCcmContents = await readFile(
       path.join(
@@ -1359,25 +1769,36 @@ describe("build-markdown", () => {
       "utf8",
     );
     const collaborativeMonitoringPurpose = rules.FRR.CCM?.info.purpose;
+    const collaborativeMonitoringName = rules.FRR.CCM?.info.name;
+    const agencyCcmRule = firstRuleSelection(
+      rules.FRR.CCM,
+      ["all", "20x", "rev5"],
+      ["Agencies"],
+    );
+    const agencyCcmSubsetTitle = subsetTitle(
+      rules.FRR.CCM,
+      agencyCcmRule.bucketName,
+      agencyCcmRule.subsetKey,
+    );
     expect(collaborativeMonitoringPurpose).toBeTruthy();
+    expect(collaborativeMonitoringName).toBeTruthy();
     expect(agencyCcmContents).toStartWith(
-      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# Collaborative Continuous Monitoring`,
+      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# ${collaborativeMonitoringName}`,
     );
     expectTextOrder(
       agencyCcmContents,
       [
-        "# Collaborative Continuous Monitoring",
+        `# ${collaborativeMonitoringName}`,
         collaborativeMonitoringPurpose ?? "",
         "\n---",
-        "## Agency Guidance {#agency-guidance}",
+        `## ${agencyCcmSubsetTitle} {#${slugifyHeading(agencyCcmSubsetTitle)}}`,
       ],
       "Generated single-subset FRR markdown should place info.purpose before the first body rule without a TOC",
     );
-    expect(agencyCcmContents).toContain("# Collaborative Continuous Monitoring");
+    expect(agencyCcmContents).toContain(`# ${collaborativeMonitoringName}`);
     expect(agencyCcmContents).not.toContain("**Subsets**");
-    expect(agencyCcmContents).toContain("## Agency Guidance");
-    expect(agencyCcmContents).toContain("CCM-AGM-ROR");
-    expect(agencyCcmContents).not.toContain("## Ongoing Certification Reports");
+    expect(agencyCcmContents).toContain(`## ${agencyCcmSubsetTitle}`);
+    expect(agencyCcmContents).toContain(agencyCcmRule.id);
 
     const agencyVdrContents = await readFile(
       path.join(
@@ -1388,15 +1809,41 @@ describe("build-markdown", () => {
       ),
       "utf8",
     );
-    expect(agencyVdrContents).toContain("# Vulnerability Detection and Response");
-    expect(agencyVdrContents).toContain("## Agency Guidance");
-    expect(agencyVdrContents).toContain("VDR-AGM-RVR");
-    expect(agencyVdrContents).not.toContain("VDR-FRP-ARP");
+    expect(agencyVdrContents).toContain(`# ${vulnerabilityDetectionName}`);
+    const agencyVdrRule = firstRuleSelection(
+      rules.FRR.VDR,
+      ["all", "20x", "rev5"],
+      ["Agencies"],
+    );
+    const agencyVdrSubsetTitle = subsetTitle(
+      rules.FRR.VDR,
+      agencyVdrRule.bucketName,
+      agencyVdrRule.subsetKey,
+    );
+    expect(agencyVdrContents).toContain(`## ${agencyVdrSubsetTitle}`);
+    expect(agencyVdrContents).toContain(agencyVdrRule.id);
+    expect(agencyVdrContents).not.toContain(
+      fedrampVdrRule.id,
+    );
   });
 
   test("ignores configured rule documents after resolving the source selection", async () => {
     const config = await loadToolConfig();
-    const rules = await loadRules(config);
+    const rules = structuredClone(await loadRules(config));
+    rules.FRR = {
+      INCLUDED: testRequirementDocument({
+        name: "Included Synthetic Ruleset",
+        shortName: "INC",
+        webName: "included-synthetic-ruleset",
+        affects: ["Assessors"],
+      }),
+      IGNORED: testRequirementDocument({
+        name: "Ignored Synthetic Ruleset",
+        shortName: "IGN",
+        webName: "ignored-synthetic-ruleset",
+        affects: ["Assessors"],
+      }),
+    };
     const artifacts = collectArtifacts(rules, {
       ...config,
       generated: {
@@ -1415,7 +1862,7 @@ describe("build-markdown", () => {
             source: {
               collection: "FRR",
               documents: "ALL",
-              ignoreDocuments: ["MKT"],
+              ignoreDocuments: ["IGNORED"],
               types: ["20x"],
               affects: ["Assessors"],
               includeAll: true,
@@ -1426,13 +1873,14 @@ describe("build-markdown", () => {
       },
     });
 
-    expect(artifacts.some((artifact) => artifact.sourceDocument === "MKT")).toBe(
-      false,
-    );
+    expect(
+      artifacts.some((artifact) => artifact.sourceDocument === "IGNORED"),
+    ).toBe(false);
     expect(
       artifacts.some(
         (artifact) =>
-          artifact.relativePath === "assessors/20x/rules/marketplace-listing.md",
+          artifact.relativePath ===
+          "assessors/20x/rules/ignored-synthetic-ruleset.md",
       ),
     ).toBe(false);
   });
@@ -1440,11 +1888,18 @@ describe("build-markdown", () => {
   test("resolves related FRR links to the matching generated audience page", async () => {
     const config = await loadToolConfig();
     const rules = structuredClone(await loadRules(config));
-    const providerRule = rules.FRR.FRC?.data.all?.CSO?.["FRC-CSO-RAA"];
-    expect(providerRule).toBeTruthy();
+    const providerRule = firstRuleSelection(rules.FRR.FRC, ["all", "20x"], [
+      "Providers",
+    ]);
+    const assessorRule = firstRuleSelection(rules.FRR.FRC, ["all", "20x"], [
+      "Assessors",
+    ]);
+    const assessorRuleName = assessorRule.requirement.name ?? assessorRule.id;
 
-    providerRule!.statement = `${providerRule!.statement ?? ""} See FRC-IAS-SUM (Assessment Summary).`;
-    providerRule!.related = ["FRC-IAS-SUM"];
+    providerRule.requirement.statement = `${
+      providerRule.requirement.statement ?? ""
+    } See ${assessorRule.id} (${assessorRuleName}).`;
+    providerRule.requirement.related = [assessorRule.id];
 
     const artifacts = collectArtifacts(rules, config);
     const providerFrcArtifact = artifacts.find(
@@ -1453,16 +1908,32 @@ describe("build-markdown", () => {
     );
     const linkedRule = providerFrcArtifact?.context.sections
       .flatMap((section) => section.requirements)
-      .find((requirement) => requirement.id === "FRC-CSO-RAA");
+      .find((requirement) => requirement.id === providerRule.id);
 
     expect(linkedRule?.statementParagraphs.join("\n")).toContain(
-      "[FRC-IAS-SUM (Assessment Summary)](../../../assessors/20x/rules/fedramp-certification.md#assessment-summary){ data-preview }",
+      `[${assessorRule.id} (${assessorRuleName})](../../../assessors/20x/rules/fedramp-certification.md#${slugifyHeading(
+        assessorRuleName,
+      )}){ data-preview }`,
     );
   });
 
   test("ignores configured deadline documents after resolving the source selection", async () => {
     const config = await loadToolConfig();
-    const rules = await loadRules(config);
+    const rules = structuredClone(await loadRules(config));
+    rules.FRR = {
+      INCLUDED: testRequirementDocument({
+        name: "Included Synthetic Ruleset",
+        shortName: "INC",
+        webName: "included-synthetic-ruleset",
+        affects: ["Providers"],
+      }),
+      IGNORED: testRequirementDocument({
+        name: "Ignored Synthetic Ruleset",
+        shortName: "IGN",
+        webName: "ignored-synthetic-ruleset",
+        affects: ["Providers"],
+      }),
+    };
     const artifacts = collectArtifacts(rules, {
       ...config,
       generated: {
@@ -1478,8 +1949,8 @@ describe("build-markdown", () => {
             template: "templates/deadlines.hbs",
             source: {
               collection: "FRR",
-              documents: ["MKT", "FRC"],
-              ignoreDocuments: ["MKT"],
+              documents: ["IGNORED", "INCLUDED"],
+              ignoreDocuments: ["IGNORED"],
               types: ["20x"],
             },
           },
@@ -1500,13 +1971,27 @@ describe("build-markdown", () => {
       ) ?? [];
 
     expect(deadlineArtifact).toBeDefined();
-    expect(shortNames).toContain("FRC");
-    expect(shortNames).not.toContain("MKT");
+    expect(shortNames).toContain("INC");
+    expect(shortNames).not.toContain("IGN");
   });
 
   test("ignores deadline documents with no rules affecting the configured audience", async () => {
     const config = await loadToolConfig();
-    const rules = await loadRules(config);
+    const rules = structuredClone(await loadRules(config));
+    rules.FRR = {
+      INCLUDED: testRequirementDocument({
+        name: "Included Synthetic Ruleset",
+        shortName: "INC",
+        webName: "included-synthetic-ruleset",
+        affects: ["Providers"],
+      }),
+      FILTERED: testRequirementDocument({
+        name: "Filtered Synthetic Ruleset",
+        shortName: "FLT",
+        webName: "filtered-synthetic-ruleset",
+        affects: ["Assessors"],
+      }),
+    };
     const artifacts = collectArtifacts(rules, {
       ...config,
       generated: {
@@ -1522,7 +2007,7 @@ describe("build-markdown", () => {
             template: "templates/deadlines.hbs",
             source: {
               collection: "FRR",
-              documents: ["REC", "FRC"],
+              documents: ["INCLUDED", "FILTERED"],
               types: ["20x"],
               affects: ["Providers"],
             },
@@ -1544,7 +2029,8 @@ describe("build-markdown", () => {
       ) ?? [];
 
     expect(deadlineArtifact).toBeDefined();
-    expect(shortNames).toEqual(["FRC"]);
+    expect(shortNames).toContain("INC");
+    expect(shortNames).not.toContain("FLT");
   });
 
   test("adds page info admonitions below content pictograph spans", async () => {
@@ -2071,26 +2557,55 @@ describe("build pipeline", () => {
       await access(path.join(htmlPath, relativePath));
     }
 
+    const renderedFrcDocument = rules.FRR.FRC;
+    const renderedAgencyUseDocument = rules.FRR.AGU;
+    const renderedChangeManagementTheme = Object.values(rules.KSI).find(
+      (theme) => theme.web_name === "change-management",
+    );
+    if (
+      !renderedFrcDocument ||
+      !renderedAgencyUseDocument ||
+      !renderedChangeManagementTheme
+    ) {
+      throw new Error(
+        "Expected source documents for rendered page smoke tests to exist.",
+      );
+    }
+    const renderedDefinitionTerm =
+      Object.values(rules.FRD.data.all ?? {})
+        .map((entry) => entry.term)
+        .sort((left, right) => left.localeCompare(right))[0] ??
+      rules.FRD.info.name;
+    const renderedChangeManagementIndicatorId =
+      Object.keys(renderedChangeManagementTheme.indicators)[0] ??
+      renderedChangeManagementTheme.name;
+
     const renderedPages = [
       {
         path: "definitions/index.html",
-        expectedText: ["FedRAMP Definitions", "Cloud Service Offering"],
+        expectedText: ["FedRAMP Definitions", renderedDefinitionTerm],
       },
       {
         path: "providers/20x/rules/fedramp-certification/index.html",
-        expectedText: ["FedRAMP Certification", "FRC-CSO-CDS"],
+        expectedText: [
+          renderedFrcDocument.info.name,
+          firstRuleId(renderedFrcDocument, ["all", "20x"], ["Providers"]),
+        ],
       },
       {
         path: "providers/20x/key-security-indicators/change-management/index.html",
-        expectedText: ["Change Management", "KSI-CMT-LMC"],
+        expectedText: [
+          renderedChangeManagementTheme.name,
+          renderedChangeManagementIndicatorId,
+        ],
       },
       {
         path: "providers/updating/deadlines/20x/index.html",
-        expectedText: ["20x Deadlines", "FedRAMP Certification"],
+        expectedText: ["20x Deadlines", renderedFrcDocument.info.name],
       },
       {
         path: "agencies/rules/agency-use/index.html",
-        expectedText: ["Agency Use of FedRAMP Certified Cloud Services"],
+        expectedText: [renderedAgencyUseDocument.info.name],
       },
       {
         path: "todo/index.html",
