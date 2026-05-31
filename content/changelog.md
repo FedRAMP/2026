@@ -9,6 +9,60 @@ picto:
 
 # Changelog
 
+## 2026.05.31.01-preview
+
+**Release Date:** May 31, 2026
+
+### Rules Changes
+
+The following changes were made in [pull request #12](https://github.com/FedRAMP/rules/pull/12) to the [FedRAMP Machine-Readable Rules](https://github.com/FedRAMP/rules) repository, which is used by this repository for machine-generated content:
+
+- `FRD-FMV` adds the alternate term `fully mitigate vulnerabilities`.
+- `FRD-PMV` adds the alternate term `partially mitigate vulnerabilities`.
+- `FRD-RMV` adds the alternate term `remediate vulnerabilities`.
+- `AGU-USE-NFC` is renamed from `Notify FedRAMP of Concerns` to `Notify FedRAMP of Monitoring Concerns`.
+- `CCM-AGM-NFR` was removed from Continuous Collaborative Monitoring.
+- `CCM-AGM-NPC` was removed from Continuous Collaborative Monitoring.
+- `CCM-OCR-RPS` is renamed from `Responsible Public Sharing` to `Responsible Public Certification Report Sharing`.
+- `CDS-CSO-RPS` is renamed from `Responsible Public Sharing` to `Responsible Public Package Sharing`.
+- `CDS-TRC-HMR` is renamed from `Human and Machine-Readable` to `Human and Machine-Readable Certification Data`.
+- `CDS-UTC-PGD` is renamed from `Public Guidance` to `Public Guidance for Certification Data`.
+- `FRC-CLA-AFR` updates its following-information display reference for `CDS-UTC-PGD` to use `Public Guidance for Certification Data`.
+- Structural: `FRC-CSF-PMV` moved from `FRR.FRC.data.rev5.CSF` to new rule `VDR-TFR-MVF` under `FRR.VDR.data.rev5.TFR`, preserving the Rev5 class-specific persistent machine verification and validation cadence.
+- Structural: `FRC-CSX-PMV` moved from `FRR.FRC.data.20x.CSX` to new rule `VDR-TFR-MVX` under `FRR.VDR.data.20x.TFR`, preserving the 20x class-specific persistent machine verification and validation cadence.
+- Structural: `FRC-CSO-NMV` moved from `FRR.FRC.data.all.CSO` to new rule `VDR-TFR-NMV` under `FRR.VDR.data.all.TFR`, preserving the non-machine verification and validation requirement.
+- Structural: `FRC-CSO-FAV` moved from `FRR.FRC.data.all.CSO` to new rule `VDR-CSO-FAV` under `FRR.VDR.data.all.CSO`, with the statement narrowed to failures in vulnerability detection and response processes.
+- `FRC-CSO-PVV` was removed as a standalone FRC rule; structurally, the persistent verification and validation concept is now incorporated into `VDR-CSO-DET`.
+- `SCG-CSO-PUB` is renamed from `Public Guidance` to `Public Secure Configuration Guidance`.
+- `SCN-CSO-HRM` is renamed from `Human and Machine-Readable` to `Human and Machine-Readable Notifications`.
+- `VDR-CSO-DET` expands vulnerability detection to include penetration testing, incident response, automated control testing, and persistent verification and validation of information resources and processes.
+- `VDR-CSO-FAV` adds the VDR rule requiring providers to treat problems or failures with vulnerability detection and response processes as vulnerabilities.
+- `VDR-CSO-RES` converts a single note into expanded notes that distinguish partial mitigation, full mitigation, and remediation, and adds the corresponding FRD terms.
+- `VDR-TFR-IRI` updates class-specific incident-treatment wording to use `Partially Mitigated Vulnerability` terminology for internet-reachable likely exploitable vulnerabilities at N3 or below.
+- `VDR-TFR-NRI` updates class-specific incident-treatment wording to use `Partially Mitigated Vulnerability` terminology for non-internet-reachable likely exploitable vulnerabilities at N4 or below.
+- `VDR-TFR-PVR` updates class-specific vulnerability response wording to use the defined partial mitigation, full mitigation, and remediation terms without changing the PAIN timeframes.
+
+### Content Updates
+
+- [Federal Agencies](https://preview.fedramp.gov/2026/agencies/): Clarified that agencies must follow FedRAMP processes when using cloud services and added an oversight warning with a March 2026 CIGIE cloud computing report link.
+- [The Federal Risk and Authorization Management Program](https://preview.fedramp.gov/2026/responsibilities/): Added guidance for pointing AI services at FedRAMP source data and corrected the responsibilities link to the consolidated rules page.
+- [Choosing a Certification Class](https://preview.fedramp.gov/2026/providers/start/class/): Replaced the placeholder with stable guidance on how Certification Classes scale by assurance, investment, federal process maturity, and agency use cases.
+- [Choosing a Certification Type](https://preview.fedramp.gov/2026/providers/start/type/): Replaced the placeholder with stable guidance comparing 20x and Rev5, including when providers should use each option and how Rev5 is expected to be retired.
+- [Choosing a Certification Path](https://preview.fedramp.gov/2026/providers/start/path/): Replaced the placeholder with stable guidance explaining Program Certification and Agency Certification, including which combinations are required, limited, or unavailable.
+
+### Site Structure
+
+- Replaced the multi-page FedRAMP responsibilities navigation with one [FedRAMP's Responsibilities](https://preview.fedramp.gov/2026/responsibilities/rules/) page that groups FedRAMP-specific rules in one place.
+
+### Generated Page Experience
+
+- Added support for generated FRR collection pages, allowing selected rules from multiple rulesets to appear together on one page. Example: [FedRAMP's Responsibilities](https://preview.fedramp.gov/2026/responsibilities/rules/).
+- Updated the stable-status pictograph color to a darker green for better contrast and readability.
+
+### Tooling
+
+- Added generator tests and documentation for FRR collection pages, related-rule links, generated references, deadline output, and rendered page smoke checks.
+
 ## 2026.05.25.01-preview
 
 **Release Date:** May 25, 2026
