@@ -479,6 +479,27 @@ function subsetTitle(
   );
 }
 
+function subsetDescription(
+  document: RequirementDocumentForTest | undefined,
+  bucketName: RuleBucketForTest,
+  subsetKey: string,
+): string {
+  if (!document) {
+    throw new Error("Expected source document to exist in rules JSON.");
+  }
+
+  const versionSubset =
+    bucketName === "all"
+      ? undefined
+      : document.info[bucketName]?.subsets?.[subsetKey];
+
+  return (
+    versionSubset?.description ??
+    document.info.subsets?.[subsetKey]?.description ??
+    ""
+  );
+}
+
 function firstRuleIdsByBucket(
   document: RequirementDocumentForTest | undefined,
 ): string[] {
@@ -1069,6 +1090,7 @@ function generatedMappingStatusFailures(config: ToolConfig): string[] {
     ["ksiDocuments", config.generated.ksiDocuments ?? []],
     ["deadlineDocuments", config.generated.deadlineDocuments ?? []],
     ["referenceIndexDocuments", config.generated.referenceIndexDocuments ?? []],
+    ["frrCollectionDocuments", config.generated.frrCollectionDocuments ?? []],
     ["ruleDocuments", config.generated.ruleDocuments],
   ];
   const failures: string[] = [];
@@ -1252,11 +1274,7 @@ describe("build-markdown", () => {
       "reference/fedramp-certification.md",
       "reference/index.md",
       "reference/security-decision-record.md",
-      "responsibilities/fedramp-security-inbox.md",
-      "responsibilities/incident-communications-procedures.md",
-      "responsibilities/marketplace-listing.md",
-      "responsibilities/significant-change-notifications.md",
-      "responsibilities/vulnerability-detection-and-response.md",
+      "responsibilities/rules.md",
     ]) {
       expect(relativePaths).toContain(relativePath);
     }
@@ -1714,33 +1732,51 @@ describe("build-markdown", () => {
       firstRuleId(rules.FRR.FSI, ["all", "20x", "rev5"], ["Providers"]),
     );
 
-    const fedrampFsiContents = await readFile(
-      path.join(OUTPUT_DIR, "responsibilities", "fedramp-security-inbox.md"),
+    const fedrampResponsibilitiesContents = await readFile(
+      path.join(OUTPUT_DIR, "responsibilities", "rules.md"),
       "utf8",
     );
+    expect(fedrampResponsibilitiesContents).toStartWith(
+      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# FedRAMP's Responsibilities`,
+    );
+    expect(fedrampResponsibilitiesContents).not.toContain("Effective Date(s)");
+    expect(fedrampResponsibilitiesContents).not.toContain("Activity Workflow");
+    expect(fedrampResponsibilitiesContents).not.toContain("``` mermaid");
+
     const fedrampSecurityInboxName = rules.FRR.FSI?.info.name;
+    const fedrampSecurityInboxPurpose = rules.FRR.FSI?.info.purpose;
+    const fedrampFsiRule = firstRuleSelection(
+      rules.FRR.FSI,
+      ["all", "20x", "rev5"],
+      ["FedRAMP"],
+    );
+    const fedrampFsiSubsetDescription = subsetDescription(
+      rules.FRR.FSI,
+      fedrampFsiRule.bucketName,
+      fedrampFsiRule.subsetKey,
+    );
     expect(fedrampSecurityInboxName).toBeTruthy();
-    expect(fedrampFsiContents).toStartWith(
-      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# ${fedrampSecurityInboxName}`,
+    expect(fedrampSecurityInboxPurpose).toBeTruthy();
+    expect(fedrampFsiSubsetDescription).toBeTruthy();
+    expectTextOrder(
+      fedrampResponsibilitiesContents,
+      [
+        "# FedRAMP's Responsibilities",
+        `## ${fedrampSecurityInboxName} {#${slugifyHeading(
+          fedrampSecurityInboxName ?? "",
+        )}}`,
+        fedrampSecurityInboxPurpose ?? "",
+        fedrampFsiSubsetDescription,
+        fedrampFsiRule.id,
+      ],
+      "Generated FedRAMP responsibilities markdown should place each FRR purpose and FRP subset description before FedRAMP rules",
     );
-    expect(fedrampFsiContents).toContain(`# ${fedrampSecurityInboxName}`);
-    expect(fedrampFsiContents).not.toContain("Effective Date(s)");
-    expect(fedrampFsiContents).toContain(
-      firstRuleId(rules.FRR.FSI, ["all", "20x", "rev5"], ["FedRAMP"]),
-    );
-    expect(fedrampFsiContents).not.toContain(
+    expect(fedrampResponsibilitiesContents).not.toContain(
       firstRuleId(rules.FRR.FRC, ["all", "20x", "rev5"], ["Providers"]),
     );
 
-    const fedrampVdrContents = await readFile(
-      path.join(
-        OUTPUT_DIR,
-        "responsibilities",
-        "vulnerability-detection-and-response.md",
-      ),
-      "utf8",
-    );
     const vulnerabilityDetectionName = rules.FRR.VDR?.info.name;
+    const vulnerabilityDetectionPurpose = rules.FRR.VDR?.info.purpose;
     const fedrampVdrRule = firstRuleSelection(
       rules.FRR.VDR,
       ["all", "20x", "rev5"],
@@ -1751,13 +1787,29 @@ describe("build-markdown", () => {
       fedrampVdrRule.bucketName,
       fedrampVdrRule.subsetKey,
     );
-    expect(vulnerabilityDetectionName).toBeTruthy();
-    expect(fedrampVdrContents).toContain(`# ${vulnerabilityDetectionName}`);
-    expect(fedrampVdrContents).toContain(`## ${fedrampVdrSubsetTitle}`);
-    expect(fedrampVdrContents).not.toContain(
-      `## ${vulnerabilityDetectionName}`,
+    const fedrampVdrSubsetDescription = subsetDescription(
+      rules.FRR.VDR,
+      fedrampVdrRule.bucketName,
+      fedrampVdrRule.subsetKey,
     );
-    expect(fedrampVdrContents).toContain(fedrampVdrRule.id);
+    expect(vulnerabilityDetectionName).toBeTruthy();
+    expect(vulnerabilityDetectionPurpose).toBeTruthy();
+    expect(fedrampVdrSubsetDescription).toBeTruthy();
+    expectTextOrder(
+      fedrampResponsibilitiesContents,
+      [
+        `## ${vulnerabilityDetectionName} {#${slugifyHeading(
+          vulnerabilityDetectionName ?? "",
+        )}}`,
+        vulnerabilityDetectionPurpose ?? "",
+        fedrampVdrSubsetDescription,
+        fedrampVdrRule.id,
+      ],
+      "Generated FedRAMP responsibilities markdown should repeat the FRR layout for later responsibility sections",
+    );
+    expect(fedrampResponsibilitiesContents).not.toContain(
+      `## ${fedrampVdrSubsetTitle}`,
+    );
 
     const agencyCcmContents = await readFile(
       path.join(
@@ -1852,6 +1904,7 @@ describe("build-markdown", () => {
         ksiDocuments: [],
         deadlineDocuments: [],
         referenceIndexDocuments: [],
+        frrCollectionDocuments: [],
         ruleDocuments: [
           {
             id: "assessor-20x-with-ignored-marketplace",
@@ -1956,6 +2009,7 @@ describe("build-markdown", () => {
           },
         ],
         referenceIndexDocuments: [],
+        frrCollectionDocuments: [],
         ruleDocuments: [],
       },
     });
@@ -2014,6 +2068,7 @@ describe("build-markdown", () => {
           },
         ],
         referenceIndexDocuments: [],
+        frrCollectionDocuments: [],
         ruleDocuments: [],
       },
     });
@@ -2107,6 +2162,7 @@ describe("build-markdown", () => {
           ksiDocuments: [],
           deadlineDocuments: [],
           referenceIndexDocuments: [],
+          frrCollectionDocuments: [],
           ruleDocuments: [],
         },
       });
@@ -2324,6 +2380,7 @@ describe("build-markdown", () => {
           ksiDocuments: [],
           deadlineDocuments: [],
           referenceIndexDocuments: [],
+          frrCollectionDocuments: [],
           ruleDocuments: [],
         },
       });
@@ -2602,6 +2659,10 @@ describe("build pipeline", () => {
       {
         path: "providers/updating/deadlines/20x/index.html",
         expectedText: ["20x Deadlines", renderedFrcDocument.info.name],
+      },
+      {
+        path: "responsibilities/rules/index.html",
+        expectedText: ["FedRAMP's Responsibilities", renderedFrcDocument.info.name],
       },
       {
         path: "agencies/rules/agency-use/index.html",

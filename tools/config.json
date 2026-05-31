@@ -109,6 +109,26 @@
         }
       }
     ],
+    "frrCollectionDocuments": [
+      {
+        "id": "fedramp-responsibilities",
+        "title": "FedRAMP's Responsibilities",
+        "output": "responsibilities/rules.md",
+        "status": "placeholder",
+        "definitionsHref": "../definitions/",
+        "rulesHref": "../",
+        "emptyBehavior": "skip",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x", "rev5"],
+          "affects": ["FedRAMP"],
+          "sections": ["FRP"],
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      }
+    ],
     "ruleDocuments": [
       {
         "id": "complete-ruleset-reference",
@@ -123,24 +143,6 @@
           "collection": "FRR",
           "documents": "ALL",
           "types": ["20x", "rev5"],
-          "includeAll": true,
-          "allPosition": "first"
-        }
-      },
-      {
-        "id": "fedramp-responsibilities",
-        "output": "responsibilities/{FRR}.md",
-        "outputMode": "documents",
-        "status": "stable",
-        "definitionsHref": "../definitions/",
-        "rulesHref": "../",
-        "emptyBehavior": "skip",
-        "includeEffectiveDates": false,
-        "source": {
-          "collection": "FRR",
-          "documents": "ALL",
-          "types": ["20x", "rev5"],
-          "affects": ["FedRAMP"],
           "includeAll": true,
           "allPosition": "first"
         }

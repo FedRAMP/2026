@@ -311,26 +311,33 @@ Generated rule pages also support selected rich rule metadata:
 - `reference_url_web_name` links a rule reference to another generated ruleset page through `rulesHref`.
 - `pain_timeframes` renders a PAIN timeframe table inside applicable rule variants.
 
-For example, this mapping processes every FRR and generates one page per rule family for rules that affect FedRAMP:
+The default template is `templates/template.hbs`, with partials in `templates/partials/`. New templates can use the same view model as the default template: effective entries, flows, sections, requirements, definitions, and requirement metadata such as terms, controls, notes, examples, and references.
+
+## Generated FRR Collection Pages
+
+Add an entry to `generated.frrCollectionDocuments` in `config.json` when selected rules from multiple FRR rulesets should be combined into one page:
 
 ```json
 {
   "id": "fedramp-responsibilities",
-  "output": "responsibilities/{FRR}.md",
-  "outputMode": "documents",
+  "title": "FedRAMP's Responsibilities",
+  "output": "responsibilities/rules.md",
+  "status": "placeholder",
   "definitionsHref": "../definitions/",
   "rulesHref": "../",
   "emptyBehavior": "skip",
-  "includeEffectiveDates": false,
   "source": {
     "collection": "FRR",
     "documents": "ALL",
     "types": ["20x", "rev5"],
     "affects": ["FedRAMP"],
+    "sections": ["FRP"],
     "includeAll": true,
     "allPosition": "first"
   }
 }
 ```
 
-The default template is `templates/template.hbs`, with partials in `templates/partials/`. New templates can use the same view model as the default template: effective entries, flows, sections, requirements, definitions, and requirement metadata such as terms, controls, notes, examples, and references.
+FRR collection mappings output a single Markdown page. Each matched FRR ruleset renders as a `##` section with the FRR purpose, then the matching subset description, then the rules selected by `source.affects` and `source.sections`. These collection pages intentionally omit effective-date blocks and activity workflow diagrams.
+
+Mapping fields are the same as generated rule pages except `title` is required, `outputMode`, `includeEffectiveDates`, and `source.groupBy` are not used, and `status` controls the overall page pictograph status directly.

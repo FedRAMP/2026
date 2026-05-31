@@ -86,7 +86,7 @@ intended to be a snapshot that will apply throughout the effective period for th
 
     Review the specific rules that FedRAMP has created for our involvement in certain processes to understand our commitment to consistency.
 
-    [FedRAMP's Responsibilities](fedramp-certification.md){ data-preview }
+    [FedRAMP's Responsibilities](rules.md){ data-preview }
 
 -   :lucide-gavel:{ .xl .middle .empty } **Who put FedRAMP in charge?**
 
