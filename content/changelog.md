@@ -9,6 +9,17 @@ picto:
 
 # Changelog
 
+## 2026.06.03.01-preview
+
+**Release Date:** June 3, 2026
+
+### Rules Changes
+
+- **CDS-CSO-AVR** (formerly `CDS-CSO-PAR`): Renamed rule from "Public Availability Reporting" to "Availability Reporting". Rule ID changed from `CDS-CSO-PAR` to `CDS-CSO-AVR` to align with naming conventions. All class variants (a, b, c, d) retain their existing requirements and artifacts.
+- **ICP-CSO-IIR** (Initial Incident Report): Clarified language across all class variants (a, b, c, d) to state that providers SHOULD/MUST provide information "as much of the following information that is available at the time of reporting and/or the current relevant status for each item". This addition applies to Classes A, B, C, and D statements.
+- **ICP-CSO-OIR** (Ongoing Incident Reports): Clarified language across all class variants (a, b, c, d) to state that providers SHOULD/MUST provide "as much of the the following additional information that is available and/or the current relevant status for each item". This addition applies to Classes A, B, C, and D statements.
+
+
 ## 2026.05.31.01-preview
 
 **Release Date:** May 31, 2026
