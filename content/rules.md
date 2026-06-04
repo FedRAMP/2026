@@ -56,23 +56,6 @@ The [FedRAMP Rules repository on GitHub](https://github.com/FedRAMP/rules) is th
 In general, FedRAMP Consolidated Rules are collected by a related process or subject called a **ruleset**. Each of these FedRAMP
 Rulesets has a purpose that is explained in the introduction, followed by subsets of the rules.
 
-FedRAMP Rulesets include:
-
-| Acronym | Title                                |
-| ------- | ------------------------------------ |
-| **AGU** | Agency Use of Cloud Services         |
-| **CCM** | Collaborative Continuous Monitoring  |
-| **CDS** | Certification Data Sharing           |
-| **FRC** | FedRAMP Certification                |
-| **FSI** | FedRAMP Security Inbox               |
-| **ICP** | Incident Communications Procedures   |
-| **MAS** | Minimum Assessment Scope             |
-| **MKT** | FedRAMP Marketplace Listing          |
-| **SCG** | Secure Configuration Guide           |
-| **SCN** | Significant Change Notifications     |
-| **UCM** | Using Cryptographic Modules          |
-| **VDR** | Vulnerability Detection and Response |
-
 ### Applicability
 
 There are hundreds of FedRAMP Rules that apply to different stakeholders in different ways; not all rules apply

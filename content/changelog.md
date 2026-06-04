@@ -9,6 +9,38 @@ picto:
 
 # Changelog
 
+## 2026.06.04.01-preview
+
+**Release Date:** June 4, 2026
+
+### Content Updates
+
+- [Using the Consolidated Rules](https://preview.fedramp.gov/2026/rules/): Removed the static ruleset acronym table so the overview no longer repeats a ruleset list that can drift from the machine-readable source.
+
+### Site Structure
+
+- Reorganized the [Complete Ruleset Reference](https://preview.fedramp.gov/2026/reference/) navigation into clearer groups for certification overview, package materials, ongoing certification, agency use, and assessor recognition.
+- Added navigation for the split certification lifecycle pages, including [Initial FedRAMP Certification](https://preview.fedramp.gov/2026/reference/initial-fedramp-certification/), [Ongoing FedRAMP Certification](https://preview.fedramp.gov/2026/reference/ongoing-fedramp-certification/), [FedRAMP Assessments](https://preview.fedramp.gov/2026/reference/fedramp-assessments/), and [Certification Package Overview](https://preview.fedramp.gov/2026/reference/certification-package-overview/).
+- Updated provider rules navigation for both 20x and Rev5 so the former FedRAMP Certification page is replaced with initial certification, ongoing certification, and assessment pages.
+- Updated assessor rules navigation for both 20x and Rev5 to point to [FedRAMP Assessments](https://preview.fedramp.gov/2026/assessors/20x/rules/fedramp-assessments/).
+
+
+### Rules Content Changes
+
+- Structural: the former `FRC` FedRAMP Certification placeholder was split across `IFR`, `FRA`, `OFR`, and empty `CPO` rulesets; former `FRC` requirements were reissued. This should help navigating the different rules for initial and ongoing FedRAMP Certification and FedRAMP Assessments, they were going to get way too large being in one ruleset.
+- `IFR-CSO-PKG` adds a class-specific FedRAMP Certification Package requirement: Class A packages require a Certification Package Overview and External Framework Mapping, while Classes B, C, and D require a Certification Package Overview, Security Decision Record, and real or example OCR evidence related to `CCM-OCR-AVL`.
+- `IFR-CLA-AFR` replaces `FRC-CLA-AFR`, updates the related certification rule reference from `FRC-CSO-POP` to `IFR-CSO-POP`, and removes `CDS-UTC-PGD` from the Class A FedRAMP rules that must be addressed.
+- `IFR-CSX-SUM` replaces `FRC-CSX-SUM`, renaming “Implementation Summaries” to “Initial Implementation Summaries” and changing the obligation from maintaining summaries to supplying summaries for each Key Security Indicator.
+- `FRC-CSF-CDE` was removed, eliminating the explicit Rev5 Class D Program Certification Exclusion rule that required Rev5 Class D providers to use the Agency Certification path. (note, this simply doesn't need to be a rule and will be enforced elsewhere)
+- `CDS-CSO-PUB` narrows the public information obligation to information that is available and applicable, splits contact information into sales and security contacts, adds product website and logo links, simplifies secure configuration guidance, and replaces several trust-center operational items with a trust-center landing page instruction. (note, this will likely change a few more times)
+- `CDS-UTC-PGD` was removed, eliminating the standalone Public Guidance for Certification Data requirement.
+- `CDS-UTC-AAD` keeps the 5-business-day agency access denial notification requirement but removes the email address from the statement text while retaining the structured notification metadata.
+- `CDS-UTC-AGA` changes the agency access recommendation from sharing the FedRAMP Certification package to supplying access to it upon agency request.
+- `MKT-PRE-REQ` replaces broad “CDS: rules” and “CCM: rules” preparation-phase prerequisites with explicit references to `CDS-CSO-PUB` and `CDS-CSO-UTC`, adding related-rule metadata and the Trust Center term.
+- `MKT-PRE-DCP` moves continuous-progress evidence from quarterly Ongoing Certification Reports to Trust Center updates at least quarterly, replacing the Ongoing Certification term with Trust Center.
+
+
+
 ## 2026.06.03.01-preview
 
 **Release Date:** June 3, 2026
