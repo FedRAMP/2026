@@ -21,6 +21,7 @@ nav = [
         { "Certification Data Sharing" = "reference/certification-data-sharing.md" },
         { "Collaborative Continuous Monitoring" = "reference/collaborative-continuous-monitoring.md" },
         { "FedRAMP Certification" = "reference/fedramp-certification.md" },
+        { "FedRAMP Certification" = "reference/fedramp-certification.md" },
         { "FedRAMP Recognition of Independent Assessment Services" = "reference/fedramp-recognition.md" },
         { "FedRAMP Security Inbox" = "reference/fedramp-security-inbox.md" },
         { "Incident Communications Procedures" = "reference/incident-communications-procedures.md" },

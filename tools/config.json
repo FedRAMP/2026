@@ -73,7 +73,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "ignoreDocuments": ["AGU", "SDR", "IAP", "IAR", "REC"],
+          "ignoreDocuments": ["AGU", "SDR", "REC"],
           "types": ["20x", "rev5"],
           "affects": ["Providers"]
         }
@@ -87,7 +87,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "ignoreDocuments": ["AGU", "SDR", "IAP", "IAR"],
+          "ignoreDocuments": ["AGU", "SDR"],
           "types": ["20x", "rev5"],
           "affects": ["Assessors"]
         }
