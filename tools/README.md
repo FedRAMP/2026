@@ -220,7 +220,8 @@ Add an entry to `generated.deadlineDocuments` in `config.json`:
   "template": "templates/deadlines.hbs",
   "source": {
     "collection": "FRR",
-    "documents": ["MKT", "FRC"],
+    "documents": "ALL",
+    "ignoreDocuments": ["AGU", "SDR", "REC"],
     "types": ["20x", "rev5"],
     "affects": ["Providers"]
   }
@@ -263,16 +264,17 @@ Add an entry to `generated.ruleDocuments` in `config.json`:
 
 ```json
 {
-  "id": "frc-provider-20x-initial-certification",
-  "title": "FedRAMP 20x Initial Certification Responsibilities",
-  "output": "providers/20x/initial/certification.md",
+  "id": "provider-fsi-rules",
+  "output": "providers/{type}/rules/{FRR}.md",
+  "outputMode": "documents",
+  "status": "stable",
   "definitionsHref": "../../../definitions/",
   "rulesHref": "../../../",
-  "emptyBehavior": "write",
+  "emptyBehavior": "skip",
   "source": {
     "collection": "FRR",
-    "document": "FRC",
-    "types": ["20x"],
+    "documents": ["FSI"],
+    "types": ["20x", "rev5"],
     "affects": ["Providers"],
     "includeAll": true,
     "allPosition": "first"
@@ -293,7 +295,7 @@ Mapping fields:
 - `emptyBehavior`: `write` keeps an empty page, `skip` omits it when no rules match.
 - `includeEffectiveDates`: set to `false` to omit the top applicability block.
 - `status`: pictograph status for generated frontmatter.
-- `source.document`: one FRR key from the rules JSON, such as `FRC`.
+- `source.document`: one FRR key from the rules JSON, such as `FSI`.
 - `source.documents`: an array of FRR keys, such as `["FSI", "ICP"]`, or `"ALL"` to process every FRR.
 - `source.ignoreDocuments`: optional array of FRR keys to remove after `source.document` or `source.documents` is resolved.
 - `source.types`: one or more certification types, such as `["20x"]` or `["rev5"]`.

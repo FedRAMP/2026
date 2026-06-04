@@ -1341,20 +1341,6 @@ describe("build-markdown", () => {
       "Generated reference index should render source-derived rows in acronym order",
     );
 
-    const referenceFrcContents = await readFile(
-      path.join(OUTPUT_DIR, "reference", "fedramp-certification.md"),
-      "utf8",
-    );
-    const fedrampCertificationName = rules.FRR.FRC?.info.name;
-    expect(fedrampCertificationName).toBeTruthy();
-    expect(referenceFrcContents).toStartWith(
-      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# ${fedrampCertificationName}`,
-    );
-    for (const ruleId of firstRuleIdsByBucket(rules.FRR.FRC)) {
-      expect(referenceFrcContents).toContain(ruleId);
-    }
-    expect(referenceFrcContents).toContain("../definitions/#");
-
     const definitionsContents = await readFile(
       path.join(OUTPUT_DIR, "definitions.md"),
       "utf8",
@@ -1573,81 +1559,6 @@ describe("build-markdown", () => {
     );
     await expect(access(contentDefinitionsPath)).rejects.toThrow();
 
-    const provider20xContents = await readFile(
-      path.join(
-        OUTPUT_DIR,
-        "providers",
-        "20x",
-        "rules",
-        "fedramp-certification.md",
-      ),
-      "utf8",
-    );
-    const fedrampCertificationPurpose = rules.FRR.FRC?.info.purpose;
-    const provider20xCommonRule = firstRuleSelection(rules.FRR.FRC, ["all"], [
-      "Providers",
-    ]);
-    const provider20xSpecificRule = firstRuleSelection(rules.FRR.FRC, ["20x"], [
-      "Providers",
-    ]);
-    const providerRev5SpecificRuleId = firstRuleId(rules.FRR.FRC, ["rev5"], [
-      "Providers",
-    ]);
-    const provider20xCommonSubsetTitle = subsetTitle(
-      rules.FRR.FRC,
-      provider20xCommonRule.bucketName,
-      provider20xCommonRule.subsetKey,
-    );
-    const provider20xSpecificSubsetTitle = subsetTitle(
-      rules.FRR.FRC,
-      provider20xSpecificRule.bucketName,
-      provider20xSpecificRule.subsetKey,
-    );
-    expect(fedrampCertificationPurpose).toBeTruthy();
-    expect(provider20xContents).toStartWith(
-      `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# ${fedrampCertificationName}`,
-    );
-    expectTextOrder(
-      provider20xContents,
-      [
-        `# ${fedrampCertificationName}`,
-        fedrampCertificationPurpose ?? "",
-        "**Subsets**",
-        `- [${provider20xCommonSubsetTitle}](#${slugifyHeading(
-          provider20xCommonSubsetTitle,
-        )})`,
-        `- [${provider20xSpecificSubsetTitle}](#${slugifyHeading(
-          provider20xSpecificSubsetTitle,
-        )})`,
-        "\n---",
-        `## ${provider20xCommonSubsetTitle} {#${slugifyHeading(
-          provider20xCommonSubsetTitle,
-        )}}`,
-      ],
-      "Generated FRR markdown should place info.purpose and a multi-section TOC before the first body rule",
-    );
-    expect(provider20xContents).toContain(`# ${fedrampCertificationName}`);
-    expect(provider20xContents).toContain(provider20xCommonRule.id);
-    expect(provider20xContents).toContain(provider20xSpecificRule.id);
-    expect(provider20xContents).not.toContain(providerRev5SpecificRuleId);
-    expect(provider20xContents).toContain("../../../definitions/#");
-
-    const providerRev5Contents = await readFile(
-      path.join(
-        OUTPUT_DIR,
-        "providers",
-        "rev5",
-        "rules",
-        "fedramp-certification.md",
-      ),
-      "utf8",
-    );
-    expect(providerRev5Contents).toStartWith(
-      `---\ntags:\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# ${fedrampCertificationName}`,
-    );
-    expect(providerRev5Contents).toContain(providerRev5SpecificRuleId);
-    expect(providerRev5Contents).not.toContain(provider20xSpecificRule.id);
-
     const provider20xIcpContents = await readFile(
       path.join(
         OUTPUT_DIR,
@@ -1740,6 +1651,9 @@ describe("build-markdown", () => {
     expect(fedrampResponsibilitiesContents).not.toContain("Effective Date(s)");
     expect(fedrampResponsibilitiesContents).not.toContain("Activity Workflow");
     expect(fedrampResponsibilitiesContents).not.toContain("``` mermaid");
+    expect(fedrampResponsibilitiesContents).not.toContain(
+      firstRuleId(rules.FRR.FSI, ["all", "20x", "rev5"], ["Providers"]),
+    );
 
     const fedrampSecurityInboxName = rules.FRR.FSI?.info.name;
     const fedrampSecurityInboxPurpose = rules.FRR.FSI?.info.purpose;
@@ -1768,9 +1682,6 @@ describe("build-markdown", () => {
         fedrampFsiRule.id,
       ],
       "Generated FedRAMP responsibilities markdown should place each FRR purpose and FRP subset description before FedRAMP rules",
-    );
-    expect(fedrampResponsibilitiesContents).not.toContain(
-      firstRuleId(rules.FRR.FRC, ["all", "20x", "rev5"], ["Providers"]),
     );
 
     const vulnerabilityDetectionName = rules.FRR.VDR?.info.name;
@@ -1934,38 +1845,6 @@ describe("build-markdown", () => {
           "assessors/20x/rules/ignored-synthetic-ruleset.md",
       ),
     ).toBe(false);
-  });
-
-  test("resolves related FRR links to the matching generated audience page", async () => {
-    const config = await loadToolConfig();
-    const rules = structuredClone(await loadRules(config));
-    const providerRule = firstRuleSelection(rules.FRR.FRC, ["all", "20x"], [
-      "Providers",
-    ]);
-    const assessorRule = firstRuleSelection(rules.FRR.FRC, ["all", "20x"], [
-      "Assessors",
-    ]);
-    const assessorRuleName = assessorRule.requirement.name ?? assessorRule.id;
-
-    providerRule.requirement.statement = `${
-      providerRule.requirement.statement ?? ""
-    } See ${assessorRule.id} (${assessorRuleName}).`;
-    providerRule.requirement.related = [assessorRule.id];
-
-    const artifacts = collectArtifacts(rules, config);
-    const providerFrcArtifact = artifacts.find(
-      (artifact) =>
-        artifact.relativePath === "providers/20x/rules/fedramp-certification.md",
-    );
-    const linkedRule = providerFrcArtifact?.context.sections
-      .flatMap((section) => section.requirements)
-      .find((requirement) => requirement.id === providerRule.id);
-
-    expect(linkedRule?.statementParagraphs.join("\n")).toContain(
-      `[${assessorRule.id} (${assessorRuleName})](../../../assessors/20x/rules/fedramp-certification.md#${slugifyHeading(
-        assessorRuleName,
-      )}){ data-preview }`,
-    );
   });
 
   test("ignores configured deadline documents after resolving the source selection", async () => {
@@ -2612,16 +2491,11 @@ describe("build pipeline", () => {
       await access(path.join(htmlPath, relativePath));
     }
 
-    const renderedFrcDocument = rules.FRR.FRC;
     const renderedAgencyUseDocument = rules.FRR.AGU;
     const renderedChangeManagementTheme = Object.values(rules.KSI).find(
       (theme) => theme.web_name === "change-management",
     );
-    if (
-      !renderedFrcDocument ||
-      !renderedAgencyUseDocument ||
-      !renderedChangeManagementTheme
-    ) {
+    if (!renderedAgencyUseDocument || !renderedChangeManagementTheme) {
       throw new Error(
         "Expected source documents for rendered page smoke tests to exist.",
       );
@@ -2641,13 +2515,6 @@ describe("build pipeline", () => {
         expectedText: ["FedRAMP Definitions", renderedDefinitionTerm],
       },
       {
-        path: "providers/20x/rules/fedramp-certification/index.html",
-        expectedText: [
-          renderedFrcDocument.info.name,
-          firstRuleId(renderedFrcDocument, ["all", "20x"], ["Providers"]),
-        ],
-      },
-      {
         path: "providers/20x/key-security-indicators/change-management/index.html",
         expectedText: [
           renderedChangeManagementTheme.name,
@@ -2656,11 +2523,11 @@ describe("build pipeline", () => {
       },
       {
         path: "providers/updating/deadlines/20x/index.html",
-        expectedText: ["20x Deadlines", renderedFrcDocument.info.name],
+        expectedText: ["20x Deadlines"],
       },
       {
         path: "responsibilities/rules/index.html",
-        expectedText: ["FedRAMP's Responsibilities", renderedFrcDocument.info.name],
+        expectedText: ["FedRAMP's Responsibilities"],
       },
       {
         path: "agencies/rules/agency-use/index.html",
