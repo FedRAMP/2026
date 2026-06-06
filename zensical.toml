@@ -9,9 +9,9 @@ nav = [
       { "Shared Responsibility Model" = "shared-responsibilities.md" },
       { "FedRAMP Definitions" = "definitions.md" },
       { "Using the Consolidated Rules" = "rules.md" },
+      { "Important Dates" = "timeline.md" },
     ] },
     { "About This Preview" = [
-      { "Release Timeline" = "timeline.md" },
       { "Source Data" = "sources.md" },
       { "Changelog" = "changelog.md" },
       { "TO DO" = "todo.md" },
