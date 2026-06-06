@@ -10,6 +10,7 @@ export type RuleDocumentSelection = string[] | "ALL";
 export type KsiThemeSelection = string[] | "ALL";
 export type RuleDocumentGrouping = "section" | "document";
 export type RuleDocumentOutputMode = "single" | "documents";
+export type KsiDocumentOutputMode = "single" | "themes";
 export type RuleDocumentLinkTargetScope = "default" | "sameMappingOnly";
 export type GeneratedDocumentStatus = "stable" | "placeholder" | "empty";
 export type GeneratedDocumentSource = "machine" | "person";
@@ -106,6 +107,7 @@ export interface KsiDocumentMappingConfig {
   id: string;
   title?: string;
   output: string;
+  outputMode?: KsiDocumentOutputMode;
   status: GeneratedDocumentStatus;
   template?: string;
   definitionsHref?: string;

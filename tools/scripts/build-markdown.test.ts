@@ -1271,6 +1271,7 @@ describe("build-markdown", () => {
       "providers/updating/deadlines/rev5.md",
       "reference/agency-use.md",
       "reference/index.md",
+      "reference/key-security-indicators.md",
       "reference/security-decision-record.md",
       "responsibilities/rules.md",
     ]) {
@@ -1283,7 +1284,7 @@ describe("build-markdown", () => {
     const referenceArtifactPaths = relativePaths.filter((relativePath) =>
       relativePath.startsWith("reference/"),
     );
-    expect(referenceArtifactPaths).toHaveLength(Object.keys(rules.FRR).length + 1);
+    expect(referenceArtifactPaths).toHaveLength(Object.keys(rules.FRR).length + 2);
 
     for (const artifact of expectedArtifacts) {
       await access(artifact.outputPath);
@@ -1477,6 +1478,38 @@ describe("build-markdown", () => {
       throw new Error("Expected Policy and Inventory to include a KSI indicator.");
     }
     expect(ksiPolicyInventoryContents).toContain(policyInventoryIndicatorId);
+
+    const ksiReferenceContents = await readFile(
+      path.join(OUTPUT_DIR, "reference", "key-security-indicators.md"),
+      "utf8",
+    );
+    expect(ksiReferenceContents).toStartWith(
+      `---\ntags:\n  - 20x\n---\n\n${STABLE_STATUS_SPAN}\n\n# Key Security Indicators`,
+    );
+    expect(ksiReferenceContents).not.toContain("**Subsets**");
+    expect(ksiReferenceContents).not.toContain('!!! info ""');
+    expect(ksiReferenceContents).toContain(`## ${changeManagementTheme.name}`);
+    expect(ksiReferenceContents).toContain(
+      `### ${changeManagementIndicator.name ?? changeManagementIndicatorId}`,
+    );
+    expectTextOrder(
+      ksiReferenceContents,
+      [
+        "# Key Security Indicators",
+        `## ${changeManagementTheme.name}`,
+        changeManagementIndicatorId,
+        `## ${policyInventoryTheme.name}`,
+        policyInventoryIndicatorId,
+      ],
+      "Generated KSI reference markdown should group all indicators by theme",
+    );
+    if (changeManagementControl) {
+      expect(ksiReferenceContents).toContain(
+        `[${changeManagementControl.toUpperCase()}](${controlUrl(
+          changeManagementControl,
+        )})`,
+      );
+    }
 
     const deadlines20xPath = path.join(
       OUTPUT_DIR,
@@ -2314,6 +2347,71 @@ describe("build-markdown", () => {
       await rm(tempDir, { recursive: true, force: true });
     }
   });
+
+  test("rejects duplicate generated output paths", async () => {
+    const config = await loadToolConfig();
+    const tempDir = await mkdtemp(path.join(tmpdir(), "cr26-site-tools-"));
+    const tempContentDir = path.join(tempDir, "content");
+    const tempSrcDir = path.join(tempDir, "src");
+    const tempHtmlDir = path.join(tempDir, "html");
+
+    try {
+      await mkdir(tempContentDir, { recursive: true });
+
+      await expect(
+        buildMarkdown({
+          ...config,
+          paths: {
+            ...config.paths,
+            content: path.relative(resolveToolPath("."), tempContentDir),
+            src: path.relative(resolveToolPath("."), tempSrcDir),
+            html: path.relative(resolveToolPath("."), tempHtmlDir),
+          },
+          generated: {
+            ...config.generated,
+            definitions: undefined,
+            definitionDocuments: [
+              {
+                id: "first-definitions",
+                title: "First Definitions",
+                output: "definitions.md",
+                status: "stable",
+                includeEffectiveDates: false,
+                source: {
+                  collection: "FRD",
+                  types: ["20x", "rev5"],
+                  includeAll: true,
+                  allPosition: "first",
+                },
+              },
+              {
+                id: "second-definitions",
+                title: "Second Definitions",
+                output: "definitions.md",
+                status: "stable",
+                includeEffectiveDates: false,
+                source: {
+                  collection: "FRD",
+                  types: ["20x", "rev5"],
+                  includeAll: true,
+                  allPosition: "first",
+                },
+              },
+            ],
+            ksiDocuments: [],
+            deadlineDocuments: [],
+            referenceIndexDocuments: [],
+            frrCollectionDocuments: [],
+            ruleDocuments: [],
+          },
+        }),
+      ).rejects.toThrow(
+        /definitions\.md" is produced by multiple mappings: first-definitions, second-definitions/,
+      );
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("content quality", () => {
@@ -2517,6 +2615,14 @@ describe("build pipeline", () => {
       {
         path: "providers/20x/key-security-indicators/change-management/index.html",
         expectedText: [
+          renderedChangeManagementTheme.name,
+          renderedChangeManagementIndicatorId,
+        ],
+      },
+      {
+        path: "reference/key-security-indicators/index.html",
+        expectedText: [
+          "Key Security Indicators",
           renderedChangeManagementTheme.name,
           renderedChangeManagementIndicatorId,
         ],

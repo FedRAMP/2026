@@ -53,6 +53,18 @@
     ],
     "ksiDocuments": [
       {
+        "id": "complete-ksi-reference",
+        "title": "Key Security Indicators",
+        "output": "reference/key-security-indicators.md",
+        "outputMode": "single",
+        "status": "stable",
+        "definitionsHref": "../definitions/",
+        "source": {
+          "collection": "KSI",
+          "themes": "ALL"
+        }
+      },
+      {
         "id": "provider-20x-key-security-indicators",
         "output": "providers/20x/key-security-indicators/{KSI}.md",
         "status": "stable",

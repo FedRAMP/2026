@@ -187,7 +187,26 @@ Add an entry to `generated.ksiDocuments` in `config.json`:
 {
   "id": "provider-20x-key-security-indicators",
   "output": "providers/20x/key-security-indicators/{KSI}.md",
+  "outputMode": "themes",
+  "status": "stable",
   "definitionsHref": "../../../definitions/",
+  "source": {
+    "collection": "KSI",
+    "themes": "ALL"
+  }
+}
+```
+
+Use `outputMode: "single"` when selected KSI themes should be grouped into one generated page:
+
+```json
+{
+  "id": "complete-ksi-reference",
+  "title": "Key Security Indicators",
+  "output": "reference/key-security-indicators.md",
+  "outputMode": "single",
+  "status": "stable",
+  "definitionsHref": "../definitions/",
   "source": {
     "collection": "KSI",
     "themes": "ALL"
@@ -198,8 +217,9 @@ Add an entry to `generated.ksiDocuments` in `config.json`:
 KSI mapping fields:
 
 - `id`: stable identifier for the mapping.
-- `title`: page H1. If omitted, the KSI theme name is used.
+- `title`: page H1. If omitted, theme pages use the KSI theme name and single pages use `Key Security Indicators`.
 - `output`: destination path relative to `paths.src`. Use `{KSI}` or `{theme}` as the lowercase KSI theme `web_name` placeholder.
+- `outputMode`: optional output behavior. Omit it or use `themes` for one page per selected KSI theme; use `single` to generate one page with selected themes as sections.
 - `template`: optional Handlebars template path relative to `tools/`; defaults to `paths.template`.
 - `definitionsHref`: relative link prefix for generated term links.
 - `emptyBehavior`: `write` keeps an empty page, `skip` omits it when no indicators match.

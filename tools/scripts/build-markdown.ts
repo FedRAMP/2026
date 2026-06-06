@@ -12,6 +12,7 @@ import {
   type FrrCollectionDocumentMappingConfig,
   type GeneratedDocumentSource,
   type GeneratedDocumentStatus,
+  type KsiDocumentOutputMode,
   type KsiDocumentMappingConfig,
   type ReferenceIndexDocumentMappingConfig,
   type RuleDocumentLinkTargetScope,
@@ -3028,7 +3029,94 @@ function sourceKsiThemes(
   });
 }
 
-function collectKsiDocumentArtifacts(
+function ksiDocumentOutputMode(
+  mapping: KsiDocumentMappingConfig,
+): KsiDocumentOutputMode {
+  return mapping.outputMode ?? "themes";
+}
+
+function buildKsiIndicatorViewModels(
+  theme: KsiThemeSource,
+  mapping: KsiDocumentMappingConfig,
+  doNotLinkTerms: DoNotLinkTermIndex,
+): RequirementViewModel[] {
+  return Object.entries(theme.indicators ?? {}).map(([id, indicator]) =>
+    buildRequirementViewModel(
+      id,
+      indicator,
+      mapping.definitionsHref ?? "definitions/",
+      "",
+      doNotLinkTerms,
+    ),
+  );
+}
+
+function buildKsiThemeSectionViewModel(
+  key: string,
+  theme: KsiThemeSource,
+  mapping: KsiDocumentMappingConfig,
+  doNotLinkTerms: DoNotLinkTermIndex,
+): SectionViewModel | null {
+  const indicators = buildKsiIndicatorViewModels(theme, mapping, doNotLinkTerms);
+
+  if (!indicators.length && mapping.emptyBehavior === "skip") {
+    return null;
+  }
+
+  return {
+    title: theme.name,
+    anchorId: sectionAnchorId(theme.short_name ?? theme.id ?? key, theme.name),
+    anchorAttribute: sectionAnchorAttribute(
+      theme.short_name ?? theme.id ?? key,
+      theme.name,
+    ),
+    isSubsetSection: false,
+    descriptionParagraphs: splitParagraphs(theme.theme),
+    requirements: indicators,
+  };
+}
+
+function collectSingleKsiDocumentArtifact(
+  rules: RulesDocument,
+  config: ToolConfig,
+  mapping: KsiDocumentMappingConfig,
+  doNotLinkTerms: DoNotLinkTermIndex,
+): BuildArtifact | null {
+  if (mapping.source.collection !== "KSI") {
+    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+  }
+
+  const sections = sourceKsiThemes(rules, mapping)
+    .map(({ key, theme }) =>
+      buildKsiThemeSectionViewModel(key, theme, mapping, doNotLinkTerms),
+    )
+    .filter((section): section is SectionViewModel => section !== null);
+
+  if (!sections.length && mapping.emptyBehavior === "skip") {
+    return null;
+  }
+
+  const relativePath = normalizeGeneratedPath(mapping.output);
+  const title = mapping.title ?? "Key Security Indicators";
+
+  return {
+    relativePath,
+    outputPath: resolveGeneratedOutputPath(config, relativePath),
+    templatePath: resolveToolPath(mapping.template ?? config.paths.template),
+    mappingId: mapping.id,
+    title,
+    documentType: "KSI",
+    context: buildDocumentContext(title, {
+      statusSpan: pictographSpan(config, mapping.status),
+      tags: versionTags(["20x"]),
+      isKsiDocument: true,
+      isRequirementsDocument: true,
+      sections,
+    }),
+  };
+}
+
+function collectThemeKsiDocumentArtifacts(
   rules: RulesDocument,
   config: ToolConfig,
   mapping: KsiDocumentMappingConfig,
@@ -3040,15 +3128,10 @@ function collectKsiDocumentArtifacts(
 
   return sourceKsiThemes(rules, mapping)
     .map(({ key, theme }): BuildArtifact | null => {
-      const indicators = Object.entries(theme.indicators ?? {}).map(
-        ([id, indicator]) =>
-          buildRequirementViewModel(
-            id,
-            indicator,
-            mapping.definitionsHref ?? "definitions/",
-            "",
-            doNotLinkTerms,
-          ),
+      const indicators = buildKsiIndicatorViewModels(
+        theme,
+        mapping,
+        doNotLinkTerms,
       );
 
       if (!indicators.length && mapping.emptyBehavior === "skip") {
@@ -3081,6 +3164,30 @@ function collectKsiDocumentArtifacts(
       };
     })
     .filter((artifact): artifact is BuildArtifact => artifact !== null);
+}
+
+function collectKsiDocumentArtifacts(
+  rules: RulesDocument,
+  config: ToolConfig,
+  mapping: KsiDocumentMappingConfig,
+  doNotLinkTerms: DoNotLinkTermIndex,
+): BuildArtifact[] {
+  if (ksiDocumentOutputMode(mapping) === "single") {
+    const artifact = collectSingleKsiDocumentArtifact(
+      rules,
+      config,
+      mapping,
+      doNotLinkTerms,
+    );
+    return artifact ? [artifact] : [];
+  }
+
+  return collectThemeKsiDocumentArtifacts(
+    rules,
+    config,
+    mapping,
+    doNotLinkTerms,
+  );
 }
 
 function collectConfiguredKsiDocumentArtifacts(
@@ -3633,6 +3740,21 @@ async function assertNoContentCollisions(
   }
 }
 
+function assertUniqueGeneratedOutputs(artifacts: BuildArtifact[]): void {
+  const mappingByPath = new Map<string, string>();
+
+  for (const artifact of artifacts) {
+    const existingMappingId = mappingByPath.get(artifact.relativePath);
+    if (existingMappingId) {
+      throw new Error(
+        `Generated output "${artifact.relativePath}" is produced by multiple mappings: ${existingMappingId}, ${artifact.mappingId}.`,
+      );
+    }
+
+    mappingByPath.set(artifact.relativePath, artifact.mappingId);
+  }
+}
+
 async function cleanupGeneratedFiles(config: ToolConfig): Promise<void> {
   const manifest = await readGeneratedManifest(config);
 
@@ -3667,6 +3789,7 @@ export async function buildMarkdown(config?: ToolConfig): Promise<BuildSummary> 
   const templates = new Map<string, (context: DocumentViewModel) => string>();
 
   await renderContentPictographs(toolConfig);
+  assertUniqueGeneratedOutputs(artifacts);
   await assertNoContentCollisions(toolConfig, artifacts);
   await cleanupGeneratedFiles(toolConfig);
 

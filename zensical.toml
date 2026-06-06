@@ -41,6 +41,7 @@ nav = [
       ] },
       { "Agency Use of FedRAMP Certified Cloud Services" = "reference/agency-use.md" },
       { "FedRAMP Recognition of Independent Assessment Services" = "reference/fedramp-recognition.md" },
+      { "Key Security Indicators" = "reference/key-security-indicators.md" },
     ] },
   ] },
   { "FedRAMP" = [
