@@ -156,6 +156,11 @@ interface NotificationSource {
   target?: string;
 }
 
+interface RequirementSchemaSource {
+  name?: string;
+  url?: string;
+}
+
 interface RequirementEntrySource {
   name?: string;
   statement?: string;
@@ -170,6 +175,7 @@ interface RequirementEntrySource {
   notes?: string[];
   danger?: string;
   notification?: NotificationSource[];
+  schema?: RequirementSchemaSource;
   corrective_actions?: string[];
   affects?: string[];
   controls?: string[];
@@ -273,6 +279,11 @@ interface NotificationViewModel {
   target: string;
 }
 
+interface RequirementSchemaViewModel {
+  name: string;
+  url: string;
+}
+
 interface RequirementViewModel {
   id: string;
   anchorId: string;
@@ -293,6 +304,7 @@ interface RequirementViewModel {
   notes: string[];
   dangerParagraphs: string[];
   notifications: NotificationViewModel[];
+  schema?: RequirementSchemaViewModel;
   correctiveActions: string[];
   affects: string[];
   controlLinks: Array<{ label: string; url: string }>;
@@ -1373,6 +1385,19 @@ function toNotifications(
   }));
 }
 
+function toRequirementSchema(
+  schema: RequirementSchemaSource | undefined,
+): RequirementSchemaViewModel | undefined {
+  if (!schema?.name || !schema.url) {
+    return undefined;
+  }
+
+  return {
+    name: schema.name,
+    url: schema.url,
+  };
+}
+
 function buildRequirementReference(
   entry: RequirementEntrySource,
   rulesRelativePath: string,
@@ -1458,6 +1483,7 @@ function buildRequirementViewModel(
     ),
     dangerParagraphs: splitParagraphs(entry.danger),
     notifications: toNotifications(entry.notification),
+    schema: toRequirementSchema(entry.schema),
     correctiveActions: entry.corrective_actions ?? [],
     affects: entry.affects ?? [],
     controlLinks: (entry.controls ?? []).map((controlId) => ({

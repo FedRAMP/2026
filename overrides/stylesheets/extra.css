@@ -22,3 +22,25 @@
 .empty {
   color: #FF4081;
 }
+
+:root {
+--fedramp-admonition-schema-color: #d69e00;
+--fedramp-admonition-schema-bg-color: rgba(214, 158, 0, 0.14);
+}
+
+.md-typeset .admonition.schema,
+.md-typeset details.schema {
+  background-color: var(--fedramp-admonition-schema-bg-color);
+}
+
+.md-typeset .schema > .admonition-title::before,
+.md-typeset .schema > summary::before {
+  background-color: var(--fedramp-admonition-schema-color);
+  -webkit-mask-image: var(--md-admonition-icon--schema);
+  mask-image: var(--md-admonition-icon--schema);
+}
+
+.md-typeset .schema > .admonition-title::after,
+.md-typeset .schema > summary::after {
+  color: var(--fedramp-admonition-schema-color);
+}

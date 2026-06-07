@@ -1774,6 +1774,35 @@ describe("build-markdown", () => {
       `Notify ${notification?.party} by ${notification?.method} using ${notification?.target}.`,
     );
 
+    const schemaRuleId = "CDS-CSO-PUB";
+    const schemaRule = rules.FRR.CDS?.data.all?.CSO?.[schemaRuleId];
+    if (!schemaRule?.schema?.name || !schemaRule.schema.url) {
+      throw new Error(
+        `Expected ${schemaRuleId} to include related JSON schema metadata.`,
+      );
+    }
+    const provider20xCdsContents = await readFile(
+      path.join(
+        OUTPUT_DIR,
+        "providers",
+        "20x",
+        "rules",
+        `${rules.FRR.CDS?.info.web_name}.md`,
+      ),
+      "utf8",
+    );
+    expectTextOrder(
+      provider20xCdsContents,
+      [
+        `### ${schemaRule.name ?? schemaRuleId}`,
+        `??? abstract "${schemaRuleId}"`,
+        `!!! schema "Related JSON Schema: [${schemaRule.schema.name}](${schemaRule.schema.url})"`,
+        '!!! quote ""',
+        schemaRule.statement ?? "",
+      ],
+      "Generated requirement markdown should place related JSON schema metadata between the rule ID block and statement",
+    );
+
     const provider20xFsiContents = await readFile(
       path.join(
         OUTPUT_DIR,

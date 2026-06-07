@@ -343,6 +343,7 @@ rev5 = "material/numeric-5-circle-outline"
 
 [project.theme.icon.admonition]
 abstract = "fontawesome/solid/gavel"
+schema ="lucide/file-braces"
 
 # Palette toggle for automatic mode
 [[project.theme.palette]]
