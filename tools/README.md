@@ -248,7 +248,7 @@ Add an entry to `generated.deadlineDocuments` in `config.json`:
 }
 ```
 
-Deadline documents generate one page per configured type. They read each selected FRR document's `info.short_name`, `info.name`, `info.web_name`, and common or certification-specific `effective` values. The generated table links each rule family name to the matching provider rule page for that type.
+Deadline documents generate one page per configured type. They read each selected FRR document's `info.short_name`, `info.name`, `info.web_name`, and common or certification-specific `effective` values. The generated table links each combined rule family name and short name, such as `FedRAMP Security Inbox (FSI)`, to the matching rule page for that type. The date columns render `optional_adoption`, `obtain`, `maintain`, and `grace` in that order; when `grace.until_next_assessment` is true, the grace column explains that the deadline is the first annual assessment scheduled after `grace.default`.
 
 Use `{type}` or `{version}` in `output` to place each type page explicitly. Use `source.ignoreDocuments` to remove specific FRR keys after `source.documents` is resolved, including when `source.documents` is `"ALL"`.
 Use `source.affects` to omit selected FRR documents that do not contain any rule affecting that audience, such as excluding assessor-only recognition rules from provider deadline pages.

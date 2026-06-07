@@ -40,10 +40,24 @@ interface RulesDocument {
   KSI: Record<string, KsiThemeSource>;
 }
 
+type EffectiveDateScalarSource = number | string;
+
+interface EffectiveGraceDateSource {
+  default?: EffectiveDateScalarSource;
+  until_next_assessment?: boolean;
+}
+
+interface EffectiveDatesSource {
+  obtain?: EffectiveDateScalarSource;
+  maintain?: EffectiveDateScalarSource;
+  optional_adoption?: EffectiveDateScalarSource;
+  grace?: EffectiveGraceDateSource;
+}
+
 interface EffectiveEntrySource {
   is?: string;
   current_status?: string;
-  date?: Record<string, number | string>;
+  date?: EffectiveDatesSource;
   class?: Record<
     string,
     {
@@ -128,7 +142,7 @@ interface VariantSource {
   statement?: string;
   following_information?: string[];
   following_information_bullets?: string[];
-  effective_date?: Record<string, number | string>;
+  effective_date?: EffectiveDatesSource;
   timeframe_type?: string;
   timeframe_num?: number | string;
   pain_timeframes?: PainTimeframesSource;
@@ -149,7 +163,7 @@ interface RequirementEntrySource {
   following_information_bullets?: string[];
   varies_by_class?: Record<string, VariantSource>;
   varies_by_level?: Record<string, VariantSource>;
-  effective_date?: Record<string, number | string>;
+  effective_date?: EffectiveDatesSource;
   timeframe_type?: string;
   timeframe_num?: number | string;
   note?: string;
@@ -327,8 +341,9 @@ interface TableOfContentsEntryViewModel {
 
 interface DeadlineRowViewModel {
   shortName: string;
-  name: string;
+  displayName: string;
   href: string;
+  optionalAdoption: string;
   obtain: string;
   maintain: string;
   graceEnds: string;
@@ -879,13 +894,39 @@ function controlUrl(controlId: string): string {
   return `${CONTROL_FREAK_BASE_URL}${prefix.toUpperCase()}-${number.padStart(2, "0")}`;
 }
 
+function effectiveDateValue(value?: EffectiveDateScalarSource): string {
+  return value === undefined ? "" : String(value);
+}
+
+function effectiveGraceEnds(date?: EffectiveDatesSource): string {
+  const defaultDate = effectiveDateValue(date?.grace?.default);
+  if (!defaultDate) {
+    return "";
+  }
+
+  if (date?.grace?.until_next_assessment) {
+    return `On the first annual assessment scheduled after ${defaultDate}`;
+  }
+
+  return defaultDate;
+}
+
 function toDateLines(
-  date: Record<string, number | string> | undefined,
+  date: EffectiveDatesSource | undefined,
 ): Array<{ label: string; value: string }> {
-  return Object.entries(date ?? {}).map(([key, value]) => ({
-    label: titleCase(key),
-    value: String(value),
-  }));
+  const lines: Array<{ label: string; value: string }> = [];
+  const addLine = (label: string, value: string): void => {
+    if (value) {
+      lines.push({ label, value });
+    }
+  };
+
+  addLine("Optional Adoption", effectiveDateValue(date?.optional_adoption));
+  addLine("Obtain", effectiveDateValue(date?.obtain));
+  addLine("Maintain", effectiveDateValue(date?.maintain));
+  addLine("Grace Ends", effectiveGraceEnds(date));
+
+  return lines;
 }
 
 function toClassApplicabilityLines(
@@ -2124,28 +2165,22 @@ function matchingDeadlineRuleDocumentPath(
 
 function deadlineDate(
   entry: EffectiveEntrySource,
-  key: "obtain" | "maintain" | "grace_ends" | "grace_by_assessment_months",
+  key: "obtain" | "maintain" | "optional_adoption",
 ): string {
-  const value = entry.date?.[key];
-  return value === undefined ? "" : String(value);
+  return effectiveDateValue(entry.date?.[key]);
 }
 
 function deadlineGraceEnds(entry: EffectiveEntrySource): string {
-  const graceEnds = deadlineDate(entry, "grace_ends");
-  if (graceEnds) {
-    return graceEnds;
+  return effectiveGraceEnds(entry.date);
+}
+
+function deadlineDisplayName(info: InfoSource): string {
+  const shortName = info.short_name?.trim();
+  if (!shortName) {
+    return info.name;
   }
 
-  const graceByAssessmentMonths = deadlineDate(
-    entry,
-    "grace_by_assessment_months",
-  );
-  if (!graceByAssessmentMonths) {
-    return "";
-  }
-
-  const maintain = deadlineDate(entry, "maintain") || "Maintain";
-  return `Within ${graceByAssessmentMonths} months of the next annual assessment after ${maintain}`;
+  return `${info.name} (${shortName})`;
 }
 
 function documentSubsetCount(document: RequirementDocumentSource): number {
@@ -2239,8 +2274,9 @@ function buildDeadlineRowViewModel(
 
   return {
     shortName: markdownTableCell(document.info.short_name ?? ""),
-    name: markdownTableCell(document.info.name),
+    displayName: markdownTableCell(deadlineDisplayName(document.info)),
     href: rulesRelativePath,
+    optionalAdoption: markdownTableCell(deadlineDate(entry, "optional_adoption")),
     obtain: markdownTableCell(deadlineDate(entry, "obtain")),
     maintain: markdownTableCell(deadlineDate(entry, "maintain")),
     graceEnds: markdownTableCell(deadlineGraceEnds(entry)),

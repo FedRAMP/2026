@@ -529,13 +529,14 @@ function findArtifact(
 
 function deadlineRowMarkdown(row: {
   shortName: string;
-  name: string;
+  displayName: string;
   href: string;
+  optionalAdoption: string;
   obtain: string;
   maintain: string;
   graceEnds: string;
 }): string {
-  return `| ${row.shortName} | [${row.name}](${row.href}) | ${row.obtain} | ${row.maintain} | ${row.graceEnds} |`;
+  return `| [${row.displayName}](${row.href}) | ${row.optionalAdoption} | ${row.obtain} | ${row.maintain} | ${row.graceEnds} |`;
 }
 
 function controlUrl(controlId: string): string {
@@ -577,7 +578,7 @@ function expectNoDeadlineRowsForDocuments(
   for (const documentKey of documentKeys) {
     const shortName = rules.FRR[documentKey]?.info.short_name;
     if (shortName) {
-      expect(contents).not.toContain(`| ${shortName} |`);
+      expect(contents).not.toContain(`(${shortName})]`);
     }
   }
 }
@@ -599,7 +600,11 @@ function testRequirementDocument(options: {
         date: {
           obtain: "2026-01-01",
           maintain: "2026-02-01",
-          grace_ends: "2026-03-01",
+          optional_adoption: "2025-12-01",
+          grace: {
+            default: "2026-03-01",
+            until_next_assessment: false,
+          },
         },
       },
     },
@@ -1421,6 +1426,30 @@ describe("build-markdown", () => {
       "Generated reference index should render source-derived rows in acronym order",
     );
 
+    const referenceCollaborativeMonitoringContents = await readFile(
+      path.join(OUTPUT_DIR, "reference", "collaborative-continuous-monitoring.md"),
+      "utf8",
+    );
+    expectTextOrder(
+      referenceCollaborativeMonitoringContents,
+      [
+        '!!! info "Effective Date(s) & Overall Applicability for 20x"',
+        "- **Optional Adoption:** 2026-07-04",
+        "- **Obtain:** 2026-07-04",
+        "- **Maintain:** 2027-01-01",
+        "- **Grace Ends:** On the first annual assessment scheduled after 2027-01-01",
+        '!!! info "Effective Date(s) & Overall Applicability for Rev5"',
+        "- **Optional Adoption:** 2026-07-04",
+        "- **Obtain:** 2027-01-01",
+        "- **Maintain:** 2027-04-02",
+        "- **Grace Ends:** 2027-10-01",
+      ],
+      "Generated effective-date metadata should render structured grace and optional adoption dates",
+    );
+    expect(referenceCollaborativeMonitoringContents).not.toContain(
+      "[object Object]",
+    );
+
     const definitionsContents = await readFile(
       path.join(OUTPUT_DIR, "definitions.md"),
       "utf8",
@@ -1607,6 +1636,12 @@ describe("build-markdown", () => {
       deadlines20xContents,
       `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# 20x Deadlines`,
       "Generated provider 20x deadlines markdown has an unexpected header",
+    );
+    expect(deadlines20xContents).toContain(
+      "| Ruleset | Optional Adoption | Obtain | Maintain | Grace Ends |",
+    );
+    expect(deadlines20xContents).toContain(
+      "| [Collaborative Continuous Monitoring (CCM)](../../20x/rules/collaborative-continuous-monitoring.md) | 2026-07-04 | 2026-07-04 | 2027-01-01 | On the first annual assessment scheduled after 2027-01-01 |",
     );
     expectDeadlineRowsFromArtifact(
       deadlines20xContents,
