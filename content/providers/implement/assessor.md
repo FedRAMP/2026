@@ -9,6 +9,14 @@ picto:
 
 # Finding an Assessor
 
+```mermaid
+flowchart LR
+  A["Preparation"] --> B[Initial Implementation] --> C[Ongoing Certification]
+
+  classDef current fill:#dff5e1,stroke:#2f855a,stroke-width:2px,color:#123524;
+  class B current;
+```
+
 Partnering with a FedRAMP Recognized Independent Assessment Service (often referred to as an "independent assessor" or simply an "assessor") is a mandatory step for any cloud provider aiming for FedRAMP Certification Class B, C, or D.
 
 These experts perform the initial assessment to obtain FedRAMP Certification and provide ongoing assessment to maintain it. Given their vital role, providers are encouraged to engage an assessor as early as possible.

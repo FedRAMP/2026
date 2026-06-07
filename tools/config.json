@@ -45,13 +45,25 @@
         "includeEffectiveDates": false,
         "source": {
           "collection": "FRD",
-          "types": ["20x", "rev5"],
+          "types": ["all"],
           "includeAll": true,
           "allPosition": "first"
         }
       }
     ],
     "ksiDocuments": [
+      {
+        "id": "complete-ksi-reference",
+        "title": "Key Security Indicators",
+        "output": "reference/key-security-indicators.md",
+        "outputMode": "single",
+        "status": "stable",
+        "definitionsHref": "../definitions/",
+        "source": {
+          "collection": "KSI",
+          "themes": "ALL"
+        }
+      },
       {
         "id": "provider-20x-key-security-indicators",
         "output": "providers/20x/key-security-indicators/{KSI}.md",
@@ -74,7 +86,7 @@
           "collection": "FRR",
           "documents": "ALL",
           "ignoreDocuments": ["AGU", "SDR", "REC"],
-          "types": ["20x", "rev5"],
+          "types": ["all"],
           "affects": ["Providers"]
         }
       },
@@ -88,8 +100,138 @@
           "collection": "FRR",
           "documents": "ALL",
           "ignoreDocuments": ["AGU", "SDR"],
-          "types": ["20x", "rev5"],
+          "types": ["all"],
           "affects": ["Assessors"]
+        }
+      }
+    ],
+    "taggedDocumentSummaries": [
+      {
+        "id": "provider-20x-initial-rules-summary",
+        "title": "Initial Certification",
+        "output": "providers/20x/initial/index.md",
+        "status": "placeholder",
+        "template": "templates/tagged-document-summary.hbs",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x"],
+          "affects": ["Providers"],
+          "tag": "initial",
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "provider-rev5-initial-rules-summary",
+        "title": "Initial Certification",
+        "output": "providers/rev5/initial/index.md",
+        "status": "placeholder",
+        "template": "templates/tagged-document-summary.hbs",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["rev5"],
+          "affects": ["Providers"],
+          "tag": "initial",
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "provider-20x-ongoing-rules-summary",
+        "title": "Ongoing Certification",
+        "output": "providers/20x/ongoing/index.md",
+        "status": "placeholder",
+        "template": "templates/tagged-document-summary.hbs",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x"],
+          "affects": ["Providers"],
+          "tag": "ongoing",
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "provider-rev5-ongoing-rules-summary",
+        "title": "Ongoing Certification",
+        "output": "providers/rev5/ongoing/index.md",
+        "status": "placeholder",
+        "template": "templates/tagged-document-summary.hbs",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["rev5"],
+          "affects": ["Providers"],
+          "tag": "ongoing",
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "assessor-20x-initial-rules-summary",
+        "title": "Initial Assessment",
+        "output": "assessors/20x/initial/index.md",
+        "status": "placeholder",
+        "template": "templates/tagged-document-summary.hbs",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x"],
+          "affects": ["Assessors"],
+          "tag": "initial",
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "assessor-rev5-initial-rules-summary",
+        "title": "Initial Assessment",
+        "output": "assessors/rev5/initial/index.md",
+        "status": "placeholder",
+        "template": "templates/tagged-document-summary.hbs",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["rev5"],
+          "affects": ["Assessors"],
+          "tag": "initial",
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "assessor-20x-ongoing-rules-summary",
+        "title": "Ongoing Assessment",
+        "output": "assessors/20x/ongoing/index.md",
+        "status": "placeholder",
+        "template": "templates/tagged-document-summary.hbs",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x"],
+          "affects": ["Assessors"],
+          "tag": "ongoing",
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "assessor-rev5-ongoing-rules-summary",
+        "title": "Ongoing Assessment",
+        "output": "assessors/rev5/ongoing/index.md",
+        "status": "placeholder",
+        "template": "templates/tagged-document-summary.hbs",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["rev5"],
+          "affects": ["Assessors"],
+          "tag": "ongoing",
+          "includeAll": true,
+          "allPosition": "first"
         }
       }
     ],
@@ -121,7 +263,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "types": ["20x", "rev5"],
+          "types": ["all"],
           "affects": ["FedRAMP"],
           "sections": ["FRP"],
           "includeAll": true,
@@ -142,7 +284,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "types": ["20x", "rev5"],
+          "types": ["all"],
           "includeAll": true,
           "allPosition": "first"
         }
@@ -159,7 +301,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "types": ["20x", "rev5"],
+          "types": ["all"],
           "affects": ["Agencies"],
           "includeAll": true,
           "allPosition": "first"
@@ -198,6 +340,24 @@
           "types": ["rev5"],
           "affects": ["Providers"],
           "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "provider-implementation-marketplace",
+        "output": "providers/implement/marketplace/{FRR}.md",
+        "outputMode": "documents",
+        "status": "placeholder",
+        "definitionsHref": "../../../definitions/",
+        "rulesHref": "../",
+        "emptyBehavior": "skip",
+        "includeEffectiveDates": false,
+        "source": {
+          "collection": "FRR",
+          "documents": ["MKT"],
+          "types": ["all"],
+          "affects": ["Providers"],
+          "sections": ["CSO", "IIP"],
           "allPosition": "first"
         }
       },
@@ -251,7 +411,7 @@
         "source": {
           "collection": "FRR",
           "documents": ["MKT", "REC"],
-          "types": ["20x", "rev5"],
+          "types": ["all"],
           "affects": ["Assessors"],
           "includeAll": true,
           "allPosition": "first"
@@ -270,7 +430,7 @@
         "source": {
           "collection": "FRR",
           "documents": ["MKT"],
-          "types": ["20x", "rev5"],
+          "types": ["all"],
           "affects": ["Advisors"],
           "includeAll": true,
           "allPosition": "first"

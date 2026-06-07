@@ -187,7 +187,26 @@ Add an entry to `generated.ksiDocuments` in `config.json`:
 {
   "id": "provider-20x-key-security-indicators",
   "output": "providers/20x/key-security-indicators/{KSI}.md",
+  "outputMode": "themes",
+  "status": "stable",
   "definitionsHref": "../../../definitions/",
+  "source": {
+    "collection": "KSI",
+    "themes": "ALL"
+  }
+}
+```
+
+Use `outputMode: "single"` when selected KSI themes should be grouped into one generated page:
+
+```json
+{
+  "id": "complete-ksi-reference",
+  "title": "Key Security Indicators",
+  "output": "reference/key-security-indicators.md",
+  "outputMode": "single",
+  "status": "stable",
+  "definitionsHref": "../definitions/",
   "source": {
     "collection": "KSI",
     "themes": "ALL"
@@ -198,8 +217,9 @@ Add an entry to `generated.ksiDocuments` in `config.json`:
 KSI mapping fields:
 
 - `id`: stable identifier for the mapping.
-- `title`: page H1. If omitted, the KSI theme name is used.
+- `title`: page H1. If omitted, theme pages use the KSI theme name and single pages use `Key Security Indicators`.
 - `output`: destination path relative to `paths.src`. Use `{KSI}` or `{theme}` as the lowercase KSI theme `web_name` placeholder.
+- `outputMode`: optional output behavior. Omit it or use `themes` for one page per selected KSI theme; use `single` to generate one page with selected themes as sections.
 - `template`: optional Handlebars template path relative to `tools/`; defaults to `paths.template`.
 - `definitionsHref`: relative link prefix for generated term links.
 - `emptyBehavior`: `write` keeps an empty page, `skip` omits it when no indicators match.
@@ -228,10 +248,37 @@ Add an entry to `generated.deadlineDocuments` in `config.json`:
 }
 ```
 
-Deadline documents generate one page per configured type. They read each selected FRR document's `info.short_name`, `info.name`, `info.web_name`, and common or certification-specific `effective` values. The generated table links each rule family name to the matching provider rule page for that type.
+Deadline documents generate one page per configured type. They read each selected FRR document's `info.short_name`, `info.name`, `info.web_name`, and common or certification-specific `effective` values. The generated table links each combined rule family name and short name, such as `FedRAMP Security Inbox (FSI)`, to the matching rule page for that type. The date columns render `optional_adoption`, `obtain`, `maintain`, and `grace` in that order; when `grace.until_next_assessment` is true, the grace column explains that the deadline is the first annual assessment scheduled after `grace.default`.
 
 Use `{type}` or `{version}` in `output` to place each type page explicitly. Use `source.ignoreDocuments` to remove specific FRR keys after `source.documents` is resolved, including when `source.documents` is `"ALL"`.
 Use `source.affects` to omit selected FRR documents that do not contain any rule affecting that audience, such as excluding assessor-only recognition rules from provider deadline pages.
+
+## Generated Tagged Document Summaries
+
+Add an entry to `generated.taggedDocumentSummaries` in `config.json`:
+
+```json
+{
+  "id": "provider-20x-initial-rules-summary",
+  "title": "Initial Certification",
+  "output": "providers/20x/initial/index.md",
+  "status": "placeholder",
+  "template": "templates/tagged-document-summary.hbs",
+  "source": {
+    "collection": "FRR",
+    "documents": "ALL",
+    "types": ["20x"],
+    "affects": ["Providers"],
+    "tag": "initial",
+    "includeAll": true,
+    "allPosition": "first"
+  }
+}
+```
+
+Tagged document summaries generate one overview page from FRR documents whose `info.tag` matches `source.tag` or `source.tags`. Each page renders a table of matching rulesets. Ruleset rows link to the generated rule page and use `info.purpose`, followed by an **Applicable Rules** count calculated from the same type, affected-party, and section filters used for the page.
+
+Summary mappings use the same `source.documents`, `source.ignoreDocuments`, `source.types`, `source.affects`, `source.sections`, `source.includeAll`, and `source.allPosition` behavior as generated rule pages. The generated links are resolved from the configured `generated.ruleDocuments` mappings, so summaries follow provider, assessor, and version-specific rule page paths.
 
 ## Generated FRR Reference Index
 

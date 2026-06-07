@@ -9,9 +9,9 @@ nav = [
       { "Shared Responsibility Model" = "shared-responsibilities.md" },
       { "FedRAMP Definitions" = "definitions.md" },
       { "Using the Consolidated Rules" = "rules.md" },
+      { "Important Dates" = "timeline.md" },
     ] },
     { "About This Preview" = [
-      { "Release Timeline" = "timeline.md" },
       { "Source Data" = "sources.md" },
       { "Changelog" = "changelog.md" },
       { "TO DO" = "todo.md" },
@@ -41,6 +41,7 @@ nav = [
       ] },
       { "Agency Use of FedRAMP Certified Cloud Services" = "reference/agency-use.md" },
       { "FedRAMP Recognition of Independent Assessment Services" = "reference/fedramp-recognition.md" },
+      { "Key Security Indicators" = "reference/key-security-indicators.md" },
     ] },
   ] },
   { "FedRAMP" = [
@@ -120,21 +121,23 @@ nav = [
   ] },
   { "Cloud Service Providers" = [
     "providers/index.md",
-    { "Getting Started as a Cloud Service Provider" = [
+      { "FedRAMP Support" = "providers/support.md" },
+    { "Getting Started & Preparation" = [
       "providers/start/index.md",
-      { "Getting Support" = "providers/support.md" },
       { "Finding an Advisor" = "providers/start/advisor.md" },
-      { "Choosing a Certification..." = [
-        { "Starting Class" = "providers/start/class.md" },
-        { "Type" = "providers/start/type.md" },
-        { "Path" = "providers/start/path.md" },
-      ] },
-      { "Preparing" = "providers/start/prepare.md" },
+      { "Choose a Starting Class" = "providers/start/class.md" },
+      { "Choose a Type" = "providers/start/type.md" },
+      { "Choose a Path" = "providers/start/path.md" },
+    ] },
+    { "Initial Implementation" = [
+      "providers/implement/index.md",
       { "Getting Listed" = [
-        "providers/start/marketplace/index.md",
-      ] },
-      { "Finding an Assessor" = "providers/start/assessor.md" },
-      { "Getting Certified" = "providers/start/get-certified.md" },
+        "providers/implement/marketplace/index.md",
+        { "Marketplace Listing Rules" = "providers/implement/marketplace/marketplace-listing.md" },
+      ]},
+      { "Do the Work" = "providers/implement/work.md" },
+      { "Finding an Assessor" = "providers/implement/assessor.md" },
+      { "Getting Certified" = "providers/implement/get-certified.md" },
     ] },
     { "Updating to 2026 Rules" = [
       "providers/updating/index.md",
@@ -149,27 +152,25 @@ nav = [
       "providers/20x/index.md",
       { "Initial Certification" = [
         "providers/20x/initial/index.md",
+        { "Marketplace Listing" = "providers/20x/rules/marketplace-listing.md" },
+        { "Initial FedRAMP Certification" = "providers/20x/rules/initial-fedramp-certification.md" },
+        { "FedRAMP Assessments" = "providers/20x/rules/fedramp-assessments.md" },
+        { "Certification Package Overview" = "providers/20x/rules/certification-package-overview.md" },
+        { "Minimum Assessment Scope" = "providers/20x/rules/minimum-assessment-scope.md" },
+        { "Certification Data Sharing" = "providers/20x/rules/certification-data-sharing.md" },
+        { "Using Cryptographic Modules" = "providers/20x/rules/using-cryptographic-modules.md" },
+        { "Secure Configuration Guide" = "providers/20x/rules/secure-configuration-guide.md" },
       ] },
       { "Ongoing Certification" = [
         "providers/20x/ongoing/index.md",
-      ] },
-      { "Changing Class" = "providers/20x/changing-class.md" },
-      { "Applicable Rules" = [
-        "providers/20x/rules/index.md",
-        { "Marketplace Listing" = "providers/20x/rules/marketplace-listing.md" },
-        { "Initial FedRAMP Certification" = "providers/20x/rules/initial-fedramp-certification.md" },
         { "Ongoing FedRAMP Certification" = "providers/20x/rules/ongoing-fedramp-certification.md" },
-        { "FedRAMP Assessments" = "providers/20x/rules/fedramp-assessments.md" },
-        { "Minimum Assessment Scope" = "providers/20x/rules/minimum-assessment-scope.md" },
-        { "Certification Data Sharing" = "providers/20x/rules/certification-data-sharing.md" },
-        { "Secure Configuration Guide" = "providers/20x/rules/secure-configuration-guide.md" },
-        { "Using Cryptographic Modules" = "providers/20x/rules/using-cryptographic-modules.md" },
         { "FedRAMP Security Inbox" = "providers/20x/rules/fedramp-security-inbox.md" },
         { "Incident Communications Procedures" = "providers/20x/rules/incident-communications-procedures.md" },
         { "Significant Change Notifications" = "providers/20x/rules/significant-change-notifications.md" },
         { "Vulnerability Detection and Response" = "providers/20x/rules/vulnerability-detection-and-response.md" },
         { "Collaborative Continuous Monitoring" = "providers/20x/rules/collaborative-continuous-monitoring.md" },
       ] },
+      { "Changing Class" = "providers/20x/changing-class.md" },
       { "Key Security Indicators" = [
         "providers/20x/key-security-indicators/index.md",
         { "Change Management" = "providers/20x/key-security-indicators/change-management.md" },
@@ -188,27 +189,25 @@ nav = [
       "providers/rev5/index.md",
       { "Initial Certification" = [
         "providers/rev5/initial/index.md",
+        { "Marketplace Listing" = "providers/rev5/rules/marketplace-listing.md" },
+        { "Initial FedRAMP Certification" = "providers/rev5/rules/initial-fedramp-certification.md" },
+        { "FedRAMP Assessments" = "providers/rev5/rules/fedramp-assessments.md" },
+        { "Certification Package Overview" = "providers/rev5/rules/certification-package-overview.md" },
+        { "Minimum Assessment Scope" = "providers/rev5/rules/minimum-assessment-scope.md" },
+        { "Certification Data Sharing" = "providers/rev5/rules/certification-data-sharing.md" },
+        { "Using Cryptographic Modules" = "providers/rev5/rules/using-cryptographic-modules.md" },
+        { "Secure Configuration Guide" = "providers/rev5/rules/secure-configuration-guide.md" },
       ] },
       { "Ongoing Certification" = [
         "providers/rev5/ongoing/index.md",
-      ] },
-      { "Changing Class" = "providers/rev5/changing-class.md" },
-      { "Applicable Rules" = [
-        "providers/rev5/rules/index.md",
-        { "Marketplace Listing" = "providers/rev5/rules/marketplace-listing.md" },
-        { "Initial FedRAMP Certification" = "providers/rev5/rules/initial-fedramp-certification.md" },
         { "Ongoing FedRAMP Certification" = "providers/rev5/rules/ongoing-fedramp-certification.md" },
-        { "FedRAMP Assessments" = "providers/rev5/rules/fedramp-assessments.md" },
-        { "Minimum Assessment Scope" = "providers/rev5/rules/minimum-assessment-scope.md" },
-        { "Certification Data Sharing" = "providers/rev5/rules/certification-data-sharing.md" },
-        { "Secure Configuration Guide" = "providers/rev5/rules/secure-configuration-guide.md" },
-        { "Using Cryptographic Modules" = "providers/rev5/rules/using-cryptographic-modules.md" },
         { "FedRAMP Security Inbox" = "providers/rev5/rules/fedramp-security-inbox.md" },
         { "Incident Communications Procedures" = "providers/rev5/rules/incident-communications-procedures.md" },
         { "Significant Change Notifications" = "providers/rev5/rules/significant-change-notifications.md" },
         { "Vulnerability Detection and Response" = "providers/rev5/rules/vulnerability-detection-and-response.md" },
         { "Collaborative Continuous Monitoring" = "providers/rev5/rules/collaborative-continuous-monitoring.md" },
       ] },
+      { "Changing Class" = "providers/rev5/changing-class.md" },
       { "Control Baselines" = [
         "providers/rev5/controls/index.md",
       ] },
@@ -340,6 +339,7 @@ rev5 = "material/numeric-5-circle-outline"
 
 [project.theme.icon.admonition]
 abstract = "fontawesome/solid/gavel"
+schema = "lucide/file-braces"
 
 # Palette toggle for automatic mode
 [[project.theme.palette]]

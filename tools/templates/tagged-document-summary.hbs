@@ -1,0 +1,28 @@
+{{#if tags.length}}
+---
+tags:
+{{#each tags}}
+  - {{this}}
+{{/each}}
+---
+
+{{/if}}
+{{#if statusSpan}}
+{{statusSpan}}
+
+{{/if}}
+# {{title}}
+
+{{#if taggedDocumentSummaryStats}}
+!!! tip "There are {{taggedDocumentSummaryStats.rulesetCount}} applicable rulesets with {{taggedDocumentSummaryStats.ruleCount}} total applicable rules."
+
+{{/if}}
+{{#if taggedDocumentSummaryRows.length}}
+| Ruleset | Summary |
+| --- | --- |
+{{#each taggedDocumentSummaryRows}}
+| [**{{label}}**]({{href}}) | {{summary}} |
+{{/each}}
+{{else}}
+No matching rules are currently available.
+{{/if}}

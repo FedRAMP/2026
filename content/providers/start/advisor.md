@@ -9,6 +9,14 @@ picto:
 
 # Finding an Advisor
 
+```mermaid
+flowchart LR
+  A["Preparation"] --> B[Initial Implementation] --> C[Ongoing Certification]
+
+  classDef current fill:#dff5e1,stroke:#2f855a,stroke-width:2px,color:#123524;
+  class A current;
+```
+
 All cloud service providers work with an independent assessor — and gain valuable experience and knowledge through that partnership specific to FedRAMP and the greater federal ecosystem. Further, your own team has access to all the guidance and instruction necessary to achieve a FedRAMP Certification of any class, type, or path on this site.
 
 In spite of all of this information being available publicly, providers that are new to FedRAMP will almost always benefit from using a high quality FedRAMP Advisory Service.

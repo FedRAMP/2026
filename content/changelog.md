@@ -9,6 +9,69 @@ picto:
 
 # Changelog
 
+## 2026.06.07.01-preview
+
+**Release Date:** June 7, 2026
+
+### Content Updates
+
+- [The Preparation Phase](https://preview.fedramp.gov/2026/providers/start/): Reworked the provider starting guide into a shorter preparation workflow that points readers toward choosing a class, type, and path before moving into implementation.
+- [Finding an Advisor](https://preview.fedramp.gov/2026/providers/start/advisor/), [Choosing a Certification Class](https://preview.fedramp.gov/2026/providers/start/class/), and [Choosing a Certification Type](https://preview.fedramp.gov/2026/providers/start/type/): Added preparation-phase workflow diagrams so readers can see where each step fits.
+- [Choosing a Certification Path](https://preview.fedramp.gov/2026/providers/start/path/): Added temporary Rev5 Program Certification options for Ready Conversion and Lost Sponsor applicants, including opening dates, grace period timing, and eligibility notes.
+- [The Initial Implementation Phase](https://preview.fedramp.gov/2026/providers/implement/): Added a new provider section that explains the implementation phase and lays out the steps from Marketplace listing through certification.
+- [Getting Listed](https://preview.fedramp.gov/2026/providers/implement/marketplace/): Added guidance on Initial Implementation Phase Marketplace listings and the obligations providers accept when they request a listing.
+- [Do the Work](https://preview.fedramp.gov/2026/providers/implement/work/): Added guidance for providers preparing their program, evidence, package overview, security decision record, and ongoing certification capabilities.
+- [Finding an Assessor](https://preview.fedramp.gov/2026/providers/implement/assessor/): Moved and expanded assessor guidance into the implementation phase, with advice on Marketplace research, qualifications, experience, and past performance.
+- [Getting Certified](https://preview.fedramp.gov/2026/providers/implement/get-certified/): Added a new certification application overview, including FedRAMP's review flow, 30-day review target, and expectations for provider responsiveness.
+- [Updating to 2026 Rules](https://preview.fedramp.gov/2026/providers/updating/): Expanded the provider transition page to explain the legal and policy changes behind FedRAMP 20x and the Consolidated Rules for 2026.
+- [What's Changing in 2026](https://preview.fedramp.gov/2026/providers/updating/changes/): Added a high-level overview of terminology changes, Rev5 transition planning, phased adoption, and major modernization expectations.
+- [Deadlines](https://preview.fedramp.gov/2026/providers/updating/deadlines/): Added draft notes for provider deadline interpretation, including FedRAMP Ready ending on July 28, 2026 and new Rev5 certification applications ending on June 11, 2027.
+- [Important Dates for the Consolidated Rules for 2026](https://preview.fedramp.gov/2026/timeline/): Updated the timeline with Class A, 20x Class B/C, temporary Rev5 pipeline, and end-of-new-Rev5 milestones.
+
+### Site Structure
+
+- Added an [Initial Implementation](https://preview.fedramp.gov/2026/providers/implement/) provider navigation section and moved Marketplace listing, assessor, and certification guidance under it.
+- Reorganized provider 20x and Rev5 rule navigation so initial and ongoing rules appear directly under their matching certification sections.
+- Added [Key Security Indicators](https://preview.fedramp.gov/2026/reference/key-security-indicators/) to the Complete Ruleset Reference.
+- Moved [Important Dates](https://preview.fedramp.gov/2026/timeline/) into the Understanding FedRAMP overview navigation.
+
+### Rules Updates
+
+### Rules Content Changes
+
+- Added AGU-AGC-TPP to prohibit agency preferences for a specific FedRAMP Certification Type or Path unless demonstrably needed and reported to FedRAMP.
+- Added AGU-USE-CLA to discourage agencies from authorizing Class A Certified offerings for more than 12 months unless the offering is seeking Class B, C, or D.
+- FRR.CPO moved from `empty` to `placeholder`; CPO-CSO-OVR and CPO-CSO-MTD add Certification Package Overview requirements, metadata expectations, related-rule mappings, and a package overview schema.
+- Removed CDS-CSF-SCD; CDS-CSO-PUB now expects public offering information in human-readable and JSON formats, expands the required information list, adds FedRAMP Recognized assessor information, and links a public marketplace information schema.
+- Added IFR-CSO-JSN and IFR-CSO-MRA for JSON-schema-valid machine-readable submissions and provider accountability for Certification Package accuracy.
+- Added IFR-APP-NTP and IFR-APP-USA to prohibit third-party applications and allow limited refreshing of stale assessments.
+- IFR-CLA-AFR expands Class A package expectations to include more FedRAMP rules and named KSI evidence; IFR-CLA-CAC was removed.
+- MKT-PRE-DCP and MKT-PRE-DLA moved to MKT-IIP-DCP and MKT-IIP-DLA; MKT-CSO-AGU moved to MKT-IIP-AGU; MKT-PRE-REQ was removed.
+- MKT-CSO-LRQ was replaced by MKT-CSO-PML, and MKT-CSO-MLR now defines minimum Marketplace listing requirements tied to CDS-CSO-PUB.
+- Removed MKT-FRP-DSM and MKT-FRP-MJS.
+- MKT-CAS-WEB, MKT-IAS-WEB, SCN-CSO-HRM, and VDR-TFR-MRH now link specific FedRAMP JSON schemas; assessor, significant-change, and VDR text now says JSON instead of generic machine-readable format where changed.
+- Added OFR-CSX-CPM for 20x package maintenance cadence and OFR-CSF-ANA, OFR-CSF-CPM, and OFR-CSF-IFC for Rev5 annual assessment, package maintenance, and integration of FedRAMP rule changes.
+- VDR-TFR-MHR, VDR-TFR-PDD, VDR-TFR-PCD, and VDR-TFR-MRH normalize `timeframe_type` from `month` to `months` where applicable.
+
+#### Schema And Structure Changes
+
+- **Breaking:** `effective_dates` changed from `obtain` + `maintain` plus either `grace_ends` or `grace_by_assessment_months` to required `obtain`, `maintain`, and `grace.default` / `grace.until_next_assessment`, with optional `optional_adoption`; consumers reading the old grace fields must update.
+- **Breaking:** The FRR subset vocabulary replaces `PRE` with `IIP`; data moved from `FRR.MKT.data.all.PRE` to `FRR.MKT.data.all.IIP`, so tools keyed to the old subset name must update.
+- Added optional `tag` to FRR document info and populated FRR document tags such as `initial`, `ongoing`, `gov`, and `assessor`.
+- Added optional FRR requirement `schema` metadata with required `name` and `url` fields for rule-linked JSON schemas.
+
+### Generated Page Experience
+
+- Added generated initial and ongoing ruleset summary pages for providers and assessors, with ruleset summaries and applicable rule counts. Examples: [20x Initial Certification](https://preview.fedramp.gov/2026/providers/20x/initial/) and [20x Initial Assessment](https://preview.fedramp.gov/2026/assessors/20x/initial/).
+- Added generated [Marketplace Listing Rules](https://preview.fedramp.gov/2026/providers/implement/marketplace/marketplace-listing/) under the provider implementation flow.
+- Updated generated deadline tables to show full ruleset names, optional adoption dates, obtain dates, maintain dates, and grace period details.
+- Added related JSON Schema callouts to generated rule pages when a rule references a schema.
+
+### Tooling
+
+- Improved generated Markdown support for tagged ruleset summaries, single-page KSI references, schema callouts, deadline handling, and duplicate output checks.
+- Expanded tests and tooling documentation for the new generated page behavior.
+
 ## 2026.06.04.01-preview
 
 **Release Date:** June 4, 2026

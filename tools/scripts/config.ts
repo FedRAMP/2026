@@ -4,12 +4,14 @@ import { fileURLToPath } from "node:url";
 import defaultConfig from "../config.json";
 
 export type RuleType = "20x" | "rev5";
+export type RuleTypeSelection = RuleType | "all";
 export type GeneratedEmptyBehavior = "write" | "skip";
 export type AllRulesPosition = "first" | "last";
 export type RuleDocumentSelection = string[] | "ALL";
 export type KsiThemeSelection = string[] | "ALL";
 export type RuleDocumentGrouping = "section" | "document";
 export type RuleDocumentOutputMode = "single" | "documents";
+export type KsiDocumentOutputMode = "single" | "themes";
 export type RuleDocumentLinkTargetScope = "default" | "sameMappingOnly";
 export type GeneratedDocumentStatus = "stable" | "placeholder" | "empty";
 export type GeneratedDocumentSource = "machine" | "person";
@@ -39,7 +41,7 @@ export interface DefinitionsMappingConfig {
 
 export interface DefinitionDocumentSourceConfig {
   collection: "FRD";
-  types?: RuleType[];
+  types?: RuleTypeSelection[];
   includeAll?: boolean;
   allPosition?: AllRulesPosition;
 }
@@ -60,7 +62,7 @@ export interface RuleDocumentSourceConfig {
   document?: string;
   documents?: RuleDocumentSelection;
   ignoreDocuments?: string[];
-  types: RuleType[];
+  types: RuleTypeSelection[];
   affects?: string[];
   sections?: string[];
   includeAll?: boolean;
@@ -106,6 +108,7 @@ export interface KsiDocumentMappingConfig {
   id: string;
   title?: string;
   output: string;
+  outputMode?: KsiDocumentOutputMode;
   status: GeneratedDocumentStatus;
   template?: string;
   definitionsHref?: string;
@@ -117,7 +120,7 @@ export interface DeadlineDocumentSourceConfig {
   collection: "FRR";
   documents?: RuleDocumentSelection;
   ignoreDocuments?: string[];
-  types: RuleType[];
+  types: RuleTypeSelection[];
   affects?: string[];
 }
 
@@ -128,6 +131,30 @@ export interface DeadlineDocumentMappingConfig {
   status: GeneratedDocumentStatus;
   template?: string;
   source: DeadlineDocumentSourceConfig;
+}
+
+export interface TaggedDocumentSummarySourceConfig {
+  collection: "FRR";
+  document?: string;
+  documents?: RuleDocumentSelection;
+  ignoreDocuments?: string[];
+  types: RuleTypeSelection[];
+  affects?: string[];
+  sections?: string[];
+  tag?: string;
+  tags?: string[];
+  includeAll?: boolean;
+  allPosition?: AllRulesPosition;
+}
+
+export interface TaggedDocumentSummaryMappingConfig {
+  id: string;
+  title: string;
+  output: string;
+  status: GeneratedDocumentStatus;
+  template?: string;
+  emptyBehavior?: GeneratedEmptyBehavior;
+  source: TaggedDocumentSummarySourceConfig;
 }
 
 export interface ReferenceIndexDocumentSourceConfig {
@@ -164,6 +191,7 @@ export interface GeneratedConfig {
   definitionDocuments?: DefinitionDocumentMappingConfig[];
   ksiDocuments?: KsiDocumentMappingConfig[];
   deadlineDocuments?: DeadlineDocumentMappingConfig[];
+  taggedDocumentSummaries?: TaggedDocumentSummaryMappingConfig[];
   referenceIndexDocuments?: ReferenceIndexDocumentMappingConfig[];
   frrCollectionDocuments?: FrrCollectionDocumentMappingConfig[];
   ruleDocuments: RuleDocumentMappingConfig[];

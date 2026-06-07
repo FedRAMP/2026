@@ -529,13 +529,34 @@ function findArtifact(
 
 function deadlineRowMarkdown(row: {
   shortName: string;
-  name: string;
+  displayName: string;
   href: string;
+  optionalAdoption: string;
   obtain: string;
   maintain: string;
   graceEnds: string;
 }): string {
-  return `| ${row.shortName} | [${row.name}](${row.href}) | ${row.obtain} | ${row.maintain} | ${row.graceEnds} |`;
+  return `| [${row.displayName}](${row.href}) | ${row.optionalAdoption} | ${row.obtain} | ${row.maintain} | ${row.graceEnds} |`;
+}
+
+function taggedDocumentSummaryRowMarkdown(row: {
+  label: string;
+  href: string;
+  summary: string;
+  applicableRuleCount: number;
+}): string {
+  return `| [**${row.label}**](${row.href}) | ${row.summary} |`;
+}
+
+function taggedDocumentSummaryStatsMarkdown(artifact: ArtifactForTest): string {
+  const stats = artifact.context.taggedDocumentSummaryStats;
+  if (!stats) {
+    throw new Error(
+      `Expected ${artifact.relativePath} to include tagged summary stats.`,
+    );
+  }
+
+  return `!!! tip "There are ${stats.rulesetCount} applicable rulesets with ${stats.ruleCount} total applicable rules."`;
 }
 
 function controlUrl(controlId: string): string {
@@ -569,6 +590,29 @@ function expectDeadlineRowsFromArtifact(
   expectTextOrder(contents, expectedRows, description);
 }
 
+function expectTaggedDocumentSummaryRowsFromArtifact(
+  contents: string,
+  artifact: ArtifactForTest,
+  description: string,
+): void {
+  const expectedRows = artifact.context.taggedDocumentSummaryRows.map(
+    taggedDocumentSummaryRowMarkdown,
+  );
+  expect(expectedRows.length).toBeGreaterThan(0);
+
+  expectTextOrder(contents, expectedRows, description);
+}
+
+function expectTaggedDocumentSummaryStatsFromArtifact(
+  contents: string,
+  artifact: ArtifactForTest,
+  description: string,
+): void {
+  expectWithFailureSummary(description, () => {
+    expect(contents).toContain(taggedDocumentSummaryStatsMarkdown(artifact));
+  });
+}
+
 function expectNoDeadlineRowsForDocuments(
   contents: string,
   rules: RulesForTest,
@@ -577,7 +621,7 @@ function expectNoDeadlineRowsForDocuments(
   for (const documentKey of documentKeys) {
     const shortName = rules.FRR[documentKey]?.info.short_name;
     if (shortName) {
-      expect(contents).not.toContain(`| ${shortName} |`);
+      expect(contents).not.toContain(`(${shortName})]`);
     }
   }
 }
@@ -599,7 +643,11 @@ function testRequirementDocument(options: {
         date: {
           obtain: "2026-01-01",
           maintain: "2026-02-01",
-          grace_ends: "2026-03-01",
+          optional_adoption: "2025-12-01",
+          grace: {
+            default: "2026-03-01",
+            until_next_assessment: false,
+          },
         },
       },
     },
@@ -770,6 +818,85 @@ async function listRelativeFiles(root: string): Promise<string[]> {
   );
 
   return files.flat().map((filePath) => filePath.split(path.sep).join("/"));
+}
+
+interface ManualSrcContentDrift {
+  relativePath: string;
+}
+
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function stripGeneratedManualPageAdornments(contents: string): string {
+  const lines = contents.replace(/\r\n?/g, "\n").split("\n");
+  const outputLines: string[] = [];
+
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index] ?? "";
+    const trimmed = line.trim();
+
+    if (/^<span class="picto">.+<\/span>$/.test(trimmed)) {
+      continue;
+    }
+
+    if (trimmed === '??? info inline end "Page Info"') {
+      while (
+        index + 1 < lines.length &&
+        (lines[index + 1] === "" || /^\s/.test(lines[index + 1] ?? ""))
+      ) {
+        index++;
+      }
+      continue;
+    }
+
+    outputLines.push(line);
+  }
+
+  return outputLines.join("\n");
+}
+
+function normalizeManualMarkdownForComparison(contents: string): string {
+  return `${stripGeneratedManualPageAdornments(contents)
+    .replace(/[ \t]+$/gm, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trimEnd()}\n`;
+}
+
+async function findManualSrcContentDrift(
+  srcRoot: string,
+  contentRoot: string,
+): Promise<ManualSrcContentDrift[]> {
+  const srcMarkdownPaths = (await listRelativeFiles(srcRoot))
+    .filter((relativePath) => relativePath.endsWith(".md"))
+    .sort();
+  const drift: ManualSrcContentDrift[] = [];
+
+  for (const relativePath of srcMarkdownPaths) {
+    const srcPath = path.join(srcRoot, relativePath);
+    const contentPath = path.join(contentRoot, relativePath);
+    if (!(await fileExists(contentPath))) {
+      continue;
+    }
+
+    const srcContents = normalizeManualMarkdownForComparison(
+      await readFile(srcPath, "utf8"),
+    );
+    const contentContents = normalizeManualMarkdownForComparison(
+      await readFile(contentPath, "utf8"),
+    );
+
+    if (srcContents !== contentContents) {
+      drift.push({ relativePath });
+    }
+  }
+
+  return drift;
 }
 
 function markdownToHtmlPath(htmlRoot: string, relativePath: string): string {
@@ -1089,6 +1216,7 @@ function generatedMappingStatusFailures(config: ToolConfig): string[] {
     ["definitionDocuments", config.generated.definitionDocuments ?? []],
     ["ksiDocuments", config.generated.ksiDocuments ?? []],
     ["deadlineDocuments", config.generated.deadlineDocuments ?? []],
+    ["taggedDocumentSummaries", config.generated.taggedDocumentSummaries ?? []],
     ["referenceIndexDocuments", config.generated.referenceIndexDocuments ?? []],
     ["frrCollectionDocuments", config.generated.frrCollectionDocuments ?? []],
     ["ruleDocuments", config.generated.ruleDocuments],
@@ -1264,13 +1392,23 @@ describe("build-markdown", () => {
     for (const relativePath of [
       "agencies/rules/collaborative-continuous-monitoring.md",
       "agencies/rules/vulnerability-detection-and-response.md",
+      "assessors/20x/initial/index.md",
+      "assessors/20x/ongoing/index.md",
+      "assessors/rev5/initial/index.md",
+      "assessors/rev5/ongoing/index.md",
       "definitions.md",
       "providers/20x/key-security-indicators/change-management.md",
       "providers/20x/key-security-indicators/cloud-native-architecture.md",
+      "providers/20x/initial/index.md",
+      "providers/20x/ongoing/index.md",
+      "providers/implement/marketplace/marketplace-listing.md",
+      "providers/rev5/initial/index.md",
+      "providers/rev5/ongoing/index.md",
       "providers/updating/deadlines/20x.md",
       "providers/updating/deadlines/rev5.md",
       "reference/agency-use.md",
       "reference/index.md",
+      "reference/key-security-indicators.md",
       "reference/security-decision-record.md",
       "responsibilities/rules.md",
     ]) {
@@ -1279,11 +1417,13 @@ describe("build-markdown", () => {
     expect(relativePaths).not.toContain(
       "assessors/20x/rules/marketplace-listing.md",
     );
+    expect(relativePaths).not.toContain("providers/updating/deadlines/all.md");
+    expect(relativePaths).not.toContain("assessors/updating/deadlines/all.md");
 
     const referenceArtifactPaths = relativePaths.filter((relativePath) =>
       relativePath.startsWith("reference/"),
     );
-    expect(referenceArtifactPaths).toHaveLength(Object.keys(rules.FRR).length + 1);
+    expect(referenceArtifactPaths).toHaveLength(Object.keys(rules.FRR).length + 2);
 
     for (const artifact of expectedArtifacts) {
       await access(artifact.outputPath);
@@ -1339,6 +1479,30 @@ describe("build-markdown", () => {
       referenceIndexContents,
       expectedReferenceIndexRows(rules),
       "Generated reference index should render source-derived rows in acronym order",
+    );
+
+    const referenceCollaborativeMonitoringContents = await readFile(
+      path.join(OUTPUT_DIR, "reference", "collaborative-continuous-monitoring.md"),
+      "utf8",
+    );
+    expectTextOrder(
+      referenceCollaborativeMonitoringContents,
+      [
+        '!!! info "Effective Date(s) & Overall Applicability for 20x"',
+        "- **Optional Adoption:** 2026-07-04",
+        "- **Obtain:** 2026-07-04",
+        "- **Maintain:** 2027-01-01",
+        "- **Grace Ends:** On the first annual assessment scheduled after 2027-01-01",
+        '!!! info "Effective Date(s) & Overall Applicability for Rev5"',
+        "- **Optional Adoption:** 2026-07-04",
+        "- **Obtain:** 2027-01-01",
+        "- **Maintain:** 2027-04-02",
+        "- **Grace Ends:** 2027-10-01",
+      ],
+      "Generated effective-date metadata should render structured grace and optional adoption dates",
+    );
+    expect(referenceCollaborativeMonitoringContents).not.toContain(
+      "[object Object]",
     );
 
     const definitionsContents = await readFile(
@@ -1478,6 +1642,38 @@ describe("build-markdown", () => {
     }
     expect(ksiPolicyInventoryContents).toContain(policyInventoryIndicatorId);
 
+    const ksiReferenceContents = await readFile(
+      path.join(OUTPUT_DIR, "reference", "key-security-indicators.md"),
+      "utf8",
+    );
+    expect(ksiReferenceContents).toStartWith(
+      `---\ntags:\n  - 20x\n---\n\n${STABLE_STATUS_SPAN}\n\n# Key Security Indicators`,
+    );
+    expect(ksiReferenceContents).not.toContain("**Subsets**");
+    expect(ksiReferenceContents).not.toContain('!!! info ""');
+    expect(ksiReferenceContents).toContain(`## ${changeManagementTheme.name}`);
+    expect(ksiReferenceContents).toContain(
+      `### ${changeManagementIndicator.name ?? changeManagementIndicatorId}`,
+    );
+    expectTextOrder(
+      ksiReferenceContents,
+      [
+        "# Key Security Indicators",
+        `## ${changeManagementTheme.name}`,
+        changeManagementIndicatorId,
+        `## ${policyInventoryTheme.name}`,
+        policyInventoryIndicatorId,
+      ],
+      "Generated KSI reference markdown should group all indicators by theme",
+    );
+    if (changeManagementControl) {
+      expect(ksiReferenceContents).toContain(
+        `[${changeManagementControl.toUpperCase()}](${controlUrl(
+          changeManagementControl,
+        )})`,
+      );
+    }
+
     const deadlines20xPath = path.join(
       OUTPUT_DIR,
       "providers",
@@ -1495,6 +1691,12 @@ describe("build-markdown", () => {
       deadlines20xContents,
       `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# 20x Deadlines`,
       "Generated provider 20x deadlines markdown has an unexpected header",
+    );
+    expect(deadlines20xContents).toContain(
+      "| Ruleset | Optional Adoption | Obtain | Maintain | Grace Ends |",
+    );
+    expect(deadlines20xContents).toContain(
+      "| [Collaborative Continuous Monitoring (CCM)](../../20x/rules/collaborative-continuous-monitoring.md) | 2026-07-04 | 2026-07-04 | 2027-01-01 | On the first annual assessment scheduled after 2027-01-01 |",
     );
     expectDeadlineRowsFromArtifact(
       deadlines20xContents,
@@ -1553,11 +1755,173 @@ describe("build-markdown", () => {
       "../../../providers/rev5/rules/",
     );
 
+    const providerInitial20xContents = await readFile(
+      path.join(OUTPUT_DIR, "providers", "20x", "initial", "index.md"),
+      "utf8",
+    );
+    const providerInitial20xArtifact = findArtifact(
+      expectedArtifacts,
+      "providers/20x/initial/index.md",
+    );
+    expect(providerInitial20xContents).toStartWith(
+      `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Initial Certification`,
+    );
+    expect(providerInitial20xContents).toContain(
+      "| Ruleset | Summary |",
+    );
+    expectTaggedDocumentSummaryStatsFromArtifact(
+      providerInitial20xContents,
+      providerInitial20xArtifact,
+      "Generated provider 20x initial summary should render aggregate stats",
+    );
+    expectTextOrder(
+      providerInitial20xContents,
+      [
+        "# Initial Certification",
+        taggedDocumentSummaryStatsMarkdown(providerInitial20xArtifact),
+        "| Ruleset | Summary |",
+      ],
+      "Generated provider 20x initial summary should place stats before the table",
+    );
+    expectTaggedDocumentSummaryRowsFromArtifact(
+      providerInitial20xContents,
+      providerInitial20xArtifact,
+      "Generated provider 20x initial summary should render source-derived rows in artifact order",
+    );
+    expect(providerInitial20xContents).toContain(
+      "| [**Certification Data Sharing (CDS)**](../rules/certification-data-sharing.md) |",
+    );
+    expect(providerInitial20xContents).toContain(
+      "<br><br>**Applicable Rules:**",
+    );
+    expect(providerInitial20xContents).not.toContain(
+      "Certification Data Sharing: General Provider Responsibilities",
+    );
+    expect(providerInitial20xContents).not.toContain(
+      "Ongoing FedRAMP Certification",
+    );
+    expect(providerInitial20xContents).not.toContain("Security Decision Record");
+
+    const providerOngoing20xContents = await readFile(
+      path.join(OUTPUT_DIR, "providers", "20x", "ongoing", "index.md"),
+      "utf8",
+    );
+    const providerOngoing20xArtifact = findArtifact(
+      expectedArtifacts,
+      "providers/20x/ongoing/index.md",
+    );
+    expect(providerOngoing20xContents).toStartWith(
+      `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Ongoing Certification`,
+    );
+    expectTaggedDocumentSummaryStatsFromArtifact(
+      providerOngoing20xContents,
+      providerOngoing20xArtifact,
+      "Generated provider 20x ongoing summary should render aggregate stats",
+    );
+    expectTaggedDocumentSummaryRowsFromArtifact(
+      providerOngoing20xContents,
+      providerOngoing20xArtifact,
+      "Generated provider 20x ongoing summary should render source-derived rows in artifact order",
+    );
+    expect(providerOngoing20xContents).toContain(
+      "| [**Ongoing FedRAMP Certification (OFR)**](../rules/ongoing-fedramp-certification.md) |",
+    );
+    expect(providerOngoing20xContents).not.toContain(
+      "Initial FedRAMP Certification",
+    );
+
+    const assessorInitial20xContents = await readFile(
+      path.join(OUTPUT_DIR, "assessors", "20x", "initial", "index.md"),
+      "utf8",
+    );
+    const assessorInitial20xArtifact = findArtifact(
+      expectedArtifacts,
+      "assessors/20x/initial/index.md",
+    );
+    expect(assessorInitial20xContents).toStartWith(
+      `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Initial Assessment`,
+    );
+    expectTaggedDocumentSummaryStatsFromArtifact(
+      assessorInitial20xContents,
+      assessorInitial20xArtifact,
+      "Generated assessor 20x initial summary should render aggregate stats",
+    );
+    expectTaggedDocumentSummaryRowsFromArtifact(
+      assessorInitial20xContents,
+      assessorInitial20xArtifact,
+      "Generated assessor 20x initial summary should render source-derived rows in artifact order",
+    );
+    expect(assessorInitial20xContents).toContain(
+      "| [**FedRAMP Assessments (FRA)**](../rules/fedramp-assessments.md) |",
+    );
+    expect(assessorInitial20xContents).toContain(
+      "| [**Marketplace Listing (MKT)**](../../recognition/rules/marketplace-listing.md) |",
+    );
+    expect(assessorInitial20xContents).not.toContain(
+      "FedRAMP Assessments: General Independent Assessor Responsibilities",
+    );
+    expect(assessorInitial20xContents).not.toContain(
+      "../../../providers/20x/rules/",
+    );
+
+    const assessorOngoing20xArtifact = findArtifact(
+      expectedArtifacts,
+      "assessors/20x/ongoing/index.md",
+    );
+    const assessorOngoing20xContents = await readFile(
+      path.join(OUTPUT_DIR, "assessors", "20x", "ongoing", "index.md"),
+      "utf8",
+    );
+    expect(assessorOngoing20xArtifact.context.taggedDocumentSummaryRows).toEqual(
+      [],
+    );
+    expect(assessorOngoing20xContents).toStartWith(
+      `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Ongoing Assessment`,
+    );
+    expectTaggedDocumentSummaryStatsFromArtifact(
+      assessorOngoing20xContents,
+      assessorOngoing20xArtifact,
+      "Generated assessor 20x ongoing summary should render zero aggregate stats",
+    );
+    expectTextOrder(
+      assessorOngoing20xContents,
+      [
+        "# Ongoing Assessment",
+        taggedDocumentSummaryStatsMarkdown(assessorOngoing20xArtifact),
+        "No matching rules are currently available.",
+      ],
+      "Generated assessor 20x ongoing summary should place stats before the empty state",
+    );
+    expect(assessorOngoing20xContents).toContain(
+      "No matching rules are currently available.",
+    );
+
     const contentDefinitionsPath = path.join(
       resolveToolPath(config.paths.content),
       "definitions.md",
     );
     await expect(access(contentDefinitionsPath)).rejects.toThrow();
+
+    const providerMarketplaceContents = await readFile(
+      path.join(
+        OUTPUT_DIR,
+        "providers",
+        "implement",
+        "marketplace",
+        "marketplace-listing.md",
+      ),
+      "utf8",
+    );
+    expect(providerMarketplaceContents).toContain(
+      "[CDS-CSO-PUB (Public Information)](../../../reference/certification-data-sharing.md#public-information){ data-preview }",
+    );
+    expect(providerMarketplaceContents).toContain(
+      "[MKT-FRP-SOF (Scope of FedRAMP)](../../../reference/marketplace-listing.md#scope-of-fedramp){ data-preview }",
+    );
+    expect(providerMarketplaceContents).not.toContain("../../20x/rules/");
+    expect(providerMarketplaceContents).not.toContain(
+      "../../../responsibilities/rules.md#scope-of-fedramp",
+    );
 
     const provider20xIcpContents = await readFile(
       path.join(
@@ -1625,6 +1989,35 @@ describe("build-markdown", () => {
     expect(notification).toBeTruthy();
     expect(provider20xIcpContents).toContain(
       `Notify ${notification?.party} by ${notification?.method} using ${notification?.target}.`,
+    );
+
+    const schemaRuleId = "CDS-CSO-PUB";
+    const schemaRule = rules.FRR.CDS?.data.all?.CSO?.[schemaRuleId];
+    if (!schemaRule?.schema?.name || !schemaRule.schema.url) {
+      throw new Error(
+        `Expected ${schemaRuleId} to include related JSON schema metadata.`,
+      );
+    }
+    const provider20xCdsContents = await readFile(
+      path.join(
+        OUTPUT_DIR,
+        "providers",
+        "20x",
+        "rules",
+        `${rules.FRR.CDS?.info.web_name}.md`,
+      ),
+      "utf8",
+    );
+    expectTextOrder(
+      provider20xCdsContents,
+      [
+        `### ${schemaRule.name ?? schemaRuleId}`,
+        `??? abstract "${schemaRuleId}"`,
+        `!!! schema "Related JSON Schema: [${schemaRule.schema.name}](${schemaRule.schema.url})"`,
+        '!!! quote ""',
+        schemaRule.statement ?? "",
+      ],
+      "Generated requirement markdown should place related JSON schema metadata between the rule ID block and statement",
     );
 
     const provider20xFsiContents = await readFile(
@@ -1812,6 +2205,7 @@ describe("build-markdown", () => {
         definitionDocuments: [],
         ksiDocuments: [],
         deadlineDocuments: [],
+        taggedDocumentSummaries: [],
         referenceIndexDocuments: [],
         frrCollectionDocuments: [],
         ruleDocuments: [
@@ -1845,6 +2239,94 @@ describe("build-markdown", () => {
           "assessors/20x/rules/ignored-synthetic-ruleset.md",
       ),
     ).toBe(false);
+  });
+
+  test("expands source.types \"all\" to common, 20x, and Rev5 rule content", async () => {
+    const config = await loadToolConfig();
+    const rules = structuredClone(await loadRules(config));
+    const syntheticDocument = testRequirementDocument({
+      name: "Synthetic Ruleset",
+      shortName: "SYN",
+      webName: "synthetic-ruleset",
+      affects: ["Providers"],
+    });
+    syntheticDocument.info["20x"] = {
+      subsets: {
+        TYP: {
+          name: "20x Rules",
+          description: "Rules specific to 20x.",
+        },
+      },
+    };
+    syntheticDocument.info.rev5 = {
+      subsets: {
+        TYP: {
+          name: "Rev5 Rules",
+          description: "Rules specific to Rev5.",
+        },
+      },
+    };
+    syntheticDocument.data["20x"] = {
+      TYP: {
+        "SYN-20X-ONE": {
+          name: "20x Synthetic Requirement",
+          statement: "Synthetic 20x requirement used by tests.",
+          affects: ["Providers"],
+        },
+      },
+    };
+    syntheticDocument.data.rev5 = {
+      TYP: {
+        "SYN-REV5-ONE": {
+          name: "Rev5 Synthetic Requirement",
+          statement: "Synthetic Rev5 requirement used by tests.",
+          affects: ["Providers"],
+        },
+      },
+    };
+    rules.FRR = {
+      SYN: syntheticDocument,
+    };
+
+    const artifacts = collectArtifacts(rules, {
+      ...config,
+      generated: {
+        ...config.generated,
+        definitionDocuments: [],
+        ksiDocuments: [],
+        deadlineDocuments: [],
+        taggedDocumentSummaries: [],
+        referenceIndexDocuments: [],
+        frrCollectionDocuments: [],
+        ruleDocuments: [
+          {
+            id: "agnostic-provider-rules",
+            output: "agnostic/{FRR}.md",
+            outputMode: "documents",
+            status: "stable",
+            emptyBehavior: "skip",
+            source: {
+              collection: "FRR",
+              documents: ["SYN"],
+              types: ["all"],
+              affects: ["Providers"],
+              includeAll: true,
+              allPosition: "first",
+            },
+          },
+        ],
+      },
+    });
+
+    const artifact = findArtifact(artifacts, "agnostic/synthetic-ruleset.md");
+    const requirementIds = artifact.context.sections.flatMap((section) =>
+      section.requirements.map((requirement) => requirement.id),
+    );
+
+    expect(artifact.context.tags).toEqual(["20x", "Rev5"]);
+    expect(requirementIds).toContain("SYN-GEN-ONE");
+    expect(requirementIds).toContain("SYN-20X-ONE");
+    expect(requirementIds).toContain("SYN-REV5-ONE");
   });
 
   test("ignores configured deadline documents after resolving the source selection", async () => {
@@ -1885,6 +2367,7 @@ describe("build-markdown", () => {
             },
           },
         ],
+        taggedDocumentSummaries: [],
         referenceIndexDocuments: [],
         frrCollectionDocuments: [],
         ruleDocuments: [],
@@ -1944,6 +2427,7 @@ describe("build-markdown", () => {
             },
           },
         ],
+        taggedDocumentSummaries: [],
         referenceIndexDocuments: [],
         frrCollectionDocuments: [],
         ruleDocuments: [],
@@ -2038,6 +2522,7 @@ describe("build-markdown", () => {
           definitionDocuments: [],
           ksiDocuments: [],
           deadlineDocuments: [],
+          taggedDocumentSummaries: [],
           referenceIndexDocuments: [],
           frrCollectionDocuments: [],
           ruleDocuments: [],
@@ -2256,6 +2741,7 @@ describe("build-markdown", () => {
           ],
           ksiDocuments: [],
           deadlineDocuments: [],
+          taggedDocumentSummaries: [],
           referenceIndexDocuments: [],
           frrCollectionDocuments: [],
           ruleDocuments: [],
@@ -2314,6 +2800,72 @@ describe("build-markdown", () => {
       await rm(tempDir, { recursive: true, force: true });
     }
   });
+
+  test("rejects duplicate generated output paths", async () => {
+    const config = await loadToolConfig();
+    const tempDir = await mkdtemp(path.join(tmpdir(), "cr26-site-tools-"));
+    const tempContentDir = path.join(tempDir, "content");
+    const tempSrcDir = path.join(tempDir, "src");
+    const tempHtmlDir = path.join(tempDir, "html");
+
+    try {
+      await mkdir(tempContentDir, { recursive: true });
+
+      await expect(
+        buildMarkdown({
+          ...config,
+          paths: {
+            ...config.paths,
+            content: path.relative(resolveToolPath("."), tempContentDir),
+            src: path.relative(resolveToolPath("."), tempSrcDir),
+            html: path.relative(resolveToolPath("."), tempHtmlDir),
+          },
+          generated: {
+            ...config.generated,
+            definitions: undefined,
+            definitionDocuments: [
+              {
+                id: "first-definitions",
+                title: "First Definitions",
+                output: "definitions.md",
+                status: "stable",
+                includeEffectiveDates: false,
+                source: {
+                  collection: "FRD",
+                  types: ["20x", "rev5"],
+                  includeAll: true,
+                  allPosition: "first",
+                },
+              },
+              {
+                id: "second-definitions",
+                title: "Second Definitions",
+                output: "definitions.md",
+                status: "stable",
+                includeEffectiveDates: false,
+                source: {
+                  collection: "FRD",
+                  types: ["20x", "rev5"],
+                  includeAll: true,
+                  allPosition: "first",
+                },
+              },
+            ],
+            ksiDocuments: [],
+            deadlineDocuments: [],
+            taggedDocumentSummaries: [],
+            referenceIndexDocuments: [],
+            frrCollectionDocuments: [],
+            ruleDocuments: [],
+          },
+        }),
+      ).rejects.toThrow(
+        /definitions\.md" is produced by multiple mappings: first-definitions, second-definitions/,
+      );
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("content quality", () => {
@@ -2357,6 +2909,132 @@ describe("content quality", () => {
       await findBoldMarkdownHeadingWarnings(contentPath);
 
     expect(Array.isArray(boldMarkdownHeadingWarnings)).toBe(true);
+  });
+});
+
+describe("manual content source drift", () => {
+  test("detects manual src edits while ignoring generated page adornments", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "cr26-site-tools-"));
+    const tempContentDir = path.join(tempDir, "content");
+    const tempSrcDir = path.join(tempDir, "src");
+
+    try {
+      await mkdir(tempContentDir, { recursive: true });
+      await mkdir(tempSrcDir, { recursive: true });
+      await writeFile(
+        path.join(tempContentDir, "clean.md"),
+        [
+          "---",
+          "description: Clean source page.",
+          "purpose: Confirms generated adornments do not count as drift.",
+          "picto:",
+          "  source: person",
+          "  status: stable",
+          "---",
+          "",
+          "# Clean",
+          "",
+          "Original content.",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      await writeFile(
+        path.join(tempSrcDir, "clean.md"),
+        [
+          "---",
+          "description: Clean source page.",
+          "purpose: Confirms generated adornments do not count as drift.",
+          "picto:",
+          "  source: person",
+          "  status: stable",
+          "---",
+          "",
+          MANUAL_STABLE_STATUS_SPAN,
+          "",
+          '??? info inline end "Page Info"',
+          "",
+          "    **Description:** Clean source page.",
+          "    ",
+          "    **Purpose:** Confirms generated adornments do not count as drift.",
+          "",
+          "# Clean",
+          "",
+          "Original content.",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      await writeFile(
+        path.join(tempContentDir, "drift.md"),
+        [
+          "---",
+          "description: Drift source page.",
+          "purpose: Confirms direct src edits are caught.",
+          "picto:",
+          "  source: person",
+          "  status: stable",
+          "---",
+          "",
+          "# Drift",
+          "",
+          "Original content.",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      await writeFile(
+        path.join(tempSrcDir, "drift.md"),
+        [
+          "---",
+          "description: Drift source page.",
+          "purpose: Confirms direct src edits are caught.",
+          "picto:",
+          "  source: person",
+          "  status: stable",
+          "---",
+          "",
+          MANUAL_STABLE_STATUS_SPAN,
+          "",
+          "# Drift",
+          "",
+          "Original content.",
+          "",
+          "This paragraph was typed into src by mistake.",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+
+      expect(
+        await findManualSrcContentDrift(tempSrcDir, tempContentDir),
+      ).toEqual([{ relativePath: "drift.md" }]);
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test("manual pages in src do not contain edits missing from content", async () => {
+    const config = await loadToolConfig();
+    const srcPath = resolveToolPath(config.paths.src);
+    const contentPath = resolveToolPath(config.paths.content);
+    const drift = await findManualSrcContentDrift(srcPath, contentPath);
+
+    expectWithFailureSummary(
+      [
+        "Manual content pages in src/ differ from their content/ sources.",
+        "This usually means a generated src/ file was edited directly.",
+        "Move the edits into the matching content/ file, then run bun run build to regenerate src/.",
+        "",
+        ...drift.map(
+          ({ relativePath }) =>
+            `- src/${relativePath} differs from content/${relativePath}`,
+        ),
+      ].join("\n"),
+      () => {
+        expect(drift).toEqual([]);
+      },
+    );
   });
 });
 
@@ -2517,6 +3195,14 @@ describe("build pipeline", () => {
       {
         path: "providers/20x/key-security-indicators/change-management/index.html",
         expectedText: [
+          renderedChangeManagementTheme.name,
+          renderedChangeManagementIndicatorId,
+        ],
+      },
+      {
+        path: "reference/key-security-indicators/index.html",
+        expectedText: [
+          "Key Security Indicators",
           renderedChangeManagementTheme.name,
           renderedChangeManagementIndicatorId,
         ],
