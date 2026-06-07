@@ -1,20 +1,15 @@
 ---
 tags:
   - 20x
-description: "Clarifications about how the initial assessment requires them to check literally everything, verify and validate every single verification and validation from the provider, and address every single KSI and every single rule. Tell 'em how to read the rules too."
-purpose: "Assessors will know how to prepare to go about this philosophically, then hit up the applicable rules for the detailed expectations."
-google_doc: ""
-picto:
-  source: person
-  status: empty
 ---
 
-<span class="picto">:lucide-person-standing:{ .person title="This content was written by a human just for this page." } :lucide-circle-slash:{ .empty title="This content has not been produced or ported to this website yet." }</span>
-
-??? info inline end "Page Info"
-
-    **Description:** Clarifications about how the initial assessment requires them to check literally everything, verify and validate every single verification and validation from the provider, and address every single KSI and every single rule. Tell 'em how to read the rules too.
-    
-    **Purpose:** Assessors will know how to prepare to go about this philosophically, then hit up the applicable rules for the detailed expectations.
+<span class="picto">:lucide-computer:{ .machine title="This content is machine-generated from FedRAMP Machine-Readable Rules." } :lucide-pencil:{ .placeholder title="This content is a placeholder and is not complete." }</span>
 
 # Initial Assessment
+
+!!! tip "There are 2 applicable rulesets with 13 total applicable rules."
+
+| Ruleset | Summary |
+| --- | --- |
+| [**FedRAMP Assessments (FRA)**](../rules/fedramp-assessments.md) | This ruleset explains the expectations for FedRAMP assessments.<br><br>**Applicable Rules:** 10 |
+| [**Marketplace Listing (MKT)**](../../recognition/rules/marketplace-listing.md) | The Marketplace Listing rules define how FedRAMP decides which cloud service offerings, assessors, and advisors may be listed in the FedRAMP Marketplace. These rules help agencies and other customers rely on the Marketplace as a consistent source of eligible services and supporting organizations, while requiring listed organizations to supply accurate, accessible, and machine-readable information.<br><br>**Applicable Rules:** 3 |

@@ -19,6 +19,7 @@ import {
   type RuleDocumentMappingConfig,
   type RuleType,
   type RuleTypeSelection,
+  type TaggedDocumentSummaryMappingConfig,
   type ToolConfig,
 } from "./config";
 
@@ -104,6 +105,7 @@ interface InfoSource {
   web_name: string;
   purpose?: string;
   status?: string;
+  tag?: string;
   effective?: EffectiveEntrySource;
   subsets?: Record<string, SubsetSource>;
   flows?: FlowSource[];
@@ -377,6 +379,18 @@ interface ReferenceIndexRowViewModel {
   updated: string;
 }
 
+interface TaggedDocumentSummaryRowViewModel {
+  label: string;
+  href: string;
+  summary: string;
+  applicableRuleCount: number;
+}
+
+interface TaggedDocumentSummaryStatsViewModel {
+  rulesetCount: number;
+  ruleCount: number;
+}
+
 interface FlowStepViewModel {
   line: string;
 }
@@ -404,6 +418,14 @@ type RuleIndex = ReadonlyMap<string, RuleIndexEntry>;
 type FrrRuleSourceMappingConfig =
   | RuleDocumentMappingConfig
   | FrrCollectionDocumentMappingConfig;
+type FrrDocumentSelectionMappingConfig = {
+  id: string;
+  source: {
+    document?: string;
+    documents?: string[] | "ALL";
+    ignoreDocuments?: string[];
+  };
+};
 
 interface RulePageCandidate {
   mappingId: string;
@@ -445,6 +467,8 @@ interface DocumentViewModel {
   indicators: RequirementViewModel[];
   deadlineTables: DeadlineTableViewModel[];
   referenceIndexRows: ReferenceIndexRowViewModel[];
+  taggedDocumentSummaryRows: TaggedDocumentSummaryRowViewModel[];
+  taggedDocumentSummaryStats?: TaggedDocumentSummaryStatsViewModel;
 }
 
 export interface BuildArtifact {
@@ -454,7 +478,13 @@ export interface BuildArtifact {
   mappingId: string;
   sourceDocument?: string;
   title: string;
-  documentType: "FRD" | "FRR" | "KSI" | "DEADLINES" | "FRR_REFERENCE_INDEX";
+  documentType:
+    | "FRD"
+    | "FRR"
+    | "KSI"
+    | "DEADLINES"
+    | "FRR_REFERENCE_INDEX"
+    | "FRR_TAGGED_SUMMARY";
   context: DocumentViewModel;
 }
 
@@ -1978,7 +2008,8 @@ function buildDocumentGroupedSectionViewModel(
 
 function sourceDocumentKeys(
   rules: RulesDocument,
-  mapping: FrrRuleSourceMappingConfig,
+  mapping: FrrDocumentSelectionMappingConfig,
+  mappingLabel = "Rule document mapping",
 ): string[] {
   const { document, documents } = mapping.source;
   let selectedDocumentKeys: string[];
@@ -1988,7 +2019,7 @@ function sourceDocumentKeys(
   } else if (Array.isArray(documents)) {
     if (!documents.length) {
       throw new Error(
-        `Rule document mapping "${mapping.id}" must specify at least one source document.`,
+        `${mappingLabel} "${mapping.id}" must specify at least one source document.`,
       );
     }
 
@@ -1997,7 +2028,7 @@ function sourceDocumentKeys(
     selectedDocumentKeys = [document];
   } else {
     throw new Error(
-      `Rule document mapping "${mapping.id}" must specify source.document, source.documents, or source.documents: "ALL".`,
+      `${mappingLabel} "${mapping.id}" must specify source.document, source.documents, or source.documents: "ALL".`,
     );
   }
 
@@ -2005,15 +2036,16 @@ function sourceDocumentKeys(
     rules,
     mapping,
     selectedDocumentKeys,
-    "Rule document mapping",
+    mappingLabel,
   );
 }
 
-type IgnorableFrrDocumentMapping =
-  | RuleDocumentMappingConfig
-  | FrrCollectionDocumentMappingConfig
-  | DeadlineDocumentMappingConfig
-  | ReferenceIndexDocumentMappingConfig;
+type IgnorableFrrDocumentMapping = {
+  id: string;
+  source: {
+    ignoreDocuments?: unknown;
+  };
+};
 
 function filterIgnoredDocumentKeys(
   rules: RulesDocument,
@@ -2082,9 +2114,10 @@ interface SourceDocument {
 
 function sourceDocuments(
   rules: RulesDocument,
-  mapping: FrrRuleSourceMappingConfig,
+  mapping: FrrDocumentSelectionMappingConfig,
+  mappingLabel = "Rule document mapping",
 ): SourceDocument[] {
-  return sourceDocumentKeys(rules, mapping).map((documentKey) => {
+  return sourceDocumentKeys(rules, mapping, mappingLabel).map((documentKey) => {
     const document = rules.FRR[documentKey];
     if (!document) {
       throw new Error(`Unknown FRR document: ${documentKey}`);
@@ -2449,6 +2482,260 @@ function buildDeadlineTables(
   ];
 }
 
+function taggedDocumentSummaryTypes(
+  mapping: TaggedDocumentSummaryMappingConfig,
+): Version[] {
+  return configuredVersions(mapping.source.types);
+}
+
+function taggedDocumentSummaryTags(
+  mapping: TaggedDocumentSummaryMappingConfig,
+): string[] {
+  const tags = [
+    ...(mapping.source.tag ? [mapping.source.tag] : []),
+    ...(mapping.source.tags ?? []),
+  ]
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+  const uniqueTags = Array.from(new Set(tags));
+
+  if (!uniqueTags.length) {
+    throw new Error(
+      `Tagged document summary mapping "${mapping.id}" must specify source.tag or source.tags.`,
+    );
+  }
+
+  return uniqueTags;
+}
+
+function taggedDocumentSummaryBuckets(
+  mapping: TaggedDocumentSummaryMappingConfig,
+): DataBucket[] {
+  return configuredTypeBuckets(
+    taggedDocumentSummaryTypes(mapping),
+    mapping.source.includeAll,
+    mapping.source.allPosition,
+  );
+}
+
+function documentMatchesTaggedDocumentSummaryTag(
+  document: RequirementDocumentSource,
+  mapping: TaggedDocumentSummaryMappingConfig,
+): boolean {
+  const tag = document.info.tag?.trim();
+  return Boolean(tag && matchesAny(tag, taggedDocumentSummaryTags(mapping)));
+}
+
+function taggedSummaryApplicableRuleCount(
+  document: RequirementDocumentSource,
+  mapping: TaggedDocumentSummaryMappingConfig,
+): number {
+  const matchingRuleIds = new Set<string>();
+  const allowedSections = mapping.source.sections;
+  const affects = mapping.source.affects ?? [];
+
+  for (const bucketName of taggedDocumentSummaryBuckets(mapping)) {
+    const bucket = document.data[bucketName];
+    if (!bucket) {
+      continue;
+    }
+
+    for (const [subsetKey, sectionRequirements] of Object.entries(bucket)) {
+      if (allowedSections && !allowedSections.includes(subsetKey)) {
+        continue;
+      }
+
+      for (const [ruleId, requirement] of Object.entries(sectionRequirements)) {
+        if (requirementMatchesAffectedParties(requirement, affects)) {
+          matchingRuleIds.add(ruleId);
+        }
+      }
+    }
+  }
+
+  return matchingRuleIds.size;
+}
+
+function documentHasTaggedSummaryRequirement(
+  document: RequirementDocumentSource,
+  mapping: TaggedDocumentSummaryMappingConfig,
+): boolean {
+  return taggedSummaryApplicableRuleCount(document, mapping) > 0;
+}
+
+function sourceTaggedDocumentSummaryDocuments(
+  rules: RulesDocument,
+  mapping: TaggedDocumentSummaryMappingConfig,
+): SourceDocument[] {
+  return sourceDocuments(rules, mapping, "Tagged document summary mapping")
+    .filter(({ document }) =>
+      documentMatchesTaggedDocumentSummaryTag(document, mapping),
+    )
+    .filter(({ document }) =>
+      documentHasTaggedSummaryRequirement(document, mapping),
+    );
+}
+
+function ruleMappingMatchesTaggedSummaryAudience(
+  ruleMapping: RuleDocumentMappingConfig,
+  summaryMapping: TaggedDocumentSummaryMappingConfig,
+): boolean {
+  const summaryAffects = summaryMapping.source.affects ?? [];
+  if (!summaryAffects.length) {
+    return true;
+  }
+
+  const ruleAffects = ruleMapping.source.affects ?? [];
+  if (!ruleAffects.length) {
+    return false;
+  }
+
+  return affectsFiltersOverlap(summaryAffects, ruleAffects);
+}
+
+function matchingTaggedSummaryRuleDocumentPath(
+  sourceDocument: SourceDocument,
+  rules: RulesDocument,
+  config: ToolConfig,
+  summaryMapping: TaggedDocumentSummaryMappingConfig,
+): string | undefined {
+  for (const version of taggedDocumentSummaryTypes(summaryMapping)) {
+    const matchingRuleMapping = config.generated.ruleDocuments.find(
+      (ruleMapping) => {
+        if (ruleMapping.source.collection !== "FRR") {
+          return false;
+        }
+
+        if (!mappingVersions(ruleMapping).includes(version)) {
+          return false;
+        }
+
+        if (
+          !ruleMappingMatchesTaggedSummaryAudience(ruleMapping, summaryMapping)
+        ) {
+          return false;
+        }
+
+        if (
+          !ruleMappingIncludesSourceDocument(
+            rules,
+            ruleMapping,
+            sourceDocument.key,
+          )
+        ) {
+          return false;
+        }
+
+        return documentHasRequirementAffecting(
+          sourceDocument.document,
+          [version],
+          ruleMapping.source.affects ?? [],
+          ruleMapping.source.sections,
+        );
+      },
+    );
+
+    if (matchingRuleMapping) {
+      return normalizeGeneratedPath(
+        renderRuleDocumentOutput(
+          matchingRuleMapping,
+          sourceDocument.document.info.web_name,
+        ),
+      );
+    }
+  }
+
+  return undefined;
+}
+
+function relativeGeneratedHref(
+  fromRelativePath: string,
+  toRelativePath: string,
+): string {
+  return toPosixPath(
+    path.posix.relative(path.posix.dirname(fromRelativePath), toRelativePath),
+  );
+}
+
+function taggedSummaryStatus(
+  config: ToolConfig,
+  mapping: TaggedDocumentSummaryMappingConfig,
+  documents: RequirementDocumentSource[],
+): GeneratedDocumentStatus {
+  if (!documents.length) {
+    return mapping.status;
+  }
+
+  return combinedDeadlineDocumentStatus(
+    config,
+    documents,
+    `tagged document summary mapping "${mapping.id}"`,
+  );
+}
+
+function taggedSummaryCell(
+  document: RequirementDocumentSource,
+  applicableRuleCount: number,
+): string {
+  const purpose = markdownTableCell(document.info.purpose ?? "");
+  const ruleCount = `**Applicable Rules:** ${applicableRuleCount}`;
+
+  return purpose ? `${purpose}<br><br>${ruleCount}` : ruleCount;
+}
+
+function buildTaggedDocumentSummaryRows(
+  sourceDocuments: SourceDocument[],
+  pageRelativePath: string,
+  rules: RulesDocument,
+  config: ToolConfig,
+  mapping: TaggedDocumentSummaryMappingConfig,
+): {
+  rows: TaggedDocumentSummaryRowViewModel[];
+  documents: RequirementDocumentSource[];
+  stats: TaggedDocumentSummaryStatsViewModel;
+} {
+  const rows: TaggedDocumentSummaryRowViewModel[] = [];
+  const documents: RequirementDocumentSource[] = [];
+  let totalApplicableRules = 0;
+
+  for (const sourceDocument of sourceDocuments) {
+    const rulePageRelativePath = matchingTaggedSummaryRuleDocumentPath(
+      sourceDocument,
+      rules,
+      config,
+      mapping,
+    );
+    if (!rulePageRelativePath) {
+      continue;
+    }
+
+    const { document } = sourceDocument;
+    const href = relativeGeneratedHref(pageRelativePath, rulePageRelativePath);
+    const applicableRuleCount = taggedSummaryApplicableRuleCount(
+      document,
+      mapping,
+    );
+    rows.push({
+      label: markdownTableCell(deadlineDisplayName(document.info)),
+      href,
+      summary: taggedSummaryCell(document, applicableRuleCount),
+      applicableRuleCount,
+    });
+    totalApplicableRules += applicableRuleCount;
+
+    documents.push(document);
+  }
+
+  return {
+    rows,
+    documents,
+    stats: {
+      rulesetCount: rows.length,
+      ruleCount: totalApplicableRules,
+    },
+  };
+}
+
 function buildConfiguredSections(
   documents: RequirementDocumentSource[],
   mapping: FrrRuleSourceMappingConfig,
@@ -2522,6 +2809,8 @@ function buildDocumentContext(
     indicators: options.indicators ?? [],
     deadlineTables: options.deadlineTables ?? [],
     referenceIndexRows: options.referenceIndexRows ?? [],
+    taggedDocumentSummaryRows: options.taggedDocumentSummaryRows ?? [],
+    taggedDocumentSummaryStats: options.taggedDocumentSummaryStats,
   };
 }
 
@@ -3414,6 +3703,62 @@ function collectDeadlineDocumentArtifacts(
   );
 }
 
+function collectTaggedDocumentSummaryArtifact(
+  rules: RulesDocument,
+  config: ToolConfig,
+  mapping: TaggedDocumentSummaryMappingConfig,
+): BuildArtifact | null {
+  if (mapping.source.collection !== "FRR") {
+    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+  }
+
+  const relativePath = normalizeGeneratedPath(mapping.output);
+  const sourceDocumentEntries = sourceTaggedDocumentSummaryDocuments(
+    rules,
+    mapping,
+  );
+  const { rows, documents, stats } = buildTaggedDocumentSummaryRows(
+    sourceDocumentEntries,
+    relativePath,
+    rules,
+    config,
+    mapping,
+  );
+
+  if (!rows.length && mapping.emptyBehavior === "skip") {
+    return null;
+  }
+
+  return {
+    relativePath,
+    outputPath: resolveGeneratedOutputPath(config, relativePath),
+    templatePath: resolveToolPath(
+      mapping.template ?? "templates/tagged-document-summary.hbs",
+    ),
+    mappingId: mapping.id,
+    title: mapping.title,
+    documentType: "FRR_TAGGED_SUMMARY",
+    context: buildDocumentContext(mapping.title, {
+      statusSpan: pictographSpan(
+        config,
+        taggedSummaryStatus(config, mapping, documents),
+      ),
+      tags: versionTags(taggedDocumentSummaryTypes(mapping)),
+      taggedDocumentSummaryRows: rows,
+      taggedDocumentSummaryStats: stats,
+    }),
+  };
+}
+
+function collectTaggedDocumentSummaryArtifacts(
+  rules: RulesDocument,
+  config: ToolConfig,
+): BuildArtifact[] {
+  return (config.generated.taggedDocumentSummaries ?? [])
+    .map((mapping) => collectTaggedDocumentSummaryArtifact(rules, config, mapping))
+    .filter((artifact): artifact is BuildArtifact => artifact !== null);
+}
+
 function collectReferenceIndexDocumentArtifact(
   rules: RulesDocument,
   config: ToolConfig,
@@ -3811,6 +4156,7 @@ export function collectArtifacts(
     ...collectConfiguredKsiDocumentArtifacts(rules, config, doNotLinkTerms),
   );
   artifacts.push(...collectDeadlineDocumentArtifacts(rules, config));
+  artifacts.push(...collectTaggedDocumentSummaryArtifacts(rules, config));
   artifacts.push(...collectReferenceIndexDocumentArtifacts(rules, config));
   artifacts.push(
     ...collectFrrCollectionDocumentArtifacts(

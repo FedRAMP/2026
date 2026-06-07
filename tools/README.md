@@ -253,6 +253,33 @@ Deadline documents generate one page per configured type. They read each selecte
 Use `{type}` or `{version}` in `output` to place each type page explicitly. Use `source.ignoreDocuments` to remove specific FRR keys after `source.documents` is resolved, including when `source.documents` is `"ALL"`.
 Use `source.affects` to omit selected FRR documents that do not contain any rule affecting that audience, such as excluding assessor-only recognition rules from provider deadline pages.
 
+## Generated Tagged Document Summaries
+
+Add an entry to `generated.taggedDocumentSummaries` in `config.json`:
+
+```json
+{
+  "id": "provider-20x-initial-rules-summary",
+  "title": "Initial Certification",
+  "output": "providers/20x/initial/index.md",
+  "status": "placeholder",
+  "template": "templates/tagged-document-summary.hbs",
+  "source": {
+    "collection": "FRR",
+    "documents": "ALL",
+    "types": ["20x"],
+    "affects": ["Providers"],
+    "tag": "initial",
+    "includeAll": true,
+    "allPosition": "first"
+  }
+}
+```
+
+Tagged document summaries generate one overview page from FRR documents whose `info.tag` matches `source.tag` or `source.tags`. Each page renders a table of matching rulesets. Ruleset rows link to the generated rule page and use `info.purpose`, followed by an **Applicable Rules** count calculated from the same type, affected-party, and section filters used for the page.
+
+Summary mappings use the same `source.documents`, `source.ignoreDocuments`, `source.types`, `source.affects`, `source.sections`, `source.includeAll`, and `source.allPosition` behavior as generated rule pages. The generated links are resolved from the configured `generated.ruleDocuments` mappings, so summaries follow provider, assessor, and version-specific rule page paths.
+
 ## Generated FRR Reference Index
 
 Add an entry to `generated.referenceIndexDocuments` in `config.json`:

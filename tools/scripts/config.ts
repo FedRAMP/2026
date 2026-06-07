@@ -133,6 +133,30 @@ export interface DeadlineDocumentMappingConfig {
   source: DeadlineDocumentSourceConfig;
 }
 
+export interface TaggedDocumentSummarySourceConfig {
+  collection: "FRR";
+  document?: string;
+  documents?: RuleDocumentSelection;
+  ignoreDocuments?: string[];
+  types: RuleTypeSelection[];
+  affects?: string[];
+  sections?: string[];
+  tag?: string;
+  tags?: string[];
+  includeAll?: boolean;
+  allPosition?: AllRulesPosition;
+}
+
+export interface TaggedDocumentSummaryMappingConfig {
+  id: string;
+  title: string;
+  output: string;
+  status: GeneratedDocumentStatus;
+  template?: string;
+  emptyBehavior?: GeneratedEmptyBehavior;
+  source: TaggedDocumentSummarySourceConfig;
+}
+
 export interface ReferenceIndexDocumentSourceConfig {
   collection: "FRR";
   documents?: RuleDocumentSelection;
@@ -167,6 +191,7 @@ export interface GeneratedConfig {
   definitionDocuments?: DefinitionDocumentMappingConfig[];
   ksiDocuments?: KsiDocumentMappingConfig[];
   deadlineDocuments?: DeadlineDocumentMappingConfig[];
+  taggedDocumentSummaries?: TaggedDocumentSummaryMappingConfig[];
   referenceIndexDocuments?: ReferenceIndexDocumentMappingConfig[];
   frrCollectionDocuments?: FrrCollectionDocumentMappingConfig[];
   ruleDocuments: RuleDocumentMappingConfig[];

@@ -539,6 +539,26 @@ function deadlineRowMarkdown(row: {
   return `| [${row.displayName}](${row.href}) | ${row.optionalAdoption} | ${row.obtain} | ${row.maintain} | ${row.graceEnds} |`;
 }
 
+function taggedDocumentSummaryRowMarkdown(row: {
+  label: string;
+  href: string;
+  summary: string;
+  applicableRuleCount: number;
+}): string {
+  return `| [**${row.label}**](${row.href}) | ${row.summary} |`;
+}
+
+function taggedDocumentSummaryStatsMarkdown(artifact: ArtifactForTest): string {
+  const stats = artifact.context.taggedDocumentSummaryStats;
+  if (!stats) {
+    throw new Error(
+      `Expected ${artifact.relativePath} to include tagged summary stats.`,
+    );
+  }
+
+  return `!!! tip "There are ${stats.rulesetCount} applicable rulesets with ${stats.ruleCount} total applicable rules."`;
+}
+
 function controlUrl(controlId: string): string {
   if (controlId.includes(".")) {
     const [main = "", sub = ""] = controlId.split(".");
@@ -568,6 +588,29 @@ function expectDeadlineRowsFromArtifact(
   expect(expectedRows.length).toBeGreaterThan(0);
 
   expectTextOrder(contents, expectedRows, description);
+}
+
+function expectTaggedDocumentSummaryRowsFromArtifact(
+  contents: string,
+  artifact: ArtifactForTest,
+  description: string,
+): void {
+  const expectedRows = artifact.context.taggedDocumentSummaryRows.map(
+    taggedDocumentSummaryRowMarkdown,
+  );
+  expect(expectedRows.length).toBeGreaterThan(0);
+
+  expectTextOrder(contents, expectedRows, description);
+}
+
+function expectTaggedDocumentSummaryStatsFromArtifact(
+  contents: string,
+  artifact: ArtifactForTest,
+  description: string,
+): void {
+  expectWithFailureSummary(description, () => {
+    expect(contents).toContain(taggedDocumentSummaryStatsMarkdown(artifact));
+  });
 }
 
 function expectNoDeadlineRowsForDocuments(
@@ -1173,6 +1216,7 @@ function generatedMappingStatusFailures(config: ToolConfig): string[] {
     ["definitionDocuments", config.generated.definitionDocuments ?? []],
     ["ksiDocuments", config.generated.ksiDocuments ?? []],
     ["deadlineDocuments", config.generated.deadlineDocuments ?? []],
+    ["taggedDocumentSummaries", config.generated.taggedDocumentSummaries ?? []],
     ["referenceIndexDocuments", config.generated.referenceIndexDocuments ?? []],
     ["frrCollectionDocuments", config.generated.frrCollectionDocuments ?? []],
     ["ruleDocuments", config.generated.ruleDocuments],
@@ -1348,10 +1392,18 @@ describe("build-markdown", () => {
     for (const relativePath of [
       "agencies/rules/collaborative-continuous-monitoring.md",
       "agencies/rules/vulnerability-detection-and-response.md",
+      "assessors/20x/initial/index.md",
+      "assessors/20x/ongoing/index.md",
+      "assessors/rev5/initial/index.md",
+      "assessors/rev5/ongoing/index.md",
       "definitions.md",
       "providers/20x/key-security-indicators/change-management.md",
       "providers/20x/key-security-indicators/cloud-native-architecture.md",
+      "providers/20x/initial/index.md",
+      "providers/20x/ongoing/index.md",
       "providers/implement/marketplace/marketplace-listing.md",
+      "providers/rev5/initial/index.md",
+      "providers/rev5/ongoing/index.md",
       "providers/updating/deadlines/20x.md",
       "providers/updating/deadlines/rev5.md",
       "reference/agency-use.md",
@@ -1703,6 +1755,147 @@ describe("build-markdown", () => {
       "../../../providers/rev5/rules/",
     );
 
+    const providerInitial20xContents = await readFile(
+      path.join(OUTPUT_DIR, "providers", "20x", "initial", "index.md"),
+      "utf8",
+    );
+    const providerInitial20xArtifact = findArtifact(
+      expectedArtifacts,
+      "providers/20x/initial/index.md",
+    );
+    expect(providerInitial20xContents).toStartWith(
+      `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Initial Certification`,
+    );
+    expect(providerInitial20xContents).toContain(
+      "| Ruleset | Summary |",
+    );
+    expectTaggedDocumentSummaryStatsFromArtifact(
+      providerInitial20xContents,
+      providerInitial20xArtifact,
+      "Generated provider 20x initial summary should render aggregate stats",
+    );
+    expectTextOrder(
+      providerInitial20xContents,
+      [
+        "# Initial Certification",
+        taggedDocumentSummaryStatsMarkdown(providerInitial20xArtifact),
+        "| Ruleset | Summary |",
+      ],
+      "Generated provider 20x initial summary should place stats before the table",
+    );
+    expectTaggedDocumentSummaryRowsFromArtifact(
+      providerInitial20xContents,
+      providerInitial20xArtifact,
+      "Generated provider 20x initial summary should render source-derived rows in artifact order",
+    );
+    expect(providerInitial20xContents).toContain(
+      "| [**Certification Data Sharing (CDS)**](../rules/certification-data-sharing.md) |",
+    );
+    expect(providerInitial20xContents).toContain(
+      "<br><br>**Applicable Rules:**",
+    );
+    expect(providerInitial20xContents).not.toContain(
+      "Certification Data Sharing: General Provider Responsibilities",
+    );
+    expect(providerInitial20xContents).not.toContain(
+      "Ongoing FedRAMP Certification",
+    );
+    expect(providerInitial20xContents).not.toContain("Security Decision Record");
+
+    const providerOngoing20xContents = await readFile(
+      path.join(OUTPUT_DIR, "providers", "20x", "ongoing", "index.md"),
+      "utf8",
+    );
+    const providerOngoing20xArtifact = findArtifact(
+      expectedArtifacts,
+      "providers/20x/ongoing/index.md",
+    );
+    expect(providerOngoing20xContents).toStartWith(
+      `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Ongoing Certification`,
+    );
+    expectTaggedDocumentSummaryStatsFromArtifact(
+      providerOngoing20xContents,
+      providerOngoing20xArtifact,
+      "Generated provider 20x ongoing summary should render aggregate stats",
+    );
+    expectTaggedDocumentSummaryRowsFromArtifact(
+      providerOngoing20xContents,
+      providerOngoing20xArtifact,
+      "Generated provider 20x ongoing summary should render source-derived rows in artifact order",
+    );
+    expect(providerOngoing20xContents).toContain(
+      "| [**Ongoing FedRAMP Certification (OFR)**](../rules/ongoing-fedramp-certification.md) |",
+    );
+    expect(providerOngoing20xContents).not.toContain(
+      "Initial FedRAMP Certification",
+    );
+
+    const assessorInitial20xContents = await readFile(
+      path.join(OUTPUT_DIR, "assessors", "20x", "initial", "index.md"),
+      "utf8",
+    );
+    const assessorInitial20xArtifact = findArtifact(
+      expectedArtifacts,
+      "assessors/20x/initial/index.md",
+    );
+    expect(assessorInitial20xContents).toStartWith(
+      `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Initial Assessment`,
+    );
+    expectTaggedDocumentSummaryStatsFromArtifact(
+      assessorInitial20xContents,
+      assessorInitial20xArtifact,
+      "Generated assessor 20x initial summary should render aggregate stats",
+    );
+    expectTaggedDocumentSummaryRowsFromArtifact(
+      assessorInitial20xContents,
+      assessorInitial20xArtifact,
+      "Generated assessor 20x initial summary should render source-derived rows in artifact order",
+    );
+    expect(assessorInitial20xContents).toContain(
+      "| [**FedRAMP Assessments (FRA)**](../rules/fedramp-assessments.md) |",
+    );
+    expect(assessorInitial20xContents).toContain(
+      "| [**Marketplace Listing (MKT)**](../../recognition/rules/marketplace-listing.md) |",
+    );
+    expect(assessorInitial20xContents).not.toContain(
+      "FedRAMP Assessments: General Independent Assessor Responsibilities",
+    );
+    expect(assessorInitial20xContents).not.toContain(
+      "../../../providers/20x/rules/",
+    );
+
+    const assessorOngoing20xArtifact = findArtifact(
+      expectedArtifacts,
+      "assessors/20x/ongoing/index.md",
+    );
+    const assessorOngoing20xContents = await readFile(
+      path.join(OUTPUT_DIR, "assessors", "20x", "ongoing", "index.md"),
+      "utf8",
+    );
+    expect(assessorOngoing20xArtifact.context.taggedDocumentSummaryRows).toEqual(
+      [],
+    );
+    expect(assessorOngoing20xContents).toStartWith(
+      `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Ongoing Assessment`,
+    );
+    expectTaggedDocumentSummaryStatsFromArtifact(
+      assessorOngoing20xContents,
+      assessorOngoing20xArtifact,
+      "Generated assessor 20x ongoing summary should render zero aggregate stats",
+    );
+    expectTextOrder(
+      assessorOngoing20xContents,
+      [
+        "# Ongoing Assessment",
+        taggedDocumentSummaryStatsMarkdown(assessorOngoing20xArtifact),
+        "No matching rules are currently available.",
+      ],
+      "Generated assessor 20x ongoing summary should place stats before the empty state",
+    );
+    expect(assessorOngoing20xContents).toContain(
+      "No matching rules are currently available.",
+    );
+
     const contentDefinitionsPath = path.join(
       resolveToolPath(config.paths.content),
       "definitions.md",
@@ -2012,6 +2205,7 @@ describe("build-markdown", () => {
         definitionDocuments: [],
         ksiDocuments: [],
         deadlineDocuments: [],
+        taggedDocumentSummaries: [],
         referenceIndexDocuments: [],
         frrCollectionDocuments: [],
         ruleDocuments: [
@@ -2101,6 +2295,7 @@ describe("build-markdown", () => {
         definitionDocuments: [],
         ksiDocuments: [],
         deadlineDocuments: [],
+        taggedDocumentSummaries: [],
         referenceIndexDocuments: [],
         frrCollectionDocuments: [],
         ruleDocuments: [
@@ -2172,6 +2367,7 @@ describe("build-markdown", () => {
             },
           },
         ],
+        taggedDocumentSummaries: [],
         referenceIndexDocuments: [],
         frrCollectionDocuments: [],
         ruleDocuments: [],
@@ -2231,6 +2427,7 @@ describe("build-markdown", () => {
             },
           },
         ],
+        taggedDocumentSummaries: [],
         referenceIndexDocuments: [],
         frrCollectionDocuments: [],
         ruleDocuments: [],
@@ -2325,6 +2522,7 @@ describe("build-markdown", () => {
           definitionDocuments: [],
           ksiDocuments: [],
           deadlineDocuments: [],
+          taggedDocumentSummaries: [],
           referenceIndexDocuments: [],
           frrCollectionDocuments: [],
           ruleDocuments: [],
@@ -2543,6 +2741,7 @@ describe("build-markdown", () => {
           ],
           ksiDocuments: [],
           deadlineDocuments: [],
+          taggedDocumentSummaries: [],
           referenceIndexDocuments: [],
           frrCollectionDocuments: [],
           ruleDocuments: [],
@@ -2654,6 +2853,7 @@ describe("build-markdown", () => {
             ],
             ksiDocuments: [],
             deadlineDocuments: [],
+            taggedDocumentSummaries: [],
             referenceIndexDocuments: [],
             frrCollectionDocuments: [],
             ruleDocuments: [],

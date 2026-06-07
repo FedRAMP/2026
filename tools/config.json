@@ -105,6 +105,136 @@
         }
       }
     ],
+    "taggedDocumentSummaries": [
+      {
+        "id": "provider-20x-initial-rules-summary",
+        "title": "Initial Certification",
+        "output": "providers/20x/initial/index.md",
+        "status": "placeholder",
+        "template": "templates/tagged-document-summary.hbs",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x"],
+          "affects": ["Providers"],
+          "tag": "initial",
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "provider-rev5-initial-rules-summary",
+        "title": "Initial Certification",
+        "output": "providers/rev5/initial/index.md",
+        "status": "placeholder",
+        "template": "templates/tagged-document-summary.hbs",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["rev5"],
+          "affects": ["Providers"],
+          "tag": "initial",
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "provider-20x-ongoing-rules-summary",
+        "title": "Ongoing Certification",
+        "output": "providers/20x/ongoing/index.md",
+        "status": "placeholder",
+        "template": "templates/tagged-document-summary.hbs",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x"],
+          "affects": ["Providers"],
+          "tag": "ongoing",
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "provider-rev5-ongoing-rules-summary",
+        "title": "Ongoing Certification",
+        "output": "providers/rev5/ongoing/index.md",
+        "status": "placeholder",
+        "template": "templates/tagged-document-summary.hbs",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["rev5"],
+          "affects": ["Providers"],
+          "tag": "ongoing",
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "assessor-20x-initial-rules-summary",
+        "title": "Initial Assessment",
+        "output": "assessors/20x/initial/index.md",
+        "status": "placeholder",
+        "template": "templates/tagged-document-summary.hbs",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x"],
+          "affects": ["Assessors"],
+          "tag": "initial",
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "assessor-rev5-initial-rules-summary",
+        "title": "Initial Assessment",
+        "output": "assessors/rev5/initial/index.md",
+        "status": "placeholder",
+        "template": "templates/tagged-document-summary.hbs",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["rev5"],
+          "affects": ["Assessors"],
+          "tag": "initial",
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "assessor-20x-ongoing-rules-summary",
+        "title": "Ongoing Assessment",
+        "output": "assessors/20x/ongoing/index.md",
+        "status": "placeholder",
+        "template": "templates/tagged-document-summary.hbs",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x"],
+          "affects": ["Assessors"],
+          "tag": "ongoing",
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "assessor-rev5-ongoing-rules-summary",
+        "title": "Ongoing Assessment",
+        "output": "assessors/rev5/ongoing/index.md",
+        "status": "placeholder",
+        "template": "templates/tagged-document-summary.hbs",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["rev5"],
+          "affects": ["Assessors"],
+          "tag": "ongoing",
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      }
+    ],
     "referenceIndexDocuments": [
       {
         "id": "complete-ruleset-reference-index",
