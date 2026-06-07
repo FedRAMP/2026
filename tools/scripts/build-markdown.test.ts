@@ -772,6 +772,85 @@ async function listRelativeFiles(root: string): Promise<string[]> {
   return files.flat().map((filePath) => filePath.split(path.sep).join("/"));
 }
 
+interface ManualSrcContentDrift {
+  relativePath: string;
+}
+
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function stripGeneratedManualPageAdornments(contents: string): string {
+  const lines = contents.replace(/\r\n?/g, "\n").split("\n");
+  const outputLines: string[] = [];
+
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index] ?? "";
+    const trimmed = line.trim();
+
+    if (/^<span class="picto">.+<\/span>$/.test(trimmed)) {
+      continue;
+    }
+
+    if (trimmed === '??? info inline end "Page Info"') {
+      while (
+        index + 1 < lines.length &&
+        (lines[index + 1] === "" || /^\s/.test(lines[index + 1] ?? ""))
+      ) {
+        index++;
+      }
+      continue;
+    }
+
+    outputLines.push(line);
+  }
+
+  return outputLines.join("\n");
+}
+
+function normalizeManualMarkdownForComparison(contents: string): string {
+  return `${stripGeneratedManualPageAdornments(contents)
+    .replace(/[ \t]+$/gm, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trimEnd()}\n`;
+}
+
+async function findManualSrcContentDrift(
+  srcRoot: string,
+  contentRoot: string,
+): Promise<ManualSrcContentDrift[]> {
+  const srcMarkdownPaths = (await listRelativeFiles(srcRoot))
+    .filter((relativePath) => relativePath.endsWith(".md"))
+    .sort();
+  const drift: ManualSrcContentDrift[] = [];
+
+  for (const relativePath of srcMarkdownPaths) {
+    const srcPath = path.join(srcRoot, relativePath);
+    const contentPath = path.join(contentRoot, relativePath);
+    if (!(await fileExists(contentPath))) {
+      continue;
+    }
+
+    const srcContents = normalizeManualMarkdownForComparison(
+      await readFile(srcPath, "utf8"),
+    );
+    const contentContents = normalizeManualMarkdownForComparison(
+      await readFile(contentPath, "utf8"),
+    );
+
+    if (srcContents !== contentContents) {
+      drift.push({ relativePath });
+    }
+  }
+
+  return drift;
+}
+
 function markdownToHtmlPath(htmlRoot: string, relativePath: string): string {
   const parsedPath = path.posix.parse(relativePath);
   const directoryParts = parsedPath.dir ? parsedPath.dir.split("/") : [];
@@ -2455,6 +2534,132 @@ describe("content quality", () => {
       await findBoldMarkdownHeadingWarnings(contentPath);
 
     expect(Array.isArray(boldMarkdownHeadingWarnings)).toBe(true);
+  });
+});
+
+describe("manual content source drift", () => {
+  test("detects manual src edits while ignoring generated page adornments", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "cr26-site-tools-"));
+    const tempContentDir = path.join(tempDir, "content");
+    const tempSrcDir = path.join(tempDir, "src");
+
+    try {
+      await mkdir(tempContentDir, { recursive: true });
+      await mkdir(tempSrcDir, { recursive: true });
+      await writeFile(
+        path.join(tempContentDir, "clean.md"),
+        [
+          "---",
+          "description: Clean source page.",
+          "purpose: Confirms generated adornments do not count as drift.",
+          "picto:",
+          "  source: person",
+          "  status: stable",
+          "---",
+          "",
+          "# Clean",
+          "",
+          "Original content.",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      await writeFile(
+        path.join(tempSrcDir, "clean.md"),
+        [
+          "---",
+          "description: Clean source page.",
+          "purpose: Confirms generated adornments do not count as drift.",
+          "picto:",
+          "  source: person",
+          "  status: stable",
+          "---",
+          "",
+          MANUAL_STABLE_STATUS_SPAN,
+          "",
+          '??? info inline end "Page Info"',
+          "",
+          "    **Description:** Clean source page.",
+          "    ",
+          "    **Purpose:** Confirms generated adornments do not count as drift.",
+          "",
+          "# Clean",
+          "",
+          "Original content.",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      await writeFile(
+        path.join(tempContentDir, "drift.md"),
+        [
+          "---",
+          "description: Drift source page.",
+          "purpose: Confirms direct src edits are caught.",
+          "picto:",
+          "  source: person",
+          "  status: stable",
+          "---",
+          "",
+          "# Drift",
+          "",
+          "Original content.",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      await writeFile(
+        path.join(tempSrcDir, "drift.md"),
+        [
+          "---",
+          "description: Drift source page.",
+          "purpose: Confirms direct src edits are caught.",
+          "picto:",
+          "  source: person",
+          "  status: stable",
+          "---",
+          "",
+          MANUAL_STABLE_STATUS_SPAN,
+          "",
+          "# Drift",
+          "",
+          "Original content.",
+          "",
+          "This paragraph was typed into src by mistake.",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+
+      expect(
+        await findManualSrcContentDrift(tempSrcDir, tempContentDir),
+      ).toEqual([{ relativePath: "drift.md" }]);
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test("manual pages in src do not contain edits missing from content", async () => {
+    const config = await loadToolConfig();
+    const srcPath = resolveToolPath(config.paths.src);
+    const contentPath = resolveToolPath(config.paths.content);
+    const drift = await findManualSrcContentDrift(srcPath, contentPath);
+
+    expectWithFailureSummary(
+      [
+        "Manual content pages in src/ differ from their content/ sources.",
+        "This usually means a generated src/ file was edited directly.",
+        "Move the edits into the matching content/ file, then run bun run build to regenerate src/.",
+        "",
+        ...drift.map(
+          ({ relativePath }) =>
+            `- src/${relativePath} differs from content/${relativePath}`,
+        ),
+      ].join("\n"),
+      () => {
+        expect(drift).toEqual([]);
+      },
+    );
   });
 });
 
