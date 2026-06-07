@@ -45,7 +45,7 @@
         "includeEffectiveDates": false,
         "source": {
           "collection": "FRD",
-          "types": ["20x", "rev5"],
+          "types": ["all"],
           "includeAll": true,
           "allPosition": "first"
         }
@@ -86,7 +86,7 @@
           "collection": "FRR",
           "documents": "ALL",
           "ignoreDocuments": ["AGU", "SDR", "REC"],
-          "types": ["20x", "rev5"],
+          "types": ["all"],
           "affects": ["Providers"]
         }
       },
@@ -100,7 +100,7 @@
           "collection": "FRR",
           "documents": "ALL",
           "ignoreDocuments": ["AGU", "SDR"],
-          "types": ["20x", "rev5"],
+          "types": ["all"],
           "affects": ["Assessors"]
         }
       }
@@ -133,7 +133,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "types": ["20x", "rev5"],
+          "types": ["all"],
           "affects": ["FedRAMP"],
           "sections": ["FRP"],
           "includeAll": true,
@@ -154,7 +154,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "types": ["20x", "rev5"],
+          "types": ["all"],
           "includeAll": true,
           "allPosition": "first"
         }
@@ -171,7 +171,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "types": ["20x", "rev5"],
+          "types": ["all"],
           "affects": ["Agencies"],
           "includeAll": true,
           "allPosition": "first"
@@ -210,6 +210,24 @@
           "types": ["rev5"],
           "affects": ["Providers"],
           "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "provider-implementation-marketplace",
+        "output": "providers/implement/marketplace/{FRR}.md",
+        "outputMode": "documents",
+        "status": "placeholder",
+        "definitionsHref": "../../../definitions/",
+        "rulesHref": "../",
+        "emptyBehavior": "skip",
+        "includeEffectiveDates": false,
+        "source": {
+          "collection": "FRR",
+          "documents": ["MKT"],
+          "types": ["all"],
+          "affects": ["Providers"],
+          "sections": ["CSO", "IIP"],
           "allPosition": "first"
         }
       },
@@ -263,7 +281,7 @@
         "source": {
           "collection": "FRR",
           "documents": ["MKT", "REC"],
-          "types": ["20x", "rev5"],
+          "types": ["all"],
           "affects": ["Assessors"],
           "includeAll": true,
           "allPosition": "first"
@@ -282,7 +300,7 @@
         "source": {
           "collection": "FRR",
           "documents": ["MKT"],
-          "types": ["20x", "rev5"],
+          "types": ["all"],
           "affects": ["Advisors"],
           "includeAll": true,
           "allPosition": "first"

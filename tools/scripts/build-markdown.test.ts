@@ -1351,6 +1351,7 @@ describe("build-markdown", () => {
       "definitions.md",
       "providers/20x/key-security-indicators/change-management.md",
       "providers/20x/key-security-indicators/cloud-native-architecture.md",
+      "providers/implement/marketplace/marketplace-listing.md",
       "providers/updating/deadlines/20x.md",
       "providers/updating/deadlines/rev5.md",
       "reference/agency-use.md",
@@ -1364,6 +1365,8 @@ describe("build-markdown", () => {
     expect(relativePaths).not.toContain(
       "assessors/20x/rules/marketplace-listing.md",
     );
+    expect(relativePaths).not.toContain("providers/updating/deadlines/all.md");
+    expect(relativePaths).not.toContain("assessors/updating/deadlines/all.md");
 
     const referenceArtifactPaths = relativePaths.filter((relativePath) =>
       relativePath.startsWith("reference/"),
@@ -1706,6 +1709,27 @@ describe("build-markdown", () => {
     );
     await expect(access(contentDefinitionsPath)).rejects.toThrow();
 
+    const providerMarketplaceContents = await readFile(
+      path.join(
+        OUTPUT_DIR,
+        "providers",
+        "implement",
+        "marketplace",
+        "marketplace-listing.md",
+      ),
+      "utf8",
+    );
+    expect(providerMarketplaceContents).toContain(
+      "[CDS-CSO-PUB (Public Information)](../../../reference/certification-data-sharing.md#public-information){ data-preview }",
+    );
+    expect(providerMarketplaceContents).toContain(
+      "[MKT-FRP-SOF (Scope of FedRAMP)](../../../reference/marketplace-listing.md#scope-of-fedramp){ data-preview }",
+    );
+    expect(providerMarketplaceContents).not.toContain("../../20x/rules/");
+    expect(providerMarketplaceContents).not.toContain(
+      "../../../responsibilities/rules.md#scope-of-fedramp",
+    );
+
     const provider20xIcpContents = await readFile(
       path.join(
         OUTPUT_DIR,
@@ -2021,6 +2045,93 @@ describe("build-markdown", () => {
           "assessors/20x/rules/ignored-synthetic-ruleset.md",
       ),
     ).toBe(false);
+  });
+
+  test("expands source.types \"all\" to common, 20x, and Rev5 rule content", async () => {
+    const config = await loadToolConfig();
+    const rules = structuredClone(await loadRules(config));
+    const syntheticDocument = testRequirementDocument({
+      name: "Synthetic Ruleset",
+      shortName: "SYN",
+      webName: "synthetic-ruleset",
+      affects: ["Providers"],
+    });
+    syntheticDocument.info["20x"] = {
+      subsets: {
+        TYP: {
+          name: "20x Rules",
+          description: "Rules specific to 20x.",
+        },
+      },
+    };
+    syntheticDocument.info.rev5 = {
+      subsets: {
+        TYP: {
+          name: "Rev5 Rules",
+          description: "Rules specific to Rev5.",
+        },
+      },
+    };
+    syntheticDocument.data["20x"] = {
+      TYP: {
+        "SYN-20X-ONE": {
+          name: "20x Synthetic Requirement",
+          statement: "Synthetic 20x requirement used by tests.",
+          affects: ["Providers"],
+        },
+      },
+    };
+    syntheticDocument.data.rev5 = {
+      TYP: {
+        "SYN-REV5-ONE": {
+          name: "Rev5 Synthetic Requirement",
+          statement: "Synthetic Rev5 requirement used by tests.",
+          affects: ["Providers"],
+        },
+      },
+    };
+    rules.FRR = {
+      SYN: syntheticDocument,
+    };
+
+    const artifacts = collectArtifacts(rules, {
+      ...config,
+      generated: {
+        ...config.generated,
+        definitionDocuments: [],
+        ksiDocuments: [],
+        deadlineDocuments: [],
+        referenceIndexDocuments: [],
+        frrCollectionDocuments: [],
+        ruleDocuments: [
+          {
+            id: "agnostic-provider-rules",
+            output: "agnostic/{FRR}.md",
+            outputMode: "documents",
+            status: "stable",
+            emptyBehavior: "skip",
+            source: {
+              collection: "FRR",
+              documents: ["SYN"],
+              types: ["all"],
+              affects: ["Providers"],
+              includeAll: true,
+              allPosition: "first",
+            },
+          },
+        ],
+      },
+    });
+
+    const artifact = findArtifact(artifacts, "agnostic/synthetic-ruleset.md");
+    const requirementIds = artifact.context.sections.flatMap((section) =>
+      section.requirements.map((requirement) => requirement.id),
+    );
+
+    expect(artifact.context.tags).toEqual(["20x", "Rev5"]);
+    expect(requirementIds).toContain("SYN-GEN-ONE");
+    expect(requirementIds).toContain("SYN-20X-ONE");
+    expect(requirementIds).toContain("SYN-REV5-ONE");
   });
 
   test("ignores configured deadline documents after resolving the source selection", async () => {

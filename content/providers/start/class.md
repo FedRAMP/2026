@@ -9,6 +9,14 @@ picto:
 
 # Choosing a Certification Class
 
+```mermaid
+flowchart LR
+  A["Preparation"] --> B[Initial Implementation] --> C[Ongoing Certification]
+
+  classDef current fill:#dff5e1,stroke:#2f855a,stroke-width:2px,color:#123524;
+  class A current;
+```
+
 FedRAMP Classes are designed to be undertaken progressively where your investment can scale with agency interest and resource availability. The further the class progression, the greater the level of assurance and commitment to federal agency customers.
 
 FedRAMP Certification requires additional work and focus, both initially and ongoing, for even the most mature security programs. These unique expectations and considerations are designed to translate

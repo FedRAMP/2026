@@ -18,6 +18,7 @@ import {
   type RuleDocumentLinkTargetScope,
   type RuleDocumentMappingConfig,
   type RuleType,
+  type RuleTypeSelection,
   type ToolConfig,
 } from "./config";
 
@@ -27,6 +28,7 @@ export const OUTPUT_DIR = resolveToolPath(DEFAULT_CONFIG.paths.src);
 type Version = RuleType;
 type SharedApplicabilityBucket = "all";
 type DataBucket = Version | SharedApplicabilityBucket;
+const ALL_VERSIONS: Version[] = ["20x", "rev5"];
 
 interface RulesDocument {
   info?: {
@@ -494,6 +496,56 @@ function humanizeVersions(versions: Version[]): string {
   return versions.map(humanizeVersion).join(" and ");
 }
 
+function isVersion(value: string): value is Version {
+  return value === "20x" || value === "rev5";
+}
+
+function addUniqueVersion(versions: Version[], version: Version): void {
+  if (!versions.includes(version)) {
+    versions.push(version);
+  }
+}
+
+function configuredVersions(
+  types: readonly RuleTypeSelection[] | undefined,
+): Version[] {
+  const selectedTypes = types?.length ? types : ALL_VERSIONS;
+  const versions: Version[] = [];
+
+  for (const selectedType of selectedTypes) {
+    if (selectedType === "all") {
+      for (const version of ALL_VERSIONS) {
+        addUniqueVersion(versions, version);
+      }
+      continue;
+    }
+
+    if (!isVersion(selectedType)) {
+      throw new Error(
+        `Unsupported generated document source type: ${selectedType}`,
+      );
+    }
+
+    addUniqueVersion(versions, selectedType);
+  }
+
+  if (!versions.length) {
+    throw new Error("Generated document source types must select a rule type.");
+  }
+
+  return versions;
+}
+
+function mappingVersions(mapping: FrrRuleSourceMappingConfig): Version[] {
+  return configuredVersions(mapping.source.types);
+}
+
+function deadlineDocumentTypes(
+  mapping: DeadlineDocumentMappingConfig,
+): Version[] {
+  return configuredVersions(mapping.source.types);
+}
+
 function humanizeStatus(value?: string): string {
   if (!value) {
     return "Unknown";
@@ -735,7 +787,7 @@ function buildRulePageIndex(
         addRulePageCandidate(index, id, {
           mappingId: mapping.id,
           relativePath,
-          types: mapping.source.types,
+          types: mappingVersions(mapping),
           affects: mapping.source.affects ?? [],
           linkTargetScope: mapping.linkTargetScope ?? "default",
         });
@@ -760,6 +812,7 @@ function candidateScore(
   context: RuleLinkContext,
 ): number {
   let score = 0;
+  const currentVersions = mappingVersions(context.currentMapping);
 
   if (candidate.relativePath === context.currentRelativePath) {
     score += 1000;
@@ -769,15 +822,13 @@ function candidateScore(
     score += 500;
   }
 
-  if (versionsOverlap(candidate.types, context.currentMapping.source.types)) {
+  if (versionsOverlap(candidate.types, currentVersions)) {
     score += 100;
   }
 
   if (
-    candidate.types.length === context.currentMapping.source.types.length &&
-    candidate.types.every((version) =>
-      context.currentMapping.source.types.includes(version),
-    )
+    candidate.types.length === currentVersions.length &&
+    candidate.types.every((version) => currentVersions.includes(version))
   ) {
     score += 25;
   }
@@ -798,7 +849,31 @@ function candidateScore(
     score += 50;
   }
 
+  if (
+    shouldPreferReferenceRuleLinks(context.currentRelativePath) &&
+    isReferenceRulePath(candidate.relativePath)
+  ) {
+    score += 2000;
+  }
+
   return score;
+}
+
+function isReferenceRulePath(relativePath: string): boolean {
+  return relativePath.split("/")[0] === "reference";
+}
+
+function isVersionSpecificRulePath(relativePath: string): boolean {
+  return relativePath
+    .split("/")
+    .some((segment) => segment === "20x" || segment === "rev5");
+}
+
+function shouldPreferReferenceRuleLinks(relativePath: string): boolean {
+  return (
+    !isReferenceRulePath(relativePath) &&
+    !isVersionSpecificRulePath(relativePath)
+  );
 }
 
 function resolveRelatedRuleHref(
@@ -806,9 +881,19 @@ function resolveRelatedRuleHref(
   context: RuleLinkContext,
 ): string | undefined {
   const candidates = (context.rulePageIndex.get(targetRule.id) ?? []).filter(
-    (candidate) =>
-      candidate.linkTargetScope !== "sameMappingOnly" ||
-      candidate.mappingId === context.currentMapping.id,
+    (candidate) => {
+      if (
+        candidate.linkTargetScope !== "sameMappingOnly" ||
+        candidate.mappingId === context.currentMapping.id
+      ) {
+        return true;
+      }
+
+      return (
+        shouldPreferReferenceRuleLinks(context.currentRelativePath) &&
+        isReferenceRulePath(candidate.relativePath)
+      );
+    },
   );
   if (!candidates.length) {
     return undefined;
@@ -1583,7 +1668,7 @@ function buildImportantRelatedTermViewModelsFromEntries(
 function definitionDocumentTypes(
   mapping: DefinitionDocumentMappingConfig,
 ): Version[] {
-  return mapping.source.types ?? ["20x", "rev5"];
+  return configuredVersions(mapping.source.types);
 }
 
 function configuredDefinitionEntries(
@@ -1685,7 +1770,7 @@ function configuredBuckets(
   mapping: FrrRuleSourceMappingConfig,
 ): DataBucket[] {
   return configuredTypeBuckets(
-    mapping.source.types,
+    mappingVersions(mapping),
     mapping.source.includeAll,
     mapping.source.allPosition,
   );
@@ -1746,7 +1831,7 @@ function buildConfiguredSectionViewModels(
   const allowedSections = mapping.source.sections;
   const definitionsHref = mapping.definitionsHref ?? "definitions/";
   const rulesHref = mapping.rulesHref ?? "";
-  const subsets = subsetsForVersions(document.info, mapping.source.types);
+  const subsets = subsetsForVersions(document.info, mappingVersions(mapping));
 
   for (const bucketName of configuredBuckets(mapping)) {
     const bucket = document.data[bucketName];
@@ -2062,7 +2147,7 @@ function sourceDeadlineDocuments(
     .filter(({ document }) =>
       documentHasRequirementAffecting(
         document,
-        mapping.source.types,
+        deadlineDocumentTypes(mapping),
         mapping.source.affects ?? [],
       ),
     );
@@ -2157,7 +2242,7 @@ function matchingDeadlineRuleDocumentPath(
       return false;
     }
 
-    if (!ruleMapping.source.types.includes(version)) {
+    if (!mappingVersions(ruleMapping).includes(version)) {
       return false;
     }
 
@@ -2856,7 +2941,7 @@ function renderDeadlineDocumentOutput(
     return mapping.output.replaceAll("{version}", version);
   }
 
-  if (mapping.source.types.length === 1) {
+  if (deadlineDocumentTypes(mapping).length === 1) {
     return mapping.output;
   }
 
@@ -3283,7 +3368,7 @@ function collectDeadlineDocumentArtifactsForMapping(
     `deadline document mapping "${mapping.id}"`,
   );
 
-  return mapping.source.types
+  return deadlineDocumentTypes(mapping)
     .map((version): BuildArtifact | null => {
       const relativePath = normalizeGeneratedPath(
         renderDeadlineDocumentOutput(mapping, version),
@@ -3397,7 +3482,7 @@ function buildFrrCollectionSectionViewModel(
   const allowedSections = mapping.source.sections;
   const definitionsHref = mapping.definitionsHref ?? "definitions/";
   const rulesHref = mapping.rulesHref ?? "";
-  const subsets = subsetsForVersions(document.info, mapping.source.types);
+  const subsets = subsetsForVersions(document.info, mappingVersions(mapping));
 
   for (const bucketName of configuredBuckets(mapping)) {
     const bucket = document.data[bucketName];
@@ -3500,7 +3585,7 @@ function collectFrrCollectionDocumentArtifact(
     documentType: "FRR",
     context: buildDocumentContext(mapping.title, {
       statusSpan: pictographSpan(config, mapping.status),
-      tags: versionTags(mapping.source.types),
+      tags: versionTags(mappingVersions(mapping)),
       isRequirementsDocument: true,
       sections,
     }),
@@ -3547,6 +3632,7 @@ function collectSingleRuleDocumentArtifact(
   }
 
   const documents = sourceDocumentEntries.map((entry) => entry.document);
+  const versions = mappingVersions(mapping);
   const relativePath = normalizeGeneratedPath(renderRuleDocumentOutput(mapping));
   const sections = buildConfiguredSections(
     documents,
@@ -3570,14 +3656,14 @@ function collectSingleRuleDocumentArtifact(
     documents.length === 1
       ? buildFlowViewModels(
           firstDocument.info,
-          mapping.source.types,
+          versions,
           buildRequirementIndex(sections),
         )
       : [];
   const effectiveEntries =
     mapping.includeEffectiveDates === false || documents.length !== 1
       ? []
-      : toEffectiveEntries(firstDocument.info, mapping.source.types);
+      : toEffectiveEntries(firstDocument.info, versions);
 
   return {
     relativePath,
@@ -3601,7 +3687,7 @@ function collectSingleRuleDocumentArtifact(
           `rule document mapping "${mapping.id}"`,
         ),
       ),
-      tags: versionTags(mapping.source.types),
+      tags: versionTags(versions),
       purposeParagraphs,
       tableOfContents: buildSectionTableOfContents(sections),
       effectiveEntries,
@@ -3626,6 +3712,7 @@ function collectDocumentRuleDocumentArtifacts(
 
   return sourceDocuments(rules, mapping)
     .map(({ key, document }): BuildArtifact | null => {
+      const versions = mappingVersions(mapping);
       const relativePath = normalizeGeneratedPath(
         renderRuleDocumentOutput(mapping, document.info.web_name),
       );
@@ -3648,7 +3735,7 @@ function collectDocumentRuleDocumentArtifacts(
       const effectiveEntries =
         mapping.includeEffectiveDates === false
           ? []
-          : toEffectiveEntries(document.info, mapping.source.types);
+          : toEffectiveEntries(document.info, versions);
 
       return {
         relativePath,
@@ -3663,13 +3750,13 @@ function collectDocumentRuleDocumentArtifacts(
             config,
             generatedDocumentStatus(config, document.info.status, `FRR.${key}.info`),
           ),
-          tags: versionTags(mapping.source.types),
+          tags: versionTags(versions),
           purposeParagraphs: splitParagraphs(document.info.purpose),
           tableOfContents: buildSectionTableOfContents(sections),
           effectiveEntries,
           flows: buildFlowViewModels(
             document.info,
-            mapping.source.types,
+            versions,
             buildRequirementIndex(sections),
           ),
           isRequirementsDocument: true,

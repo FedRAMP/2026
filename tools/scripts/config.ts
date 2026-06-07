@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import defaultConfig from "../config.json";
 
 export type RuleType = "20x" | "rev5";
+export type RuleTypeSelection = RuleType | "all";
 export type GeneratedEmptyBehavior = "write" | "skip";
 export type AllRulesPosition = "first" | "last";
 export type RuleDocumentSelection = string[] | "ALL";
@@ -40,7 +41,7 @@ export interface DefinitionsMappingConfig {
 
 export interface DefinitionDocumentSourceConfig {
   collection: "FRD";
-  types?: RuleType[];
+  types?: RuleTypeSelection[];
   includeAll?: boolean;
   allPosition?: AllRulesPosition;
 }
@@ -61,7 +62,7 @@ export interface RuleDocumentSourceConfig {
   document?: string;
   documents?: RuleDocumentSelection;
   ignoreDocuments?: string[];
-  types: RuleType[];
+  types: RuleTypeSelection[];
   affects?: string[];
   sections?: string[];
   includeAll?: boolean;
@@ -119,7 +120,7 @@ export interface DeadlineDocumentSourceConfig {
   collection: "FRR";
   documents?: RuleDocumentSelection;
   ignoreDocuments?: string[];
-  types: RuleType[];
+  types: RuleTypeSelection[];
   affects?: string[];
 }
 

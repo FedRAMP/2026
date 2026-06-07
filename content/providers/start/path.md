@@ -7,14 +7,15 @@ picto:
   status: stable
 ---
 
-
-??? info inline end "Page Info"
-
-    **Description:** Overview of the Certification paths and how to choose one, including depending on the type and class expectations.
-
-    **Purpose:** Folks know they should aim for Program Certification on 20x unless they need a Class D before early 2027.
-
 # Choosing a Certification Path
+
+```mermaid
+flowchart LR
+  A["Preparation"] --> B[Initial Implementation] --> C[Ongoing Certification]
+
+  classDef current fill:#dff5e1,stroke:#2f855a,stroke-width:2px,color:#123524;
+  class A current;
+```
 
 There are two FedRAMP Certification Paths:
 

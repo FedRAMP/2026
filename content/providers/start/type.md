@@ -9,6 +9,14 @@ picto:
 
 # Choosing a Certification Type
 
+```mermaid
+flowchart LR
+  A["Preparation"] --> B[Initial Implementation] --> C[Ongoing Certification]
+
+  classDef current fill:#dff5e1,stroke:#2f855a,stroke-width:2px,color:#123524;
+  class A current;
+```
+
 There are two FedRAMP Certification Types:
 
 - **20x** is a modern cloud-native approach that is new in 2026.
