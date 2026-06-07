@@ -4,7 +4,7 @@ purpose: "Folks will understand that preparing is a big deal and they should mak
 google_doc: "https://docs.google.com/document/d/16nRI1Sr3oAxriPB-y-6aOSG5BttCcxV4go3_NEQD7Mc/edit?tab=t.ezf9qps8sdix"
 picto:
   source: person
-  status: empty
+  status: stable
 ---
 
 # Do the Work
