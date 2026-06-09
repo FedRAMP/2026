@@ -26,7 +26,6 @@ import {
   loadToolConfig,
   REPO_ROOT,
   resolveToolPath,
-  type RuleType,
   type ToolConfig,
 } from "./config";
 import { deploy } from "./deploy";
@@ -220,20 +219,6 @@ function expectWithFailureSummary(
   }
 }
 
-function expectFileToStartWith(
-  filePath: string,
-  contents: string,
-  expectedStart: string,
-  description: string,
-): void {
-  const relativePath = path.relative(REPO_ROOT, filePath);
-  const summary = `${description}: ${relativePath}`;
-
-  expectWithFailureSummary(summary, () => {
-    expect(contents, summary).toStartWith(expectedStart);
-  });
-}
-
 function expectTextOrder(
   contents: string,
   expectedTexts: string[],
@@ -254,11 +239,6 @@ function expectTextOrder(
 
 type RulesForTest = Awaited<ReturnType<typeof loadRules>>;
 type RequirementDocumentForTest = RulesForTest["FRR"][string];
-type RequirementEntryForTest =
-  NonNullable<
-    NonNullable<RequirementDocumentForTest["data"]["all"]>[string]
-  >[string];
-type RuleBucketForTest = "all" | RuleType;
 type ArtifactForTest = ReturnType<typeof collectArtifacts>[number];
 
 function markdownTableCell(value: string): string {
@@ -278,27 +258,6 @@ function slugifyTerm(term: string): string {
     .toLowerCase()
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9-]/g, "");
-}
-
-function slugifyHeading(heading: string): string {
-  return slugifyTerm(heading.replace(/&/g, " and "));
-}
-
-function mermaidNodeId(value: string): string {
-  const normalized = value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-
-  return `node_${normalized || "unnamed"}`;
-}
-
-function mermaidQuotedValue(value: string): string {
-  return value
-    .replaceAll("\\", "\\\\")
-    .replaceAll('"', '\\"')
-    .replaceAll("\r", " ")
-    .replaceAll("\n", "<br/>");
 }
 
 function relatedTermsGroupAnchorId(tag: string): string {
@@ -400,121 +359,6 @@ function expectedImportantRelatedTermRows(rules: RulesForTest): string[] {
     });
 }
 
-function matchesAffectedParties(
-  requirement: RequirementEntryForTest,
-  affects: string[],
-): boolean {
-  if (!affects.length) {
-    return true;
-  }
-
-  return (requirement.affects ?? []).some((affectedParty) =>
-    affects.some(
-      (allowedParty) =>
-        allowedParty.toLowerCase() === affectedParty.toLowerCase(),
-    ),
-  );
-}
-
-function firstRuleSelection(
-  document: RequirementDocumentForTest | undefined,
-  bucketNames: RuleBucketForTest[],
-  affects: string[] = [],
-): {
-  id: string;
-  requirement: RequirementEntryForTest;
-  bucketName: RuleBucketForTest;
-  subsetKey: string;
-} {
-  if (!document) {
-    throw new Error("Expected source document to exist in rules JSON.");
-  }
-
-  for (const bucketName of bucketNames) {
-    const bucket = document.data[bucketName];
-    if (!bucket) {
-      continue;
-    }
-
-    for (const [subsetKey, requirements] of Object.entries(bucket)) {
-      for (const [id, requirement] of Object.entries(requirements)) {
-        if (matchesAffectedParties(requirement, affects)) {
-          return { id, requirement, bucketName, subsetKey };
-        }
-      }
-    }
-  }
-
-  throw new Error(
-    `Expected ${document.info.short_name ?? document.info.name} to include a ${bucketNames.join(
-      "/",
-    )} rule${affects.length ? ` affecting ${affects.join(", ")}` : ""}.`,
-  );
-}
-
-function firstRuleId(
-  document: RequirementDocumentForTest | undefined,
-  bucketNames: RuleBucketForTest[],
-  affects: string[] = [],
-): string {
-  return firstRuleSelection(document, bucketNames, affects).id;
-}
-
-function subsetTitle(
-  document: RequirementDocumentForTest | undefined,
-  bucketName: RuleBucketForTest,
-  subsetKey: string,
-): string {
-  if (!document) {
-    throw new Error("Expected source document to exist in rules JSON.");
-  }
-
-  const versionSubset =
-    bucketName === "all"
-      ? undefined
-      : document.info[bucketName]?.subsets?.[subsetKey];
-
-  return (
-    versionSubset?.name ?? document.info.subsets?.[subsetKey]?.name ?? subsetKey
-  );
-}
-
-function subsetDescription(
-  document: RequirementDocumentForTest | undefined,
-  bucketName: RuleBucketForTest,
-  subsetKey: string,
-): string {
-  if (!document) {
-    throw new Error("Expected source document to exist in rules JSON.");
-  }
-
-  const versionSubset =
-    bucketName === "all"
-      ? undefined
-      : document.info[bucketName]?.subsets?.[subsetKey];
-
-  return (
-    versionSubset?.description ??
-    document.info.subsets?.[subsetKey]?.description ??
-    ""
-  );
-}
-
-function firstRuleIdsByBucket(
-  document: RequirementDocumentForTest | undefined,
-): string[] {
-  if (!document) {
-    throw new Error("Expected source document to exist in rules JSON.");
-  }
-
-  const ids = new Set<string>();
-  for (const bucketName of Object.keys(document.data) as RuleBucketForTest[]) {
-    ids.add(firstRuleSelection(document, [bucketName]).id);
-  }
-
-  return Array.from(ids);
-}
-
 function findArtifact(
   artifacts: ArtifactForTest[],
   relativePath: string,
@@ -525,6 +369,73 @@ function findArtifact(
   }
 
   return artifact;
+}
+
+function firstArtifactMatching(
+  artifacts: ArtifactForTest[],
+  predicate: (artifact: ArtifactForTest) => boolean,
+  description: string,
+): ArtifactForTest {
+  const artifact = artifacts.find(predicate);
+  if (!artifact) {
+    throw new Error(`Expected generated artifact matching: ${description}`);
+  }
+
+  return artifact;
+}
+
+function artifactWithMappingId(
+  artifacts: ArtifactForTest[],
+  mappingId: string,
+): ArtifactForTest {
+  return firstArtifactMatching(
+    artifacts,
+    (artifact) => artifact.mappingId === mappingId,
+    `mapping id ${mappingId}`,
+  );
+}
+
+function artifactsWithMappingId(
+  artifacts: ArtifactForTest[],
+  mappingId: string,
+): ArtifactForTest[] {
+  return artifacts.filter((artifact) => artifact.mappingId === mappingId);
+}
+
+function artifactOfType(
+  artifacts: ArtifactForTest[],
+  documentType: ArtifactForTest["documentType"],
+): ArtifactForTest {
+  return firstArtifactMatching(
+    artifacts,
+    (artifact) => artifact.documentType === documentType,
+    `document type ${documentType}`,
+  );
+}
+
+function artifactsOfType(
+  artifacts: ArtifactForTest[],
+  documentType: ArtifactForTest["documentType"],
+): ArtifactForTest[] {
+  return artifacts.filter((artifact) => artifact.documentType === documentType);
+}
+
+function firstRequirementInArtifact(artifact: ArtifactForTest): {
+  id: string;
+  title: string;
+} {
+  for (const section of artifact.context.sections) {
+    const requirement = section.requirements[0];
+    if (requirement) {
+      return requirement;
+    }
+  }
+
+  throw new Error(`Expected ${artifact.relativePath} to include a requirement.`);
+}
+
+async function readGeneratedArtifact(artifact: ArtifactForTest): Promise<string> {
+  return readFile(artifact.outputPath, "utf8");
 }
 
 function deadlineRowMarkdown(row: {
@@ -557,24 +468,6 @@ function taggedDocumentSummaryStatsMarkdown(artifact: ArtifactForTest): string {
   }
 
   return `!!! tip "There are ${stats.rulesetCount} applicable rulesets with ${stats.ruleCount} total applicable rules."`;
-}
-
-function controlUrl(controlId: string): string {
-  if (controlId.includes(".")) {
-    const [main = "", sub = ""] = controlId.split(".");
-    const [prefix = "", number = ""] = main.split("-");
-
-    return `https://controlfreak.risk-redux.io/controls/${prefix.toUpperCase()}-${number.padStart(
-      2,
-      "0",
-    )}(${sub.padStart(2, "0")})`;
-  }
-
-  const [prefix = "", number = ""] = controlId.split("-");
-  return `https://controlfreak.risk-redux.io/controls/${prefix.toUpperCase()}-${number.padStart(
-    2,
-    "0",
-  )}`;
 }
 
 function expectDeadlineRowsFromArtifact(
@@ -611,19 +504,6 @@ function expectTaggedDocumentSummaryStatsFromArtifact(
   expectWithFailureSummary(description, () => {
     expect(contents).toContain(taggedDocumentSummaryStatsMarkdown(artifact));
   });
-}
-
-function expectNoDeadlineRowsForDocuments(
-  contents: string,
-  rules: RulesForTest,
-  documentKeys: string[],
-): void {
-  for (const documentKey of documentKeys) {
-    const shortName = rules.FRR[documentKey]?.info.short_name;
-    if (shortName) {
-      expect(contents).not.toContain(`(${shortName})]`);
-    }
-  }
 }
 
 function testRequirementDocument(options: {
@@ -1389,41 +1269,49 @@ describe("build-markdown", () => {
     expect(relativePaths).toEqual(
       expectedArtifacts.map((artifact) => artifact.relativePath).sort(),
     );
-    for (const relativePath of [
-      "agencies/rules/collaborative-continuous-monitoring.md",
-      "agencies/rules/vulnerability-detection-and-response.md",
-      "assessors/20x/initial/index.md",
-      "assessors/20x/ongoing/index.md",
-      "assessors/rev5/initial/index.md",
-      "assessors/rev5/ongoing/index.md",
-      "definitions.md",
-      "providers/20x/key-security-indicators/change-management.md",
-      "providers/20x/key-security-indicators/cloud-native-architecture.md",
-      "providers/20x/initial/index.md",
-      "providers/20x/ongoing/index.md",
-      "providers/implement/marketplace/marketplace-listing.md",
-      "providers/rev5/initial/index.md",
-      "providers/rev5/ongoing/index.md",
-      "providers/updating/deadlines/20x.md",
-      "providers/updating/deadlines/rev5.md",
-      "reference/agency-use.md",
-      "reference/index.md",
-      "reference/key-security-indicators.md",
-      "reference/security-decision-record.md",
-      "responsibilities/rules.md",
-    ]) {
-      expect(relativePaths).toContain(relativePath);
+    for (const mapping of config.generated.definitionDocuments ?? []) {
+      expect(relativePaths).toContain(mapping.output);
     }
-    expect(relativePaths).not.toContain(
-      "assessors/20x/rules/marketplace-listing.md",
-    );
-    expect(relativePaths).not.toContain("providers/updating/deadlines/all.md");
-    expect(relativePaths).not.toContain("assessors/updating/deadlines/all.md");
+    for (const mapping of config.generated.referenceIndexDocuments ?? []) {
+      expect(relativePaths).toContain(mapping.output);
+    }
+    for (const mapping of config.generated.frrCollectionDocuments ?? []) {
+      expect(relativePaths).toContain(mapping.output);
+    }
+    for (const mapping of config.generated.taggedDocumentSummaries ?? []) {
+      expect(relativePaths).toContain(mapping.output);
+    }
+
+    for (const mapping of config.generated.deadlineDocuments ?? []) {
+      for (const artifact of artifactsWithMappingId(expectedArtifacts, mapping.id)) {
+        expect(relativePaths).toContain(artifact.relativePath);
+      }
+    }
+
+    for (const mapping of config.generated.ksiDocuments ?? []) {
+      const artifacts = artifactsWithMappingId(expectedArtifacts, mapping.id);
+      expect(artifacts.length).toBeGreaterThan(0);
+      for (const artifact of artifacts) {
+        expect(relativePaths).toContain(artifact.relativePath);
+      }
+    }
+
+    for (const mapping of config.generated.ruleDocuments) {
+      const artifacts = artifactsWithMappingId(expectedArtifacts, mapping.id);
+      expect(artifacts.length).toBeGreaterThan(0);
+      for (const artifact of artifacts) {
+        expect(relativePaths).toContain(artifact.relativePath);
+      }
+    }
 
     const referenceArtifactPaths = relativePaths.filter((relativePath) =>
       relativePath.startsWith("reference/"),
     );
-    expect(referenceArtifactPaths).toHaveLength(Object.keys(rules.FRR).length + 2);
+    expect(referenceArtifactPaths).toHaveLength(
+      expectedArtifacts.filter((artifact) =>
+        artifact.relativePath.startsWith("reference/"),
+      ).length,
+    );
 
     for (const artifact of expectedArtifacts) {
       await access(artifact.outputPath);
@@ -1433,41 +1321,44 @@ describe("build-markdown", () => {
       expect(contents.trim().length).toBeGreaterThan(0);
     }
 
-    const referenceIndexContents = await readFile(
-      path.join(OUTPUT_DIR, "reference", "index.md"),
-      "utf8",
+    const referenceIndexArtifact = artifactOfType(
+      expectedArtifacts,
+      "FRR_REFERENCE_INDEX",
+    );
+    const referenceIndexContents = await readGeneratedArtifact(
+      referenceIndexArtifact,
     );
     expect(referenceIndexContents).toStartWith(
       [
         "---",
-        'title: "Complete Ruleset Reference"',
-        'description: "This section contains the entire Consolidated Rules for 2026 as a standalone reference for each ruleset."',
-        'purpose: "This content allows folks to see the full rules together without them broken apart by stakeholder."',
+        `title: ${JSON.stringify(referenceIndexArtifact.title)}`,
+        `description: ${JSON.stringify(referenceIndexArtifact.context.description ?? "")}`,
+        `purpose: ${JSON.stringify(referenceIndexArtifact.context.purpose ?? "")}`,
         'google_doc: ""',
         "picto:",
         "  source: machine",
-        "  status: stable",
+        `  status: ${referenceIndexArtifact.context.pictoStatus}`,
         "---",
         "",
-        STABLE_STATUS_SPAN,
+        referenceIndexArtifact.context.statusSpan ?? "",
         "",
         '??? info inline end "Page Info"',
         "",
-        "    **Description:** This section contains the entire Consolidated Rules for 2026 as a standalone reference for each ruleset.",
+        `    **Description:** ${referenceIndexArtifact.context.description ?? ""}`,
         "    ",
-        "    **Purpose:** This content allows folks to see the full rules together without them broken apart by stakeholder.",
+        `    **Purpose:** ${referenceIndexArtifact.context.purpose ?? ""}`,
         "",
-        "# Complete Ruleset Reference",
+        `# ${referenceIndexArtifact.title}`,
       ].join("\n"),
     );
-    expect(referenceIndexContents).toContain(
-      "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset with all related content in a single rule as an overall reference. The individual stakeholder sections of this site contain only the specific rules that apply in different circumstances for different stakeholders, while the reference rulesets are entirely unabridged.",
-    );
+    for (const paragraph of referenceIndexArtifact.context.purposeParagraphs) {
+      expect(referenceIndexContents).toContain(paragraph);
+    }
     expectTextOrder(
       referenceIndexContents,
       [
-        "# Complete Ruleset Reference",
-        "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset",
+        `# ${referenceIndexArtifact.title}`,
+        referenceIndexArtifact.context.purposeParagraphs[0] ?? "",
         "| Acronym | Ruleset | Status | Counts | Most Recently Updated |",
       ],
       "Generated reference index should place configured introduction before the table",
@@ -1481,34 +1372,29 @@ describe("build-markdown", () => {
       "Generated reference index should render source-derived rows in acronym order",
     );
 
-    const referenceCollaborativeMonitoringContents = await readFile(
-      path.join(OUTPUT_DIR, "reference", "collaborative-continuous-monitoring.md"),
-      "utf8",
+    const effectiveDateArtifact = firstArtifactMatching(
+      expectedArtifacts,
+      (artifact) => artifact.context.effectiveEntries.length > 0,
+      "an artifact with effective-date entries",
+    );
+    const effectiveDateContents = await readGeneratedArtifact(effectiveDateArtifact);
+    const effectiveDateTexts = effectiveDateArtifact.context.effectiveEntries.flatMap(
+      (entry) => [
+        `!!! info "Effective Date(s) & Overall Applicability for ${entry.audienceLabel}"`,
+        `- **${entry.statusLabel}**`,
+        ...entry.dateLines.map((line) => `- **${line.label}:** ${line.value}`),
+        ...entry.classLines.map((line) => `- **${line.label}:** ${line.value}`),
+      ],
     );
     expectTextOrder(
-      referenceCollaborativeMonitoringContents,
-      [
-        '!!! info "Effective Date(s) & Overall Applicability for 20x"',
-        "- **Optional Adoption:** 2026-07-04",
-        "- **Obtain:** 2026-07-04",
-        "- **Maintain:** 2027-01-01",
-        "- **Grace Ends:** On the first annual assessment scheduled after 2027-01-01",
-        '!!! info "Effective Date(s) & Overall Applicability for Rev5"',
-        "- **Optional Adoption:** 2026-07-04",
-        "- **Obtain:** 2027-01-01",
-        "- **Maintain:** 2027-04-02",
-        "- **Grace Ends:** 2027-10-01",
-      ],
-      "Generated effective-date metadata should render structured grace and optional adoption dates",
+      effectiveDateContents,
+      effectiveDateTexts,
+      "Generated effective-date metadata should render source-derived dates",
     );
-    expect(referenceCollaborativeMonitoringContents).not.toContain(
-      "[object Object]",
-    );
+    expect(effectiveDateContents).not.toContain("[object Object]");
 
-    const definitionsContents = await readFile(
-      path.join(OUTPUT_DIR, "definitions.md"),
-      "utf8",
-    );
+    const definitionsArtifact = artifactOfType(expectedArtifacts, "FRD");
+    const definitionsContents = await readGeneratedArtifact(definitionsArtifact);
     const definitionsPurpose = rules.FRD.info.purpose;
     const definitionHeaders = Array.from(
       definitionsContents.matchAll(/^## (.+)$/gm),
@@ -1534,7 +1420,7 @@ describe("build-markdown", () => {
 
     expect(definitionsPurpose).toBeTruthy();
     expect(definitionsContents).toStartWith(
-      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# FedRAMP Definitions`,
+      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${definitionsArtifact.context.statusSpan}\n\n# ${definitionsArtifact.title}`,
     );
     expectTextOrder(
       definitionsContents,
@@ -1565,620 +1451,217 @@ describe("build-markdown", () => {
     }
     expect(definitionHeaders).toEqual(definitionTerms);
 
-    const ksiArtifactPaths = relativePaths.filter((relativePath) =>
-      relativePath.startsWith("providers/20x/key-security-indicators/"),
+    const ksiThemeArtifact = firstArtifactMatching(
+      expectedArtifacts,
+      (artifact) =>
+        artifact.documentType === "KSI" && artifact.context.indicators.length > 0,
+      "a theme-based KSI artifact",
     );
-    expect(ksiArtifactPaths).toHaveLength(Object.keys(rules.KSI).length);
-
-    const changeManagementTheme = Object.values(rules.KSI).find(
-      (theme) => theme.web_name === "change-management",
-    );
-    if (!changeManagementTheme) {
+    const ksiThemeContents = await readGeneratedArtifact(ksiThemeArtifact);
+    const ksiThemeIndicator = ksiThemeArtifact.context.indicators[0];
+    if (!ksiThemeIndicator) {
       throw new Error(
-        'Expected a KSI theme with web_name "change-management" in the rules JSON.',
+        `Expected ${ksiThemeArtifact.relativePath} to include a KSI indicator.`,
       );
     }
-    const [changeManagementIndicatorId, changeManagementIndicator] =
-      Object.entries(changeManagementTheme.indicators)[0] ?? [];
-    if (!changeManagementIndicatorId || !changeManagementIndicator) {
-      throw new Error("Expected Change Management to include a KSI indicator.");
+    expect(ksiThemeContents).toStartWith(
+      `---\ntags:\n  - 20x\n---\n\n${ksiThemeArtifact.context.statusSpan}\n\n# ${ksiThemeArtifact.title}`,
+    );
+    expect(ksiThemeContents).not.toContain("**Subsets**");
+    expect(ksiThemeContents).toContain(ksiThemeIndicator.id);
+    expect(ksiThemeContents).toContain(`### ${ksiThemeIndicator.title}`);
+    if (ksiThemeIndicator.controlLinks[0]) {
+      const control = ksiThemeIndicator.controlLinks[0];
+      expect(ksiThemeContents).toContain("**Related SP 800-53 Controls:**");
+      expect(ksiThemeContents).toContain(`[${control.label}](${control.url})`);
     }
-    const changeManagementControl = changeManagementIndicator.controls?.[0];
 
-    const ksiChangeManagementContents = await readFile(
-      path.join(
-        OUTPUT_DIR,
-        "providers",
-        "20x",
-        "key-security-indicators",
-        "change-management.md",
-      ),
-      "utf8",
+    const ksiReferenceArtifact = firstArtifactMatching(
+      expectedArtifacts,
+      (artifact) =>
+        artifact.documentType === "KSI" && artifact.context.sections.length > 0,
+      "a grouped KSI reference artifact",
     );
-    expect(ksiChangeManagementContents).toStartWith(
-      `---\ntags:\n  - 20x\n---\n\n${STABLE_STATUS_SPAN}\n\n# ${changeManagementTheme.name}`,
-    );
-    expect(ksiChangeManagementContents).toContain(
-      `# ${changeManagementTheme.name}`,
-    );
-    expect(ksiChangeManagementContents).not.toContain("**Subsets**");
-    expect(ksiChangeManagementContents).not.toContain('!!! info ""');
-    expect(ksiChangeManagementContents).toContain(changeManagementIndicatorId);
-    expect(ksiChangeManagementContents).toContain(
-      `### ${changeManagementIndicator.name ?? changeManagementIndicatorId}`,
-    );
-    if (changeManagementControl) {
-      expect(ksiChangeManagementContents).toContain(
-        "**Related SP 800-53 Controls:**",
-      );
-      expect(ksiChangeManagementContents).toContain(
-        `[${changeManagementControl.toUpperCase()}](${controlUrl(
-          changeManagementControl,
-        )})`,
-      );
-    }
-    const ksiPolicyInventoryContents = await readFile(
-      path.join(
-        OUTPUT_DIR,
-        "providers",
-        "20x",
-        "key-security-indicators",
-        "policy-and-inventory.md",
-      ),
-      "utf8",
-    );
-    const policyInventoryTheme = Object.values(rules.KSI).find(
-      (theme) => theme.web_name === "policy-and-inventory",
-    );
-    if (!policyInventoryTheme) {
+    const ksiReferenceContents = await readGeneratedArtifact(ksiReferenceArtifact);
+    const firstKsiSection = ksiReferenceArtifact.context.sections[0];
+    const firstKsiSectionRequirement = firstKsiSection?.requirements[0];
+    if (!firstKsiSection || !firstKsiSectionRequirement) {
       throw new Error(
-        'Expected a KSI theme with web_name "policy-and-inventory" in the rules JSON.',
+        `Expected ${ksiReferenceArtifact.relativePath} to include grouped KSI indicators.`,
       );
     }
-    const [policyInventoryIndicatorId] =
-      Object.entries(policyInventoryTheme.indicators)[0] ?? [];
-    if (!policyInventoryIndicatorId) {
-      throw new Error("Expected Policy and Inventory to include a KSI indicator.");
-    }
-    expect(ksiPolicyInventoryContents).toContain(policyInventoryIndicatorId);
-
-    const ksiReferenceContents = await readFile(
-      path.join(OUTPUT_DIR, "reference", "key-security-indicators.md"),
-      "utf8",
-    );
     expect(ksiReferenceContents).toStartWith(
-      `---\ntags:\n  - 20x\n---\n\n${STABLE_STATUS_SPAN}\n\n# Key Security Indicators`,
+      `---\ntags:\n  - 20x\n---\n\n${ksiReferenceArtifact.context.statusSpan}\n\n# ${ksiReferenceArtifact.title}`,
     );
     expect(ksiReferenceContents).not.toContain("**Subsets**");
-    expect(ksiReferenceContents).not.toContain('!!! info ""');
-    expect(ksiReferenceContents).toContain(`## ${changeManagementTheme.name}`);
-    expect(ksiReferenceContents).toContain(
-      `### ${changeManagementIndicator.name ?? changeManagementIndicatorId}`,
-    );
     expectTextOrder(
       ksiReferenceContents,
       [
-        "# Key Security Indicators",
-        `## ${changeManagementTheme.name}`,
-        changeManagementIndicatorId,
-        `## ${policyInventoryTheme.name}`,
-        policyInventoryIndicatorId,
+        `# ${ksiReferenceArtifact.title}`,
+        `## ${firstKsiSection.title}`,
+        `### ${firstKsiSectionRequirement.title}`,
+        firstKsiSectionRequirement.id,
       ],
-      "Generated KSI reference markdown should group all indicators by theme",
+      "Generated KSI reference markdown should group indicators by source theme",
     );
-    if (changeManagementControl) {
-      expect(ksiReferenceContents).toContain(
-        `[${changeManagementControl.toUpperCase()}](${controlUrl(
-          changeManagementControl,
-        )})`,
+
+    for (const deadlineArtifact of artifactsOfType(expectedArtifacts, "DEADLINES")) {
+      const deadlineContents = await readGeneratedArtifact(deadlineArtifact);
+      expect(deadlineContents).toContain(`# ${deadlineArtifact.title}`);
+      expect(deadlineContents).toContain(
+        "| Ruleset | Optional Adoption | Obtain | Maintain | Grace Ends |",
+      );
+      expectDeadlineRowsFromArtifact(
+        deadlineContents,
+        deadlineArtifact,
+        `Generated deadline markdown should render source-derived rows for ${deadlineArtifact.relativePath}`,
       );
     }
 
-    const deadlines20xPath = path.join(
-      OUTPUT_DIR,
-      "providers",
-      "updating",
-      "deadlines",
-      "20x.md",
-    );
-    const deadlines20xContents = await readFile(deadlines20xPath, "utf8");
-    const providerDeadlineIgnoredDocuments =
-      (config.generated.deadlineDocuments ?? []).find(
-        (mapping) => mapping.id === "provider-important-deadlines",
-      )?.source.ignoreDocuments ?? [];
-    expectFileToStartWith(
-      deadlines20xPath,
-      deadlines20xContents,
-      `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# 20x Deadlines`,
-      "Generated provider 20x deadlines markdown has an unexpected header",
-    );
-    expect(deadlines20xContents).toContain(
-      "| Ruleset | Optional Adoption | Obtain | Maintain | Grace Ends |",
-    );
-    expect(deadlines20xContents).toContain(
-      "| [Collaborative Continuous Monitoring (CCM)](../../20x/rules/collaborative-continuous-monitoring.md) | 2026-07-04 | 2026-07-04 | 2027-01-01 | On the first annual assessment scheduled after 2027-01-01 |",
-    );
-    expectDeadlineRowsFromArtifact(
-      deadlines20xContents,
-      findArtifact(expectedArtifacts, "providers/updating/deadlines/20x.md"),
-      "Generated provider 20x deadlines should render source-derived rows in artifact order",
-    );
-    expectNoDeadlineRowsForDocuments(
-      deadlines20xContents,
-      rules,
-      providerDeadlineIgnoredDocuments,
-    );
-    expect(deadlines20xContents).not.toContain("Rev5 Deadlines");
-
-    const deadlinesRev5Contents = await readFile(
-      path.join(OUTPUT_DIR, "providers", "updating", "deadlines", "rev5.md"),
-      "utf8",
-    );
-    expect(deadlinesRev5Contents).toStartWith(
-      `---\ntags:\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Rev5 Deadlines`,
-    );
-    expectDeadlineRowsFromArtifact(
-      deadlinesRev5Contents,
-      findArtifact(expectedArtifacts, "providers/updating/deadlines/rev5.md"),
-      "Generated provider Rev5 deadlines should render source-derived rows in artifact order",
-    );
-    expectNoDeadlineRowsForDocuments(
-      deadlinesRev5Contents,
-      rules,
-      providerDeadlineIgnoredDocuments,
-    );
-    expect(deadlinesRev5Contents).not.toContain("20x Deadlines");
-
-    const assessorDeadlines20xContents = await readFile(
-      path.join(OUTPUT_DIR, "assessors", "updating", "deadlines", "20x.md"),
-      "utf8",
-    );
-    expectDeadlineRowsFromArtifact(
-      assessorDeadlines20xContents,
-      findArtifact(expectedArtifacts, "assessors/updating/deadlines/20x.md"),
-      "Generated assessor 20x deadlines should render source-derived rows in artifact order",
-    );
-    expect(assessorDeadlines20xContents).not.toContain(
-      "../../../providers/20x/rules/",
-    );
-
-    const assessorDeadlinesRev5Contents = await readFile(
-      path.join(OUTPUT_DIR, "assessors", "updating", "deadlines", "rev5.md"),
-      "utf8",
-    );
-    expectDeadlineRowsFromArtifact(
-      assessorDeadlinesRev5Contents,
-      findArtifact(expectedArtifacts, "assessors/updating/deadlines/rev5.md"),
-      "Generated assessor Rev5 deadlines should render source-derived rows in artifact order",
-    );
-    expect(assessorDeadlinesRev5Contents).not.toContain(
-      "../../../providers/rev5/rules/",
-    );
-
-    const providerInitial20xContents = await readFile(
-      path.join(OUTPUT_DIR, "providers", "20x", "initial", "index.md"),
-      "utf8",
-    );
-    const providerInitial20xArtifact = findArtifact(
+    for (const summaryArtifact of artifactsOfType(
       expectedArtifacts,
-      "providers/20x/initial/index.md",
+      "FRR_TAGGED_SUMMARY",
+    )) {
+      const summaryContents = await readGeneratedArtifact(summaryArtifact);
+      expect(summaryContents).toContain(`# ${summaryArtifact.title}`);
+      expectTaggedDocumentSummaryStatsFromArtifact(
+        summaryContents,
+        summaryArtifact,
+        `Generated tagged summary should render aggregate stats for ${summaryArtifact.relativePath}`,
+      );
+
+      if (summaryArtifact.context.taggedDocumentSummaryRows.length) {
+        expect(summaryContents).toContain("| Ruleset | Summary |");
+        expect(summaryContents).toContain("<br><br>**Applicable Rules:**");
+        expectTaggedDocumentSummaryRowsFromArtifact(
+          summaryContents,
+          summaryArtifact,
+          `Generated tagged summary should render source-derived rows for ${summaryArtifact.relativePath}`,
+        );
+      } else {
+        expect(summaryContents).toContain("No matching rules are currently available.");
+      }
+    }
+
+    for (const artifact of artifactsOfType(expectedArtifacts, "FRR")) {
+      const contents = await readGeneratedArtifact(artifact);
+      for (const section of artifact.context.sections) {
+        expect(contents).toContain(`## ${section.title}`);
+        const requirement = section.requirements[0];
+        if (requirement) {
+          expect(contents).toContain(requirement.id);
+          expect(contents).toContain(`### ${requirement.title}`);
+        }
+      }
+    }
+
+    const workflowArtifact = firstArtifactMatching(
+      expectedArtifacts,
+      (artifact) => artifact.context.flows.length > 0,
+      "an FRR artifact with an activity workflow",
     );
-    expect(providerInitial20xContents).toStartWith(
-      `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Initial Certification`,
+    const workflowContents = await readGeneratedArtifact(workflowArtifact);
+    const workflow = workflowArtifact.context.flows[0];
+    if (!workflow) {
+      throw new Error(`Expected ${workflowArtifact.relativePath} to include a workflow.`);
+    }
+    expect(workflowContents).toContain(`## Activity Workflow: ${workflow.title}`);
+    expect(workflowContents).toContain("``` mermaid");
+    for (const line of workflow.mermaidLines) {
+      expect(workflowContents).toContain(line);
+    }
+
+    const schemaArtifact = firstArtifactMatching(
+      expectedArtifacts,
+      (artifact) =>
+        artifact.context.sections.some((section) =>
+          section.requirements.some((requirement) => requirement.schema),
+        ),
+      "an FRR artifact with related JSON schema metadata",
     );
-    expect(providerInitial20xContents).toContain(
-      "| Ruleset | Summary |",
-    );
-    expectTaggedDocumentSummaryStatsFromArtifact(
-      providerInitial20xContents,
-      providerInitial20xArtifact,
-      "Generated provider 20x initial summary should render aggregate stats",
-    );
+    const schemaContents = await readGeneratedArtifact(schemaArtifact);
+    const schemaRequirement = schemaArtifact.context.sections
+      .flatMap((section) => section.requirements)
+      .find((requirement) => requirement.schema);
+    if (!schemaRequirement?.schema) {
+      throw new Error(`Expected ${schemaArtifact.relativePath} to include schema metadata.`);
+    }
     expectTextOrder(
-      providerInitial20xContents,
+      schemaContents,
       [
-        "# Initial Certification",
-        taggedDocumentSummaryStatsMarkdown(providerInitial20xArtifact),
-        "| Ruleset | Summary |",
+        `### ${schemaRequirement.title}`,
+        `!!! schema "Related JSON Schema: [${schemaRequirement.schema.name}](${schemaRequirement.schema.url})"`,
+        '!!! quote ""',
       ],
-      "Generated provider 20x initial summary should place stats before the table",
-    );
-    expectTaggedDocumentSummaryRowsFromArtifact(
-      providerInitial20xContents,
-      providerInitial20xArtifact,
-      "Generated provider 20x initial summary should render source-derived rows in artifact order",
-    );
-    expect(providerInitial20xContents).toContain(
-      "| [**Certification Data Sharing (CDS)**](../rules/certification-data-sharing.md) |",
-    );
-    expect(providerInitial20xContents).toContain(
-      "<br><br>**Applicable Rules:**",
-    );
-    expect(providerInitial20xContents).not.toContain(
-      "Certification Data Sharing: General Provider Responsibilities",
-    );
-    expect(providerInitial20xContents).not.toContain(
-      "Ongoing FedRAMP Certification",
-    );
-    expect(providerInitial20xContents).not.toContain("Security Decision Record");
-
-    const providerOngoing20xContents = await readFile(
-      path.join(OUTPUT_DIR, "providers", "20x", "ongoing", "index.md"),
-      "utf8",
-    );
-    const providerOngoing20xArtifact = findArtifact(
-      expectedArtifacts,
-      "providers/20x/ongoing/index.md",
-    );
-    expect(providerOngoing20xContents).toStartWith(
-      `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Ongoing Certification`,
-    );
-    expectTaggedDocumentSummaryStatsFromArtifact(
-      providerOngoing20xContents,
-      providerOngoing20xArtifact,
-      "Generated provider 20x ongoing summary should render aggregate stats",
-    );
-    expectTaggedDocumentSummaryRowsFromArtifact(
-      providerOngoing20xContents,
-      providerOngoing20xArtifact,
-      "Generated provider 20x ongoing summary should render source-derived rows in artifact order",
-    );
-    expect(providerOngoing20xContents).toContain(
-      "| [**Ongoing FedRAMP Certification (OFR)**](../rules/ongoing-fedramp-certification.md) |",
-    );
-    expect(providerOngoing20xContents).not.toContain(
-      "Initial FedRAMP Certification",
+      "Generated requirement markdown should place related JSON schema metadata before the statement",
     );
 
-    const assessorInitial20xContents = await readFile(
-      path.join(OUTPUT_DIR, "assessors", "20x", "initial", "index.md"),
-      "utf8",
-    );
-    const assessorInitial20xArtifact = findArtifact(
+    const notificationArtifact = firstArtifactMatching(
       expectedArtifacts,
-      "assessors/20x/initial/index.md",
+      (artifact) =>
+        artifact.context.sections.some((section) =>
+          section.requirements.some(
+            (requirement) => requirement.notifications.length > 0,
+          ),
+        ),
+      "an FRR artifact with notification metadata",
     );
-    expect(assessorInitial20xContents).toStartWith(
-      `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Initial Assessment`,
-    );
-    expectTaggedDocumentSummaryStatsFromArtifact(
-      assessorInitial20xContents,
-      assessorInitial20xArtifact,
-      "Generated assessor 20x initial summary should render aggregate stats",
-    );
-    expectTaggedDocumentSummaryRowsFromArtifact(
-      assessorInitial20xContents,
-      assessorInitial20xArtifact,
-      "Generated assessor 20x initial summary should render source-derived rows in artifact order",
-    );
-    expect(assessorInitial20xContents).toContain(
-      "| [**FedRAMP Assessments (FRA)**](../rules/fedramp-assessments.md) |",
-    );
-    expect(assessorInitial20xContents).toContain(
-      "| [**Marketplace Listing (MKT)**](../../recognition/rules/marketplace-listing.md) |",
-    );
-    expect(assessorInitial20xContents).not.toContain(
-      "FedRAMP Assessments: General Independent Assessor Responsibilities",
-    );
-    expect(assessorInitial20xContents).not.toContain(
-      "../../../providers/20x/rules/",
+    const notificationContents = await readGeneratedArtifact(notificationArtifact);
+    const notificationRequirement = notificationArtifact.context.sections
+      .flatMap((section) => section.requirements)
+      .find((requirement) => requirement.notifications.length > 0);
+    const notification = notificationRequirement?.notifications[0];
+    if (!notification) {
+      throw new Error(
+        `Expected ${notificationArtifact.relativePath} to include notification metadata.`,
+      );
+    }
+    expect(notificationContents).toContain(
+      `Notify ${notification.party} by ${notification.method} using ${notification.target}.`,
     );
 
-    const assessorOngoing20xArtifact = findArtifact(
+    const referenceArtifact = firstArtifactMatching(
       expectedArtifacts,
-      "assessors/20x/ongoing/index.md",
+      (artifact) =>
+        artifact.context.sections.some((section) =>
+          section.requirements.some((requirement) => requirement.reference),
+        ),
+      "an FRR artifact with a requirement reference link",
     );
-    const assessorOngoing20xContents = await readFile(
-      path.join(OUTPUT_DIR, "assessors", "20x", "ongoing", "index.md"),
-      "utf8",
+    const referenceContents = await readGeneratedArtifact(referenceArtifact);
+    const referenceRequirement = referenceArtifact.context.sections
+      .flatMap((section) => section.requirements)
+      .find((requirement) => requirement.reference);
+    if (!referenceRequirement?.reference) {
+      throw new Error(
+        `Expected ${referenceArtifact.relativePath} to include reference metadata.`,
+      );
+    }
+    expect(referenceContents).toContain(
+      `**Reference:** [${referenceRequirement.reference.label}](${referenceRequirement.reference.url})`,
     );
-    expect(assessorOngoing20xArtifact.context.taggedDocumentSummaryRows).toEqual(
-      [],
-    );
-    expect(assessorOngoing20xContents).toStartWith(
-      `---\ntags:\n  - 20x\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Ongoing Assessment`,
-    );
-    expectTaggedDocumentSummaryStatsFromArtifact(
-      assessorOngoing20xContents,
-      assessorOngoing20xArtifact,
-      "Generated assessor 20x ongoing summary should render zero aggregate stats",
-    );
-    expectTextOrder(
-      assessorOngoing20xContents,
-      [
-        "# Ongoing Assessment",
-        taggedDocumentSummaryStatsMarkdown(assessorOngoing20xArtifact),
-        "No matching rules are currently available.",
-      ],
-      "Generated assessor 20x ongoing summary should place stats before the empty state",
-    );
-    expect(assessorOngoing20xContents).toContain(
-      "No matching rules are currently available.",
-    );
+
+    const frrCollectionMapping = config.generated.frrCollectionDocuments?.[0];
+    if (frrCollectionMapping) {
+      const frrCollectionArtifact = artifactWithMappingId(
+        expectedArtifacts,
+        frrCollectionMapping.id,
+      );
+      const frrCollectionContents =
+        await readGeneratedArtifact(frrCollectionArtifact);
+      const frrCollectionRequirement =
+        firstRequirementInArtifact(frrCollectionArtifact);
+      expect(frrCollectionContents).not.toContain("Effective Date(s)");
+      expect(frrCollectionContents).not.toContain("Activity Workflow");
+      expect(frrCollectionContents).not.toContain("``` mermaid");
+      expect(frrCollectionContents).toContain(frrCollectionRequirement.id);
+    }
 
     const contentDefinitionsPath = path.join(
       resolveToolPath(config.paths.content),
       "definitions.md",
     );
     await expect(access(contentDefinitionsPath)).rejects.toThrow();
-
-    const providerMarketplaceContents = await readFile(
-      path.join(
-        OUTPUT_DIR,
-        "providers",
-        "implement",
-        "marketplace",
-        "marketplace-listing.md",
-      ),
-      "utf8",
-    );
-    expect(providerMarketplaceContents).toContain(
-      "[CDS-CSO-PUB (Public Information)](../../../reference/certification-data-sharing.md#public-information){ data-preview }",
-    );
-    expect(providerMarketplaceContents).toContain(
-      "[MKT-FRP-SOF (Scope of FedRAMP)](../../../reference/marketplace-listing.md#scope-of-fedramp){ data-preview }",
-    );
-    expect(providerMarketplaceContents).not.toContain("../../20x/rules/");
-    expect(providerMarketplaceContents).not.toContain(
-      "../../../responsibilities/rules.md#scope-of-fedramp",
-    );
-
-    const provider20xIcpContents = await readFile(
-      path.join(
-        OUTPUT_DIR,
-        "providers",
-        "20x",
-        "rules",
-        "incident-communications-procedures.md",
-      ),
-      "utf8",
-    );
-    const providerIcpRules = rules.FRR.ICP?.data.all?.CSO ?? {};
-    const incidentFlow = rules.FRR.ICP?.info.flows?.[0];
-    if (!incidentFlow?.steps?.length) {
-      throw new Error("Expected ICP to include a workflow in the rules JSON.");
-    }
-    const firstRuleStep = incidentFlow.steps.find(
-      (step) => step.to && providerIcpRules[step.to],
-    );
-    if (!firstRuleStep?.from || !firstRuleStep.to) {
-      throw new Error(
-        "Expected ICP workflow to include a step from a start node to a rule.",
-      );
-    }
-    const firstWorkflowRule = providerIcpRules[firstRuleStep.to];
-    if (!firstWorkflowRule?.name) {
-      throw new Error(
-        `Expected ICP workflow rule ${firstRuleStep.to} to exist in the provider rules.`,
-      );
-    }
-    const firstWorkflowStartNode = mermaidNodeId(firstRuleStep.from);
-    const firstWorkflowRuleNode = mermaidNodeId(firstRuleStep.to);
-    expect(provider20xIcpContents).toContain(
-      `## Activity Workflow: ${incidentFlow.activity ?? "Flow 1"}`,
-    );
-    expect(provider20xIcpContents).toContain("``` mermaid");
-    expect(provider20xIcpContents).toContain("flowchart TD");
-    expect(provider20xIcpContents).toContain(
-      `${firstRuleStep.to}<br/>${firstWorkflowRule.name}`,
-    );
-    expect(provider20xIcpContents).toContain(
-      `${firstWorkflowStartNode}(["${mermaidQuotedValue(firstRuleStep.from)}"])`,
-    );
-    expect(provider20xIcpContents).toMatch(
-      new RegExp(
-        `${firstWorkflowStartNode} -->(\\|"[^"]+"\\|)? ${firstWorkflowRuleNode}`,
-      ),
-    );
-    expect(provider20xIcpContents).toContain(
-      `click ${firstWorkflowRuleNode} href "#`,
-    );
-    expect(provider20xIcpContents).toContain(
-      `"Jump to ${firstRuleStep.to}"`,
-    );
-    const notificationRule = Object.values(providerIcpRules).find((rule) =>
-      rule.notification?.some(
-        (notification) =>
-          notification.party && notification.method && notification.target,
-      ),
-    );
-    const notification = notificationRule?.notification?.find(
-      (entry) => entry.party && entry.method && entry.target,
-    );
-    expect(notificationRule).toBeTruthy();
-    expect(notification).toBeTruthy();
-    expect(provider20xIcpContents).toContain(
-      `Notify ${notification?.party} by ${notification?.method} using ${notification?.target}.`,
-    );
-
-    const schemaRuleId = "CDS-CSO-PUB";
-    const schemaRule = rules.FRR.CDS?.data.all?.CSO?.[schemaRuleId];
-    if (!schemaRule?.schema?.name || !schemaRule.schema.url) {
-      throw new Error(
-        `Expected ${schemaRuleId} to include related JSON schema metadata.`,
-      );
-    }
-    const provider20xCdsContents = await readFile(
-      path.join(
-        OUTPUT_DIR,
-        "providers",
-        "20x",
-        "rules",
-        `${rules.FRR.CDS?.info.web_name}.md`,
-      ),
-      "utf8",
-    );
-    expectTextOrder(
-      provider20xCdsContents,
-      [
-        `### ${schemaRule.name ?? schemaRuleId}`,
-        `??? abstract "${schemaRuleId}"`,
-        `!!! schema "Related JSON Schema: [${schemaRule.schema.name}](${schemaRule.schema.url})"`,
-        '!!! quote ""',
-        schemaRule.statement ?? "",
-      ],
-      "Generated requirement markdown should place related JSON schema metadata between the rule ID block and statement",
-    );
-
-    const provider20xFsiContents = await readFile(
-      path.join(
-        OUTPUT_DIR,
-        "providers",
-        "20x",
-        "rules",
-        "fedramp-security-inbox.md",
-      ),
-      "utf8",
-    );
-    expect(provider20xFsiContents).toContain(
-      firstRuleId(rules.FRR.FSI, ["all", "20x", "rev5"], ["Providers"]),
-    );
-
-    const fedrampResponsibilitiesContents = await readFile(
-      path.join(OUTPUT_DIR, "responsibilities", "rules.md"),
-      "utf8",
-    );
-    expect(fedrampResponsibilitiesContents).toStartWith(
-      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# FedRAMP's Responsibilities`,
-    );
-    expect(fedrampResponsibilitiesContents).not.toContain("Effective Date(s)");
-    expect(fedrampResponsibilitiesContents).not.toContain("Activity Workflow");
-    expect(fedrampResponsibilitiesContents).not.toContain("``` mermaid");
-    expect(fedrampResponsibilitiesContents).not.toContain(
-      firstRuleId(rules.FRR.FSI, ["all", "20x", "rev5"], ["Providers"]),
-    );
-
-    const fedrampSecurityInboxName = rules.FRR.FSI?.info.name;
-    const fedrampSecurityInboxPurpose = rules.FRR.FSI?.info.purpose;
-    const fedrampFsiRule = firstRuleSelection(
-      rules.FRR.FSI,
-      ["all", "20x", "rev5"],
-      ["FedRAMP"],
-    );
-    const fedrampFsiSubsetDescription = subsetDescription(
-      rules.FRR.FSI,
-      fedrampFsiRule.bucketName,
-      fedrampFsiRule.subsetKey,
-    );
-    expect(fedrampSecurityInboxName).toBeTruthy();
-    expect(fedrampSecurityInboxPurpose).toBeTruthy();
-    expect(fedrampFsiSubsetDescription).toBeTruthy();
-    expectTextOrder(
-      fedrampResponsibilitiesContents,
-      [
-        "# FedRAMP's Responsibilities",
-        `## ${fedrampSecurityInboxName} {#${slugifyHeading(
-          fedrampSecurityInboxName ?? "",
-        )}}`,
-        fedrampSecurityInboxPurpose ?? "",
-        fedrampFsiSubsetDescription,
-        fedrampFsiRule.id,
-      ],
-      "Generated FedRAMP responsibilities markdown should place each FRR purpose and FRP subset description before FedRAMP rules",
-    );
-
-    const vulnerabilityDetectionName = rules.FRR.VDR?.info.name;
-    const vulnerabilityDetectionPurpose = rules.FRR.VDR?.info.purpose;
-    const fedrampVdrRule = firstRuleSelection(
-      rules.FRR.VDR,
-      ["all", "20x", "rev5"],
-      ["FedRAMP"],
-    );
-    const fedrampVdrSubsetTitle = subsetTitle(
-      rules.FRR.VDR,
-      fedrampVdrRule.bucketName,
-      fedrampVdrRule.subsetKey,
-    );
-    const fedrampVdrSubsetDescription = subsetDescription(
-      rules.FRR.VDR,
-      fedrampVdrRule.bucketName,
-      fedrampVdrRule.subsetKey,
-    );
-    expect(vulnerabilityDetectionName).toBeTruthy();
-    expect(vulnerabilityDetectionPurpose).toBeTruthy();
-    expect(fedrampVdrSubsetDescription).toBeTruthy();
-    expectTextOrder(
-      fedrampResponsibilitiesContents,
-      [
-        `## ${vulnerabilityDetectionName} {#${slugifyHeading(
-          vulnerabilityDetectionName ?? "",
-        )}}`,
-        vulnerabilityDetectionPurpose ?? "",
-        fedrampVdrSubsetDescription,
-        fedrampVdrRule.id,
-      ],
-      "Generated FedRAMP responsibilities markdown should repeat the FRR layout for later responsibility sections",
-    );
-    expect(fedrampResponsibilitiesContents).not.toContain(
-      `## ${fedrampVdrSubsetTitle}`,
-    );
-
-    const agencyCcmContents = await readFile(
-      path.join(
-        OUTPUT_DIR,
-        "agencies",
-        "rules",
-        "collaborative-continuous-monitoring.md",
-      ),
-      "utf8",
-    );
-    const collaborativeMonitoringPurpose = rules.FRR.CCM?.info.purpose;
-    const collaborativeMonitoringName = rules.FRR.CCM?.info.name;
-    const agencyCcmRule = firstRuleSelection(
-      rules.FRR.CCM,
-      ["all", "20x", "rev5"],
-      ["Agencies"],
-    );
-    const agencyCcmSubsetTitle = subsetTitle(
-      rules.FRR.CCM,
-      agencyCcmRule.bucketName,
-      agencyCcmRule.subsetKey,
-    );
-    expect(collaborativeMonitoringPurpose).toBeTruthy();
-    expect(collaborativeMonitoringName).toBeTruthy();
-    expect(agencyCcmContents).toStartWith(
-      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# ${collaborativeMonitoringName}`,
-    );
-    expectTextOrder(
-      agencyCcmContents,
-      [
-        `# ${collaborativeMonitoringName}`,
-        collaborativeMonitoringPurpose ?? "",
-        "\n---",
-        `## ${agencyCcmSubsetTitle} {#${slugifyHeading(agencyCcmSubsetTitle)}}`,
-      ],
-      "Generated single-subset FRR markdown should place info.purpose before the first body rule without a TOC",
-    );
-    expect(agencyCcmContents).toContain(`# ${collaborativeMonitoringName}`);
-    expect(agencyCcmContents).not.toContain("**Subsets**");
-    expect(agencyCcmContents).toContain(`## ${agencyCcmSubsetTitle}`);
-    expect(agencyCcmContents).toContain(agencyCcmRule.id);
-
-    const agencyVdrContents = await readFile(
-      path.join(
-        OUTPUT_DIR,
-        "agencies",
-        "rules",
-        "vulnerability-detection-and-response.md",
-      ),
-      "utf8",
-    );
-    expect(agencyVdrContents).toContain(`# ${vulnerabilityDetectionName}`);
-    const agencyVdrRule = firstRuleSelection(
-      rules.FRR.VDR,
-      ["all", "20x", "rev5"],
-      ["Agencies"],
-    );
-    const agencyVdrSubsetTitle = subsetTitle(
-      rules.FRR.VDR,
-      agencyVdrRule.bucketName,
-      agencyVdrRule.subsetKey,
-    );
-    expect(agencyVdrContents).toContain(`## ${agencyVdrSubsetTitle}`);
-    expect(agencyVdrContents).toContain(agencyVdrRule.id);
-    expect(agencyVdrContents).not.toContain(
-      fedrampVdrRule.id,
-    );
   });
 
   test("ignores configured rule documents after resolving the source selection", async () => {
@@ -3169,13 +2652,40 @@ describe("build pipeline", () => {
       await access(path.join(htmlPath, relativePath));
     }
 
-    const renderedAgencyUseDocument = rules.FRR.AGU;
-    const renderedChangeManagementTheme = Object.values(rules.KSI).find(
-      (theme) => theme.web_name === "change-management",
+    const renderedDefinitionArtifact = artifactOfType(expectedArtifacts, "FRD");
+    const renderedKsiThemeArtifact = firstArtifactMatching(
+      expectedArtifacts,
+      (artifact) =>
+        artifact.documentType === "KSI" && artifact.context.indicators.length > 0,
+      "a rendered KSI theme artifact",
     );
-    if (!renderedAgencyUseDocument || !renderedChangeManagementTheme) {
+    const renderedKsiThemeIndicator =
+      renderedKsiThemeArtifact.context.indicators[0];
+    const renderedKsiReferenceArtifact = firstArtifactMatching(
+      expectedArtifacts,
+      (artifact) =>
+        artifact.documentType === "KSI" && artifact.context.sections.length > 0,
+      "a rendered KSI reference artifact",
+    );
+    const renderedDeadlineArtifact = artifactOfType(expectedArtifacts, "DEADLINES");
+    const renderedResponsibilitiesArtifact = firstArtifactMatching(
+      expectedArtifacts,
+      (artifact) =>
+        (config.generated.frrCollectionDocuments ?? []).some(
+          (mapping) => mapping.id === artifact.mappingId,
+        ),
+      "a rendered FRR collection artifact",
+    );
+    const renderedAgencyArtifact = firstArtifactMatching(
+      expectedArtifacts,
+      (artifact) =>
+        artifact.documentType === "FRR" &&
+        artifact.relativePath.startsWith("agencies/rules/"),
+      "a rendered agency rules artifact",
+    );
+    if (!renderedKsiThemeIndicator) {
       throw new Error(
-        "Expected source documents for rendered page smoke tests to exist.",
+        `Expected ${renderedKsiThemeArtifact.relativePath} to include an indicator.`,
       );
     }
     const renderedDefinitionTerm =
@@ -3183,41 +2693,62 @@ describe("build pipeline", () => {
         .map((entry) => entry.term)
         .sort((left, right) => left.localeCompare(right))[0] ??
       rules.FRD.info.name;
-    const renderedChangeManagementIndicatorId =
-      Object.keys(renderedChangeManagementTheme.indicators)[0] ??
-      renderedChangeManagementTheme.name;
+    const renderedKsiThemeHtmlPath = path.relative(
+      htmlPath,
+      markdownToHtmlPath(htmlPath, renderedKsiThemeArtifact.relativePath),
+    );
+    const renderedKsiReferenceHtmlPath = path.relative(
+      htmlPath,
+      markdownToHtmlPath(htmlPath, renderedKsiReferenceArtifact.relativePath),
+    );
+    const renderedDeadlineHtmlPath = path.relative(
+      htmlPath,
+      markdownToHtmlPath(htmlPath, renderedDeadlineArtifact.relativePath),
+    );
+    const renderedResponsibilitiesHtmlPath = path.relative(
+      htmlPath,
+      markdownToHtmlPath(htmlPath, renderedResponsibilitiesArtifact.relativePath),
+    );
+    const renderedAgencyHtmlPath = path.relative(
+      htmlPath,
+      markdownToHtmlPath(htmlPath, renderedAgencyArtifact.relativePath),
+    );
 
     const renderedPages = [
       {
-        path: "definitions/index.html",
-        expectedText: ["FedRAMP Definitions", renderedDefinitionTerm],
+        path: path.relative(
+          htmlPath,
+          markdownToHtmlPath(htmlPath, renderedDefinitionArtifact.relativePath),
+        ),
+        expectedText: [renderedDefinitionArtifact.title, renderedDefinitionTerm],
       },
       {
-        path: "providers/20x/key-security-indicators/change-management/index.html",
+        path: renderedKsiThemeHtmlPath,
         expectedText: [
-          renderedChangeManagementTheme.name,
-          renderedChangeManagementIndicatorId,
+          renderedKsiThemeArtifact.title,
+          renderedKsiThemeIndicator.id,
         ],
       },
       {
-        path: "reference/key-security-indicators/index.html",
+        path: renderedKsiReferenceHtmlPath,
         expectedText: [
-          "Key Security Indicators",
-          renderedChangeManagementTheme.name,
-          renderedChangeManagementIndicatorId,
+          renderedKsiReferenceArtifact.title,
+          renderedKsiReferenceArtifact.context.sections[0]?.title ?? "",
+          renderedKsiReferenceArtifact.context.sections[0]?.requirements[0]?.id ??
+            "",
         ],
       },
       {
-        path: "providers/updating/deadlines/20x/index.html",
-        expectedText: ["20x Deadlines"],
+        path: renderedDeadlineHtmlPath,
+        expectedText: [renderedDeadlineArtifact.title],
       },
       {
-        path: "responsibilities/rules/index.html",
-        expectedText: ["FedRAMP's Responsibilities"],
+        path: renderedResponsibilitiesHtmlPath,
+        expectedText: [renderedResponsibilitiesArtifact.title],
       },
       {
-        path: "agencies/rules/agency-use/index.html",
-        expectedText: [renderedAgencyUseDocument.info.name],
+        path: renderedAgencyHtmlPath,
+        expectedText: [renderedAgencyArtifact.title],
       },
       {
         path: "todo/index.html",

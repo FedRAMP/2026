@@ -58,21 +58,14 @@ GRC engineering teams:
    business.
 
 3. Focus on building a strong Certification Package Overview first, working through the FedRAMP
-   Rulesets that focus on Initial Certification first. These rulesets interconnect but can
-   generally be approached in the following order:
-
-    a. Initial FedRAMP Certification
-    b. Minimum Assessment Scope
-    c. Certification Package Overview
-    d. Using Cryptographic Modules
-    e. Certification Data Sharing
+   Rulesets that focus on the Boundary first.
 
 4. Then you'll move onto your Security Decision Record, which collects all the information about
    how you have decided to approach the remaining FedRAMP rules. This will take the most time
    and investment, so if building a Certification Package Overview was difficult then you will
    have a long journey ahead of you!
 
-5. Finally, you'll need to work your way through the Ongoing FedRAMP Certification rules and
+5. Finally, you'll need to work your way through the Assurance rulesets and
    ensure you have everything in place to meet those requirements. The foundation for those
    requirements will be addressed in final updates to your Certification Package Overivew
    and your Security Decision Record. You will need to prove you are ready to meet all
