@@ -9,6 +9,69 @@ picto:
 
 # Changelog
 
+## 2026.06.09.01-preview
+
+**Release Date:** June 9, 2026
+
+!!! warning "This update changes a bunch of FedRAMP Rulesets!"
+
+    We did not change many rules, but we have moved various rules around within different
+    rulesets and renamed some of them. For example, the `FedRAMP Security Inbox` ruleset
+    is now the `Addressing FedRAMP Communication` ruleset and the
+    `Incident Communications Procedures` ruleset is `Incident Evaluation and Reporting`...
+    there are more! Ready carefully! VDR got split into VDR + VER! Same rules!
+    Different names! Big changes! ;D
+
+!!! tip "This update aligns on updated groups for the rulesets!"
+
+    We have been having a lot of discussion about the previous approach to grouping
+    rulesets into "initial certification" and "ongoing certification" because initial
+    certification requires you to meet the ongoing certification rulesets and vice
+    versa.
+
+    This change groups some rulesets into a "Boundary" group and others into an
+    "Assurance" group to establish the primary differences. The "Boundary" is all about
+    defining the cloud service offering, what it is, and what you'll do, while the
+    "Assurance" group is all about maintaining assurance with your government customers.
+
+### Site Structure
+
+- Reorganized the provider rule navigation for 20x and Rev5 into Boundary Related, Assurance Related, and Package Related groups, with Marketplace Listing and FedRAMP Certification listed separately.
+- Reorganized the [Complete Ruleset Reference](https://preview.fedramp.gov/2026/reference/) navigation around boundary, assurance, package, government, and assessor-related rules.
+- Updated agency and assessor rule navigation to use the current rule names, including [Vulnerability Evaluation and Reporting](https://preview.fedramp.gov/2026/agencies/rules/vulnerability-evaluation-and-reporting/) for agencies and [Independent Verification and Validation](https://preview.fedramp.gov/2026/assessors/20x/rules/independent-verification-and-validation/) for assessors.
+- Removed the initial and ongoing assessment summary pages from assessor 20x and Rev5 navigation.
+
+## Rules Content Changes
+
+- No `FRD-*` definitions or `KSI-*` indicators were added, removed, or substantively changed.
+- Added top-level `CTL` content with guidance/parameters for 80 Rev5 controls across AC, AU, CA, CM, CP, IA, IR, MA, PS, RA, SA, SC, SI, and SR, including `AC-06-01`, `AU-06`, `CA-02`, `CM-12`, `IA-02`, `IR-04`, `RA-05`, `SA-09-05`, `SC-13`, `SI-04`, and `SR-08`.
+- Structural: reorganized FRR process families, moving `FSI-*` to `AFC-*`, `ICP-*` to `IEC-*`, `IFR-*` to `FRC-*`, `FRA-*` to `IVV-*`, `UCM-*` to `CMU-*`, selected `OFR-*` rules to `CPO-*` or `IVV-*`, and selected `VDR-*` rules to `VER-*`.
+- Structural: `FRA-CSO-STE`, `FRA-CSO-RAA`, `FRA-IAS-*`, and `FRA-IAX-*` moved to matching `IVV-*` IDs with no statement changes.
+- Structural: `FSI-FRP-*` and `FSI-CSO-*` moved to matching `AFC-FRP-*` and `AFC-CSO-*` IDs; `AFC-CSO-INB` updates its related reference from `FSI-CSO-NOC` to `AFC-CSO-NOC`.
+- Structural: `ICP-FRP-ORV` and `ICP-CSO-*` moved to matching `IEC-FRP-ORV` and `IEC-CSO-*` IDs; `IEC-CSO-DPR`, `IEC-CSO-EFI`, and `IEC-CSO-IIR` update internal references from `ICP-*` to `IEC-*`.
+- Structural: `IFR-CSO-*`, `IFR-CLA-*`, `IFR-APP-*`, `IFR-APS-ATO`, `IFR-CSX-*`, and `IFR-CSF-RDY` moved to matching `FRC-*` IDs; `FRC-CLA-AFR` updates its subset name and related references to `FRC-*`, `AFC-*`, and `IEC-*`.
+- Added `FRC-CCL-PLC` as a placeholder rule for changing FedRAMP Certification Class.
+- Structural: `UCM-CSO-CMD`, `UCM-CSO-UVM`, and `UCM-CSO-CAT` moved to `CMU-CSO-CMD`, `CMU-CSO-UVM`, and `CMU-CSO-CAT`; `CPO-CSO-OVR` now references `CMU-CSO-CMD`.
+- Structural: `OFR-CSX-CPM` and `OFR-CSF-CPM` moved to `CPO-CSX-CPM` and `CPO-CSF-CPM`; `OFR-CSO-IVV`, `OFR-CSF-ANA`, and `OFR-CSF-IFC` moved into `IVV`, with `IVV-CSO-PIA` renamed to “Persistent Independent Verification and Validation Assessments.”
+- Removed `IFR-FRP-ECR`, which allowed FedRAMP exemptions from certification rules in rare circumstances.
+- Removed old ongoing-certification umbrella rules `OFR-AFR-CCM`, `OFR-AFR-CDS`, `OFR-AFR-FSI`, `OFR-AFR-ICP`, `OFR-AFR-MAS`, `OFR-AFR-SCG`, `OFR-AFR-SCN`, `OFR-AFR-UCM`, `OFR-AFR-VDR`, and `OFR-FRP-MCM`.
+- Reworked the vulnerability split: `VDR-BST-ADT`, `VDR-BST-AKE`, `VDR-BST-DAC`, `VDR-BST-DFR`, `VDR-BST-MSP`, and `VDR-BST-SIR` now live under `VDR-CSO-*`, while `VDR-FRP-*`, `VDR-AGM-*`, `VDR-EVA-*`, `VDR-RPT-*`, and selected `VDR-TFR-*` rules moved to `VER-*`.
+- `VDR` now retains detection/response and selected timeframe rules such as `VDR-CSO-DET`, `VDR-CSO-RES`, `VDR-CSO-FAV`, `VDR-TFR-NMV`, `VDR-TFR-PDD`, `VDR-TFR-KEV`, `VDR-TFR-PSD`, `VDR-TFR-MVX`, and `VDR-TFR-MVF`.
+- `VER` now carries evaluation, agency guidance, reporting, and selected timeframe rules such as `VER-FRP-ARP`, `VER-AGM-NFR`, `VER-EVA-EPA`, `VER-RPT-VDT`, `VER-TFR-MHR`, `VER-TFR-MRH`, and `VER-TFR-EVU`.
+- `VER-EVA-EPA` renames “Potential Adverse Impact” to “Potential Agency Impact,” `VER-TFR-EVU` updates class-specific references from `VDR-EVA` to `VER-EVA`, and `VER-TFR-MRH` updates its schema URL from historical VDR activity to historical VER activity.
+- Added `SDR-CSO-PLC` as placeholder Security Decision Record content so the SDR ruleset can render without errors.
+- Updated Ongoing Authorization wording to Ongoing Certification wording in `AGU-USE-DSO`, `AGU-USE-NFC`, `AGU-USE-NPC`, `AGU-USE-ROR`, and `CDS-CSO-HAD`.
+- Updated FRR document metadata: `AGU` drops “Needs Review,” `SCN` becomes singular “Significant Change Notification,” and tags are recategorized for `CCM`, `CDS`, `CPO`, `FRC`, `MAS`, `MKT`, `REC`, `SCG`, `SCN`, `SDR`, `VDR`, and `VER`.
+
+### Generated Page Experience
+
+- Added generated provider summary pages for boundary, assurance, and package materials for both certification types. Examples: [The 20x FedRAMP Boundary](https://preview.fedramp.gov/2026/providers/20x/boundary/) and [Rev5 Package Materials](https://preview.fedramp.gov/2026/providers/rev5/package/).
+- Updated generated provider summaries to follow the newer boundary, assurance, and materials rule taxonomy instead of the previous initial and ongoing certification grouping.
+
+### Tooling
+
+- Refactored generated Markdown tests to use configured artifact metadata and generated output paths instead of hard-coded page lists.
+
 ## 2026.06.07.01-preview
 
 **Release Date:** June 7, 2026
