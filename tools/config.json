@@ -107,9 +107,9 @@
     ],
     "taggedDocumentSummaries": [
       {
-        "id": "provider-20x-initial-rules-summary",
-        "title": "Initial Certification",
-        "output": "providers/20x/initial/index.md",
+        "id": "provider-20x-boundary-rules-summary",
+        "title": "The 20x FedRAMP Boundary",
+        "output": "providers/20x/boundary/index.md",
         "status": "placeholder",
         "template": "templates/tagged-document-summary.hbs",
         "source": {
@@ -117,15 +117,15 @@
           "documents": "ALL",
           "types": ["20x"],
           "affects": ["Providers"],
-          "tag": "initial",
+          "tag": "boundary",
           "includeAll": true,
           "allPosition": "first"
         }
       },
       {
-        "id": "provider-rev5-initial-rules-summary",
-        "title": "Initial Certification",
-        "output": "providers/rev5/initial/index.md",
+        "id": "provider-rev5-boundary-rules-summary",
+        "title": "The Rev5 FedRAMP Boundary",
+        "output": "providers/rev5/boundary/index.md",
         "status": "placeholder",
         "template": "templates/tagged-document-summary.hbs",
         "source": {
@@ -133,15 +133,15 @@
           "documents": "ALL",
           "types": ["rev5"],
           "affects": ["Providers"],
-          "tag": "initial",
+          "tag": "boundary",
           "includeAll": true,
           "allPosition": "first"
         }
       },
       {
-        "id": "provider-20x-ongoing-rules-summary",
-        "title": "Ongoing Certification",
-        "output": "providers/20x/ongoing/index.md",
+        "id": "provider-20x-assurance-rules-summary",
+        "title": "Assurance",
+        "output": "providers/20x/assurance/index.md",
         "status": "placeholder",
         "template": "templates/tagged-document-summary.hbs",
         "source": {
@@ -149,15 +149,15 @@
           "documents": "ALL",
           "types": ["20x"],
           "affects": ["Providers"],
-          "tag": "ongoing",
+          "tag": "assurance",
           "includeAll": true,
           "allPosition": "first"
         }
       },
       {
-        "id": "provider-rev5-ongoing-rules-summary",
-        "title": "Ongoing Certification",
-        "output": "providers/rev5/ongoing/index.md",
+        "id": "provider-rev5-assurance-rules-summary",
+        "title": "Assurance",
+        "output": "providers/rev5/assurance/index.md",
         "status": "placeholder",
         "template": "templates/tagged-document-summary.hbs",
         "source": {
@@ -165,71 +165,39 @@
           "documents": "ALL",
           "types": ["rev5"],
           "affects": ["Providers"],
-          "tag": "ongoing",
+          "tag": "assurance",
           "includeAll": true,
           "allPosition": "first"
         }
       },
       {
-        "id": "assessor-20x-initial-rules-summary",
-        "title": "Initial Assessment",
-        "output": "assessors/20x/initial/index.md",
+        "id": "provider-20x-materials-rules-summary",
+        "title": "Package Materials",
+        "output": "providers/20x/package/index.md",
         "status": "placeholder",
         "template": "templates/tagged-document-summary.hbs",
         "source": {
           "collection": "FRR",
           "documents": "ALL",
           "types": ["20x"],
-          "affects": ["Assessors"],
-          "tag": "initial",
+          "affects": ["Providers"],
+          "tag": "materials",
           "includeAll": true,
           "allPosition": "first"
         }
       },
       {
-        "id": "assessor-rev5-initial-rules-summary",
-        "title": "Initial Assessment",
-        "output": "assessors/rev5/initial/index.md",
+        "id": "provider-rev5-materials-rules-summary",
+        "title": "Package Materials",
+        "output": "providers/rev5/package/index.md",
         "status": "placeholder",
         "template": "templates/tagged-document-summary.hbs",
         "source": {
           "collection": "FRR",
           "documents": "ALL",
           "types": ["rev5"],
-          "affects": ["Assessors"],
-          "tag": "initial",
-          "includeAll": true,
-          "allPosition": "first"
-        }
-      },
-      {
-        "id": "assessor-20x-ongoing-rules-summary",
-        "title": "Ongoing Assessment",
-        "output": "assessors/20x/ongoing/index.md",
-        "status": "placeholder",
-        "template": "templates/tagged-document-summary.hbs",
-        "source": {
-          "collection": "FRR",
-          "documents": "ALL",
-          "types": ["20x"],
-          "affects": ["Assessors"],
-          "tag": "ongoing",
-          "includeAll": true,
-          "allPosition": "first"
-        }
-      },
-      {
-        "id": "assessor-rev5-ongoing-rules-summary",
-        "title": "Ongoing Assessment",
-        "output": "assessors/rev5/ongoing/index.md",
-        "status": "placeholder",
-        "template": "templates/tagged-document-summary.hbs",
-        "source": {
-          "collection": "FRR",
-          "documents": "ALL",
-          "types": ["rev5"],
-          "affects": ["Assessors"],
-          "tag": "ongoing",
+          "affects": ["Providers"],
+          "tag": "materials",
           "includeAll": true,
           "allPosition": "first"
         }
@@ -308,7 +276,7 @@
         }
       },
       {
-        "id": "provider-specific-initial-rules-20x",
+        "id": "provider-specific-rules-20x",
         "output": "providers/20x/rules/{FRR}.md",
         "outputMode": "documents",
         "status": "stable",
@@ -326,7 +294,7 @@
         }
       },
       {
-        "id": "provider-specific-initial-rules-rev5",
+        "id": "provider-specific-rules-rev5",
         "output": "providers/rev5/rules/{FRR}.md",
         "outputMode": "documents",
         "status": "placeholder",
@@ -362,7 +330,7 @@
         }
       },
       {
-        "id": "assessor-specific-initial-rules-20x",
+        "id": "assessor-specific-rules-20x",
         "output": "assessors/20x/rules/{FRR}.md",
         "outputMode": "documents",
         "status": "placeholder",
@@ -381,7 +349,7 @@
         }
       },
       {
-        "id": "assessor-specific-initial-rules-rev5",
+        "id": "assessor-specific-rules-rev5",
         "output": "assessors/rev5/rules/{FRR}.md",
         "outputMode": "documents",
         "status": "placeholder",
