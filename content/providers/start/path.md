@@ -13,7 +13,7 @@ picto:
 flowchart LR
   A["Preparation"] --> B[Initial Implementation] --> C[Ongoing Certification]
 
-  classDef current fill:#dff5e1,stroke:#2f855a,stroke-width:2px,color:#123524;
+  classDef current stroke:#00A86B,stroke-width:3px;
   class A current;
 ```
 
