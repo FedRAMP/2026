@@ -26,6 +26,7 @@ import {
   loadToolConfig,
   REPO_ROOT,
   resolveToolPath,
+  type GeneratedDocumentStatus,
   type ToolConfig,
 } from "./config";
 import { deploy } from "./deploy";
@@ -351,6 +352,60 @@ function artifactsOfType(
   documentType: ArtifactForTest["documentType"],
 ): ArtifactForTest[] {
   return artifacts.filter((artifact) => artifact.documentType === documentType);
+}
+
+function configWithGeneratedMappingStatus(
+  config: ToolConfig,
+  status: GeneratedDocumentStatus,
+): ToolConfig {
+  const updatedConfig = structuredClone(config);
+
+  const updateStatuses = <T extends { status: GeneratedDocumentStatus }>(
+    mappings: T[] | undefined,
+  ): T[] | undefined =>
+    mappings?.map((mapping) => ({
+      ...mapping,
+      status,
+    }));
+
+  updatedConfig.generated.definitionDocuments = updateStatuses(
+    updatedConfig.generated.definitionDocuments,
+  );
+  updatedConfig.generated.ksiDocuments = updateStatuses(
+    updatedConfig.generated.ksiDocuments,
+  );
+  updatedConfig.generated.deadlineDocuments = updateStatuses(
+    updatedConfig.generated.deadlineDocuments,
+  );
+  updatedConfig.generated.taggedDocumentSummaries = updateStatuses(
+    updatedConfig.generated.taggedDocumentSummaries,
+  );
+  updatedConfig.generated.referenceIndexDocuments = updateStatuses(
+    updatedConfig.generated.referenceIndexDocuments,
+  );
+  updatedConfig.generated.frrCollectionDocuments = updateStatuses(
+    updatedConfig.generated.frrCollectionDocuments,
+  );
+  updatedConfig.generated.ruleDocuments = updateStatuses(
+    updatedConfig.generated.ruleDocuments,
+  ) ?? [];
+
+  return updatedConfig;
+}
+
+function setRulesSourceStatuses(
+  rules: RulesForTest,
+  status: GeneratedDocumentStatus,
+): void {
+  rules.FRD.info.status = status;
+
+  for (const document of Object.values(rules.FRR)) {
+    document.info.status = status;
+  }
+
+  for (const theme of Object.values(rules.KSI)) {
+    theme.status = status;
+  }
 }
 
 function firstRequirementInArtifact(artifact: ArtifactForTest): {
@@ -1597,6 +1652,43 @@ describe("build-markdown", () => {
     await expect(access(contentDefinitionsPath)).rejects.toThrow();
   });
 
+  test("uses configured mapping statuses for generated pictographs", async () => {
+    const config = await loadToolConfig();
+
+    for (const { mappingStatus, sourceStatus, expectedSpan } of [
+      {
+        mappingStatus: "stable" as const,
+        sourceStatus: "placeholder" as const,
+        expectedSpan: STABLE_STATUS_SPAN,
+      },
+      {
+        mappingStatus: "placeholder" as const,
+        sourceStatus: "stable" as const,
+        expectedSpan: PLACEHOLDER_STATUS_SPAN,
+      },
+    ]) {
+      const rules = structuredClone(await loadRules(config));
+      setRulesSourceStatuses(rules, sourceStatus);
+
+      const artifacts = collectArtifacts(
+        rules,
+        configWithGeneratedMappingStatus(config, mappingStatus),
+      );
+
+      expect(artifacts.length).toBeGreaterThan(0);
+      for (const artifact of artifacts) {
+        expect(
+          artifact.context.statusSpan,
+          `${artifact.relativePath} should use its generated mapping status`,
+        ).toBe(expectedSpan);
+
+        if (artifact.documentType === "FRR_REFERENCE_INDEX") {
+          expect(artifact.context.pictoStatus).toBe(mappingStatus);
+        }
+      }
+    }
+  });
+
   test("ignores configured rule documents after resolving the source selection", async () => {
     const config = await loadToolConfig();
     const rules = structuredClone(await loadRules(config));
@@ -1788,7 +1880,9 @@ describe("build-markdown", () => {
       AON: {
         "SYN-AON-ONE": {
           name: "Class A Requirement",
-          statement: "This should not appear on Class B pages.",
+          statement:
+            "This Class A rule refers to SYN-BON-VAR (Class Variant Requirement) and KSI-SYN-INCLUDED (Synthetic Indicator).",
+          related: ["SYN-BON-VAR", "KSI-SYN-INCLUDED"],
           affects: ["Providers"],
         },
       },
@@ -1838,13 +1932,47 @@ describe("build-markdown", () => {
       SYN: syntheticDocument,
       OMT: omittedDocument,
     };
+    rules.KSI = {
+      SYN: {
+        id: "KSI-SYN",
+        name: "Synthetic Indicators",
+        web_name: "synthetic-indicators",
+        short_name: "SYN",
+        status: "stable",
+        indicators: {
+          "KSI-SYN-INCLUDED": {
+            name: "Synthetic Indicator",
+            statement: "Related indicator should render.",
+          },
+          "KSI-SYN-OTHER": {
+            name: "Other Indicator",
+            statement: "Unrelated indicator should not render.",
+          },
+        },
+      },
+    };
 
     const artifacts = collectArtifacts(rules, {
       ...config,
       generated: {
         ...config.generated,
         definitionDocuments: [],
-        ksiDocuments: [],
+        ksiDocuments: [
+          {
+            id: "20x-a-ksi-reference",
+            title: "Key Security Indicators",
+            output: "reference/20x/a/key-security-indicators.md",
+            outputMode: "single",
+            status: "stable",
+            definitionsHref: "../../../definitions/",
+            relatedIndicatorsFromRuleDocumentMappingId: "20x-a-reference",
+            source: {
+              collection: "KSI",
+              themes: "ALL",
+              classes: ["A"],
+            },
+          },
+        ],
         deadlineDocuments: [],
         taggedDocumentSummaries: [],
         frrCollectionDocuments: [],
@@ -1891,6 +2019,8 @@ describe("build-markdown", () => {
             outputMode: "documents",
             status: "stable",
             rulesHref: "../",
+            relatedRulesOutput: "reference/20x/a/related.md",
+            relatedRulesTitle: "20x Class A Related Rules",
             emptyBehavior: "skip",
             source: {
               collection: "FRR",
@@ -1925,6 +2055,13 @@ describe("build-markdown", () => {
       artifacts,
       "reference/20x/b/synthetic-ruleset.md",
     );
+    const classARuleArtifact = findArtifact(
+      artifacts,
+      "reference/20x/a/synthetic-ruleset.md",
+    );
+    const classARequirement = classARuleArtifact.context.sections
+      .flatMap((section) => section.requirements)
+      .find((entry) => entry.id === "SYN-AON-ONE");
     const requirementIds = ruleArtifact.context.sections.flatMap((section) =>
       section.requirements.map((requirement) => requirement.id),
     );
@@ -1945,6 +2082,33 @@ describe("build-markdown", () => {
       label: "Companion Ruleset",
       url: "../companion-ruleset/",
     });
+    expect(classARequirement?.statementParagraphs.join("\n")).toContain(
+      "[SYN-BON-VAR (Class Variant Requirement)](related.md#class-variant-requirement){ data-preview }",
+    );
+    expect(classARequirement?.statementParagraphs.join("\n")).toContain(
+      "[KSI-SYN-INCLUDED (Synthetic Indicator)](key-security-indicators.md#synthetic-indicator){ data-preview }",
+    );
+
+    const relatedArtifact = findArtifact(
+      artifacts,
+      "reference/20x/a/related.md",
+    );
+    expect(relatedArtifact.title).toBe("20x Class A Related Rules");
+    expect(
+      relatedArtifact.context.sections.flatMap((section) =>
+        section.requirements.map((entry) => entry.id),
+      ),
+    ).toEqual(["SYN-BON-VAR"]);
+
+    const ksiArtifact = findArtifact(
+      artifacts,
+      "reference/20x/a/key-security-indicators.md",
+    );
+    expect(
+      ksiArtifact.context.sections.flatMap((section) =>
+        section.requirements.map((entry) => entry.id),
+      ),
+    ).toEqual(["KSI-SYN-INCLUDED"]);
 
     const indexArtifact = findArtifact(artifacts, "reference/20x/b/index.md");
     expect(indexArtifact.context.referenceIndexRows).toEqual([
@@ -2476,7 +2640,7 @@ describe("build-markdown", () => {
       );
       expect(contents).toContain("# Custom FedRAMP Definitions");
       expect(contents).toStartWith(
-        `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${STABLE_STATUS_SPAN}\n\n# Custom FedRAMP Definitions`,
+        `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Custom FedRAMP Definitions`,
       );
       expect(contents).toContain("## Important Related Terms");
       expect(contents).not.toContain("## General Terms");

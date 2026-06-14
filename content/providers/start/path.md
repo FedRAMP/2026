@@ -33,6 +33,7 @@ You don't really get to choose your Certification Path because it's the result o
 
 !!! tip "You may obtain a FedRAMP 20x Class A Certification then change it to FedRAMP Rev5 Class B, C, or D via Agency Certification."
 
+### FedRAMP 20x Profiles
 
 | Type | Class | Program Certification Path | Agency Certification Path|
 | -- | -- | -- | -- |
@@ -40,6 +41,11 @@ You don't really get to choose your Certification Path because it's the result o
 | **20x** | Class B |  :lucide-badge-check:{ .xl .middle .stable } Required | :lucide-circle-slash:{ .xl .middle .empty } Unavailable|
 | **20x** | Class C |  :lucide-badge-check:{ .xl .middle .stable } Required | :lucide-circle-slash:{ .xl .middle .empty } Unavailable|
 | **20x** | Class D |  :lucide-wrench:{ .xl .middle .placeholder } Coming In 2027 | :lucide-circle-slash:{ .xl .middle .empty } Unavailable|
+
+### FedRAMP Rev5 (Legacy) Profiles
+
+| Type | Class | Program Certification Path | Agency Certification Path|
+| -- | -- | -- | -- |
 | _Rev5_ | Class A | :lucide-circle-slash:{ .xl .middle .empty } Unavailable | :lucide-circle-slash:{ .xl .middle .empty } Unavailable|
 | _Rev5_ | Class B | :lucide-circle-dashed:{ .xl .middle .placeholder } Limited| :lucide-badge-check:{ .xl .middle .stable } Generally Required|
 | _Rev5_ | Class C | :lucide-circle-dashed:{ .xl .middle .placeholder } Limited| :lucide-badge-check:{ .xl .middle .stable } Generally Required|

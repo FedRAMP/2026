@@ -36,6 +36,7 @@ export interface DefinitionsMappingConfig {
   enabled: boolean;
   title?: string;
   output: string;
+  status?: GeneratedDocumentStatus;
   template?: string;
 }
 
@@ -81,6 +82,8 @@ export interface RuleDocumentMappingConfig {
   definitionsHref?: string;
   rulesHref?: string;
   linkTargetScope?: RuleDocumentLinkTargetScope;
+  relatedRulesOutput?: string;
+  relatedRulesTitle?: string;
   emptyBehavior?: GeneratedEmptyBehavior;
   includeEffectiveDates?: boolean;
   source: RuleDocumentSourceConfig;
@@ -114,6 +117,7 @@ export interface KsiDocumentMappingConfig {
   status: GeneratedDocumentStatus;
   template?: string;
   definitionsHref?: string;
+  relatedIndicatorsFromRuleDocumentMappingId?: string;
   emptyBehavior?: GeneratedEmptyBehavior;
   source: KsiDocumentSourceConfig;
 }

@@ -7,7 +7,7 @@ picto:
   status: stable
 ---
 
-# The Preparation Phase
+# Getting Started - The Preparation Phase
 
 ```mermaid
 flowchart LR

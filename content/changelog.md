@@ -277,7 +277,7 @@ The following changes were made in [pull request #12](https://github.com/FedRAMP
 - Moved Definitions from the FedRAMP section to the Overview section as they apply to all stakeholders.
 - Added Cloud Service Providers -> Getting Started as a Cloud Service Provider -> [Finding an Advisor](providers/start/advisor)
 - Added Cloud Service Providers -> Getting Started as a Cloud Service Provider -> [Finding an Assessor](providers/start/assessor)
-- Added placeholder [FedRAMP Recognition for Independent Assessment Services rules](assessors/recognition/rules/fedramp-recognition.md)
+- Added placeholder [FedRAMP Recognition for Independent Assessment Services rules](assessors/rules/fedramp-recognition.md)
 - Lots of work continues behind the scenes
 
 ## 2026.05.04.01-preview

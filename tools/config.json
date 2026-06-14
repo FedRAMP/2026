@@ -81,6 +81,7 @@
         "outputMode": "single",
         "status": "stable",
         "definitionsHref": "../../../definitions/",
+        "relatedIndicatorsFromRuleDocumentMappingId": "20x-a-ruleset-reference",
         "source": {
           "collection": "KSI",
           "themes": "ALL",
@@ -128,20 +129,6 @@
           "types": ["all"],
           "affects": ["Providers"]
         }
-      },
-      {
-        "id": "assessor-important-deadlines",
-        "title": "Important Deadlines",
-        "output": "assessors/updating/deadlines/{type}.md",
-        "status": "stable",
-        "template": "templates/deadlines.hbs",
-        "source": {
-          "collection": "FRR",
-          "documents": "ALL",
-          "ignoreDocuments": ["AGU", "SDR"],
-          "types": ["all"],
-          "affects": ["Assessors"]
-        }
       }
     ],
     "taggedDocumentSummaries": [
@@ -149,7 +136,7 @@
         "id": "provider-20x-boundary-rules-summary",
         "title": "The 20x FedRAMP Boundary",
         "output": "providers/20x/boundary/index.md",
-        "status": "placeholder",
+        "status": "stable",
         "template": "templates/tagged-document-summary.hbs",
         "source": {
           "collection": "FRR",
@@ -165,7 +152,7 @@
         "id": "provider-rev5-boundary-rules-summary",
         "title": "The Rev5 FedRAMP Boundary",
         "output": "providers/rev5/boundary/index.md",
-        "status": "placeholder",
+        "status": "stable",
         "template": "templates/tagged-document-summary.hbs",
         "source": {
           "collection": "FRR",
@@ -181,7 +168,7 @@
         "id": "provider-20x-assurance-rules-summary",
         "title": "Assurance",
         "output": "providers/20x/assurance/index.md",
-        "status": "placeholder",
+        "status": "stable",
         "template": "templates/tagged-document-summary.hbs",
         "source": {
           "collection": "FRR",
@@ -197,7 +184,7 @@
         "id": "provider-rev5-assurance-rules-summary",
         "title": "Assurance",
         "output": "providers/rev5/assurance/index.md",
-        "status": "placeholder",
+        "status": "stable",
         "template": "templates/tagged-document-summary.hbs",
         "source": {
           "collection": "FRR",
@@ -213,7 +200,7 @@
         "id": "provider-20x-materials-rules-summary",
         "title": "Package Materials",
         "output": "providers/20x/package/index.md",
-        "status": "placeholder",
+        "status": "stable",
         "template": "templates/tagged-document-summary.hbs",
         "source": {
           "collection": "FRR",
@@ -229,7 +216,7 @@
         "id": "provider-rev5-materials-rules-summary",
         "title": "Package Materials",
         "output": "providers/rev5/package/index.md",
-        "status": "placeholder",
+        "status": "stable",
         "template": "templates/tagged-document-summary.hbs",
         "source": {
           "collection": "FRR",
@@ -432,7 +419,7 @@
         "id": "fedramp-responsibilities",
         "title": "FedRAMP's Responsibilities",
         "output": "responsibilities/rules.md",
-        "status": "placeholder",
+        "status": "stable",
         "definitionsHref": "../definitions/",
         "rulesHref": "../",
         "emptyBehavior": "skip",
@@ -473,6 +460,8 @@
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../",
         "linkTargetScope": "sameMappingOnly",
+        "relatedRulesOutput": "reference/20x/a/related.md",
+        "relatedRulesTitle": "20x Class A Related Rules",
         "emptyBehavior": "skip",
         "source": {
           "collection": "FRR",
@@ -583,7 +572,7 @@
         "id": "agency-specific-rules",
         "output": "agencies/rules/{FRR}.md",
         "outputMode": "documents",
-        "status": "placeholder",
+        "status": "stable",
         "definitionsHref": "../../definitions/",
         "rulesHref": "../../",
         "emptyBehavior": "skip",
@@ -619,7 +608,7 @@
         "id": "provider-specific-rules-rev5",
         "output": "providers/rev5/rules/{FRR}.md",
         "outputMode": "documents",
-        "status": "placeholder",
+        "status": "stable",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../../../",
         "emptyBehavior": "skip",
@@ -637,7 +626,7 @@
         "id": "provider-implementation-marketplace",
         "output": "providers/implement/marketplace/{FRR}.md",
         "outputMode": "documents",
-        "status": "placeholder",
+        "status": "stable",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../",
         "emptyBehavior": "skip",
@@ -652,55 +641,17 @@
         }
       },
       {
-        "id": "assessor-specific-rules-20x",
-        "output": "assessors/20x/rules/{FRR}.md",
+        "id": "assessor-rules",
+        "output": "assessors/rules/{FRR}.md",
         "outputMode": "documents",
-        "status": "placeholder",
-        "definitionsHref": "../../../definitions/",
-        "rulesHref": "../../../",
-        "emptyBehavior": "skip",
-        "includeEffectiveDates": false,
-        "source": {
-          "collection": "FRR",
-          "documents": "ALL",
-          "ignoreDocuments": ["MKT", "REC"],
-          "types": ["20x"],
-          "affects": ["Assessors"],
-          "includeAll": true,
-          "allPosition": "first"
-        }
-      },
-      {
-        "id": "assessor-specific-rules-rev5",
-        "output": "assessors/rev5/rules/{FRR}.md",
-        "outputMode": "documents",
-        "status": "placeholder",
-        "definitionsHref": "../../../definitions/",
-        "rulesHref": "../../../",
-        "emptyBehavior": "skip",
-        "includeEffectiveDates": false,
-        "source": {
-          "collection": "FRR",
-          "documents": "ALL",
-          "ignoreDocuments": ["MKT", "REC"],
-          "types": ["rev5"],
-          "affects": ["Assessors"],
-          "includeAll": true,
-          "allPosition": "first"
-        }
-      },
-      {
-        "id": "assessor-recognition",
-        "output": "assessors/recognition/rules/{FRR}.md",
-        "outputMode": "documents",
-        "status": "placeholder",
+        "status": "stable",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../",
         "emptyBehavior": "skip",
         "includeEffectiveDates": false,
         "source": {
           "collection": "FRR",
-          "documents": ["MKT", "REC"],
+          "documents": "ALL",
           "types": ["all"],
           "affects": ["Assessors"],
           "includeAll": true,
@@ -711,7 +662,7 @@
         "id": "advisors-marketplace",
         "output": "advisors/rules/{FRR}.md",
         "outputMode": "documents",
-        "status": "placeholder",
+        "status": "stable",
 
         "definitionsHref": "../../definitions/",
         "rulesHref": "../",

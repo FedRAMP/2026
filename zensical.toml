@@ -94,8 +94,8 @@ nav = [
   ] },
   { "Cloud Service Providers" = [
     "providers/index.md",
-    { "FedRAMP Support" = "providers/support.md" },
-    { "Getting Started & Preparation" = [
+    { "Getting Support" = "providers/support.md" },
+    { "Getting Started" = [
       "providers/start/index.md",
       { "Finding an Advisor" = "providers/start/advisor.md" },
       { "Choose a Path" = "providers/start/path.md" },
@@ -123,14 +123,16 @@ nav = [
     ] },
     { "FedRAMP 20x Certification Rules" = [
       "providers/20x/index.md",
-      { "Boundary Related" = [
+      { "Marketplace Listing" = "providers/20x/rules/marketplace-listing.md" },
+      { "FedRAMP Certification" = "providers/20x/rules/fedramp-certification.md" },
+      { "Boundary Rulesets" = [
         "providers/20x/boundary/index.md",
         { "Minimum Assessment Scope" = "providers/20x/rules/minimum-assessment-scope.md" },
         { "Certification Data Sharing" = "providers/20x/rules/certification-data-sharing.md" },
         { "Cryptographic Module Use" = "providers/20x/rules/cryptographic-module-use.md" },
         { "Vulnerability Detection and Response" = "providers/20x/rules/vulnerability-detection-and-response.md" },
       ] },
-      { "Assurance Related" = [
+      { "Assurance Rulesets" = [
         "providers/20x/assurance/index.md",
         { "Collaborative Continuous Monitoring" = "providers/20x/rules/collaborative-continuous-monitoring.md" },
         { "Addressing FedRAMP Communication" = "providers/20x/rules/addressing-fedramp-communication.md" },
@@ -139,14 +141,12 @@ nav = [
         { "Independent Verification and Validation" = "providers/20x/rules/independent-verification-and-validation.md" },
         { "Vulnerability Evaluation and Reporting" = "providers/20x/rules/vulnerability-evaluation-and-reporting.md" },
       ] },
-      { "Package Related" = [
+      { "Package Rulesets" = [
         "providers/20x/package/index.md",
         { "Certification Package Overview" = "providers/20x/rules/certification-package-overview.md" },
         { "Security Decision Record" = "providers/20x/rules/security-decision-record.md" },
         { "Secure Configuration Guide" = "providers/20x/rules/secure-configuration-guide.md" },
       ] },
-      { "Marketplace Listing" = "providers/20x/rules/marketplace-listing.md" },
-      { "FedRAMP Certification" = "providers/20x/rules/fedramp-certification.md" },
       { "Key Security Indicators" = [
         "providers/20x/key-security-indicators/index.md",
         { "Change Management" = "providers/20x/key-security-indicators/change-management.md" },
@@ -163,14 +163,16 @@ nav = [
     ] },
     { "FedRAMP Rev5 Certification Rules" = [
       "providers/rev5/index.md",
-      { "Boundary Related" = [
+      { "Marketplace Listing" = "providers/rev5/rules/marketplace-listing.md" },
+      { "FedRAMP Certification" = "providers/rev5/rules/fedramp-certification.md" },
+      { "Boundary Rulesets" = [
         "providers/rev5/boundary/index.md",
         { "Minimum Assessment Scope" = "providers/rev5/rules/minimum-assessment-scope.md" },
         { "Certification Data Sharing" = "providers/rev5/rules/certification-data-sharing.md" },
         { "Cryptographic Module Use" = "providers/rev5/rules/cryptographic-module-use.md" },
         { "Vulnerability Detection and Response" = "providers/rev5/rules/vulnerability-detection-and-response.md" },
       ] },
-      { "Assurance Related" = [
+      { "Assurance Rulesets" = [
         "providers/rev5/assurance/index.md",
         { "Collaborative Continuous Monitoring" = "providers/rev5/rules/collaborative-continuous-monitoring.md" },
         { "Addressing FedRAMP Communication" = "providers/rev5/rules/addressing-fedramp-communication.md" },
@@ -179,15 +181,13 @@ nav = [
         { "Independent Verification and Validation" = "providers/rev5/rules/independent-verification-and-validation.md" },
         { "Vulnerability Evaluation and Reporting" = "providers/rev5/rules/vulnerability-evaluation-and-reporting.md" },
       ] },
-      { "Package Related" = [
+      { "Package Rulesets" = [
         "providers/rev5/package/index.md",
         { "Certification Package Overview" = "providers/rev5/rules/certification-package-overview.md" },
         { "Security Decision Record" = "providers/rev5/rules/security-decision-record.md" },
         { "Secure Configuration Guide" = "providers/rev5/rules/secure-configuration-guide.md" },
       ] },
-      { "Marketplace Listing" = "providers/rev5/rules/marketplace-listing.md" },
-      { "FedRAMP Certification" = "providers/rev5/rules/fedramp-certification.md" },
-      { "Control Baselines" = [
+      { "Rev5 Controls" = [
         "providers/rev5/controls/index.md",
       ] },
     ] },
@@ -197,39 +197,19 @@ nav = [
     { "Getting Started as an Independent Assessor" = [
       "assessors/start/index.md",
       { "Getting Support" = "assessors/support.md" },
+      { "FedRAMP Recognition" = "assessors/rules/fedramp-recognition.md" },
+      { "Marketplace Listing" = "assessors/rules/marketplace-listing.md" },
     ] },
     { "Updating to 2026 Rules" = [
       "assessors/updating/index.md",
       { "What's Changing" = "assessors/updating/changes.md" },
-      { "Important Deadlines" = [
-        "assessors/updating/deadlines/index.md",
-        { "Rev5 Deadlines" = "assessors/updating/deadlines/rev5.md" },
-        { "20x Deadlines" = "assessors/updating/deadlines/20x.md" },
-      ] },
     ] },
-    { "FedRAMP Recognition" = [
-      "assessors/recognition/index.md",
-      { "Applicable Rules" = [
-        "assessors/recognition/rules/index.md",
-        { "FedRAMP Recognition" = "assessors/recognition/rules/fedramp-recognition.md" },
-        { "Marketplace Listing" = "assessors/recognition/rules/marketplace-listing.md" },
-      ] },
+    { "Performing FedRAMP Assessments" = [
+      "assessors/fedramp-assessments/index.md",
+      { "20x Assessments" = "assessors/fedramp-assessments/20x.md" },
+      { "Rev5 Assessments" = "assessors/fedramp-assessments/rev5.md" },
+      { "Independent Verification and Validation" = "assessors/rules/independent-verification-and-validation.md" },
     ] },
-    { "Performing FedRAMP 20x Assessments" = [
-      "assessors/20x/index.md",
-      { "Applicable Rules" = [
-        "assessors/20x/rules/index.md",
-        { "Independent Verification and Validation" = "assessors/20x/rules/independent-verification-and-validation.md" },
-      ] },
-    ] },
-    { "Performing FedRAMP Rev5 Assessments" = [
-      "assessors/rev5/index.md",
-      { "Applicable Rules" = [
-        "assessors/rev5/rules/index.md",
-        { "Independent Verification and Validation" = "assessors/rev5/rules/independent-verification-and-validation.md" },
-      ] },
-    ] },
-
   ] },
   { "Advisors" = [
     "advisors/index.md",
@@ -254,6 +234,7 @@ nav = [
         { "Package Rulesets" = [
           { "Certification Package Overview" = "reference/20x/a/certification-package-overview.md" },
         ] },
+        { "Related Rules" = "reference/20x/a/related.md" },
         { "Key Security Indicators" = "reference/20x/a/key-security-indicators.md" },
       ] },
       { "20x Class B" = [
@@ -308,80 +289,80 @@ nav = [
       ] },
     ] },
     { "Rev5" = [
-  "reference/rev5/index.md",
-  { "Rev5 Class B" = [
-    "reference/rev5/b/index.md",
-    { "Marketplace Listing" = "reference/rev5/b/marketplace-listing.md" },
-    { "FedRAMP Certification" = "reference/rev5/b/fedramp-certification.md" },
-    { "Boundary Rulesets" = [
-      { "Minimum Assessment Scope" = "reference/rev5/b/minimum-assessment-scope.md" },
-      { "Certification Data Sharing" = "reference/rev5/b/certification-data-sharing.md" },
-      { "Cryptographic Module Use" = "reference/rev5/b/cryptographic-module-use.md" },
-      { "Vulnerability Detection and Response" = "reference/rev5/b/vulnerability-detection-and-response.md" },
+      "reference/rev5/index.md",
+      { "Rev5 Class B" = [
+        "reference/rev5/b/index.md",
+        { "Marketplace Listing" = "reference/rev5/b/marketplace-listing.md" },
+        { "FedRAMP Certification" = "reference/rev5/b/fedramp-certification.md" },
+        { "Boundary Rulesets" = [
+          { "Minimum Assessment Scope" = "reference/rev5/b/minimum-assessment-scope.md" },
+          { "Certification Data Sharing" = "reference/rev5/b/certification-data-sharing.md" },
+          { "Cryptographic Module Use" = "reference/rev5/b/cryptographic-module-use.md" },
+          { "Vulnerability Detection and Response" = "reference/rev5/b/vulnerability-detection-and-response.md" },
+        ] },
+        { "Assurance Rulesets" = [
+          { "Collaborative Continuous Monitoring" = "reference/rev5/b/collaborative-continuous-monitoring.md" },
+          { "Addressing FedRAMP Communication" = "reference/rev5/b/addressing-fedramp-communication.md" },
+          { "Incident Evaluation and Communication" = "reference/rev5/b/incident-evaluation-and-communication.md" },
+          { "Significant Change Notification" = "reference/rev5/b/significant-change-notification.md" },
+          { "Independent Verification and Validation" = "reference/rev5/b/independent-verification-and-validation.md" },
+          { "Vulnerability Evaluation and Reporting" = "reference/rev5/b/vulnerability-evaluation-and-reporting.md" },
+        ] },
+        { "Package Rulesets" = [
+          { "Certification Package Overview" = "reference/rev5/b/certification-package-overview.md" },
+          { "Security Decision Record" = "reference/rev5/b/security-decision-record.md" },
+          { "Secure Configuration Guide" = "reference/rev5/b/secure-configuration-guide.md" },
+        ] },
+      ] },
+      { "Rev5 Class C" = [
+        "reference/rev5/c/index.md",
+        { "Marketplace Listing" = "reference/rev5/c/marketplace-listing.md" },
+        { "FedRAMP Certification" = "reference/rev5/c/fedramp-certification.md" },
+        { "Boundary Rulesets" = [
+          { "Minimum Assessment Scope" = "reference/rev5/c/minimum-assessment-scope.md" },
+          { "Certification Data Sharing" = "reference/rev5/c/certification-data-sharing.md" },
+          { "Cryptographic Module Use" = "reference/rev5/c/cryptographic-module-use.md" },
+          { "Vulnerability Detection and Response" = "reference/rev5/c/vulnerability-detection-and-response.md" },
+        ] },
+        { "Assurance Rulesets" = [
+          { "Collaborative Continuous Monitoring" = "reference/rev5/c/collaborative-continuous-monitoring.md" },
+          { "Addressing FedRAMP Communication" = "reference/rev5/c/addressing-fedramp-communication.md" },
+          { "Incident Evaluation and Communication" = "reference/rev5/c/incident-evaluation-and-communication.md" },
+          { "Significant Change Notification" = "reference/rev5/c/significant-change-notification.md" },
+          { "Independent Verification and Validation" = "reference/rev5/c/independent-verification-and-validation.md" },
+          { "Vulnerability Evaluation and Reporting" = "reference/rev5/c/vulnerability-evaluation-and-reporting.md" },
+        ] },
+        { "Package Rulesets" = [
+          { "Certification Package Overview" = "reference/rev5/c/certification-package-overview.md" },
+          { "Security Decision Record" = "reference/rev5/c/security-decision-record.md" },
+          { "Secure Configuration Guide" = "reference/rev5/c/secure-configuration-guide.md" },
+        ] },
+      ] },
+      { "Rev5 Class D" = [
+        "reference/rev5/d/index.md",
+        { "Marketplace Listing" = "reference/rev5/d/marketplace-listing.md" },
+        { "FedRAMP Certification" = "reference/rev5/d/fedramp-certification.md" },
+        { "Boundary Rulesets" = [
+          { "Minimum Assessment Scope" = "reference/rev5/d/minimum-assessment-scope.md" },
+          { "Certification Data Sharing" = "reference/rev5/d/certification-data-sharing.md" },
+          { "Cryptographic Module Use" = "reference/rev5/d/cryptographic-module-use.md" },
+          { "Vulnerability Detection and Response" = "reference/rev5/d/vulnerability-detection-and-response.md" },
+        ] },
+        { "Assurance Rulesets" = [
+          { "Collaborative Continuous Monitoring" = "reference/rev5/d/collaborative-continuous-monitoring.md" },
+          { "Addressing FedRAMP Communication" = "reference/rev5/d/addressing-fedramp-communication.md" },
+          { "Incident Evaluation and Communication" = "reference/rev5/d/incident-evaluation-and-communication.md" },
+          { "Significant Change Notification" = "reference/rev5/d/significant-change-notification.md" },
+          { "Independent Verification and Validation" = "reference/rev5/d/independent-verification-and-validation.md" },
+          { "Vulnerability Evaluation and Reporting" = "reference/rev5/d/vulnerability-evaluation-and-reporting.md" },
+        ] },
+        { "Package Rulesets" = [
+          { "Certification Package Overview" = "reference/rev5/d/certification-package-overview.md" },
+          { "Security Decision Record" = "reference/rev5/d/security-decision-record.md" },
+          { "Secure Configuration Guide" = "reference/rev5/d/secure-configuration-guide.md" },
+        ] },
+      ] },
     ] },
-    { "Assurance Rulesets" = [
-      { "Collaborative Continuous Monitoring" = "reference/rev5/b/collaborative-continuous-monitoring.md" },
-      { "Addressing FedRAMP Communication" = "reference/rev5/b/addressing-fedramp-communication.md" },
-      { "Incident Evaluation and Communication" = "reference/rev5/b/incident-evaluation-and-communication.md" },
-      { "Significant Change Notification" = "reference/rev5/b/significant-change-notification.md" },
-      { "Independent Verification and Validation" = "reference/rev5/b/independent-verification-and-validation.md" },
-      { "Vulnerability Evaluation and Reporting" = "reference/rev5/b/vulnerability-evaluation-and-reporting.md" },
-    ] },
-    { "Package Rulesets" = [
-      { "Certification Package Overview" = "reference/rev5/b/certification-package-overview.md" },
-      { "Security Decision Record" = "reference/rev5/b/security-decision-record.md" },
-      { "Secure Configuration Guide" = "reference/rev5/b/secure-configuration-guide.md" },
-    ] },
-  ] },
-  { "Rev5 Class C" = [
-    "reference/rev5/c/index.md",
-    { "Marketplace Listing" = "reference/rev5/c/marketplace-listing.md" },
-    { "FedRAMP Certification" = "reference/rev5/c/fedramp-certification.md" },
-    { "Boundary Rulesets" = [
-      { "Minimum Assessment Scope" = "reference/rev5/c/minimum-assessment-scope.md" },
-      { "Certification Data Sharing" = "reference/rev5/c/certification-data-sharing.md" },
-      { "Cryptographic Module Use" = "reference/rev5/c/cryptographic-module-use.md" },
-      { "Vulnerability Detection and Response" = "reference/rev5/c/vulnerability-detection-and-response.md" },
-    ] },
-    { "Assurance Rulesets" = [
-      { "Collaborative Continuous Monitoring" = "reference/rev5/c/collaborative-continuous-monitoring.md" },
-      { "Addressing FedRAMP Communication" = "reference/rev5/c/addressing-fedramp-communication.md" },
-      { "Incident Evaluation and Communication" = "reference/rev5/c/incident-evaluation-and-communication.md" },
-      { "Significant Change Notification" = "reference/rev5/c/significant-change-notification.md" },
-      { "Independent Verification and Validation" = "reference/rev5/c/independent-verification-and-validation.md" },
-      { "Vulnerability Evaluation and Reporting" = "reference/rev5/c/vulnerability-evaluation-and-reporting.md" },
-    ] },
-    { "Package Rulesets" = [
-      { "Certification Package Overview" = "reference/rev5/c/certification-package-overview.md" },
-      { "Security Decision Record" = "reference/rev5/c/security-decision-record.md" },
-      { "Secure Configuration Guide" = "reference/rev5/c/secure-configuration-guide.md" },
-    ] },
-  ] },
-  { "Rev5 Class D" = [
-    "reference/rev5/d/index.md",
-    { "Marketplace Listing" = "reference/rev5/d/marketplace-listing.md" },
-    { "FedRAMP Certification" = "reference/rev5/d/fedramp-certification.md" },
-    { "Boundary Rulesets" = [
-      { "Minimum Assessment Scope" = "reference/rev5/d/minimum-assessment-scope.md" },
-      { "Certification Data Sharing" = "reference/rev5/d/certification-data-sharing.md" },
-      { "Cryptographic Module Use" = "reference/rev5/d/cryptographic-module-use.md" },
-      { "Vulnerability Detection and Response" = "reference/rev5/d/vulnerability-detection-and-response.md" },
-    ] },
-    { "Assurance Rulesets" = [
-      { "Collaborative Continuous Monitoring" = "reference/rev5/d/collaborative-continuous-monitoring.md" },
-      { "Addressing FedRAMP Communication" = "reference/rev5/d/addressing-fedramp-communication.md" },
-      { "Incident Evaluation and Communication" = "reference/rev5/d/incident-evaluation-and-communication.md" },
-      { "Significant Change Notification" = "reference/rev5/d/significant-change-notification.md" },
-      { "Independent Verification and Validation" = "reference/rev5/d/independent-verification-and-validation.md" },
-      { "Vulnerability Evaluation and Reporting" = "reference/rev5/d/vulnerability-evaluation-and-reporting.md" },
-    ] },
-    { "Package Rulesets" = [
-      { "Certification Package Overview" = "reference/rev5/d/certification-package-overview.md" },
-      { "Security Decision Record" = "reference/rev5/d/security-decision-record.md" },
-      { "Secure Configuration Guide" = "reference/rev5/d/secure-configuration-guide.md" },
-    ] },
-  ] },
-] },
     { "Complete Rulesets" = [
       "reference/complete-rulesets/index.md",
       { "Marketplace Listing" = "reference/marketplace-listing.md" },

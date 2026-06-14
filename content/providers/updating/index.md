@@ -66,3 +66,8 @@ Certifications.
 Every single cloud service provider will need to adjust their processes, tools,
 capabilities, and methodologies to modernize their approach to Governance, Risk, and
 Compliance (GRC) in order to retain their FedRAMP Certification.
+
+## Definitions
+
+Please ensure you are familiar with all [FedRAMP Definitions](../../definitions.md) or at least how to
+reference them when a FedRAMP Practice uses a specific term that is defined by FedRAMP.

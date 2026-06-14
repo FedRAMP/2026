@@ -137,6 +137,7 @@ empty
 ```
 
 Tooltips and rendered icon definitions are configured in `pictographs` in `config.json`.
+For generated mappings, the mapping's `status` controls the rendered page pictograph. Status values from the rules JSON are content metadata and do not override the configured generated-page status.
 
 ## Generated TO DO Page
 
@@ -222,6 +223,7 @@ KSI mapping fields:
 - `outputMode`: optional output behavior. Omit it or use `themes` for one page per selected KSI theme; use `single` to generate one page with selected themes as sections.
 - `template`: optional Handlebars template path relative to `tools/`; defaults to `paths.template`.
 - `definitionsHref`: relative link prefix for generated term links.
+- `relatedIndicatorsFromRuleDocumentMappingId`: optional `generated.ruleDocuments` mapping id. When set, the KSI page includes only indicators directly referenced by rules included in that rule mapping.
 - `emptyBehavior`: `write` keeps an empty page, `skip` omits it when no indicators match.
 - `status`: pictograph status for generated frontmatter.
 - `source.collection`: must be `KSI`.
@@ -249,7 +251,7 @@ Add an entry to `generated.deadlineDocuments` in `config.json`:
 }
 ```
 
-Deadline documents generate one page per configured type. They read each selected FRR document's `info.short_name`, `info.name`, `info.web_name`, and common or certification-specific `effective` values. The generated table links each combined rule family name and short name, such as `FedRAMP Security Inbox (FSI)`, to the matching rule page for that type. The date columns render `optional_adoption`, `obtain`, `maintain`, and `grace` in that order; when `grace.until_next_assessment` is true, the grace column explains that the deadline is the first annual assessment scheduled after `grace.default`.
+Deadline documents generate one page per configured type. They read each selected FRR document's `info.short_name`, `info.name`, `info.web_name`, and common or certification-specific `effective` values. The generated table links each combined rule family name and short name, such as `FedRAMP Security Inbox (FSI)`, to the matching rule page for that type. The date columns render `optional_adoption`, `obtain`, `maintain`, and `grace` in that order; when `grace.until_next_assessment` is true, the grace column explains that the deadline is the first FedRAMP independent assessment completed after `grace.default`.
 
 Use `{type}` or `{version}` in `output` to place each type page explicitly. Use `source.ignoreDocuments` to remove specific FRR keys after `source.documents` is resolved, including when `source.documents` is `"ALL"`.
 Use `source.affects` to omit selected FRR documents that do not contain any rule affecting that audience, such as excluding assessor-only recognition rules from provider deadline pages.
@@ -342,6 +344,8 @@ Mapping fields:
 - `definitionsHref`: relative link prefix for generated term links.
 - `rulesHref`: relative link prefix for `reference_url_web_name` references.
 - `linkTargetScope`: optional related-rule link visibility. Use `sameMappingOnly` for complete reference mappings that should not become fallback link targets for stakeholder-specific pages.
+- `relatedRulesOutput`: optional companion page path for directly related FRR rules that are referenced by this mapping but are not otherwise included by its filters.
+- `relatedRulesTitle`: optional page H1 for the companion related-rules page.
 - `emptyBehavior`: `write` keeps an empty page, `skip` omits it when no rules match.
 - `includeEffectiveDates`: set to `false` to omit the top applicability block.
 - `status`: pictograph status for generated frontmatter.
