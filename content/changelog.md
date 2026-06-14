@@ -9,6 +9,82 @@ picto:
 
 # Changelog
 
+## 2026.06.14.01-preview
+
+**Release Date:** June 14, 2026
+
+## Branch Changelog
+
+### Content Updates
+
+- [FedRAMP Certification](https://preview.fedramp.gov/2026/certification/): Clarified certification types, classes, and paths, including that Class A is only available for FedRAMP 20x and that FedRAMP 20x Class D is planned for early 2027.
+- [Getting Started - The Preparation Phase](https://preview.fedramp.gov/2026/providers/start/): Updated the provider preparation sequence so providers choose a certification path before choosing class and type.
+- [Choosing a Certification Path](https://preview.fedramp.gov/2026/providers/start/path/): Revised the path guidance with separate 20x and Rev5 profile tables, including Program Certification and Agency Certification availability.
+- [FedRAMP 20x Certification Rules](https://preview.fedramp.gov/2026/providers/20x/): Added an overview of how providers should work through 20x rulesets, including marketplace listing, certification, boundary, assurance, package, and Key Security Indicator sections.
+- [Key Security Indicators](https://preview.fedramp.gov/2026/providers/20x/key-security-indicators/): Expanded the KSI introduction to explain outcome-based measurement, continuous improvement, getting started, and assurance expectations.
+- [FedRAMP Rev5 Certification Rules](https://preview.fedramp.gov/2026/providers/rev5/): Added Rev5 transition guidance, including the June 11, 2027 cutoff for new Rev5 Certification applications and the shift toward modernized rule-based practices.
+- [Rev5 Controls](https://preview.fedramp.gov/2026/providers/rev5/controls/): Replaced the placeholder page with guidance on NIST SP 800-53 Rev. 5 controls, control ownership, evidence, and ongoing assurance.
+- [Important Deadlines](https://preview.fedramp.gov/2026/providers/updating/deadlines/): Replaced placeholder text with critical adoption dates, ruleset effective date explanations, grace-period guidance, and expiration guidance.
+- [Updating to 2026 Rules](https://preview.fedramp.gov/2026/providers/updating/): Added a reminder to review FedRAMP Definitions when applying new FedRAMP Practices.
+- [Updating to 2026 Rules for Assessors](https://preview.fedramp.gov/2026/assessors/updating/): Added guidance on the shift from “3PAO” language to independent assessment services and pointed assessors to provider update guidance.
+- [What's Changing in 2026 for Assessors](https://preview.fedramp.gov/2026/assessors/updating/changes/): Added detailed assessor guidance on independent verification and validation, Agency Certification, Program Certification, FedRAMP Recognition, and avoiding unwritten “ghost rules.”
+- [Performing FedRAMP Assessments](https://preview.fedramp.gov/2026/assessors/fedramp-assessments/): Added placeholder pages for the new assessor assessment section, including 20x and Rev5 assessment placeholders.
+- [Ruleset Reference](https://preview.fedramp.gov/2026/reference/): Added a new landing page that explains complete ruleset references and links to 20x, Rev5, complete rulesets, and 20x Class A reference material.
+- Updated provider preparation and implementation phase diagrams to use a consistent outline highlight for the current phase.
+- Corrected an older [Changelog](https://preview.fedramp.gov/2026/changelog/) link so FedRAMP Recognition rules point to the current assessor rules path.
+
+### Rules Content Changes
+
+- `FRD-CCL`, `FRD-CPF`, `FRD-CPH`, and `FRD-CTY` add certification terminology for class, profile, path, and type.
+- `FRD-FIN` adds the FedRAMP Independent Assessment definition, and `FRD-FPR` adds the FedRAMP Practices definition.
+- `FRD-INC`, `FRD-ONC`, `FRD-VRF`, and `FRD-VUL` refine definitions for Initial Certification, Ongoing Certification, Verification, and Vulnerability.
+- `FRD-KEV` updates the Known Exploited Vulnerability definition and refreshes its CISA reference URL.
+- `AFC-CSO-CRA`, `AFC-CSO-IMA`, `AGU-AGC-TPP`, `FRC-CCL-PLC`, `MKT-IIP-DLA`, `SCN-CSO-EVA`, `VDR-CSO-DET`, and `REC-IAS-SEP` update related term mappings.
+- `AFC-FRP-VRE`, `CPO-CSO-MTD`, `CPO-CSO-OVR`, `FRC-APP-MLF`, `FRC-CLA-AFR`, `IVV-IAS-OSA`, `IVV-IAS-SUM`, `SCN-CSO-INF`, and `VDR-TFR-KEV` update notes, following information, related references, or external references.
+- `CDS-CSO-FID` adds a requirement to always include the FedRAMP ID, and `CDS-CSO-IRP` adds a requirement to include relevant policies.
+- `CDS-CSO-AVR`, `CDS-CSO-HAD`, `CDS-CSO-PUB`, and `CDS-CSO-SVC` update CDS class variants, statement/following-information wording, or rule naming.
+- `FRC-CLA-KSM` and `FRC-CSX-SUM` are removed from 20x-specific FRC content.
+- `FRC-APP-FIA`, `FRC-APP-MLF`, `FRC-APP-NTP`, `FRC-APP-USA`, `FRC-CLA-ASF`, and `FRC-CSO-PKG` update FRC applicant, marketplace, stale-assessment, framework, and package wording.
+- `FRC-CSO-FCP` adds a FedRAMP Certification Profile requirement.
+- `IEC-CSO-IIR` updates class-specific Initial Incident Report expectations.
+- `IVV-CSX-AIA`, `IVV-CSO-FIA`, and `IVV-CSF-AIA` add annual or FedRAMP independent assessment requirements across 20x, shared, and Rev5 paths.
+- `IVV-IAX-STE`, `IVV-IAX-UNP`, `IVV-CSO-PIA`, `IVV-IAS-MME`, `IVV-IAS-OUC`, `IVV-IAS-PAD`, `IVV-IAS-VVP`, `IVV-CSF-ANA`, and `IVV-CSF-IFC` remove or replace older IVV assessment requirements.
+- `IVV-CSO-DUS`, `IVV-CSO-ICP`, `IVV-CSO-SEE`, `IVV-CSO-SEI`, `IVV-CSO-USR`, `IVV-IAS-VEF`, `IVV-IAS-VIM`, `IVV-IAS-VIP`, `IVV-CSF-ACF`, `IVV-CSF-MCA`, and `IVV-CSF-PCA` add more granular IVV requirements for samples, implementation/effectiveness evidence, package inclusion, and Rev5 control assessment.
+- `IVV-CSO-STE` is renamed from Supply Technical Evidence to Supply Technical Explanations and updates its statement and terms.
+- `VDR-TFR-PVR` updates class-specific vulnerability mitigation and remediation expectations.
+- `VER-EVA-EPA` updates the Estimate Potential Agency Impact statement.
+- `SDR-CSX-KMT`, `SDR-CSX-KSI`, `SDR-CSO-FRR`, `SDR-CSO-MTD`, `SDR-CSF-CTF`, and `SDR-CSF-ODP` add Security Decision Record requirements for KSI metrics, KSI content, FedRAMP Rules, metadata, Rev5 controls, and organization-defined parameters.
+- `SDR-CSO-PLC` removes the placeholder SDR rule.
+- `KSI-SVC-SNT` is removed and `KSI-SVC-SIN` adds the replacement Securing Information indicator.
+
+### Site Structure
+
+- Added a new top-level [Ruleset Reference](https://preview.fedramp.gov/2026/reference/) section.
+- Moved the unfiltered complete ruleset reference to [Complete Rulesets](https://preview.fedramp.gov/2026/reference/complete-rulesets/).
+- Added class-specific [20x Ruleset Reference](https://preview.fedramp.gov/2026/reference/20x/) sections for [Class A](https://preview.fedramp.gov/2026/reference/20x/a/), [Class B](https://preview.fedramp.gov/2026/reference/20x/b/), and [Class C](https://preview.fedramp.gov/2026/reference/20x/c/).
+- Added class-specific [Rev5 Ruleset Reference](https://preview.fedramp.gov/2026/reference/rev5/) sections for [Class B](https://preview.fedramp.gov/2026/reference/rev5/b/), [Class C](https://preview.fedramp.gov/2026/reference/rev5/c/), and [Class D](https://preview.fedramp.gov/2026/reference/rev5/d/).
+- Updated provider navigation labels from “Related” groupings to clearer “Rulesets” groupings, and made Marketplace Listing and FedRAMP Certification rules easier to find.
+- Reworked assessor navigation by replacing separate 20x, Rev5, Recognition, and assessor deadline sections with a simpler assessor rules and FedRAMP assessments structure.
+- Removed the standalone assessor deadlines landing page from the assessor navigation.
+
+### Generated Page Experience
+
+- Generated class-specific ruleset references now filter rules by certification type, class, and subset applicability.
+- Generated rules with `varies_by_class` now render only the selected class variant in class-specific reference pages.
+- Generated reference indexes now support multiple class-specific links per ruleset row and calculate subset and rule counts using the same filters as the linked pages.
+- Added [20x Class A Related Rules](https://preview.fedramp.gov/2026/reference/20x/a/related/) for related rules referenced by Class A content but not otherwise included in the Class A ruleset reference.
+- Added class-specific Key Security Indicator reference pages for 20x, including a [20x Class A KSI page](https://preview.fedramp.gov/2026/reference/20x/a/key-security-indicators/) that includes only KSIs related to the Class A rules.
+- Updated generated related-rule and related-KSI links so reference pages link to the matching class-specific folder when that page exists.
+- Updated generated page pictographs so generated mapping status controls the rendered icon, instead of inheriting placeholder status from source rule metadata.
+- Cleaned generated reference mappings so 20x and Rev5 ruleset links target class folders instead of unlinked top-level generated files.
+
+### Tooling
+
+- Expanded generated Markdown configuration for class filters, related-rule companion pages, related KSI filtering, multi-link reference indexes, and mapping-controlled pictograph status.
+- Updated generated Markdown tests for class-specific filtering, related rules, related KSIs, reference index links, and generated pictograph status.
+- Updated tooling documentation for the new generated page configuration fields and reference index behavior.
+
+
 ## 2026.06.09.01-preview
 
 **Release Date:** June 9, 2026
