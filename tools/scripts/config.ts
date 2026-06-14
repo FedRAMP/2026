@@ -181,6 +181,7 @@ export interface ReferenceIndexDocumentMappingConfig {
   status: GeneratedDocumentStatus;
   template?: string;
   ruleDocumentMappingId?: string;
+  ruleDocumentMappingIds?: string[];
   emptyBehavior?: GeneratedEmptyBehavior;
   source: ReferenceIndexDocumentSourceConfig;
 }

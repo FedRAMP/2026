@@ -253,10 +253,15 @@ function relatedTermsGroupAnchorId(tag: string): string {
 }
 
 function referenceIndexRowMarkdown(artifact: ArtifactForTest): string[] {
-  return artifact.context.referenceIndexRows.map(
-    (row) =>
-      `| ${row.acronym} | [${row.name}](${row.href}) | ${row.status} | ${row.counts} | ${row.updated} |`,
-  );
+  return artifact.context.referenceIndexRows.map((row) => {
+    const rulesetCell = row.multipleLinks
+      ? `${row.name}<br>${row.links
+          .map((link) => `[${link.label}](${link.href})`)
+          .join("<br>")}`
+      : `[${row.name}](${row.href})`;
+
+    return `| ${row.acronym} | ${rulesetCell} | ${row.status} | ${row.counts} | ${row.updated} |`;
+  });
 }
 
 function expectedImportantRelatedTermRows(rules: RulesForTest): string[] {
@@ -1790,6 +1795,8 @@ describe("build-markdown", () => {
       BON: {
         "SYN-BON-VAR": {
           name: "Class Variant Requirement",
+          reference: "Companion Ruleset",
+          reference_url_web_name: "companion-ruleset",
           varies_by_class: {
             a: {
               statement: "Class A variant should not render.",
@@ -1809,8 +1816,27 @@ describe("build-markdown", () => {
         },
       },
     };
+    const omittedDocument = testRequirementDocument({
+      name: "Omitted Ruleset",
+      shortName: "OMT",
+      webName: "omitted-ruleset",
+      affects: ["Providers"],
+    });
+    omittedDocument.info.subsets = {
+      BON: syntheticDocument.info.subsets.BON!,
+    };
+    omittedDocument.data.all = {
+      BON: {
+        "OMT-BON-ONE": {
+          name: "Omitted Class B Requirement",
+          statement: "This document is not included in the linked rule mapping.",
+          affects: ["Providers"],
+        },
+      },
+    };
     rules.FRR = {
       SYN: syntheticDocument,
+      OMT: omittedDocument,
     };
 
     const artifacts = collectArtifacts(rules, {
@@ -1824,6 +1850,23 @@ describe("build-markdown", () => {
         frrCollectionDocuments: [],
         referenceIndexDocuments: [
           {
+            id: "20x-reference-index",
+            title: "20x Ruleset Reference",
+            description: "Synthetic top-level reference index.",
+            purpose: "Verifies class-specific reference links.",
+            output: "reference/20x/index.md",
+            status: "stable",
+            ruleDocumentMappingIds: ["20x-a-reference", "20x-b-reference"],
+            source: {
+              collection: "FRR",
+              documents: ["SYN", "OMT"],
+              types: ["20x"],
+              classes: ["A", "B"],
+              includeAll: true,
+              allPosition: "first",
+            },
+          },
+          {
             id: "20x-b-reference-index",
             title: "20x Class B Ruleset Reference",
             description: "Synthetic reference index.",
@@ -1833,7 +1876,7 @@ describe("build-markdown", () => {
             ruleDocumentMappingId: "20x-b-reference",
             source: {
               collection: "FRR",
-              documents: ["SYN"],
+              documents: ["SYN", "OMT"],
               types: ["20x"],
               classes: ["B"],
               includeAll: true,
@@ -1843,10 +1886,27 @@ describe("build-markdown", () => {
         ],
         ruleDocuments: [
           {
+            id: "20x-a-reference",
+            output: "reference/20x/a/{FRR}.md",
+            outputMode: "documents",
+            status: "stable",
+            rulesHref: "../",
+            emptyBehavior: "skip",
+            source: {
+              collection: "FRR",
+              documents: ["SYN"],
+              types: ["20x"],
+              classes: ["A"],
+              includeAll: true,
+              allPosition: "first",
+            },
+          },
+          {
             id: "20x-b-reference",
             output: "reference/20x/b/{FRR}.md",
             outputMode: "documents",
             status: "stable",
+            rulesHref: "../",
             emptyBehavior: "skip",
             source: {
               collection: "FRR",
@@ -1881,6 +1941,10 @@ describe("build-markdown", () => {
     expect(
       requirement?.variantSections[0]?.statementParagraphs.join("\n"),
     ).not.toContain("Class A variant should not render.");
+    expect(requirement?.reference).toEqual({
+      label: "Companion Ruleset",
+      url: "../companion-ruleset/",
+    });
 
     const indexArtifact = findArtifact(artifacts, "reference/20x/b/index.md");
     expect(indexArtifact.context.referenceIndexRows).toEqual([
@@ -1888,6 +1952,26 @@ describe("build-markdown", () => {
         acronym: "SYN",
         href: "synthetic-ruleset.md",
         counts: "Subsets: 1<br>Rules: 1",
+      }),
+    ]);
+
+    const topIndexArtifact = findArtifact(artifacts, "reference/20x/index.md");
+    expect(topIndexArtifact.context.referenceIndexRows).toEqual([
+      expect.objectContaining({
+        acronym: "SYN",
+        href: "a/synthetic-ruleset.md",
+        multipleLinks: true,
+        links: [
+          {
+            label: "Class A",
+            href: "a/synthetic-ruleset.md",
+          },
+          {
+            label: "Class B",
+            href: "b/synthetic-ruleset.md",
+          },
+        ],
+        counts: "Subsets: 2<br>Rules: 2",
       }),
     ]);
   });

@@ -267,10 +267,15 @@
         "output": "reference/20x/index.md",
         "status": "stable",
         "template": "templates/reference-index.hbs",
-        "ruleDocumentMappingId": "20x-ruleset-reference",
+        "ruleDocumentMappingIds": [
+          "20x-a-ruleset-reference",
+          "20x-b-ruleset-reference",
+          "20x-c-ruleset-reference"
+        ],
         "source": {
           "collection": "FRR",
           "documents": "ALL",
+          "ignoreDocuments": ["AGU", "REC"],
           "types": ["20x"],
           "classes": ["A", "B", "C"],
           "includeAll": true,
@@ -290,6 +295,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
+          "ignoreDocuments": ["AGU", "REC"],
           "types": ["20x"],
           "classes": ["A"],
           "includeAll": true,
@@ -309,6 +315,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
+          "ignoreDocuments": ["AGU", "REC"],
           "types": ["20x"],
           "classes": ["B"],
           "includeAll": true,
@@ -328,6 +335,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
+          "ignoreDocuments": ["AGU", "REC"],
           "types": ["20x"],
           "classes": ["C"],
           "includeAll": true,
@@ -343,10 +351,15 @@
         "output": "reference/rev5/index.md",
         "status": "stable",
         "template": "templates/reference-index.hbs",
-        "ruleDocumentMappingId": "rev5-ruleset-reference",
+        "ruleDocumentMappingIds": [
+          "rev5-b-ruleset-reference",
+          "rev5-c-ruleset-reference",
+          "rev5-d-ruleset-reference"
+        ],
         "source": {
           "collection": "FRR",
           "documents": "ALL",
+          "ignoreDocuments": ["AGU", "REC"],
           "types": ["rev5"],
           "classes": ["B", "C", "D"],
           "includeAll": true,
@@ -366,6 +379,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
+          "ignoreDocuments": ["AGU", "REC"],
           "types": ["rev5"],
           "classes": ["B"],
           "includeAll": true,
@@ -385,6 +399,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
+          "ignoreDocuments": ["AGU", "REC"],
           "types": ["rev5"],
           "classes": ["C"],
           "includeAll": true,
@@ -404,6 +419,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
+          "ignoreDocuments": ["AGU", "REC"],
           "types": ["rev5"],
           "classes": ["D"],
           "includeAll": true,
@@ -450,24 +466,6 @@
         }
       },
       {
-        "id": "20x-ruleset-reference",
-        "output": "reference/20x/{FRR}.md",
-        "outputMode": "documents",
-        "status": "stable",
-        "definitionsHref": "../../definitions/",
-        "rulesHref": "../",
-        "linkTargetScope": "sameMappingOnly",
-        "emptyBehavior": "skip",
-        "source": {
-          "collection": "FRR",
-          "documents": "ALL",
-          "types": ["20x"],
-          "classes": ["A", "B", "C"],
-          "includeAll": true,
-          "allPosition": "first"
-        }
-      },
-      {
         "id": "20x-a-ruleset-reference",
         "output": "reference/20x/a/{FRR}.md",
         "outputMode": "documents",
@@ -479,6 +477,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
+          "ignoreDocuments": ["AGU", "REC"],
           "types": ["20x"],
           "classes": ["A"],
           "includeAll": true,
@@ -497,6 +496,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
+          "ignoreDocuments": ["AGU", "REC"],
           "types": ["20x"],
           "classes": ["B"],
           "includeAll": true,
@@ -515,26 +515,9 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
+          "ignoreDocuments": ["AGU", "REC"],
           "types": ["20x"],
           "classes": ["C"],
-          "includeAll": true,
-          "allPosition": "first"
-        }
-      },
-      {
-        "id": "rev5-ruleset-reference",
-        "output": "reference/rev5/{FRR}.md",
-        "outputMode": "documents",
-        "status": "stable",
-        "definitionsHref": "../../definitions/",
-        "rulesHref": "../",
-        "linkTargetScope": "sameMappingOnly",
-        "emptyBehavior": "skip",
-        "source": {
-          "collection": "FRR",
-          "documents": "ALL",
-          "types": ["rev5"],
-          "classes": ["B", "C", "D"],
           "includeAll": true,
           "allPosition": "first"
         }
@@ -551,6 +534,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
+          "ignoreDocuments": ["AGU", "REC"],
           "types": ["rev5"],
           "classes": ["B"],
           "includeAll": true,
@@ -569,6 +553,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
+          "ignoreDocuments": ["AGU", "REC"],
           "types": ["rev5"],
           "classes": ["C"],
           "includeAll": true,
@@ -587,6 +572,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
+          "ignoreDocuments": ["AGU", "REC"],
           "types": ["rev5"],
           "classes": ["D"],
           "includeAll": true,

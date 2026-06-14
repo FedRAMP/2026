@@ -251,23 +251,8 @@ nav = [
         "reference/20x/a/index.md",
         { "Marketplace Listing" = "reference/20x/a/marketplace-listing.md" },
         { "FedRAMP Certification" = "reference/20x/a/fedramp-certification.md" },
-        { "Boundary Rulesets" = [
-          { "Minimum Assessment Scope" = "reference/20x/a/minimum-assessment-scope.md" },
-          { "Certification Data Sharing" = "reference/20x/a/certification-data-sharing.md" },
-          { "Cryptographic Module Use" = "reference/20x/a/cryptographic-module-use.md" },
-          { "Vulnerability Detection and Response" = "reference/20x/a/vulnerability-detection-and-response.md" },
-        ] },
-        { "Assurance Rulesets" = [
-          { "Collaborative Continuous Monitoring" = "reference/20x/a/collaborative-continuous-monitoring.md" },
-          { "Addressing FedRAMP Communication" = "reference/20x/a/addressing-fedramp-communication.md" },
-          { "Incident Evaluation and Communication" = "reference/20x/a/incident-evaluation-and-communication.md" },
-          { "Significant Change Notification" = "reference/20x/a/significant-change-notification.md" },
-          { "Independent Verification and Validation" = "reference/20x/a/independent-verification-and-validation.md" },
-          { "Vulnerability Evaluation and Reporting" = "reference/20x/a/vulnerability-evaluation-and-reporting.md" },
-        ] },
         { "Package Rulesets" = [
           { "Certification Package Overview" = "reference/20x/a/certification-package-overview.md" },
-          { "Secure Configuration Guide" = "reference/20x/a/secure-configuration-guide.md" },
         ] },
         { "Key Security Indicators" = "reference/20x/a/key-security-indicators.md" },
       ] },

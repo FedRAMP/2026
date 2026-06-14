@@ -382,6 +382,8 @@ interface ReferenceIndexRowViewModel {
   acronym: string;
   name: string;
   href: string;
+  links: Array<{ label: string; href: string }>;
+  multipleLinks: boolean;
   status: string;
   counts: string;
   updated: string;
@@ -2581,56 +2583,152 @@ function latestReferenceIndexUpdateDate(
   return dates.sort().at(-1) ?? "";
 }
 
-function referenceIndexRuleDocumentMapping(
-  config: ToolConfig,
+function referenceIndexRuleDocumentMappingIds(
   mapping: ReferenceIndexDocumentMappingConfig,
-): RuleDocumentMappingConfig | undefined {
-  if (!mapping.ruleDocumentMappingId) {
-    return undefined;
-  }
+): string[] {
+  const ids = [
+    ...(mapping.ruleDocumentMappingId ? [mapping.ruleDocumentMappingId] : []),
+    ...(mapping.ruleDocumentMappingIds ?? []),
+  ];
+  const uniqueIds = Array.from(new Set(ids));
 
-  const ruleMapping = config.generated.ruleDocuments.find(
-    (entry) => entry.id === mapping.ruleDocumentMappingId,
-  );
-  if (!ruleMapping) {
+  if (uniqueIds.length !== ids.length) {
     throw new Error(
-      `Reference index document mapping "${mapping.id}" references unknown rule document mapping "${mapping.ruleDocumentMappingId}".`,
+      `Reference index document mapping "${mapping.id}" has duplicate rule document mapping ids.`,
     );
   }
 
-  if (ruleMapping.outputMode !== "documents") {
-    throw new Error(
-      `Reference index document mapping "${mapping.id}" must reference a rule document mapping with outputMode: "documents".`,
-    );
-  }
-
-  return ruleMapping;
+  return uniqueIds;
 }
 
-function referenceIndexRuleHref(
-  sourceDocument: SourceDocument,
-  pageRelativePath: string,
+function referenceIndexRuleDocumentMappings(
   config: ToolConfig,
   mapping: ReferenceIndexDocumentMappingConfig,
-): string {
-  const ruleMapping = referenceIndexRuleDocumentMapping(config, mapping);
-  if (!ruleMapping) {
-    return `${sourceDocument.document.info.web_name}.md`;
+): RuleDocumentMappingConfig[] {
+  const ids = referenceIndexRuleDocumentMappingIds(mapping);
+  if (!ids.length) {
+    return [];
   }
 
-  const targetRelativePath = normalizeGeneratedPath(
-    renderRuleDocumentOutput(
-      ruleMapping,
-      sourceDocument.document.info.web_name,
-    ),
-  );
+  return ids.map((id) => {
+    const ruleMapping = config.generated.ruleDocuments.find(
+      (entry) => entry.id === id,
+    );
+    if (!ruleMapping) {
+      throw new Error(
+        `Reference index document mapping "${mapping.id}" references unknown rule document mapping "${id}".`,
+      );
+    }
 
-  return relativeGeneratedHref(pageRelativePath, targetRelativePath);
+    if (ruleMapping.outputMode !== "documents") {
+      throw new Error(
+        `Reference index document mapping "${mapping.id}" must reference rule document mappings with outputMode: "documents".`,
+      );
+    }
+
+    return ruleMapping;
+  });
+}
+
+function documentHasRequirementsForRuleMapping(
+  document: RequirementDocumentSource,
+  mapping: FrrRuleSourceMappingConfig,
+): boolean {
+  const subsets = subsetsForVersions(document.info, mappingVersions(mapping));
+  const allowedSections = mapping.source.sections;
+
+  for (const bucketName of configuredBuckets(mapping)) {
+    const bucket = document.data[bucketName];
+    if (!bucket) {
+      continue;
+    }
+
+    for (const [subsetKey, requirements] of Object.entries(bucket)) {
+      if (allowedSections && !allowedSections.includes(subsetKey)) {
+        continue;
+      }
+
+      if (!subsetMatchesSourceApplicability(subsets[subsetKey], mapping)) {
+        continue;
+      }
+
+      for (const requirement of Object.values(requirements)) {
+        if (requirementMatchesMapping(requirement, mapping)) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+function ruleDocumentMappingLinkLabel(mapping: RuleDocumentMappingConfig): string {
+  const classes = mappingClasses(mapping);
+  if (classes.length === 1) {
+    return `Class ${classes[0]}`;
+  }
+
+  if (classes.length > 1) {
+    return `Classes ${classes.join(", ")}`;
+  }
+
+  return "Ruleset";
+}
+
+function referenceIndexRuleLinks(
+  sourceDocument: SourceDocument,
+  pageRelativePath: string,
+  rules: RulesDocument,
+  config: ToolConfig,
+  mapping: ReferenceIndexDocumentMappingConfig,
+): Array<{ label: string; href: string }> {
+  const ruleMappings = referenceIndexRuleDocumentMappings(config, mapping);
+  if (!ruleMappings.length) {
+    return [
+      {
+        label: "Ruleset",
+        href: `${sourceDocument.document.info.web_name}.md`,
+      },
+    ];
+  }
+
+  return ruleMappings
+    .filter((ruleMapping) => {
+      if (
+        !ruleMappingIncludesSourceDocument(
+          rules,
+          ruleMapping,
+          sourceDocument.key,
+        )
+      ) {
+        return false;
+      }
+
+      return documentHasRequirementsForRuleMapping(
+        sourceDocument.document,
+        ruleMapping,
+      );
+    })
+    .map((ruleMapping) => {
+      const targetRelativePath = normalizeGeneratedPath(
+        renderRuleDocumentOutput(
+          ruleMapping,
+          sourceDocument.document.info.web_name,
+        ),
+      );
+
+      return {
+        label: ruleDocumentMappingLinkLabel(ruleMapping),
+        href: relativeGeneratedHref(pageRelativePath, targetRelativePath),
+      };
+    });
 }
 
 function buildReferenceIndexRows(
   sourceDocuments: SourceDocument[],
   pageRelativePath: string,
+  rules: RulesDocument,
   config: ToolConfig,
   mapping: ReferenceIndexDocumentMappingConfig,
 ): ReferenceIndexRowViewModel[] {
@@ -2641,16 +2739,23 @@ function buildReferenceIndexRows(
       if (!matchingEntries.length) {
         return null;
       }
+      const links = referenceIndexRuleLinks(
+        sourceDocument,
+        pageRelativePath,
+        rules,
+        config,
+        mapping,
+      );
+      if (!links.length) {
+        return null;
+      }
 
       return {
         acronym: markdownTableCell(document.info.short_name ?? ""),
         name: markdownTableCell(document.info.name),
-        href: referenceIndexRuleHref(
-          sourceDocument,
-          pageRelativePath,
-          config,
-          mapping,
-        ),
+        href: links[0]?.href ?? "",
+        links,
+        multipleLinks: links.length > 1,
         status: markdownTableCell(humanizeStatus(document.info.status)),
         counts: `Subsets: ${referenceIndexSubsetCount(
           matchingEntries,
@@ -4059,6 +4164,7 @@ function collectReferenceIndexDocumentArtifact(
   const referenceIndexRows = buildReferenceIndexRows(
     sourceDocumentEntries,
     relativePath,
+    rules,
     config,
     mapping,
   );

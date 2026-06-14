@@ -27,5 +27,5 @@ picto:
 | Acronym | Ruleset | Status | Counts | Most Recently Updated |
 | --- | --- | --- | --- | --- |
 {{#each referenceIndexRows}}
-| {{acronym}} | [{{name}}]({{href}}) | {{status}} | {{counts}} | {{updated}} |
+| {{acronym}} | {{#if multipleLinks}}{{name}}<br>{{#each links}}[{{label}}]({{href}}){{#unless @last}}<br>{{/unless}}{{/each}}{{else}}[{{name}}]({{href}}){{/if}} | {{status}} | {{counts}} | {{updated}} |
 {{/each}}
