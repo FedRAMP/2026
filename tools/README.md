@@ -137,6 +137,7 @@ empty
 ```
 
 Tooltips and rendered icon definitions are configured in `pictographs` in `config.json`.
+For generated mappings, the mapping's `status` controls the rendered page pictograph. Status values from the rules JSON are content metadata and do not override the configured generated-page status.
 
 ## Generated TO DO Page
 
@@ -222,11 +223,13 @@ KSI mapping fields:
 - `outputMode`: optional output behavior. Omit it or use `themes` for one page per selected KSI theme; use `single` to generate one page with selected themes as sections.
 - `template`: optional Handlebars template path relative to `tools/`; defaults to `paths.template`.
 - `definitionsHref`: relative link prefix for generated term links.
+- `relatedIndicatorsFromRuleDocumentMappingId`: optional `generated.ruleDocuments` mapping id. When set, the KSI page includes only indicators directly referenced by rules included in that rule mapping.
 - `emptyBehavior`: `write` keeps an empty page, `skip` omits it when no indicators match.
 - `status`: pictograph status for generated frontmatter.
 - `source.collection`: must be `KSI`.
 - `source.theme`: one KSI theme key from the rules JSON, such as `CMT`.
 - `source.themes`: an array of KSI theme keys, such as `["CMT", "IAM"]`, or `"ALL"` to process every KSI theme.
+- `source.classes`: optional certification classes, such as `["B"]`. When present, indicators with `varies_by_class` render only the selected class variant.
 
 ## Generated Deadline Pages
 
@@ -248,7 +251,7 @@ Add an entry to `generated.deadlineDocuments` in `config.json`:
 }
 ```
 
-Deadline documents generate one page per configured type. They read each selected FRR document's `info.short_name`, `info.name`, `info.web_name`, and common or certification-specific `effective` values. The generated table links each combined rule family name and short name, such as `FedRAMP Security Inbox (FSI)`, to the matching rule page for that type. The date columns render `optional_adoption`, `obtain`, `maintain`, and `grace` in that order; when `grace.until_next_assessment` is true, the grace column explains that the deadline is the first annual assessment scheduled after `grace.default`.
+Deadline documents generate one page per configured type. They read each selected FRR document's `info.short_name`, `info.name`, `info.web_name`, and common or certification-specific `effective` values. The generated table links each combined rule family name and short name, such as `FedRAMP Security Inbox (FSI)`, to the matching rule page for that type. The date columns render `optional_adoption`, `obtain`, `maintain`, and `grace` in that order; when `grace.until_next_assessment` is true, the grace column explains that the deadline is the first FedRAMP independent assessment completed after `grace.default`.
 
 Use `{type}` or `{version}` in `output` to place each type page explicitly. Use `source.ignoreDocuments` to remove specific FRR keys after `source.documents` is resolved, including when `source.documents` is `"ALL"`.
 Use `source.affects` to omit selected FRR documents that do not contain any rule affecting that audience, such as excluding assessor-only recognition rules from provider deadline pages.
@@ -303,7 +306,9 @@ Add an entry to `generated.referenceIndexDocuments` in `config.json`:
 
 Reference index mappings generate a table of FRR rulesets with links, status, subset and rule counts, and the most recent rule update date. Use `introduction` for the visible narrative text above the table. Use `source.documents: "ALL"` to include every FRR ruleset from the rules JSON; use `source.ignoreDocuments` to remove specific FRR keys after selection.
 
-The complete ruleset reference is usually paired with rule document mappings that use `outputMode: "documents"` and `output: "reference/{FRR}.md"` so each FRR ruleset has a standalone generated page.
+Use `ruleDocumentMappingId` when the index should link to a generated ruleset mapping that does not live beside the index page. Use `ruleDocumentMappingIds` when one index row should link to multiple generated mappings, such as separate class-specific reference pages. Reference index mappings also support `source.types`, `source.classes`, `source.sections`, `source.affects`, `source.includeAll`, and `source.allPosition` so the table counts and links can match a filtered ruleset reference. When `source.classes` is present, only subsets whose `info.subsets.<key>.applicability.types` and `.classes` overlap the selected type and class are included.
+
+The complete ruleset reference is usually paired with rule document mappings that use `outputMode: "documents"` and `output: "reference/{FRR}.md"` so each FRR ruleset has a standalone generated page. Class-specific reference sections use the same pattern with outputs such as `reference/20x/a/{FRR}.md`.
 
 ## Generated Rule Pages
 
@@ -339,6 +344,8 @@ Mapping fields:
 - `definitionsHref`: relative link prefix for generated term links.
 - `rulesHref`: relative link prefix for `reference_url_web_name` references.
 - `linkTargetScope`: optional related-rule link visibility. Use `sameMappingOnly` for complete reference mappings that should not become fallback link targets for stakeholder-specific pages.
+- `relatedRulesOutput`: optional companion page path for directly related FRR rules that are referenced by this mapping but are not otherwise included by its filters.
+- `relatedRulesTitle`: optional page H1 for the companion related-rules page.
 - `emptyBehavior`: `write` keeps an empty page, `skip` omits it when no rules match.
 - `includeEffectiveDates`: set to `false` to omit the top applicability block.
 - `status`: pictograph status for generated frontmatter.
@@ -346,6 +353,7 @@ Mapping fields:
 - `source.documents`: an array of FRR keys, such as `["FSI", "ICP"]`, or `"ALL"` to process every FRR.
 - `source.ignoreDocuments`: optional array of FRR keys to remove after `source.document` or `source.documents` is resolved.
 - `source.types`: one or more certification types, such as `["20x"]` or `["rev5"]`.
+- `source.classes`: optional certification classes, such as `["A"]`. When present, generated ruleset pages include only subsets whose applicability includes the selected type and class, and `varies_by_class` output is trimmed to the selected class.
 - `source.affects`: optional filter matched against each rule's `affects` list.
 - `source.sections`: optional list of subset keys to include, such as `["CSO", "CSX", "CSF"]`.
 - `source.includeAll`: include `data.all` rules with each selected type.

@@ -45,7 +45,7 @@ This section helps independent assessment services understand the expectations f
 
     The expectations for independent verification and validation under FedRAMP 20x are very different from Rev5, requiring different skills and a new approach.
 
-    [Performing FedRAMP 20x Assessments](20x/index.md){ data-preview }
+    [Performing FedRAMP 20x Assessments](fedramp-assessments/20x.md){ data-preview }
 
 -   :material-rewind-5:{ .xl .middle .machine } **FedRAMP Rev5**
 
@@ -53,6 +53,6 @@ This section helps independent assessment services understand the expectations f
 
     FedRAMP Rev5 isn't new but the expectations for independent verification and validation have still shifted and you'll need to review the rules.
 
-    [Performing FedRAMP Rev5 Assessments](rev5/index.md){ data-preview }
+    [Performing FedRAMP Rev5 Assessments](fedramp-assessments/rev5.md){ data-preview }
 
 </div>

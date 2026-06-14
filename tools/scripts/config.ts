@@ -36,6 +36,7 @@ export interface DefinitionsMappingConfig {
   enabled: boolean;
   title?: string;
   output: string;
+  status?: GeneratedDocumentStatus;
   template?: string;
 }
 
@@ -63,6 +64,7 @@ export interface RuleDocumentSourceConfig {
   documents?: RuleDocumentSelection;
   ignoreDocuments?: string[];
   types: RuleTypeSelection[];
+  classes?: string[];
   affects?: string[];
   sections?: string[];
   includeAll?: boolean;
@@ -80,6 +82,8 @@ export interface RuleDocumentMappingConfig {
   definitionsHref?: string;
   rulesHref?: string;
   linkTargetScope?: RuleDocumentLinkTargetScope;
+  relatedRulesOutput?: string;
+  relatedRulesTitle?: string;
   emptyBehavior?: GeneratedEmptyBehavior;
   includeEffectiveDates?: boolean;
   source: RuleDocumentSourceConfig;
@@ -102,6 +106,7 @@ export interface KsiDocumentSourceConfig {
   collection: "KSI";
   theme?: string;
   themes?: KsiThemeSelection;
+  classes?: string[];
 }
 
 export interface KsiDocumentMappingConfig {
@@ -112,6 +117,7 @@ export interface KsiDocumentMappingConfig {
   status: GeneratedDocumentStatus;
   template?: string;
   definitionsHref?: string;
+  relatedIndicatorsFromRuleDocumentMappingId?: string;
   emptyBehavior?: GeneratedEmptyBehavior;
   source: KsiDocumentSourceConfig;
 }
@@ -161,6 +167,12 @@ export interface ReferenceIndexDocumentSourceConfig {
   collection: "FRR";
   documents?: RuleDocumentSelection;
   ignoreDocuments?: string[];
+  types?: RuleTypeSelection[];
+  classes?: string[];
+  affects?: string[];
+  sections?: string[];
+  includeAll?: boolean;
+  allPosition?: AllRulesPosition;
 }
 
 export interface ReferenceIndexDocumentMappingConfig {
@@ -172,6 +184,9 @@ export interface ReferenceIndexDocumentMappingConfig {
   output: string;
   status: GeneratedDocumentStatus;
   template?: string;
+  ruleDocumentMappingId?: string;
+  ruleDocumentMappingIds?: string[];
+  emptyBehavior?: GeneratedEmptyBehavior;
   source: ReferenceIndexDocumentSourceConfig;
 }
 

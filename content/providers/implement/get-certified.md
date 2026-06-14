@@ -16,7 +16,7 @@ flowchart LR
   cat@{ img: "/2026/assets/sad-thumbs-up-cat.jpg", h: 72, constraint: "on" }
   cat --> C[Ongoing Certification]
 
-  classDef current fill:#dff5e1,stroke:#2f855a,stroke-width:2px,color:#123524;
+  classDef current stroke:#00A86B,stroke-width:3px;
   class B current;
 ```
 
