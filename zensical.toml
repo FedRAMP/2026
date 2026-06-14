@@ -243,7 +243,7 @@ nav = [
       { "Marketplace Listing" = "advisors/rules/marketplace-listing.md" },
     ] },
   ] },
-  { "Reference" = [
+  { "Ruleset Reference" = [
       "reference/index.md",
       { "Boundary Related" = [
         { "Minimum Assessment Scope" = "reference/minimum-assessment-scope.md" },
