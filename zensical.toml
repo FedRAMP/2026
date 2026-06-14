@@ -16,37 +16,6 @@ nav = [
       { "Changelog" = "changelog.md" },
       { "TO DO" = "todo.md" },
     ] },
-    { "Complete Ruleset Reference" = [
-      "reference/index.md",
-      { "Boundary Related" = [
-        { "Minimum Assessment Scope" = "reference/minimum-assessment-scope.md" },
-        { "Certification Data Sharing" = "reference/certification-data-sharing.md" },
-        { "Cryptographic Module Use" = "reference/cryptographic-module-use.md" },
-        { "Vulnerability Detection and Response" = "reference/vulnerability-detection-and-response.md" },
-      ] },
-      { "Assurance Related" = [
-        { "Collaborative Continuous Monitoring" = "reference/collaborative-continuous-monitoring.md" },
-        { "Addressing FedRAMP Communication" = "reference/addressing-fedramp-communication.md" },
-        { "Incident Evaluation and Communication" = "reference/incident-evaluation-and-communication.md" },
-        { "Significant Change Notification" = "reference/significant-change-notification.md" },
-        { "Independent Verification and Validation" = "reference/independent-verification-and-validation.md" },
-        { "Vulnerability Evaluation and Reporting" = "reference/vulnerability-evaluation-and-reporting.md" },
-      ] },
-      { "Package Related" = [
-        { "Certification Package Overview" = "reference/certification-package-overview.md" },
-        { "Security Decision Record" = "reference/security-decision-record.md" },
-        { "Secure Configuration Guide" = "reference/secure-configuration-guide.md" },
-      ] },
-      { "Marketplace Listing" = "reference/marketplace-listing.md" },
-      { "FedRAMP Certification" = "reference/fedramp-certification.md" },
-      { "Key Security Indicators" = "reference/key-security-indicators.md" },
-      { "Gov Related" = [
-        { "Agency Use of FedRAMP Certified Cloud Services" = "reference/agency-use.md" },
-      ] },
-      { "Assessor Related" = [
-        { "FedRAMP Recognition of Independent Assessment Services" = "reference/fedramp-recognition.md" },
-      ] },
-    ] },
   ] },
   { "FedRAMP" = [
     "responsibilities/index.md",
@@ -274,6 +243,37 @@ nav = [
       { "Marketplace Listing" = "advisors/rules/marketplace-listing.md" },
     ] },
   ] },
+  { "Reference" = [
+      "reference/index.md",
+      { "Boundary Related" = [
+        { "Minimum Assessment Scope" = "reference/minimum-assessment-scope.md" },
+        { "Certification Data Sharing" = "reference/certification-data-sharing.md" },
+        { "Cryptographic Module Use" = "reference/cryptographic-module-use.md" },
+        { "Vulnerability Detection and Response" = "reference/vulnerability-detection-and-response.md" },
+      ] },
+      { "Assurance Related" = [
+        { "Collaborative Continuous Monitoring" = "reference/collaborative-continuous-monitoring.md" },
+        { "Addressing FedRAMP Communication" = "reference/addressing-fedramp-communication.md" },
+        { "Incident Evaluation and Communication" = "reference/incident-evaluation-and-communication.md" },
+        { "Significant Change Notification" = "reference/significant-change-notification.md" },
+        { "Independent Verification and Validation" = "reference/independent-verification-and-validation.md" },
+        { "Vulnerability Evaluation and Reporting" = "reference/vulnerability-evaluation-and-reporting.md" },
+      ] },
+      { "Package Related" = [
+        { "Certification Package Overview" = "reference/certification-package-overview.md" },
+        { "Security Decision Record" = "reference/security-decision-record.md" },
+        { "Secure Configuration Guide" = "reference/secure-configuration-guide.md" },
+      ] },
+      { "Marketplace Listing" = "reference/marketplace-listing.md" },
+      { "FedRAMP Certification" = "reference/fedramp-certification.md" },
+      { "Key Security Indicators" = "reference/key-security-indicators.md" },
+      { "Gov Related" = [
+        { "Agency Use of FedRAMP Certified Cloud Services" = "reference/agency-use.md" },
+      ] },
+      { "Assessor Related" = [
+        { "FedRAMP Recognition of Independent Assessment Services" = "reference/fedramp-recognition.md" },
+      ] },
+    ] },
   { "--> return to FedRAMP.gov" = "https://fedramp.gov" },
 ]
 
