@@ -129,9 +129,9 @@ nav = [
     { "Getting Started & Preparation" = [
       "providers/start/index.md",
       { "Finding an Advisor" = "providers/start/advisor.md" },
-      { "Choose a Starting Class" = "providers/start/class.md" },
-      { "Choose a Type" = "providers/start/type.md" },
       { "Choose a Path" = "providers/start/path.md" },
+      { "Choose a Class" = "providers/start/class.md" },
+      { "Choose a Type" = "providers/start/type.md" },
     ] },
     { "Initial Implementation" = [
       "providers/implement/index.md",

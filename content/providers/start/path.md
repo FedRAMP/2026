@@ -22,26 +22,29 @@ There are two FedRAMP Certification Paths:
 - **Program Certification** is provided directly by FedRAMP and does not require a federal agency to "sponsor" the service for FedRAMP Certification; this path is mostly only available for the 20x Certification Type.
 - **Agency Certification** requires a federal agency to authorize the service in advance, following the legacy FedRAMP process, then "sponsor" the service for FedRAMP Certification; this path is only available for the Rev5 Certification Type.
 
-!!! tip "You may combine FedRAMP Certification Paths for Rev5."
-
-    Cloud service providers may obtain a FedRAMP Rev5 Class A Certification via the Program Certification Path
-    then later use the Agency Certification Path to upgrade to a different FedRAMP Rev5 Certification Class.
 
 ## Choice is a Misnomer
 
-In general, you do not get to choose a Certification Path because it is the outcome of your other choices. This section
-is more about awareness than choice.
+You don't really get to choose your Certification Path because it's the result of the choices you've already made.
 
-| Type | Class | Program Certification | Agency Certification |
+- If you intend to obtain a FedRAMP 20x Certification, then you will automatically proceed on the Program Certification Path.
+- If you already have an agency sponsor for FedRAMP Rev5, then you will likely proceed on the Agency Certification Path.
+- In very limited circumstances, the Program Certification Path is open FedRAMP Rev5 based on specific criteria.
+
+!!! tip "You may obtain a FedRAMP 20x Class A Certification then change it to FedRAMP Rev5 Class B, C, or D via Agency Certification."
+
+
+| Type | Class | Program Certification Path | Agency Certification Path|
 | -- | -- | -- | -- |
-| 20x | Class A | :lucide-badge-check:{ .xl .middle .stable } Required | :lucide-circle-slash:{ .xl .middle .empty } Unavailable|
-| 20x | Class B |  :lucide-badge-check:{ .xl .middle .stable } Required | :lucide-circle-slash:{ .xl .middle .empty } Unavailable|
-| 20x | Class C |  :lucide-badge-check:{ .xl .middle .stable } Required | :lucide-circle-slash:{ .xl .middle .empty } Unavailable|
-| 20x | Class D |  :lucide-badge-check:{ .xl .middle .stable } Required | :lucide-circle-slash:{ .xl .middle .empty } Unavailable|
-| Rev5 | Class A | :lucide-badge-check:{ .xl .middle .stable } Required | :lucide-circle-slash:{ .xl .middle .empty } Unavailable|
-| Rev5 | Class B | :lucide-circle-dashed:{ .xl .middle .placeholder } Limited| :lucide-badge-check:{ .xl .middle .stable } Expected|
-| Rev5 | Class C | :lucide-circle-dashed:{ .xl .middle .placeholder } Limited| :lucide-badge-check:{ .xl .middle .stable } Expected|
-| Rev5 | Class D | :lucide-circle-slash:{ .xl .middle .empty } Unavailable | :lucide-badge-check:{ .xl .middle .stable } Required|
+| **20x** | Class A | :lucide-badge-check:{ .xl .middle .stable } Required | :lucide-circle-slash:{ .xl .middle .empty } Unavailable|
+| **20x** | Class B |  :lucide-badge-check:{ .xl .middle .stable } Required | :lucide-circle-slash:{ .xl .middle .empty } Unavailable|
+| **20x** | Class C |  :lucide-badge-check:{ .xl .middle .stable } Required | :lucide-circle-slash:{ .xl .middle .empty } Unavailable|
+| **20x** | Class D |  :lucide-wrench:{ .xl .middle .placeholder } Coming In 2027 | :lucide-circle-slash:{ .xl .middle .empty } Unavailable|
+| _Rev5_ | Class A | :lucide-circle-slash:{ .xl .middle .empty } Unavailable | :lucide-circle-slash:{ .xl .middle .empty } Unavailable|
+| _Rev5_ | Class B | :lucide-circle-dashed:{ .xl .middle .placeholder } Limited| :lucide-badge-check:{ .xl .middle .stable } Generally Required|
+| _Rev5_ | Class C | :lucide-circle-dashed:{ .xl .middle .placeholder } Limited| :lucide-badge-check:{ .xl .middle .stable } Generally Required|
+| _Rev5_ | Class D | :lucide-circle-slash:{ .xl .middle .empty } Unavailable | :lucide-badge-check:{ .xl .middle .stable } Required|
+
 
 ## Temporary Rev5 Program Certification Availability For Class B and C
 
