@@ -241,18 +241,6 @@ type RulesForTest = Awaited<ReturnType<typeof loadRules>>;
 type RequirementDocumentForTest = RulesForTest["FRR"][string];
 type ArtifactForTest = ReturnType<typeof collectArtifacts>[number];
 
-function markdownTableCell(value: string): string {
-  return value.replace(/\s+/g, " ").replace(/\|/g, "\\|").trim();
-}
-
-function humanizeStatus(value?: string): string {
-  if (!value) {
-    return "Unknown";
-  }
-
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
 function slugifyTerm(term: string): string {
   return term
     .toLowerCase()
@@ -264,71 +252,11 @@ function relatedTermsGroupAnchorId(tag: string): string {
   return `related-terms-group-${slugifyTerm(tag)}`;
 }
 
-function documentSubsetCount(document: RequirementDocumentForTest): number {
-  const subsetKeys = new Set<string>();
-
-  for (const bucket of Object.values(document.data)) {
-    for (const subsetKey of Object.keys(bucket ?? {})) {
-      subsetKeys.add(subsetKey);
-    }
-  }
-
-  return subsetKeys.size;
-}
-
-function documentRuleCount(document: RequirementDocumentForTest): number {
-  const ruleIds = new Set<string>();
-
-  for (const bucket of Object.values(document.data)) {
-    for (const requirements of Object.values(bucket ?? {})) {
-      for (const ruleId of Object.keys(requirements ?? {})) {
-        ruleIds.add(ruleId);
-      }
-    }
-  }
-
-  return ruleIds.size;
-}
-
-function latestRequirementUpdateDate(
-  document: RequirementDocumentForTest,
-): string {
-  const dates: string[] = [];
-
-  for (const bucket of Object.values(document.data)) {
-    for (const requirements of Object.values(bucket ?? {})) {
-      for (const requirement of Object.values(requirements ?? {})) {
-        for (const change of requirement.updated ?? []) {
-          if (change.date) {
-            dates.push(change.date);
-          }
-        }
-      }
-    }
-  }
-
-  return dates.sort().at(-1) ?? "";
-}
-
-function expectedReferenceIndexRows(rules: RulesForTest): string[] {
-  return Object.values(rules.FRR)
-    .map((document) => {
-      const acronym = markdownTableCell(document.info.short_name ?? "");
-      const name = markdownTableCell(document.info.name);
-      const href = `${document.info.web_name}.md`;
-      const status = markdownTableCell(humanizeStatus(document.info.status));
-      const counts = `Subsets: ${documentSubsetCount(
-        document,
-      )}<br>Rules: ${documentRuleCount(document)}`;
-      const updated = markdownTableCell(latestRequirementUpdateDate(document));
-
-      return {
-        acronym,
-        row: `| ${acronym} | [${name}](${href}) | ${status} | ${counts} | ${updated} |`,
-      };
-    })
-    .sort((left, right) => left.acronym.localeCompare(right.acronym))
-    .map((entry) => entry.row);
+function referenceIndexRowMarkdown(artifact: ArtifactForTest): string[] {
+  return artifact.context.referenceIndexRows.map(
+    (row) =>
+      `| ${row.acronym} | [${row.name}](${row.href}) | ${row.status} | ${row.counts} | ${row.updated} |`,
+  );
 }
 
 function expectedImportantRelatedTermRows(rules: RulesForTest): string[] {
@@ -1368,7 +1296,7 @@ describe("build-markdown", () => {
     );
     expectTextOrder(
       referenceIndexContents,
-      expectedReferenceIndexRows(rules),
+      referenceIndexRowMarkdown(referenceIndexArtifact),
       "Generated reference index should render source-derived rows in acronym order",
     );
 
@@ -1810,6 +1738,227 @@ describe("build-markdown", () => {
     expect(requirementIds).toContain("SYN-GEN-ONE");
     expect(requirementIds).toContain("SYN-20X-ONE");
     expect(requirementIds).toContain("SYN-REV5-ONE");
+  });
+
+  test("filters ruleset references by subset applicability and selected class", async () => {
+    const config = await loadToolConfig();
+    const rules = structuredClone(await loadRules(config));
+    const syntheticDocument = testRequirementDocument({
+      name: "Synthetic Ruleset",
+      shortName: "SYN",
+      webName: "synthetic-ruleset",
+      affects: ["Providers"],
+    });
+
+    syntheticDocument.info.subsets = {
+      AON: {
+        name: "Class A Only",
+        description: "Rules specific to Class A.",
+        applicability: {
+          types: ["20x"],
+          classes: ["A"],
+          affects: ["Providers"],
+        },
+      },
+      BON: {
+        name: "Class B Only",
+        description: "Rules specific to Class B.",
+        applicability: {
+          types: ["20x"],
+          classes: ["B"],
+          affects: ["Providers"],
+        },
+      },
+      R5B: {
+        name: "Rev5 Class B",
+        description: "Rules specific to Rev5 Class B.",
+        applicability: {
+          types: ["Rev5"],
+          classes: ["B"],
+          affects: ["Providers"],
+        },
+      },
+    };
+    syntheticDocument.data.all = {
+      AON: {
+        "SYN-AON-ONE": {
+          name: "Class A Requirement",
+          statement: "This should not appear on Class B pages.",
+          affects: ["Providers"],
+        },
+      },
+      BON: {
+        "SYN-BON-VAR": {
+          name: "Class Variant Requirement",
+          varies_by_class: {
+            a: {
+              statement: "Class A variant should not render.",
+            },
+            b: {
+              statement: "Class B variant should render.",
+            },
+          },
+          affects: ["Providers"],
+        },
+      },
+      R5B: {
+        "SYN-R5B-ONE": {
+          name: "Rev5 Requirement",
+          statement: "This should not appear on 20x pages.",
+          affects: ["Providers"],
+        },
+      },
+    };
+    rules.FRR = {
+      SYN: syntheticDocument,
+    };
+
+    const artifacts = collectArtifacts(rules, {
+      ...config,
+      generated: {
+        ...config.generated,
+        definitionDocuments: [],
+        ksiDocuments: [],
+        deadlineDocuments: [],
+        taggedDocumentSummaries: [],
+        frrCollectionDocuments: [],
+        referenceIndexDocuments: [
+          {
+            id: "20x-b-reference-index",
+            title: "20x Class B Ruleset Reference",
+            description: "Synthetic reference index.",
+            purpose: "Verifies class-specific reference index rows.",
+            output: "reference/20x/b/index.md",
+            status: "stable",
+            ruleDocumentMappingId: "20x-b-reference",
+            source: {
+              collection: "FRR",
+              documents: ["SYN"],
+              types: ["20x"],
+              classes: ["B"],
+              includeAll: true,
+              allPosition: "first",
+            },
+          },
+        ],
+        ruleDocuments: [
+          {
+            id: "20x-b-reference",
+            output: "reference/20x/b/{FRR}.md",
+            outputMode: "documents",
+            status: "stable",
+            emptyBehavior: "skip",
+            source: {
+              collection: "FRR",
+              documents: ["SYN"],
+              types: ["20x"],
+              classes: ["B"],
+              includeAll: true,
+              allPosition: "first",
+            },
+          },
+        ],
+      },
+    });
+
+    const ruleArtifact = findArtifact(
+      artifacts,
+      "reference/20x/b/synthetic-ruleset.md",
+    );
+    const requirementIds = ruleArtifact.context.sections.flatMap((section) =>
+      section.requirements.map((requirement) => requirement.id),
+    );
+    const requirement = ruleArtifact.context.sections
+      .flatMap((section) => section.requirements)
+      .find((entry) => entry.id === "SYN-BON-VAR");
+
+    expect(requirementIds).toEqual(["SYN-BON-VAR"]);
+    expect(requirement?.variantSections).toHaveLength(1);
+    expect(requirement?.variantSections[0]?.title).toBe("Class B");
+    expect(
+      requirement?.variantSections[0]?.statementParagraphs.join("\n"),
+    ).toContain("Class B variant should render.");
+    expect(
+      requirement?.variantSections[0]?.statementParagraphs.join("\n"),
+    ).not.toContain("Class A variant should not render.");
+
+    const indexArtifact = findArtifact(artifacts, "reference/20x/b/index.md");
+    expect(indexArtifact.context.referenceIndexRows).toEqual([
+      expect.objectContaining({
+        acronym: "SYN",
+        href: "synthetic-ruleset.md",
+        counts: "Subsets: 1<br>Rules: 1",
+      }),
+    ]);
+  });
+
+  test("trims KSI class variants when a KSI mapping selects a class", async () => {
+    const config = await loadToolConfig();
+    const rules = structuredClone(await loadRules(config));
+    rules.KSI = {
+      SYN: {
+        id: "SYN",
+        name: "Synthetic Indicators",
+        web_name: "synthetic-indicators",
+        short_name: "SYN",
+        status: "stable",
+        indicators: {
+          "KSI-SYN-VAR": {
+            name: "Class Variant Indicator",
+            varies_by_class: {
+              b: {
+                statement: "Class B indicator should render.",
+              },
+              c: {
+                statement: "Class C indicator should not render.",
+              },
+            },
+          },
+        },
+      },
+    };
+
+    const artifacts = collectArtifacts(rules, {
+      ...config,
+      generated: {
+        ...config.generated,
+        definitionDocuments: [],
+        ksiDocuments: [
+          {
+            id: "20x-b-ksi-reference",
+            title: "Key Security Indicators",
+            output: "reference/20x/b/key-security-indicators.md",
+            outputMode: "single",
+            status: "stable",
+            source: {
+              collection: "KSI",
+              themes: "ALL",
+              classes: ["B"],
+            },
+          },
+        ],
+        deadlineDocuments: [],
+        taggedDocumentSummaries: [],
+        referenceIndexDocuments: [],
+        frrCollectionDocuments: [],
+        ruleDocuments: [],
+      },
+    });
+
+    const artifact = findArtifact(
+      artifacts,
+      "reference/20x/b/key-security-indicators.md",
+    );
+    const indicator = artifact.context.sections[0]?.requirements[0];
+
+    expect(indicator?.variantSections).toHaveLength(1);
+    expect(indicator?.variantSections[0]?.title).toBe("Class B");
+    expect(
+      indicator?.variantSections[0]?.statementParagraphs.join("\n"),
+    ).toContain("Class B indicator should render.");
+    expect(
+      indicator?.variantSections[0]?.statementParagraphs.join("\n"),
+    ).not.toContain("Class C indicator should not render.");
   });
 
   test("ignores configured deadline documents after resolving the source selection", async () => {

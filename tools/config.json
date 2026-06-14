@@ -73,6 +73,45 @@
           "collection": "KSI",
           "themes": "ALL"
         }
+      },
+      {
+        "id": "20x-a-key-security-indicators-reference",
+        "title": "Key Security Indicators",
+        "output": "reference/20x/a/key-security-indicators.md",
+        "outputMode": "single",
+        "status": "stable",
+        "definitionsHref": "../../../definitions/",
+        "source": {
+          "collection": "KSI",
+          "themes": "ALL",
+          "classes": ["A"]
+        }
+      },
+      {
+        "id": "20x-b-key-security-indicators-reference",
+        "title": "Key Security Indicators",
+        "output": "reference/20x/b/key-security-indicators.md",
+        "outputMode": "single",
+        "status": "stable",
+        "definitionsHref": "../../../definitions/",
+        "source": {
+          "collection": "KSI",
+          "themes": "ALL",
+          "classes": ["B"]
+        }
+      },
+      {
+        "id": "20x-c-key-security-indicators-reference",
+        "title": "Key Security Indicators",
+        "output": "reference/20x/c/key-security-indicators.md",
+        "outputMode": "single",
+        "status": "stable",
+        "definitionsHref": "../../../definitions/",
+        "source": {
+          "collection": "KSI",
+          "themes": "ALL",
+          "classes": ["C"]
+        }
       }
     ],
     "deadlineDocuments": [
@@ -210,12 +249,165 @@
         "description": "This section contains the entire Consolidated Rules for 2026 as a standalone reference for each ruleset.",
         "purpose": "This content allows folks to see the full rules together without them broken apart by stakeholder.",
         "introduction": "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset with all related content in a single rule as an overall reference. The individual stakeholder sections of this site contain only the specific rules that apply in different circumstances for different stakeholders, while the reference rulesets are entirely unabridged.",
-        "output": "reference/index.md",
+        "output": "reference/complete-rulesets/index.md",
         "status": "stable",
         "template": "templates/reference-index.hbs",
+        "ruleDocumentMappingId": "complete-ruleset-reference",
         "source": {
           "collection": "FRR",
           "documents": "ALL"
+        }
+      },
+      {
+        "id": "20x-ruleset-reference-index",
+        "title": "20x Ruleset Reference",
+        "description": "This section contains the FedRAMP 20x rulesets as standalone references.",
+        "purpose": "This content allows folks to see the 20x rules together without them broken apart by stakeholder.",
+        "introduction": "This section contains the FedRAMP 20x rulesets with content that applies to one or more 20x classes.",
+        "output": "reference/20x/index.md",
+        "status": "stable",
+        "template": "templates/reference-index.hbs",
+        "ruleDocumentMappingId": "20x-ruleset-reference",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x"],
+          "classes": ["A", "B", "C"],
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "20x-a-ruleset-reference-index",
+        "title": "20x Class A Ruleset Reference",
+        "description": "This section contains the entire Consolidated Rules for 2026 as a standalone reference for each ruleset.",
+        "purpose": "This content allows folks to see the full rules together without them broken apart by stakeholder.",
+        "introduction": "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset with all related content in a single rule as an overall reference. The individual stakeholder sections of this site contain only the specific rules that apply in different circumstances for different stakeholders, while the reference rulesets are entirely unabridged.",
+        "output": "reference/20x/a/index.md",
+        "status": "stable",
+        "template": "templates/reference-index.hbs",
+        "ruleDocumentMappingId": "20x-a-ruleset-reference",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x"],
+          "classes": ["A"],
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "20x-b-ruleset-reference-index",
+        "title": "20x Class B Ruleset Reference",
+        "description": "This section contains the entire Consolidated Rules for 2026 as a standalone reference for each ruleset.",
+        "purpose": "This content allows folks to see the full rules together without them broken apart by stakeholder.",
+        "introduction": "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset with all related content in a single rule as an overall reference. The individual stakeholder sections of this site contain only the specific rules that apply in different circumstances for different stakeholders, while the reference rulesets are entirely unabridged.",
+        "output": "reference/20x/b/index.md",
+        "status": "stable",
+        "template": "templates/reference-index.hbs",
+        "ruleDocumentMappingId": "20x-b-ruleset-reference",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x"],
+          "classes": ["B"],
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "20x-c-ruleset-reference-index",
+        "title": "20x Class C Ruleset Reference",
+        "description": "This section contains the entire Consolidated Rules for 2026 as a standalone reference for each ruleset.",
+        "purpose": "This content allows folks to see the full rules together without them broken apart by stakeholder.",
+        "introduction": "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset with all related content in a single rule as an overall reference. The individual stakeholder sections of this site contain only the specific rules that apply in different circumstances for different stakeholders, while the reference rulesets are entirely unabridged.",
+        "output": "reference/20x/c/index.md",
+        "status": "stable",
+        "template": "templates/reference-index.hbs",
+        "ruleDocumentMappingId": "20x-c-ruleset-reference",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x"],
+          "classes": ["C"],
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "rev5-ruleset-reference-index",
+        "title": "Rev5 Ruleset Reference",
+        "description": "This section contains the FedRAMP Rev5 rulesets as standalone references.",
+        "purpose": "This content allows folks to see the Rev5 rules together without them broken apart by stakeholder.",
+        "introduction": "This section contains the FedRAMP Rev5 rulesets with content that applies to one or more Rev5 classes.",
+        "output": "reference/rev5/index.md",
+        "status": "stable",
+        "template": "templates/reference-index.hbs",
+        "ruleDocumentMappingId": "rev5-ruleset-reference",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["rev5"],
+          "classes": ["B", "C", "D"],
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "rev5-b-ruleset-reference-index",
+        "title": "Rev5 Class B Ruleset Reference",
+        "description": "This section contains the FedRAMP Rev5 Class B rulesets as standalone references.",
+        "purpose": "This content allows folks to see Rev5 Class B rules together without them broken apart by stakeholder.",
+        "introduction": "This section contains the FedRAMP Rev5 rulesets with content that applies to Rev5 Class B.",
+        "output": "reference/rev5/b/index.md",
+        "status": "stable",
+        "template": "templates/reference-index.hbs",
+        "ruleDocumentMappingId": "rev5-b-ruleset-reference",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["rev5"],
+          "classes": ["B"],
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "rev5-c-ruleset-reference-index",
+        "title": "Rev5 Class C Ruleset Reference",
+        "description": "This section contains the FedRAMP Rev5 Class C rulesets as standalone references.",
+        "purpose": "This content allows folks to see Rev5 Class C rules together without them broken apart by stakeholder.",
+        "introduction": "This section contains the FedRAMP Rev5 rulesets with content that applies to Rev5 Class C.",
+        "output": "reference/rev5/c/index.md",
+        "status": "stable",
+        "template": "templates/reference-index.hbs",
+        "ruleDocumentMappingId": "rev5-c-ruleset-reference",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["rev5"],
+          "classes": ["C"],
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "rev5-d-ruleset-reference-index",
+        "title": "Rev5 Class D Ruleset Reference",
+        "description": "This section contains the FedRAMP Rev5 Class D rulesets as standalone references.",
+        "purpose": "This content allows folks to see Rev5 Class D rules together without them broken apart by stakeholder.",
+        "introduction": "This section contains the FedRAMP Rev5 rulesets with content that applies to Rev5 Class D.",
+        "output": "reference/rev5/d/index.md",
+        "status": "stable",
+        "template": "templates/reference-index.hbs",
+        "ruleDocumentMappingId": "rev5-d-ruleset-reference",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["rev5"],
+          "classes": ["D"],
+          "includeAll": true,
+          "allPosition": "first"
         }
       }
     ],
@@ -253,6 +445,150 @@
           "collection": "FRR",
           "documents": "ALL",
           "types": ["all"],
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "20x-ruleset-reference",
+        "output": "reference/20x/{FRR}.md",
+        "outputMode": "documents",
+        "status": "stable",
+        "definitionsHref": "../../definitions/",
+        "rulesHref": "../",
+        "linkTargetScope": "sameMappingOnly",
+        "emptyBehavior": "skip",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x"],
+          "classes": ["A", "B", "C"],
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "20x-a-ruleset-reference",
+        "output": "reference/20x/a/{FRR}.md",
+        "outputMode": "documents",
+        "status": "stable",
+        "definitionsHref": "../../../definitions/",
+        "rulesHref": "../",
+        "linkTargetScope": "sameMappingOnly",
+        "emptyBehavior": "skip",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x"],
+          "classes": ["A"],
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "20x-b-ruleset-reference",
+        "output": "reference/20x/b/{FRR}.md",
+        "outputMode": "documents",
+        "status": "stable",
+        "definitionsHref": "../../../definitions/",
+        "rulesHref": "../",
+        "linkTargetScope": "sameMappingOnly",
+        "emptyBehavior": "skip",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x"],
+          "classes": ["B"],
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "20x-c-ruleset-reference",
+        "output": "reference/20x/c/{FRR}.md",
+        "outputMode": "documents",
+        "status": "stable",
+        "definitionsHref": "../../../definitions/",
+        "rulesHref": "../",
+        "linkTargetScope": "sameMappingOnly",
+        "emptyBehavior": "skip",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["20x"],
+          "classes": ["C"],
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "rev5-ruleset-reference",
+        "output": "reference/rev5/{FRR}.md",
+        "outputMode": "documents",
+        "status": "stable",
+        "definitionsHref": "../../definitions/",
+        "rulesHref": "../",
+        "linkTargetScope": "sameMappingOnly",
+        "emptyBehavior": "skip",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["rev5"],
+          "classes": ["B", "C", "D"],
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "rev5-b-ruleset-reference",
+        "output": "reference/rev5/b/{FRR}.md",
+        "outputMode": "documents",
+        "status": "stable",
+        "definitionsHref": "../../../definitions/",
+        "rulesHref": "../",
+        "linkTargetScope": "sameMappingOnly",
+        "emptyBehavior": "skip",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["rev5"],
+          "classes": ["B"],
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "rev5-c-ruleset-reference",
+        "output": "reference/rev5/c/{FRR}.md",
+        "outputMode": "documents",
+        "status": "stable",
+        "definitionsHref": "../../../definitions/",
+        "rulesHref": "../",
+        "linkTargetScope": "sameMappingOnly",
+        "emptyBehavior": "skip",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["rev5"],
+          "classes": ["C"],
+          "includeAll": true,
+          "allPosition": "first"
+        }
+      },
+      {
+        "id": "rev5-d-ruleset-reference",
+        "output": "reference/rev5/d/{FRR}.md",
+        "outputMode": "documents",
+        "status": "stable",
+        "definitionsHref": "../../../definitions/",
+        "rulesHref": "../",
+        "linkTargetScope": "sameMappingOnly",
+        "emptyBehavior": "skip",
+        "source": {
+          "collection": "FRR",
+          "documents": "ALL",
+          "types": ["rev5"],
+          "classes": ["D"],
           "includeAll": true,
           "allPosition": "first"
         }

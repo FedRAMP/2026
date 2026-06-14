@@ -227,6 +227,7 @@ KSI mapping fields:
 - `source.collection`: must be `KSI`.
 - `source.theme`: one KSI theme key from the rules JSON, such as `CMT`.
 - `source.themes`: an array of KSI theme keys, such as `["CMT", "IAM"]`, or `"ALL"` to process every KSI theme.
+- `source.classes`: optional certification classes, such as `["B"]`. When present, indicators with `varies_by_class` render only the selected class variant.
 
 ## Generated Deadline Pages
 
@@ -303,7 +304,9 @@ Add an entry to `generated.referenceIndexDocuments` in `config.json`:
 
 Reference index mappings generate a table of FRR rulesets with links, status, subset and rule counts, and the most recent rule update date. Use `introduction` for the visible narrative text above the table. Use `source.documents: "ALL"` to include every FRR ruleset from the rules JSON; use `source.ignoreDocuments` to remove specific FRR keys after selection.
 
-The complete ruleset reference is usually paired with rule document mappings that use `outputMode: "documents"` and `output: "reference/{FRR}.md"` so each FRR ruleset has a standalone generated page.
+Use `ruleDocumentMappingId` when the index should link to a generated ruleset mapping that does not live beside the index page. Reference index mappings also support `source.types`, `source.classes`, `source.sections`, `source.affects`, `source.includeAll`, and `source.allPosition` so the table counts and links can match a filtered ruleset reference. When `source.classes` is present, only subsets whose `info.subsets.<key>.applicability.types` and `.classes` overlap the selected type and class are included.
+
+The complete ruleset reference is usually paired with rule document mappings that use `outputMode: "documents"` and `output: "reference/{FRR}.md"` so each FRR ruleset has a standalone generated page. Class-specific reference sections use the same pattern with outputs such as `reference/20x/a/{FRR}.md`.
 
 ## Generated Rule Pages
 
@@ -346,6 +349,7 @@ Mapping fields:
 - `source.documents`: an array of FRR keys, such as `["FSI", "ICP"]`, or `"ALL"` to process every FRR.
 - `source.ignoreDocuments`: optional array of FRR keys to remove after `source.document` or `source.documents` is resolved.
 - `source.types`: one or more certification types, such as `["20x"]` or `["rev5"]`.
+- `source.classes`: optional certification classes, such as `["A"]`. When present, generated ruleset pages include only subsets whose applicability includes the selected type and class, and `varies_by_class` output is trimmed to the selected class.
 - `source.affects`: optional filter matched against each rule's `affects` list.
 - `source.sections`: optional list of subset keys to include, such as `["CSO", "CSX", "CSF"]`.
 - `source.includeAll`: include `data.all` rules with each selected type.

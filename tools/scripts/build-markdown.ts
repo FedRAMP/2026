@@ -73,9 +73,17 @@ interface EffectiveEntrySource {
   warnings?: string[];
 }
 
+interface SubsetApplicabilitySource {
+  types?: string[];
+  paths?: string[];
+  classes?: string[];
+  affects?: string[];
+}
+
 interface SubsetSource {
   name?: string;
   description?: string;
+  applicability?: SubsetApplicabilitySource;
 }
 
 interface FlowStepSource {
@@ -570,10 +578,111 @@ function mappingVersions(mapping: FrrRuleSourceMappingConfig): Version[] {
   return configuredVersions(mapping.source.types);
 }
 
+function sourceVersions(mapping: {
+  source: { types?: readonly RuleTypeSelection[] };
+}): Version[] {
+  return configuredVersions(mapping.source.types);
+}
+
 function deadlineDocumentTypes(
   mapping: DeadlineDocumentMappingConfig,
 ): Version[] {
   return configuredVersions(mapping.source.types);
+}
+
+function normalizeCertificationClass(value: string): string {
+  return value.trim().toUpperCase();
+}
+
+function mappingClasses(mapping: {
+  id: string;
+  source: { classes?: readonly string[] };
+}): string[] {
+  const classes = mapping.source.classes;
+  if (classes === undefined) {
+    return [];
+  }
+
+  const normalizedClasses = classes
+    .map(normalizeCertificationClass)
+    .filter(Boolean);
+  const uniqueClasses = Array.from(new Set(normalizedClasses));
+  if (!uniqueClasses.length) {
+    throw new Error(
+      `Generated document mapping "${mapping.id}" must specify at least one source class when source.classes is present.`,
+    );
+  }
+
+  return uniqueClasses;
+}
+
+function normalizeApplicabilityType(value: string): Version | undefined {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "20x") {
+    return "20x";
+  }
+
+  if (normalized === "rev5") {
+    return "rev5";
+  }
+
+  return undefined;
+}
+
+function applicabilityTypesOverlapSelectedVersions(
+  applicability: SubsetApplicabilitySource | undefined,
+  versions: Version[],
+): boolean {
+  const applicabilityTypes = (applicability?.types ?? [])
+    .map(normalizeApplicabilityType)
+    .filter((value): value is Version => value !== undefined);
+
+  return (
+    applicabilityTypes.length > 0 &&
+    applicabilityTypes.some((value) => versions.includes(value))
+  );
+}
+
+function applicabilityClassesOverlapSelectedClasses(
+  applicability: SubsetApplicabilitySource | undefined,
+  classes: string[],
+): boolean {
+  const applicabilityClasses = (applicability?.classes ?? [])
+    .map(normalizeCertificationClass)
+    .filter(Boolean);
+
+  return (
+    applicabilityClasses.length > 0 &&
+    applicabilityClasses.some((value) => classes.includes(value))
+  );
+}
+
+function subsetMatchesSourceApplicability(
+  subset: SubsetSource | undefined,
+  mapping: {
+    id: string;
+    source: {
+      types?: readonly RuleTypeSelection[];
+      classes?: readonly string[];
+    };
+  },
+): boolean {
+  const classes = mappingClasses(mapping);
+  if (!classes.length) {
+    return true;
+  }
+
+  const applicability = subset?.applicability;
+  if (!applicability) {
+    return true;
+  }
+
+  return (
+    applicabilityTypesOverlapSelectedVersions(
+      applicability,
+      sourceVersions(mapping),
+    ) && applicabilityClassesOverlapSelectedClasses(applicability, classes)
+  );
 }
 
 function humanizeStatus(value?: string): string {
@@ -796,6 +905,7 @@ function buildRulePageIndex(
 
     for (const { key, document } of sourceDocuments(rules, mapping)) {
       const relativePath = relativePathForDocument(document);
+      const subsets = subsetsForVersions(document.info, mappingVersions(mapping));
 
       for (const [id, rule] of ruleIndex) {
         if (rule.documentKey !== key) {
@@ -807,6 +917,12 @@ function buildRulePageIndex(
         }
 
         if (!ruleSubsetMatchesMapping(rule.subsetKey, mapping)) {
+          continue;
+        }
+
+        if (
+          !subsetMatchesSourceApplicability(subsets[rule.subsetKey], mapping)
+        ) {
           continue;
         }
 
@@ -1457,6 +1573,7 @@ function buildVariantViewModel(
 function buildVariantSections(
   entry: RequirementEntrySource,
   ruleLinkContext?: RuleLinkContext,
+  selectedClasses: string[] = [],
 ): VariantViewModel[] {
   const sections: VariantViewModel[] = [];
   const relatedRuleIds = entry.related;
@@ -1464,6 +1581,13 @@ function buildVariantSections(
   for (const [className, classEntry] of Object.entries(
     entry.varies_by_class ?? {},
   )) {
+    if (
+      selectedClasses.length &&
+      !selectedClasses.includes(normalizeCertificationClass(className))
+    ) {
+      continue;
+    }
+
     sections.push(
       buildVariantViewModel(
         `Class ${className.toUpperCase()}`,
@@ -1558,6 +1682,7 @@ function buildRequirementViewModel(
   rulesRelativePath: string,
   doNotLinkTerms: DoNotLinkTermIndex,
   ruleLinkContext?: RuleLinkContext,
+  selectedClasses: string[] = [],
 ): RequirementViewModel {
   const title = entry.name ?? id;
   const relatedRuleIds = entry.related;
@@ -1573,7 +1698,11 @@ function buildRequirementViewModel(
       relatedRuleIds,
       ruleLinkContext,
     ),
-    variantSections: buildVariantSections(entry, ruleLinkContext),
+    variantSections: buildVariantSections(
+      entry,
+      ruleLinkContext,
+      selectedClasses,
+    ),
     effectiveDateLines: toDateLines(entry.effective_date),
     timeframe: formatDuration(entry.timeframe_type, entry.timeframe_num),
     numberedItems: linkRelatedRuleReferencesInList(
@@ -1832,9 +1961,26 @@ function requirementMatchesMapping(
   requirement: RequirementEntrySource,
   mapping: FrrRuleSourceMappingConfig,
 ): boolean {
+  if (!requirementMatchesSelectedClasses(requirement, mappingClasses(mapping))) {
+    return false;
+  }
+
   return requirementMatchesAffectedParties(
     requirement,
     mapping.source.affects ?? [],
+  );
+}
+
+function requirementMatchesSelectedClasses(
+  requirement: RequirementEntrySource,
+  classes: string[],
+): boolean {
+  if (!classes.length || !requirement.varies_by_class) {
+    return true;
+  }
+
+  return Object.keys(requirement.varies_by_class).some((className) =>
+    classes.includes(normalizeCertificationClass(className)),
   );
 }
 
@@ -1875,6 +2021,10 @@ function buildConfiguredSectionViewModels(
       }
 
       const subset = subsets[subsetKey];
+      if (!subsetMatchesSourceApplicability(subset, mapping)) {
+        continue;
+      }
+
       const section = sections.get(subsetKey) ?? {
         title: subset?.name ?? subsetKey,
         anchorId: sectionAnchorId(subsetKey, subset?.name ?? subsetKey),
@@ -1900,6 +2050,7 @@ function buildConfiguredSectionViewModels(
             rulesHref,
             doNotLinkTerms,
             ruleLinkContext,
+            mappingClasses(mapping),
           ),
         );
       }
@@ -1955,6 +2106,7 @@ function buildDocumentGroupedSectionViewModel(
   const allowedSections = mapping.source.sections;
   const definitionsHref = mapping.definitionsHref ?? "definitions/";
   const rulesHref = mapping.rulesHref ?? "";
+  const subsets = subsetsForVersions(document.info, mappingVersions(mapping));
 
   for (const bucketName of configuredBuckets(mapping)) {
     const bucket = document.data[bucketName];
@@ -1964,6 +2116,11 @@ function buildDocumentGroupedSectionViewModel(
 
     for (const [subsetKey, sectionRequirements] of Object.entries(bucket)) {
       if (allowedSections && !allowedSections.includes(subsetKey)) {
+        continue;
+      }
+
+      const subset = subsets[subsetKey];
+      if (!subsetMatchesSourceApplicability(subset, mapping)) {
         continue;
       }
 
@@ -1980,6 +2137,7 @@ function buildDocumentGroupedSectionViewModel(
             rulesHref,
             doNotLinkTerms,
             ruleLinkContext,
+            mappingClasses(mapping),
           ),
         );
       }
@@ -2327,45 +2485,95 @@ function deadlineDisplayName(info: InfoSource): string {
   return `${info.name} (${shortName})`;
 }
 
-function documentSubsetCount(document: RequirementDocumentSource): number {
-  const subsetKeys = new Set<string>();
-
-  for (const bucket of Object.values(document.data)) {
-    for (const subsetKey of Object.keys(bucket ?? {})) {
-      subsetKeys.add(subsetKey);
-    }
-  }
-
-  return subsetKeys.size;
+function referenceIndexBuckets(
+  mapping: ReferenceIndexDocumentMappingConfig,
+): DataBucket[] {
+  return configuredTypeBuckets(
+    sourceVersions(mapping),
+    mapping.source.includeAll,
+    mapping.source.allPosition,
+  );
 }
 
-function documentRuleCount(document: RequirementDocumentSource): number {
-  const ruleIds = new Set<string>();
+function requirementMatchesReferenceIndexMapping(
+  requirement: RequirementEntrySource,
+  mapping: ReferenceIndexDocumentMappingConfig,
+): boolean {
+  if (!requirementMatchesSelectedClasses(requirement, mappingClasses(mapping))) {
+    return false;
+  }
 
-  for (const bucket of Object.values(document.data)) {
-    for (const requirements of Object.values(bucket ?? {})) {
-      for (const ruleId of Object.keys(requirements ?? {})) {
-        ruleIds.add(ruleId);
+  return requirementMatchesAffectedParties(
+    requirement,
+    mapping.source.affects ?? [],
+  );
+}
+
+function referenceIndexMatchingEntries(
+  document: RequirementDocumentSource,
+  mapping: ReferenceIndexDocumentMappingConfig,
+): Array<{
+  subsetKey: string;
+  ruleId: string;
+  requirement: RequirementEntrySource;
+}> {
+  const entries: Array<{
+    subsetKey: string;
+    ruleId: string;
+    requirement: RequirementEntrySource;
+  }> = [];
+  const subsets = subsetsForVersions(document.info, sourceVersions(mapping));
+  const allowedSections = mapping.source.sections;
+
+  for (const bucketName of referenceIndexBuckets(mapping)) {
+    const bucket = document.data[bucketName];
+    if (!bucket) {
+      continue;
+    }
+
+    for (const [subsetKey, requirements] of Object.entries(bucket)) {
+      if (allowedSections && !allowedSections.includes(subsetKey)) {
+        continue;
+      }
+
+      if (!subsetMatchesSourceApplicability(subsets[subsetKey], mapping)) {
+        continue;
+      }
+
+      for (const [ruleId, requirement] of Object.entries(requirements)) {
+        if (!requirementMatchesReferenceIndexMapping(requirement, mapping)) {
+          continue;
+        }
+
+        entries.push({ subsetKey, ruleId, requirement });
       }
     }
   }
 
-  return ruleIds.size;
+  return entries;
 }
 
-function latestRequirementUpdateDate(
-  document: RequirementDocumentSource,
+function referenceIndexSubsetCount(
+  entries: Array<{ subsetKey: string }>,
+): number {
+  return new Set(entries.map((entry) => entry.subsetKey)).size;
+}
+
+function referenceIndexRuleCount(
+  entries: Array<{ ruleId: string }>,
+): number {
+  return new Set(entries.map((entry) => entry.ruleId)).size;
+}
+
+function latestReferenceIndexUpdateDate(
+  entries: Array<{ requirement: RequirementEntrySource }>,
 ): string {
   const dates: string[] = [];
 
-  for (const bucket of Object.values(document.data)) {
-    for (const requirements of Object.values(bucket ?? {})) {
-      for (const requirement of Object.values(requirements ?? {})) {
-        for (const change of requirement.updated ?? []) {
-          if (change.date) {
-            dates.push(change.date);
-          }
-        }
+  for (const { requirement } of entries) {
+    for (const change of requirement.updated ?? []) {
+      if (change.date) {
+        dates.push(change.date);
       }
     }
   }
@@ -2373,18 +2581,86 @@ function latestRequirementUpdateDate(
   return dates.sort().at(-1) ?? "";
 }
 
+function referenceIndexRuleDocumentMapping(
+  config: ToolConfig,
+  mapping: ReferenceIndexDocumentMappingConfig,
+): RuleDocumentMappingConfig | undefined {
+  if (!mapping.ruleDocumentMappingId) {
+    return undefined;
+  }
+
+  const ruleMapping = config.generated.ruleDocuments.find(
+    (entry) => entry.id === mapping.ruleDocumentMappingId,
+  );
+  if (!ruleMapping) {
+    throw new Error(
+      `Reference index document mapping "${mapping.id}" references unknown rule document mapping "${mapping.ruleDocumentMappingId}".`,
+    );
+  }
+
+  if (ruleMapping.outputMode !== "documents") {
+    throw new Error(
+      `Reference index document mapping "${mapping.id}" must reference a rule document mapping with outputMode: "documents".`,
+    );
+  }
+
+  return ruleMapping;
+}
+
+function referenceIndexRuleHref(
+  sourceDocument: SourceDocument,
+  pageRelativePath: string,
+  config: ToolConfig,
+  mapping: ReferenceIndexDocumentMappingConfig,
+): string {
+  const ruleMapping = referenceIndexRuleDocumentMapping(config, mapping);
+  if (!ruleMapping) {
+    return `${sourceDocument.document.info.web_name}.md`;
+  }
+
+  const targetRelativePath = normalizeGeneratedPath(
+    renderRuleDocumentOutput(
+      ruleMapping,
+      sourceDocument.document.info.web_name,
+    ),
+  );
+
+  return relativeGeneratedHref(pageRelativePath, targetRelativePath);
+}
+
 function buildReferenceIndexRows(
   sourceDocuments: SourceDocument[],
+  pageRelativePath: string,
+  config: ToolConfig,
+  mapping: ReferenceIndexDocumentMappingConfig,
 ): ReferenceIndexRowViewModel[] {
   return sourceDocuments
-    .map(({ document }) => ({
-      acronym: markdownTableCell(document.info.short_name ?? ""),
-      name: markdownTableCell(document.info.name),
-      href: `${document.info.web_name}.md`,
-      status: markdownTableCell(humanizeStatus(document.info.status)),
-      counts: `Subsets: ${documentSubsetCount(document)}<br>Rules: ${documentRuleCount(document)}`,
-      updated: markdownTableCell(latestRequirementUpdateDate(document)),
-    }))
+    .map((sourceDocument): ReferenceIndexRowViewModel | null => {
+      const { document } = sourceDocument;
+      const matchingEntries = referenceIndexMatchingEntries(document, mapping);
+      if (!matchingEntries.length) {
+        return null;
+      }
+
+      return {
+        acronym: markdownTableCell(document.info.short_name ?? ""),
+        name: markdownTableCell(document.info.name),
+        href: referenceIndexRuleHref(
+          sourceDocument,
+          pageRelativePath,
+          config,
+          mapping,
+        ),
+        status: markdownTableCell(humanizeStatus(document.info.status)),
+        counts: `Subsets: ${referenceIndexSubsetCount(
+          matchingEntries,
+        )}<br>Rules: ${referenceIndexRuleCount(matchingEntries)}`,
+        updated: markdownTableCell(
+          latestReferenceIndexUpdateDate(matchingEntries),
+        ),
+      };
+    })
+    .filter((row): row is ReferenceIndexRowViewModel => row !== null)
     .sort((left, right) => left.acronym.localeCompare(right.acronym));
 }
 
@@ -3476,15 +3752,21 @@ function buildKsiIndicatorViewModels(
   mapping: KsiDocumentMappingConfig,
   doNotLinkTerms: DoNotLinkTermIndex,
 ): RequirementViewModel[] {
-  return Object.entries(theme.indicators ?? {}).map(([id, indicator]) =>
-    buildRequirementViewModel(
-      id,
-      indicator,
-      mapping.definitionsHref ?? "definitions/",
-      "",
-      doNotLinkTerms,
-    ),
-  );
+  return Object.entries(theme.indicators ?? {})
+    .filter(([, indicator]) =>
+      requirementMatchesSelectedClasses(indicator, mappingClasses(mapping)),
+    )
+    .map(([id, indicator]) =>
+      buildRequirementViewModel(
+        id,
+        indicator,
+        mapping.definitionsHref ?? "definitions/",
+        "",
+        doNotLinkTerms,
+        undefined,
+        mappingClasses(mapping),
+      ),
+    );
 }
 
 function buildKsiThemeSectionViewModel(
@@ -3774,6 +4056,15 @@ function collectReferenceIndexDocumentArtifact(
   }
 
   const relativePath = normalizeGeneratedPath(mapping.output);
+  const referenceIndexRows = buildReferenceIndexRows(
+    sourceDocumentEntries,
+    relativePath,
+    config,
+    mapping,
+  );
+  if (!referenceIndexRows.length && mapping.emptyBehavior === "skip") {
+    return null;
+  }
 
   return {
     relativePath,
@@ -3789,7 +4080,7 @@ function collectReferenceIndexDocumentArtifact(
       pictoStatus: mapping.status,
       statusSpan: pictographSpan(config, mapping.status),
       purposeParagraphs: splitParagraphs(mapping.introduction),
-      referenceIndexRows: buildReferenceIndexRows(sourceDocumentEntries),
+      referenceIndexRows,
     }),
   };
 }
@@ -3847,6 +4138,10 @@ function buildFrrCollectionSectionViewModel(
         continue;
       }
 
+      if (!subsetMatchesSourceApplicability(subsets[subsetKey], mapping)) {
+        continue;
+      }
+
       addUniqueParagraphs(
         descriptionParagraphs,
         splitParagraphs(subsets[subsetKey]?.description),
@@ -3861,6 +4156,7 @@ function buildFrrCollectionSectionViewModel(
             rulesHref,
             doNotLinkTerms,
             ruleLinkContext,
+            mappingClasses(mapping),
           ),
         );
       }

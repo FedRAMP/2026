@@ -63,6 +63,7 @@ export interface RuleDocumentSourceConfig {
   documents?: RuleDocumentSelection;
   ignoreDocuments?: string[];
   types: RuleTypeSelection[];
+  classes?: string[];
   affects?: string[];
   sections?: string[];
   includeAll?: boolean;
@@ -102,6 +103,7 @@ export interface KsiDocumentSourceConfig {
   collection: "KSI";
   theme?: string;
   themes?: KsiThemeSelection;
+  classes?: string[];
 }
 
 export interface KsiDocumentMappingConfig {
@@ -161,6 +163,12 @@ export interface ReferenceIndexDocumentSourceConfig {
   collection: "FRR";
   documents?: RuleDocumentSelection;
   ignoreDocuments?: string[];
+  types?: RuleTypeSelection[];
+  classes?: string[];
+  affects?: string[];
+  sections?: string[];
+  includeAll?: boolean;
+  allPosition?: AllRulesPosition;
 }
 
 export interface ReferenceIndexDocumentMappingConfig {
@@ -172,6 +180,8 @@ export interface ReferenceIndexDocumentMappingConfig {
   output: string;
   status: GeneratedDocumentStatus;
   template?: string;
+  ruleDocumentMappingId?: string;
+  emptyBehavior?: GeneratedEmptyBehavior;
   source: ReferenceIndexDocumentSourceConfig;
 }
 
