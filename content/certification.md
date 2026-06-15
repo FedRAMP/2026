@@ -74,17 +74,17 @@ Class D requires an immense investment and commitment for both initial and ongoi
 
 There are 2 **paths** for FedRAMP Certification, with each path being restricted to certain types and classes of certification:
 
+!!! tip "See [Choosing a Certification Path](providers/start/path.md) in the Cloud Service Providers section for additional information on these paths."
+
 ### Program Certification
 
 The **Program Certification** path is new in the Consolidated Rules for 2026 and allows cloud service providers to submit certification packages directly to FedRAMP for initial FedRAMP Certification. This is the preferred path for qualifying cloud service offerings and does not require an initial agency partner or sponsor.
 
-FedRAMP Certification Profiles for Program Certification include (see the specific class overview page in the cloud service provider section of the consolidated rules for more details):
+FedRAMP Certification Profiles for Program Certification in the Consolidated Rules for 2026 include::
 
 1. FedRAMP 20x Class A, B, or C
 
-2. FedRAMP Rev5 Class A
-
-3. FedRAMP Rev5 Class B or C in extremely limited cases
+2. FedRAMP Rev5 Class B or C in extremely limited cases
 
 ### Agency Certification
 
