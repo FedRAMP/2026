@@ -21,9 +21,9 @@ In general, most cloud service providers will approach the FedRAMP 20x Certifica
 
 2. [FedRAMP Certification](rules/fedramp-certification) explains the high level requirements for FedRAMP Certification.
 
-3. [Boundary Rulesets](rules/boundary) tell you how to establish, maintain, and protect the information resources that will be within the scope of your FedRAMP Certification.
+3. [Boundary Rulesets](boundary) tell you how to establish, maintain, and protect the information resources that will be within the scope of your FedRAMP Certification.
 
-4. [Assurance Rulesets](rules/assurance) list of all of the special expectations that are necessary for assuring government customers that you are protecting their information.
+4. [Assurance Rulesets](assurance) list of all of the special expectations that are necessary for assuring government customers that you are protecting their information.
 
     !!! tip "Assurance Rulesets will require new engineering and product work!"
 
@@ -36,7 +36,7 @@ In general, most cloud service providers will approach the FedRAMP 20x Certifica
         federal agencies, but specific customers may require additional assurance due to
         risk and complexity of their use case.
 
-5. [Package Rulesets](rules/package) outline how all of this information should be supplied for FedRAMP.
+5. [Package Rulesets](package) outline how all of this information should be supplied for FedRAMP.
 
 6. [Key Security Indicators](key-security-indicators/) summarize the security capabilities that a high quality cloud service offering
     will prove and measure to maintain its own security and assure their government customers they are doing so.
