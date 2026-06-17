@@ -9,6 +9,37 @@ picto:
 
 # Changelog
 
+## 2026.06.17.01-preview
+
+**Release Date:** June 17, 2026
+
+### Content Updates
+
+- [Agency Specific Rules](https://preview.fedramp.gov/2026/agencies/rules/): Expanded the agency rules overview to explain how FedRAMP rules relate to the FedRAMP Authorization Act, OMB Memorandum M-24-15, and agency legal review.
+- [Sponsoring a FedRAMP Certification](https://preview.fedramp.gov/2026/agencies/sponsoring/): Replaced placeholder text with guidance that agency sponsorship is a legacy Rev5 path, clarifies sponsor risk responsibility, and calls out the June 11, 2027 cutoff for sponsored Agency Certification applications.
+- [Making Ongoing Certification Collaborative](https://preview.fedramp.gov/2026/agencies/sponsoring/ongoing/): Clarified that sponsor-specific duties end after FedRAMP Certification and that providers move into collaborative continuous monitoring with FedRAMP and agency customers.
+- [Using a FedRAMP Certified Cloud Service](https://preview.fedramp.gov/2026/agencies/use/): Added guidance on how agencies reuse FedRAMP Certifications while still authorizing and monitoring their own federal information systems.
+- [FedRAMP Certification Classes](https://preview.fedramp.gov/2026/agencies/use/classes/): Clarified that Certification Classes describe assurance information, not FIPS impact levels, and added comparison and adequacy tables for agency review.
+- [Accessing FedRAMP Certification Packages](https://preview.fedramp.gov/2026/agencies/use/packages/): Added guidance on certification package purpose, provider-controlled package information, Trust Center transition expectations, and GRC automation.
+- [Using FedRAMP 20x Certification Packages](https://preview.fedramp.gov/2026/agencies/use/packages/20x/): Added guidance on 20x packages as maintained FedRAMP Certification Data rather than one-time static document folders.
+- [Using FedRAMP Rev5 Certification Packages](https://preview.fedramp.gov/2026/agencies/use/packages/rev5/): Added guidance on using Rev5 package evidence without copying provider controls into agency authorization materials.
+- [Ongoing Authorization](https://preview.fedramp.gov/2026/agencies/use/ongoing/): Replaced placeholder text with guidance on agency monitoring responsibilities, ongoing certification data review, inherited FedRAMP packages, and continuous monitoring goals.
+- [Agency Plans of Action and Milestones](https://preview.fedramp.gov/2026/agencies/use/ongoing/poams/): Added guidance that agency POA&Ms should track agency-owned actions and risk decisions, not automatically copy provider vulnerability records.
+- [The FedRAMP Agency Liaisons Program](https://preview.fedramp.gov/2026/agencies/support/liaisons/): Clarified liaison program benefits, how agencies can use liaisons, and how to join or find an agency liaison.
+- [FedRAMP Agency Support Groups](https://preview.fedramp.gov/2026/agencies/support/groups/): Clarified that support groups are for federal agency personnel and added a direct path to the FedRAMP Events registration page.
+- [Reporting Concerns to FedRAMP](https://preview.fedramp.gov/2026/agencies/support/concerns/): Added steps for agencies to escalate provider compliance concerns, notify contracting officers, and contact FedRAMP when needed.
+- [Responding to CISA Emergency and Binding Operational Directives](https://preview.fedramp.gov/2026/agencies/support/cisa-directives/): Added guidance for agencies to follow CISA directive instructions and rely on FedRAMP’s coordinated provider response process for FedRAMP Certified services.
+- [The FedRAMP Marketplace](https://preview.fedramp.gov/2026/marketplace/): Replaced placeholder text with a stable Marketplace overview covering products, agencies, assessors, and listing paths for providers, assessors, and advisors.
+- [Advisory Services](https://preview.fedramp.gov/2026/advisors/): Simplified the advisor landing page to focus on Marketplace listing rules and removed the unfinished support/start card.
+- [Independent Assessment Services](https://preview.fedramp.gov/2026/assessors/): Updated the assessor landing page support callout as the empty getting-started section was removed.
+
+### Site Structure
+
+- Added shared [Getting Support](https://preview.fedramp.gov/2026/support/) guidance to the FedRAMP navigation and moved it from the provider-specific support URL.
+- Removed the agency-specific Marketplace placeholder page and directs Marketplace guidance through the top-level [FedRAMP Marketplace](https://preview.fedramp.gov/2026/marketplace/) page.
+- Simplified Independent Assessor navigation by removing the empty getting-started/support grouping and listing FedRAMP Recognition and Marketplace Listing directly under the section.
+- Simplified Advisor navigation by removing empty getting-started, support, and rules overview pages and linking directly to Marketplace Listing rules.
+
 ## 2026.06.14.01-preview
 
 **Release Date:** June 14, 2026

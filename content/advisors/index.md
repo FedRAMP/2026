@@ -26,14 +26,6 @@ This section explains how advisory services can get support from FedRAMP and the
 
 <div class="grid cards" markdown>
 
--   :lucide-shield-question-mark:{ .xl .middle .stable } **Need support?**
-
-    ---
-
-    Learn how to get involved with the FedRAMP Community, what kind of support FedRAMP offers in public vs in private, and why you need to always specify which capacity you're acting in when contacting FedRAMP.
-
-    [Getting Started](start/index.md){ data-preview }
-
 -   :lucide-layers:{ .xl .middle .placeholder } **Getting Listed**
 
     ---

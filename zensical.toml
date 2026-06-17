@@ -19,8 +19,9 @@ nav = [
   ] },
   { "FedRAMP" = [
     "responsibilities/index.md",
-    { "FedRAMP Marketplace" = "marketplace.md" },
+    { "Getting Support" = "support.md" },
     { "Scope of FedRAMP" = "scope.md" },
+    { "FedRAMP Marketplace" = "marketplace.md" },
     { "FedRAMP's Responsibilities" = "responsibilities/rules.md" },
     { "FedRAMP's Authority" = [
       { "FedRAMP Authorization Act" = [
@@ -64,7 +65,6 @@ nav = [
     ] },
     { "Using a FedRAMP Certified Cloud Service" = [
       "agencies/use/index.md",
-      { "FedRAMP Marketplace" = "agencies/use/marketplace.md" },
       { "Certification Classes" = "agencies/use/classes.md" },
       { "Certification Packages" = [
         "agencies/use/packages/index.md",
@@ -94,7 +94,6 @@ nav = [
   ] },
   { "Cloud Service Providers" = [
     "providers/index.md",
-    { "Getting Support" = "providers/support.md" },
     { "Getting Started" = [
       "providers/start/index.md",
       { "Finding an Advisor" = "providers/start/advisor.md" },
@@ -194,12 +193,8 @@ nav = [
   ] },
   { "Independent Assessors" = [
     "assessors/index.md",
-    { "Getting Started as an Independent Assessor" = [
-      "assessors/start/index.md",
-      { "Getting Support" = "assessors/support.md" },
-      { "FedRAMP Recognition" = "assessors/rules/fedramp-recognition.md" },
-      { "Marketplace Listing" = "assessors/rules/marketplace-listing.md" },
-    ] },
+    { "FedRAMP Recognition" = "assessors/rules/fedramp-recognition.md" },
+    { "Marketplace Listing" = "assessors/rules/marketplace-listing.md" },
     { "Updating to 2026 Rules" = [
       "assessors/updating/index.md",
       { "What's Changing" = "assessors/updating/changes.md" },
@@ -213,15 +208,7 @@ nav = [
   ] },
   { "Advisors" = [
     "advisors/index.md",
-    { "Getting Started as an Advisory Service" = [
-      "advisors/start/index.md",
-      { "Getting Support" = "advisors/support.md" },
-
-    ] },
-    { "Applicable Rules" = [
-      "advisors/rules/index.md",
       { "Marketplace Listing" = "advisors/rules/marketplace-listing.md" },
-    ] },
   ] },
   { "Ruleset Reference" = [
     "reference/index.md",
