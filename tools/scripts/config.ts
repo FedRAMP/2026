@@ -72,6 +72,11 @@ export interface RuleDocumentSourceConfig {
   groupBy?: RuleDocumentGrouping;
 }
 
+export interface RelatedRulesGroupConfig {
+  title: string;
+  sourceRuleIds: string[];
+}
+
 export interface RuleDocumentMappingConfig {
   id: string;
   title?: string;
@@ -84,6 +89,8 @@ export interface RuleDocumentMappingConfig {
   linkTargetScope?: RuleDocumentLinkTargetScope;
   relatedRulesOutput?: string;
   relatedRulesTitle?: string;
+  relatedRulesGroups?: RelatedRulesGroupConfig[];
+  relatedRulesUngroupedTitle?: string;
   emptyBehavior?: GeneratedEmptyBehavior;
   includeEffectiveDates?: boolean;
   source: RuleDocumentSourceConfig;

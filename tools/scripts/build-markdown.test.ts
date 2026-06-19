@@ -1604,9 +1604,62 @@ describe("build-markdown", () => {
         `Expected ${notificationArtifact.relativePath} to include notification metadata.`,
       );
     }
+    const notificationDestination = notification.href
+      ? `[${notification.linkLabel}](${notification.href})`
+      : `${notification.name}${notification.targetDetail ?? ""}`;
     expect(notificationContents).toContain(
-      `Notify ${notification.party} by ${notification.method} using ${notification.target}.`,
+      `Notify ${notification.party} via ${notification.methodLabel}: ${notificationDestination}.`,
     );
+
+    const bracketedNotificationArtifact = firstArtifactMatching(
+      expectedArtifacts,
+      (artifact) =>
+        artifact.context.sections.some((section) =>
+          section.requirements.some((requirement) =>
+            requirement.notifications.some(
+              (entry) => entry.href && entry.linkLabel.includes("\\["),
+            ),
+          ),
+        ),
+      "an FRR artifact with bracketed notification link text",
+    );
+    const bracketedNotificationContents = await readGeneratedArtifact(
+      bracketedNotificationArtifact,
+    );
+    const bracketedNotification = bracketedNotificationArtifact.context.sections
+      .flatMap((section) => section.requirements)
+      .flatMap((requirement) => requirement.notifications)
+      .find((entry) => entry.href && entry.linkLabel.includes("\\["));
+    if (!bracketedNotification?.href) {
+      throw new Error(
+        `Expected ${bracketedNotificationArtifact.relativePath} to include bracketed notification link text.`,
+      );
+    }
+    expect(bracketedNotificationContents).toContain(
+      `[${bracketedNotification.linkLabel}](${bracketedNotification.href})`,
+    );
+
+    const classARelatedArtifact = findArtifact(
+      expectedArtifacts,
+      "reference/20x/a/related.md",
+    );
+    const classARelatedSectionTitles = classARelatedArtifact.context.sections.map(
+      (section) => section.title,
+    );
+    expect(classARelatedSectionTitles).toContain(
+      "Mandatory Class A Rules: Certification Data Sharing (CDS)",
+    );
+    expect(classARelatedSectionTitles).toContain(
+      "Recommended Class A Rules: Certification Package Overview (CPO)",
+    );
+    expect(classARelatedSectionTitles).toContain(
+      "Optional Class A Rules: Collaborative Continuous Monitoring (CCM)",
+    );
+    expect(
+      classARelatedArtifact.context.sections
+        .flatMap((section) => section.requirements)
+        .filter((requirement) => requirement.id === "CDS-CSO-AVR"),
+    ).toHaveLength(1);
 
     const referenceArtifact = firstArtifactMatching(
       expectedArtifacts,

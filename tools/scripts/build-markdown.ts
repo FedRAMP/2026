@@ -163,9 +163,11 @@ interface VariantSource {
 }
 
 interface NotificationSource {
-  party?: string;
-  method?: string;
-  target?: string;
+  party: string;
+  method: "email" | "form" | "update" | "varies" | "web";
+  target: string;
+  name: string;
+  url?: string;
 }
 
 interface RequirementSchemaSource {
@@ -287,8 +289,11 @@ interface TermLinkViewModel {
 
 interface NotificationViewModel {
   party: string;
-  method: string;
-  target: string;
+  methodLabel: string;
+  name: string;
+  linkLabel: string;
+  href?: string;
+  targetDetail?: string;
 }
 
 interface RequirementSchemaViewModel {
@@ -422,6 +427,11 @@ interface RuleIndexEntry {
   bucketName: DataBucket;
   subsetKey: string;
   requirement: RequirementEntrySource;
+}
+
+interface MissingRelatedRule {
+  id: string;
+  sourceRuleIds: string[];
 }
 
 type RuleIndex = ReadonlyMap<string, RuleIndexEntry>;
@@ -1073,8 +1083,64 @@ function missingRelatedRuleIdsForMapping(
   ruleIndex: RuleIndex,
   mapping: RuleDocumentMappingConfig,
 ): string[] {
+  return missingRelatedRulesForMapping(rules, ruleIndex, mapping).map(
+    (relatedRule) => relatedRule.id,
+  );
+}
+
+function compareRelatedRuleIds(
+  leftRuleId: string,
+  rightRuleId: string,
+  rules: RulesDocument,
+  ruleIndex: RuleIndex,
+): number {
+  const leftRule = ruleIndex.get(leftRuleId);
+  const rightRule = ruleIndex.get(rightRuleId);
+  const leftDocument = leftRule ? rules.FRR[leftRule.documentKey] : undefined;
+  const rightDocument = rightRule ? rules.FRR[rightRule.documentKey] : undefined;
+  const leftDocumentName = leftDocument?.info.name ?? leftRule?.documentKey ?? "";
+  const rightDocumentName =
+    rightDocument?.info.name ?? rightRule?.documentKey ?? "";
+
+  return (
+    leftDocumentName.localeCompare(rightDocumentName) ||
+    (leftRule?.subsetKey ?? "").localeCompare(rightRule?.subsetKey ?? "") ||
+    leftRuleId.localeCompare(rightRuleId)
+  );
+}
+
+function missingRelatedRulesForMapping(
+  rules: RulesDocument,
+  ruleIndex: RuleIndex,
+  mapping: RuleDocumentMappingConfig,
+): MissingRelatedRule[] {
   const includedRuleIds = ruleDocumentMappingRuleIds(rules, ruleIndex, mapping);
-  const missingRelatedRuleIds = new Set<string>();
+  const sourceRuleIdsByRelatedRuleId = new Map<string, Set<string>>();
+  const configuredGroupSourceRuleIds = new Set<string>();
+
+  for (const group of mapping.relatedRulesGroups ?? []) {
+    if (!group.title.trim() || !group.sourceRuleIds.length) {
+      throw new Error(
+        `Related-rules groups for mapping "${mapping.id}" must include a title and at least one source rule ID.`,
+      );
+    }
+
+    for (const sourceRuleId of group.sourceRuleIds) {
+      if (!includedRuleIds.has(sourceRuleId)) {
+        throw new Error(
+          `Related-rules group "${group.title}" for mapping "${mapping.id}" references source rule "${sourceRuleId}", which is not included by the mapping.`,
+        );
+      }
+
+      if (configuredGroupSourceRuleIds.has(sourceRuleId)) {
+        throw new Error(
+          `Related-rules source rule "${sourceRuleId}" is configured more than once for mapping "${mapping.id}".`,
+        );
+      }
+
+      configuredGroupSourceRuleIds.add(sourceRuleId);
+    }
+  }
 
   for (const includedRuleId of includedRuleIds) {
     const includedRule = ruleIndex.get(includedRuleId);
@@ -1083,24 +1149,21 @@ function missingRelatedRuleIdsForMapping(
         continue;
       }
 
-      missingRelatedRuleIds.add(relatedRuleId);
+      const sourceRuleIds =
+        sourceRuleIdsByRelatedRuleId.get(relatedRuleId) ?? new Set<string>();
+      sourceRuleIds.add(includedRuleId);
+      sourceRuleIdsByRelatedRuleId.set(relatedRuleId, sourceRuleIds);
     }
   }
 
-  return Array.from(missingRelatedRuleIds).sort((leftRuleId, rightRuleId) => {
-    const leftRule = ruleIndex.get(leftRuleId);
-    const rightRule = ruleIndex.get(rightRuleId);
-    const leftDocument = leftRule ? rules.FRR[leftRule.documentKey] : undefined;
-    const rightDocument = rightRule ? rules.FRR[rightRule.documentKey] : undefined;
-    const leftDocumentName = leftDocument?.info.name ?? leftRule?.documentKey ?? "";
-    const rightDocumentName = rightDocument?.info.name ?? rightRule?.documentKey ?? "";
-
-    return (
-      leftDocumentName.localeCompare(rightDocumentName) ||
-      (leftRule?.subsetKey ?? "").localeCompare(rightRule?.subsetKey ?? "") ||
-      leftRuleId.localeCompare(rightRuleId)
+  return Array.from(sourceRuleIdsByRelatedRuleId.entries())
+    .map(([id, sourceRuleIds]) => ({
+      id,
+      sourceRuleIds: Array.from(sourceRuleIds).sort(),
+    }))
+    .sort((left, right) =>
+      compareRelatedRuleIds(left.id, right.id, rules, ruleIndex),
     );
-  });
 }
 
 function relatedKsiIndicatorIdsForRuleDocumentMapping(
@@ -1825,17 +1888,17 @@ function formatDuration(
   }
 
   const amount = String(timeframeNum);
-
-  if (timeframeType === "bizdays") {
-    return `${amount} business ${amount === "1" ? "day" : "days"}`;
-  }
-
-  if (timeframeType === "days") {
-    return `${amount} ${amount === "1" ? "day" : "days"}`;
-  }
-
-  if (timeframeType === "month" || timeframeType === "months") {
-    return `${amount} ${amount === "1" ? "month" : "months"}`;
+  const durationLabels: Record<string, [string, string]> = {
+    bizdays: ["business day", "business days"],
+    days: ["day", "days"],
+    hours: ["hour", "hours"],
+    months: ["month", "months"],
+    weeks: ["week", "weeks"],
+    years: ["year", "years"],
+  };
+  const labels = timeframeType ? durationLabels[timeframeType] : undefined;
+  if (labels) {
+    return `${amount} ${amount === "1" ? labels[0] : labels[1]}`;
   }
 
   return timeframeType ? `${amount} ${timeframeType}` : amount;
@@ -2009,11 +2072,41 @@ function buildVariantSections(
 function toNotifications(
   notifications: NotificationSource[] = [],
 ): NotificationViewModel[] {
-  return notifications.map((notification) => ({
-    party: notification.party ?? "",
-    method: notification.method ?? "",
-    target: notification.target ?? "",
-  }));
+  const methodLabels: Record<NotificationSource["method"], string> = {
+    email: "email",
+    form: "form",
+    update: "an update",
+    varies: "the appropriate recipient-specific method",
+    web: "the web",
+  };
+
+  return notifications.map((notification) => {
+    const target = notification.target.trim();
+    const sourceName = notification.name.trim();
+    const href =
+      notification.url ??
+      (/^https?:\/\//i.test(target)
+        ? target
+        : notification.method === "email" && /^[^@\s]+@[^@\s]+$/.test(target)
+          ? `mailto:${target}`
+          : undefined);
+    const targetDetail =
+      !href && target && target.toLowerCase() !== sourceName.toLowerCase()
+        ? ` (${target})`
+        : undefined;
+    const name = targetDetail
+      ? sourceName.replace(/[.!?]+$/, "")
+      : sourceName;
+
+    return {
+      party: notification.party,
+      methodLabel: methodLabels[notification.method],
+      name,
+      linkLabel: sourceName.replace(/([\\[\]])/g, "\\$1"),
+      href,
+      targetDetail,
+    };
+  });
 }
 
 function toRequirementSchema(
@@ -4890,7 +4983,7 @@ function collectDocumentRuleDocumentArtifacts(
 }
 
 function buildRelatedRuleSections(
-  ruleIds: string[],
+  relatedRules: MissingRelatedRule[],
   rules: RulesDocument,
   ruleIndex: RuleIndex,
   mapping: RuleDocumentMappingConfig,
@@ -4898,9 +4991,36 @@ function buildRelatedRuleSections(
   ruleLinkContext: RuleLinkContext,
 ): SectionViewModel[] {
   const sections = new Map<string, SectionViewModel>();
+  const configuredGroups = mapping.relatedRulesGroups ?? [];
+  const groupedRelatedRules = relatedRules
+    .map((relatedRule) => {
+      const groupIndex = configuredGroups.findIndex((group) =>
+        group.sourceRuleIds.some((sourceRuleId) =>
+          relatedRule.sourceRuleIds.includes(sourceRuleId),
+        ),
+      );
 
-  for (const ruleId of ruleIds) {
-    const rule = ruleIndex.get(ruleId);
+      return {
+        relatedRule,
+        groupIndex:
+          groupIndex >= 0 ? groupIndex : configuredGroups.length,
+        group:
+          groupIndex >= 0 ? configuredGroups[groupIndex] : undefined,
+      };
+    })
+    .sort(
+      (left, right) =>
+        left.groupIndex - right.groupIndex ||
+        compareRelatedRuleIds(
+          left.relatedRule.id,
+          right.relatedRule.id,
+          rules,
+          ruleIndex,
+        ),
+    );
+
+  for (const { relatedRule, group, groupIndex } of groupedRelatedRules) {
+    const rule = ruleIndex.get(relatedRule.id);
     if (!rule) {
       continue;
     }
@@ -4913,10 +5033,19 @@ function buildRelatedRuleSections(
     const sectionTitle = document.info.short_name
       ? `${document.info.name} (${document.info.short_name})`
       : document.info.name;
-    const section = sections.get(rule.documentKey) ?? {
-      title: sectionTitle,
-      anchorId: sectionAnchorId(rule.documentKey, sectionTitle),
-      anchorAttribute: sectionAnchorAttribute(rule.documentKey, sectionTitle),
+    const groupTitle =
+      group?.title ??
+      (configuredGroups.length
+        ? mapping.relatedRulesUngroupedTitle ?? "Other Related Rules"
+        : undefined);
+    const groupedSectionTitle = groupTitle
+      ? `${groupTitle}: ${sectionTitle}`
+      : sectionTitle;
+    const sectionKey = `${groupIndex}:${rule.documentKey}`;
+    const section = sections.get(sectionKey) ?? {
+      title: groupedSectionTitle,
+      anchorId: sectionAnchorId(sectionKey, groupedSectionTitle),
+      anchorAttribute: sectionAnchorAttribute(sectionKey, groupedSectionTitle),
       isSubsetSection: false,
       descriptionParagraphs: splitParagraphs(document.info.purpose),
       requirements: [],
@@ -4933,7 +5062,7 @@ function buildRelatedRuleSections(
         mappingClasses(mapping),
       ),
     );
-    sections.set(rule.documentKey, section);
+    sections.set(sectionKey, section);
   }
 
   return Array.from(sections.values());
@@ -4957,15 +5086,15 @@ function collectRelatedRuleDocumentArtifact(
     throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
   }
 
-  const ruleIds = missingRelatedRuleIdsForMapping(rules, ruleIndex, mapping);
-  if (!ruleIds.length) {
+  const relatedRules = missingRelatedRulesForMapping(rules, ruleIndex, mapping);
+  if (!relatedRules.length) {
     return null;
   }
 
   const relativePath = normalizeGeneratedPath(mapping.relatedRulesOutput);
   const title = mapping.relatedRulesTitle ?? "Related Rules";
   const sections = buildRelatedRuleSections(
-    ruleIds,
+    relatedRules,
     rules,
     ruleIndex,
     mapping,
@@ -4991,7 +5120,9 @@ function collectRelatedRuleDocumentArtifact(
       statusSpan: pictographSpan(config, mapping.status),
       tags: versionTags(mappingVersions(mapping)),
       purposeParagraphs: [
-        "These rules are referenced by this ruleset reference but are not otherwise included in this generated class-specific ruleset.",
+        mapping.relatedRulesGroups?.length
+          ? "These rules are referenced by this ruleset reference but are not otherwise included in this generated class-specific ruleset. They are grouped by how the source rules characterize them."
+          : "These rules are referenced by this ruleset reference but are not otherwise included in this generated class-specific ruleset.",
       ],
       tableOfContents: buildSectionTableOfContents(sections),
       isRequirementsDocument: true,

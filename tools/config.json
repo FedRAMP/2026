@@ -462,6 +462,21 @@
         "linkTargetScope": "sameMappingOnly",
         "relatedRulesOutput": "reference/20x/a/related.md",
         "relatedRulesTitle": "20x Class A Related Rules",
+        "relatedRulesGroups": [
+          {
+            "title": "Mandatory Class A Rules",
+            "sourceRuleIds": ["FRC-CLA-MFR"]
+          },
+          {
+            "title": "Recommended Class A Rules",
+            "sourceRuleIds": ["FRC-CLA-RFR"]
+          },
+          {
+            "title": "Optional Class A Rules",
+            "sourceRuleIds": ["FRC-CLA-OFR"]
+          }
+        ],
+        "relatedRulesUngroupedTitle": "Other Related Rules",
         "emptyBehavior": "skip",
         "source": {
           "collection": "FRR",

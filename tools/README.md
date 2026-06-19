@@ -346,6 +346,8 @@ Mapping fields:
 - `linkTargetScope`: optional related-rule link visibility. Use `sameMappingOnly` for complete reference mappings that should not become fallback link targets for stakeholder-specific pages.
 - `relatedRulesOutput`: optional companion page path for directly related FRR rules that are referenced by this mapping but are not otherwise included by its filters.
 - `relatedRulesTitle`: optional page H1 for the companion related-rules page.
+- `relatedRulesGroups`: optional ordered groups for the companion page. Each group supplies a `title` and `sourceRuleIds`; a related rule is assigned to the first group whose source rule references it, so the ordering also resolves overlaps.
+- `relatedRulesUngroupedTitle`: optional heading prefix for related rules that are not referenced by a configured group.
 - `emptyBehavior`: `write` keeps an empty page, `skip` omits it when no rules match.
 - `includeEffectiveDates`: set to `false` to omit the top applicability block.
 - `status`: pictograph status for generated frontmatter.
@@ -367,6 +369,7 @@ Generated rule pages also support selected rich rule metadata:
 - `following_information` renders as numbered items and `following_information_bullets` renders as bullet items.
 - `reference_url_web_name` links a rule reference to another generated ruleset page through `rulesHref`.
 - `pain_timeframes` renders a PAIN timeframe table inside applicable rule variants.
+- Notification entries render their required human-readable `name` and link form, web, and email targets when possible. Non-link targets remain visible as supporting destination details.
 
 The default template is `templates/template.hbs`, with partials in `templates/partials/`. New templates can use the same view model as the default template: effective entries, flows, sections, requirements, definitions, and requirement metadata such as terms, controls, notes, examples, and references.
 
