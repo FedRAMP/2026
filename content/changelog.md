@@ -52,6 +52,49 @@ picto:
 - The `CDS` purpose now uses the defined term “FedRAMP Certification Data.”
 - Terminology and capitalization were normalized without changing force, scope, timeframes, or applicability in `FRD-FIN`, `FRD-FPR`, `AGU-USE-RCF`, `CDS-CSO-FID`, `CDS-UTC-AGA`, `FRC-APP-FIA`, `IVV-CSO-FIA`, `MAS-CSO-SUP`, `SCG-CSO-AUP`, `SCN-CSO-MAR`, `SCN-CSO-NOM`, `SCN-CSO-EMG`, `SCN-TRF-UPD`, `SDR-CSO-FRR`, and `SDR-CSF-ODP`; the `REC` purpose received the same editorial normalization.
 
+### Content Updates
+
+- [Initial Agency Authorization](https://preview.fedramp.gov/2026/agencies/use/initial/) and [The Agency System Security Plan](https://preview.fedramp.gov/2026/agencies/use/initial/ssp/): Added practical guidance for selecting, configuring, assessing, documenting, and authorizing an agency system that uses a FedRAMP Certified service.
+- [Accessing FedRAMP Certification Packages](https://preview.fedramp.gov/2026/agencies/use/packages/): Explained the transition from USDA Connect to provider trust centers, package access requirements, GRC integrations, and the August 2027 transition deadline.
+- [20x Packages](https://preview.fedramp.gov/2026/agencies/use/packages/20x/), [Rev5 Packages](https://preview.fedramp.gov/2026/agencies/use/packages/rev5/), [Certification Classes](https://preview.fedramp.gov/2026/agencies/use/classes/), and [Using FedRAMP Certifications](https://preview.fedramp.gov/2026/agencies/use/): Standardized package terminology and clarified how agencies should evaluate available evidence.
+- [Sponsoring a FedRAMP Certification](https://preview.fedramp.gov/2026/agencies/sponsoring/) and [Sponsoring Initial Certification](https://preview.fedramp.gov/2026/agencies/sponsoring/initial/): Clarified that agency sponsorship is a temporary legacy Rev5 path and that FedRAMP will stop accepting sponsored applications after June 11, 2027.
+- [Ongoing Agency Authorization](https://preview.fedramp.gov/2026/agencies/use/ongoing/) and [Agency POA&Ms](https://preview.fedramp.gov/2026/agencies/use/ongoing/poams/): Clarified agency responsibilities for Collaborative Continuous Monitoring and agency-owned weaknesses.
+- [Agency Rules](https://preview.fedramp.gov/2026/agencies/rules/) and [Agency Guidance](https://preview.fedramp.gov/2026/agencies/): Clarified legal and policy responsibilities, package reuse, and ongoing participation.
+- Updated agency support guidance for [CISA directives](https://preview.fedramp.gov/2026/agencies/support/cisa-directives/), [reporting concerns](https://preview.fedramp.gov/2026/agencies/support/concerns/), [support groups](https://preview.fedramp.gov/2026/agencies/support/groups/), [agency liaisons](https://preview.fedramp.gov/2026/agencies/support/liaisons/), and [general support](https://preview.fedramp.gov/2026/agencies/support/).
+- [Performing FedRAMP Assessments](https://preview.fedramp.gov/2026/assessors/fedramp-assessments/): Added an evidence-focused assessment philosophy centered on verification, validation, technical judgment, independence, and clear reporting.
+- [FedRAMP 20x Assessments](https://preview.fedramp.gov/2026/assessors/fedramp-assessments/20x/): Added guidance for assessing security outcomes, validation systems, living evidence, automated measurements, and KSI reporting.
+- [FedRAMP Rev5 Assessments](https://preview.fedramp.gov/2026/assessors/fedramp-assessments/rev5/): Explained the different expectations for Program Certification and legacy agency-sponsored assessments.
+- [Assessor Guidance](https://preview.fedramp.gov/2026/assessors/) and [Adopting Updated Assessment Requirements](https://preview.fedramp.gov/2026/assessors/updating/changes/): Corrected support links and standardized terminology for rules and independent assessment services.
+- [Addressing Rules](https://preview.fedramp.gov/2026/providers/implement/rules/): Added guidance explaining what it means to address and follow a FedRAMP rule, including applicability and unavailable information.
+- Updated provider implementation guidance covering [initial implementation](https://preview.fedramp.gov/2026/providers/implement/), [finding an assessor](https://preview.fedramp.gov/2026/providers/implement/assessor/), [Marketplace listing](https://preview.fedramp.gov/2026/providers/implement/marketplace/), [implementation work](https://preview.fedramp.gov/2026/providers/implement/work/), and [getting certified](https://preview.fedramp.gov/2026/providers/implement/get-certified/).
+- Updated provider planning guidance for [choosing a class](https://preview.fedramp.gov/2026/providers/start/class/), [path](https://preview.fedramp.gov/2026/providers/start/path/), [type](https://preview.fedramp.gov/2026/providers/start/type/), [working with advisors](https://preview.fedramp.gov/2026/providers/start/advisor/), and [getting started](https://preview.fedramp.gov/2026/providers/start/).
+- Marked [Rev5 guidance](https://preview.fedramp.gov/2026/providers/rev5/) and [Rev5 Controls](https://preview.fedramp.gov/2026/providers/rev5/controls/) as stable, while cleaning up provider [20x](https://preview.fedramp.gov/2026/providers/20x/), [KSI](https://preview.fedramp.gov/2026/providers/20x/key-security-indicators/), [updating](https://preview.fedramp.gov/2026/providers/updating/), and [provider overview](https://preview.fedramp.gov/2026/providers/) pages.
+- [FedRAMP Certification](https://preview.fedramp.gov/2026/certification/): Clarified what Certification establishes, how agencies reuse it, and why it is distinct from an agency ATO.
+- [Shared Responsibilities](https://preview.fedramp.gov/2026/shared-responsibilities/): Clarified agency authorization and SSP responsibilities, FedRAMP enforcement limits, assessor recognition, and advisory-service responsibilities.
+- [Using the Consolidated Rules](https://preview.fedramp.gov/2026/rules/): Improved terminology, corrected an example, and clarified how rules, definitions, applicability, and identifiers work together.
+- [FedRAMP Marketplace](https://preview.fedramp.gov/2026/marketplace/), [Source Data](https://preview.fedramp.gov/2026/sources/), [Support](https://preview.fedramp.gov/2026/support/), [FedRAMP Responsibilities](https://preview.fedramp.gov/2026/responsibilities/), and [Timeline](https://preview.fedramp.gov/2026/timeline/): Updated service descriptions, contact information, source terminology, navigation presentation, and human-readable dates.
+- Removed internal drafting metadata from public pages throughout the [overview](https://preview.fedramp.gov/2026/), [advisors](https://preview.fedramp.gov/2026/advisors/), [scope](https://preview.fedramp.gov/2026/scope/), [ruleset reference](https://preview.fedramp.gov/2026/reference/), [FedRAMP Authorization Act](https://preview.fedramp.gov/2026/authority/law/), [OMB Memorandum M-24-15](https://preview.fedramp.gov/2026/authority/m-24-15/), and [rescinded 2011 memorandum](https://preview.fedramp.gov/2026/authority/rescinded-2011-fedramp-memo/) collections.
+
+### Site Structure
+
+- Added [Addressing Rules](https://preview.fedramp.gov/2026/providers/implement/rules/) to the provider implementation navigation.
+- Added direct navigation links to the Legacy Documentation Reference, machine-readable rules, and FedRAMP support.
+- Removed the internal TO DO page from the site and build pipeline.
+- Added sticky, pruned navigation tabs and page feedback controls.
+
+### Generated Page Experience
+
+- Added compact applicability labels showing the certification type, path, class, and audience for generated rule subsets.
+- Improved generated notification requirements with descriptive names and direct links to forms, websites, and email destinations.
+- Added effective-date information to generated rule pages and grouped Class A related rules into mandatory, recommended, optional, and other sections.
+- Removed internal page-information callouts from generated reference indexes.
+- Widened the content layout, refined status pictographs, and consolidated site styling.
+
+### Tooling
+
+- Added content-style warnings for inconsistent FedRAMP Certification terminology and integrated them into the standard check command.
+- Expanded generation tests for applicability filtering, related-rule groups, notification rendering, and generated-page behavior.
+- Simplified repository agent instructions and added a reusable public branch changelog skill.
 
 ## 2026.06.17.01-preview
 

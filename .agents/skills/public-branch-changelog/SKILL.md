@@ -46,6 +46,7 @@ Produce a concise changelog for readers who need to understand what changed with
 ## Apply the changelog scope
 
 - Summarize this repository only.
+- Don't include changes to the changelog in the changelog.
 - Ignore `tools/rules/**`. Do not inspect or summarize submodule contents.
 - Do not treat `src/` or `html/` as independent source changes. Use them only to verify generated pages and URLs.
 - **Content updates:** Cover every changed public page under `content/`. State what changed for readers in no more than two sentences and link the public page. Group changes that only affect spelling, formatting, or metadata.
