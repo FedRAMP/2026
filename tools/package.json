@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "deploy": "bun run ./scripts/deploy.ts",
-    "build": "bun run ./scripts/build.ts && python3 ./scripts/postprocess.py",
+    "build": "bun run ./scripts/build.ts",
     "dev": "bun run ./scripts/dev.ts",
     "fix": "bun run fix:headers",
     "fix:headers": "bun run ./scripts/fix-headers.ts",
