@@ -88,7 +88,7 @@ FedRAMP Certification Profiles for Program Certification in the Consolidated Rul
 
 ### Agency Certification
 
-The **Agency Certification** path is the traditional agency partner or sponsor path, where a federal agency follows FedRAMP rules to perform an initial agency review of a cloud service offering and grants an agency-specific authorization to operate for the cloud service. The package is then submitted to FedRAMP for a completeness check and official FedRAMP Certification. After the initial FedRAMP Certification, the sponsoring agency becomes just another customer as the cloud service transitions to collaborative continuous monitoring following FedRAMP rules.
+The **Agency Certification** path is the traditional agency partner or sponsor path, where a federal agency follows FedRAMP rules to perform an initial agency review of a cloud service offering and grants an agency-specific authorization to operate for the cloud service. The package is then submitted to FedRAMP for a completeness check and official FedRAMP Certification. After the initial FedRAMP Certification, the sponsoring agency becomes just another customer as the cloud service transitions to Collaborative Continuous Monitoring following FedRAMP rules.
 
 This path is available for FedRAMP Rev5 Certification at Class B, C, or D; it is the **only** path for FedRAMP Class D Certification in the Consolidated Rules for 2026.
 

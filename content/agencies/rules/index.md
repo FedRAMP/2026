@@ -35,7 +35,7 @@ In practice, agencies should use these rules to:
 
 5. Notify FedRAMP when required, including after authorization and when requesting additional information beyond what FedRAMP normally requires.
 
-6. Review ongoing certification information and participate in collaborative continuous monitoring.
+6. Review ongoing certification information and participate in Collaborative Continuous Monitoring.
 
 7. Coordinate with FedRAMP when package conflicts, serious monitoring concerns, or agency-specific requirements arise.
 

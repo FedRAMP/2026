@@ -152,9 +152,9 @@ requests that are inappropriate or otherwise publicly addressed.
 
     ---
 
-    It's not your typical corporate help desk with a thousand agents who don't know the subject - ours is monitored primarily by senior technical staff and leadership.
+    It's not your typical corporate inbox with a thousand agents who don't know the subject - ours is monitored primarily by senior technical staff and leadership.
 
-    [The FedRAMP Help Desk](https://help.fedramp.gov/)
+    [E-mail info@fedramp.gov](mailto:info@fedramp.gov)
 
 </div>
 

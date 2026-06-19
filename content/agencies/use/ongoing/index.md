@@ -1,5 +1,5 @@
 ---
-description: "Explains the general expectations for ongoing authorization of a federal information system that uses a FedRAMP Certified cloud service offering, especially collaborative continuous monitoring stuff - points to the CCM rules but doesn't quote them."
+description: "Explains the general expectations for ongoing authorization of a federal information system that uses a FedRAMP Certified cloud service offering, especially Collaborative Continuous Monitoring stuff - points to the CCM rules but doesn't quote them."
 purpose: "Helps agencies know what the expectations are and where to find the explicit rules."
 google_doc: ""
 picto:
@@ -9,7 +9,7 @@ picto:
 
 Agencies are responsible for monitoring the federal information systems they authorize, including any FedRAMP Certified cloud service offerings used by those systems. FedRAMP Certification gives agencies reusable security information about the cloud service offering, but it does not replace the agency's own information security continuous monitoring program.
 
-Agencies should be active participants in collaborative continuous monitoring. That means reviewing ongoing FedRAMP Certification Data, staying responsive to provider communications, and maintaining durable agency contact paths that keep working through personnel changes. Agency security teams should build practical working relationships with cloud service provider security teams, grounded in mutual trust, clear expectations, and timely communication.
+Agencies should be active participants in Collaborative Continuous Monitoring. That means reviewing ongoing FedRAMP Certification Data, staying responsive to provider communications, and maintaining durable agency contact paths that keep working through personnel changes. Agency security teams should build practical working relationships with cloud service provider security teams, grounded in mutual trust, clear expectations, and timely communication.
 
 If an agency information system uses a cloud service offering that inherits controls from another FedRAMP package, the agency is also responsible for understanding and monitoring the inherited FedRAMP package where it affects the agency's use.
 

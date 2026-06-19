@@ -17,7 +17,7 @@ flowchart LR
   class B current;
 ```
 
-Partnering with a FedRAMP Recognized Independent Assessment Service (often referred to as an "independent assessor" or simply an "assessor") is a mandatory step for any cloud provider aiming for FedRAMP Certification Class B, C, or D.
+Partnering with a FedRAMP Recognized independent assessment service (often referred to as an "independent assessor" or simply an "assessor") is a mandatory step for any cloud provider aiming for FedRAMP Certification Class B, C, or D.
 
 These experts perform the initial assessment to obtain FedRAMP Certification and provide ongoing assessment to maintain it. Given their vital role, providers are encouraged to engage an assessor as early as possible.
 
@@ -27,9 +27,9 @@ A list of FedRAMP Recognized assessors can be found on the FedRAMP Marketplace u
 
 You can browse the list of FedRAMP Recognized assessors in alphabetical order, or you can filter and sort for the qualifications and expertise you are looking for in an assessor.
 
-!!! warning "FedRAMP Marketplace Independent Assessment Services Listings"
+!!! warning "FedRAMP Marketplace independent assessment services Listings"
 
-    FedRAMP provides information about Independent Assessment Services for the convenience of the public based on a formal FedRAMP Recognition process; listing in the FedRAMP Marketplace does represent an endorsement by FedRAMP for any business.
+    FedRAMP provides information about independent assessment services for the convenience of the public based on a formal FedRAMP Recognition process; listing in the FedRAMP Marketplace does represent an endorsement by FedRAMP for any business.
 
 ## Consider the Vibes
 

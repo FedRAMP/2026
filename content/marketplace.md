@@ -9,7 +9,7 @@ picto:
 
 # The FedRAMP Marketplace
 
-[FedRAMP’s Marketplace](https://www.fedramp.gov/marketplace/) is the federal government’s catalog for cloud service offerings, federal agency authorizations, and FedRAMP Recognized independent assessors. It is the authoritative place to confirm whether a cloud service offering has a FedRAMP designation, is working toward certification, or is connected to agency reuse.
+[FedRAMP’s Marketplace](https://www.fedramp.gov/marketplace/) is the federal government’s catalog for cloud service offerings, independent assessment services, and advisors. It is the authoritative place to confirm whether a cloud service offering has a FedRAMP designation, is working toward certification, or is connected to agency reuse.
 
 <div class="grid cards" markdown>
 
