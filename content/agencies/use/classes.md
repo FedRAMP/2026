@@ -4,7 +4,7 @@ purpose: "Agencies will understand why Certification classes aren't the same as 
 google_doc: "https://docs.google.com/document/d/1UdOIjketHNMeQrpmDVJdX8KrdKClvVQ7stp97KEYw9I/edit?tab=t.9414dt9x6r02"
 picto:
   source: person
-  status: placeholder
+  status: stable
 ---
 
 # FedRAMP Certification Classes

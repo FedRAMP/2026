@@ -32,7 +32,7 @@
       "title": "TO DO",
       "output": "todo.md",
       "source": "machine",
-      "status": "placeholder",
+      "status": "stable",
       "description": "A table showing all pages, their source, and their progress along with links to internal documentation only available to FedRAMP.",
       "purpose": "The FedRAMP team will have a simple place to see progress that is machine-generated."
     },

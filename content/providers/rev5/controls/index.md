@@ -6,7 +6,7 @@ purpose: "Folks will know how to approach the control baselines."
 google_doc: ""
 picto:
   source: person
-  status: placeholder
+  status: stable
 ---
 
 # Rev5 Controls

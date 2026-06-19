@@ -6,7 +6,7 @@ purpose: "Folks know what's expected in general and how to work through the rest
 google_doc: "https://docs.google.com/document/d/16nRI1Sr3oAxriPB-y-6aOSG5BttCcxV4go3_NEQD7Mc/edit?tab=t.7tck04b1dww4"
 picto:
   source: person
-  status: placeholder
+  status: stable
 ---
 
 # FedRAMP Rev5 Certification Rules

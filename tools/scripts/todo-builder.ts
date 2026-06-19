@@ -79,8 +79,14 @@ const TODO_GROUPS: Array<{
   {
     source: "person",
     sourceLabel: "Human-Written",
-    status: "stable",
-    statusLabel: "Stable",
+    status: "empty",
+    statusLabel: "Empty",
+  },
+  {
+    source: "machine",
+    sourceLabel: "Machine-Generated",
+    status: "empty",
+    statusLabel: "Empty",
   },
   {
     source: "person",
@@ -89,28 +95,10 @@ const TODO_GROUPS: Array<{
     statusLabel: "Placeholder",
   },
   {
-    source: "person",
-    sourceLabel: "Human-Written",
-    status: "empty",
-    statusLabel: "Empty",
-  },
-  {
-    source: "machine",
-    sourceLabel: "Machine-Generated",
-    status: "stable",
-    statusLabel: "Stable",
-  },
-  {
     source: "machine",
     sourceLabel: "Machine-Generated",
     status: "placeholder",
     statusLabel: "Placeholder",
-  },
-  {
-    source: "machine",
-    sourceLabel: "Machine-Generated",
-    status: "empty",
-    statusLabel: "Empty",
   },
 ];
 
@@ -588,6 +576,9 @@ function renderGroupedPageTables(
     const groupPages = pages.filter(
       (page) => page.source === group.source && page.status === group.status,
     );
+    if (groupPages.length === 0) {
+      return [];
+    }
     return [
       `## ${group.statusLabel} ${group.sourceLabel} Pages ${pictographPair(
         config,

@@ -2715,31 +2715,35 @@ describe("build-markdown", () => {
           'google_doc: ""',
           "picto:",
           "  source: machine",
-          "  status: placeholder",
+          "  status: stable",
           "---",
           "",
           PLACEHOLDER_STATUS_SPAN,
         ].join("\n"),
       );
       expect(contents).toContain("**Generated:** 2026-05-03T12:00:00.000Z");
+
+
       expect(contents).toContain(
-        `## Stable Human-Written Pages ${PERSON_PICTOGRAPH} ${STABLE_PICTOGRAPH}`,
+        `## Empty Human-Written Pages ${PERSON_PICTOGRAPH} ${EMPTY_PICTOGRAPH}`,
+      );
+      expect(contents).toContain(
+        `## Empty Machine-Generated Pages ${MACHINE_PICTOGRAPH} ${EMPTY_PICTOGRAPH}`,
       );
       expect(contents).toContain(
         `## Placeholder Human-Written Pages ${PERSON_PICTOGRAPH} ${PLACEHOLDER_PICTOGRAPH}`,
       );
       expect(contents).toContain(
-        `## Empty Human-Written Pages ${PERSON_PICTOGRAPH} ${EMPTY_PICTOGRAPH}`,
+        `## Placeholder Machine-Generated Pages ${MACHINE_PICTOGRAPH} ${PLACEHOLDER_PICTOGRAPH}`,
+      );
+      expect(contents).toContain(
+        `## Stable Human-Written Pages ${PERSON_PICTOGRAPH} ${STABLE_PICTOGRAPH}`,
       );
       expect(contents).toContain(
         `## Stable Machine-Generated Pages ${MACHINE_PICTOGRAPH} ${STABLE_PICTOGRAPH}`,
       );
-      expect(contents).toContain(
-        `## Placeholder Machine-Generated Pages ${MACHINE_PICTOGRAPH} ${PLACEHOLDER_PICTOGRAPH}`,
-      );
-      expect(contents).toContain(
-        `## Empty Machine-Generated Pages ${MACHINE_PICTOGRAPH} ${EMPTY_PICTOGRAPH}`,
-      );
+
+
       expect(contents).toContain(
         `| [Overview](index.md) :lucide-circle-arrow-out-down-right:<br> [Manual Page](index.md) | ${PERSON_PICTOGRAPH} ${EMPTY_PICTOGRAPH} | Manual description | Manual purpose | [:material-file-edit-outline:](https://docs.google.com/document/d/example/edit){ title="Link to FedRAMP Internal Google Doc" } |`,
       );
