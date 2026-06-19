@@ -1,182 +1,74 @@
 ---
 picto:
   source: person
-  status: placeholder
+  status: stable
 ---
 
 # The Agency System Security Plan
 
-An agency System Security Plan describes how an agency information system protects its information and supports its mission. When the system uses a FedRAMP Certified cloud service, the SSP should focus on the agency's use, configuration, integrations, procedures, and responsibilities.
+The [initial authorization process](index.md){ data-preview } leads to one System Security Plan for the agency information system. When the system uses a FedRAMP Certified cloud service, the SSP should explain how the agency uses that service and its security capabilities.
 
-The cloud service provider's FedRAMP Certification Package is reusable evidence about the provider's service. It is not the agency SSP, and the agency should not copy the provider's complete control implementation into its own plan.
+Create one SSP for the agency information system. Do not create a separate agency SSP for each cloud service it uses.
 
 !!! tip "Account for every selected control; detail only what the agency owns."
 
-    OMB Circular A-130 and the NIST Risk Management Framework require the agency's selected controls to be documented in the system security plan.
+    Include every control selected for the agency system. Describe the agency's implementation in detail. When the agency uses or relies on a provider capability, reference the FedRAMP Certification Package instead of copying the provider's implementation.
 
-    For controls implemented by the agency, describe the agency implementation. For inherited provider controls, identify the source of inheritance and reference the relevant FedRAMP Certification Package information.
+## What belongs in the SSP
 
-## One SSP For The Agency Information System
+The SSP should identify:
 
-Create an SSP for the agency information system, not a separate SSP for every external service it uses.
+- The authorized use, users, information, and system boundary.
+- The FedRAMP Certified offering, services, and features the agency will use.
+- The selected and tailored controls, including organization-defined parameters.
+- The agency's configuration, integrations, training, and operating procedures.
+- The provider capabilities the agency uses or relies on.
+- Agency common controls and other outside dependencies.
 
-An agency system may use several cloud services, agency common controls, enterprise security services, and locally operated components. The SSP should explain how those pieces work together to protect the system. Conversely, the same cloud service may support several agency systems with different use cases, data, configurations, and risk decisions; each system's authorization materials should address its own use.
+The provider's FedRAMP Certification Package contains evidence about the cloud service. Keep that evidence in the package. The agency SSP should point to it and describe the agency's own use.
 
-The agency authorizing official accepts the risk of operating the agency information system. FedRAMP does not accept that risk, and a FedRAMP Certification does not turn the provider's cloud service offering into a separately authorized agency system.
+## Document each selected control
 
-## Develop The SSP Throughout Authorization
+For each selected control or control enhancement, record how the agency system addresses it:
 
-Begin the SSP during control selection and system design by documenting planned control implementations. Update it as the agency selects a service, configures the tenant, tests integrations, assesses controls, and resolves findings. The version submitted for authorization should describe the system that will actually operate.
-
-Before completing the SSP, the agency should know:
-
-- The mission, business functions, users, and authorized use cases.
-- The system boundary, information flows, integrations, and external services.
-- The information types and approved security categorization.
-- The selected and tailored NIST SP 800-53 controls and organization-defined parameters.
-- The security capabilities needed to satisfy those controls.
-- Which service and features the agency will use.
-- The provider's customer responsibilities and Secure Configuration Guide.
-- The allocation of controls among the agency, agency common control providers, and cloud service provider.
-- The configuration and compensating controls the agency will implement.
-
-Writing generic control statements before these decisions are made—and never revisiting them—produces a plan that does not describe the actual system.
-
-## Build The Agency SSP
-
-### 1. Describe The Authorized System
-
-Document the system in terms that support the authorization decision:
-
-- Mission and business purpose.
-- System owner and accountable officials.
-- Authorized users and administrators.
-- Authorized and prohibited use cases.
-- Information types and security categorization.
-- Authorization boundary and environment of operation.
-- Major components, cloud services, agency enterprise services, connections, and third-party information resources.
-- Information flows into, within, and out of the system.
-- Privacy, records management, and other applicable requirements.
-
-Make clear which FedRAMP Certified offering, deployment model, service components, and features are included. A provider may sell services that are outside the boundary of its FedRAMP Certification.
-
-### 2. Record The Selected And Tailored Controls
-
-Start with the baseline associated with the system's approved security categorization. Apply tailoring, overlays, agency policy, privacy requirements, threat information, and mission-specific needs. Document the rationale for tailoring decisions and assign all organization-defined parameters.
-
-The SSP should contain the resulting control set selected for the agency system. It should not contain every control in the provider's Certification Package merely because that package is available.
-
-### 3. Allocate Responsibility
-
-For each selected control and control enhancement, determine where it is implemented:
-
-| Allocation | What The Agency SSP Should Say |
+| How the control is addressed | What to document |
 | :--- | :--- |
-| Agency system-specific | Describe the agency implementation, responsible role, scope, frequency, parameters, dependencies, and evidence. |
-| Agency common control | Identify the agency common control provider and authorization or evidence the system inherits. Document any system-specific dependency. |
-| Provider-inherited | Identify the FedRAMP Certified service and the Certification Package information or demonstrated capability relied upon. Document the configuration or conditions required for inheritance. |
-| Not applicable after tailoring | Record the approved tailoring rationale in accordance with agency policy. |
+| The agency implements it | Describe what the agency does, who is responsible, where the control applies, how often it runs, and what evidence it produces. |
+| The agency uses a provider capability | Describe how the agency configures or uses the capability. Reference the provider's Secure Configuration Guide and relevant FedRAMP Certification Data. |
+| The agency relies on a provider capability without configuring it | Reference the package evidence and record any assumptions or limits on that reliance. |
+| The system inherits an agency common control | Identify the common control provider and the authorization or evidence being inherited. |
+| The control was tailored out | Record the approved rationale required by agency policy. |
 
-Allocation may occur below the control level. A provider may implement one part of a control while the agency implements another. Do not label a control inherited if the agency still has a configuration, procedural, integration, or monitoring responsibility necessary for the control to work.
+## Write the agency implementation
 
-### 4. Write Agency Implementation Statements
+An implementation statement should describe the work, not repeat the control text. Answer the questions an assessor will need:
 
-An agency implementation statement should be specific enough to implement, assess, and monitor. It should answer:
+- Who owns the activity?
+- What does the agency configure or operate?
+- Where does it apply?
+- When does it occur?
+- What provider capability or common control does it depend on?
+- What evidence shows that it works?
 
-- **Who** performs or owns the activity?
-- **What** technical, physical, or procedural mechanism is used?
-- **Where** does it apply within the authorized system?
-- **When** or how often does it occur?
-- **Which parameters** or agency policy values apply?
-- **What evidence** demonstrates that it is operating as intended?
-- **What dependencies** must the provider, an agency common control, or another system satisfy?
+Start with the agency action, then name the provider capability that makes the action possible.
 
-Avoid statements that only repeat the NIST control text or say that the agency is "compliant." Describe what actually happens.
+For identity and access management, the SSP might explain that the agency configures the tenant to use its identity provider, manages agency groups and privileges, protects administrative accounts, and reviews access. The statement should reference the provider's federation, session, and authorization capabilities.
 
-### 5. Reference Provider Capabilities For Inherited Controls
+For logging, the SSP might explain that the agency enables the required events, sends them to the agency SIEM, configures alerts, reviews activity, and investigates incidents. The statement should reference the provider's event generation, protection, retention, and export capabilities.
 
-NIST defines a security or privacy capability as a combination of mutually reinforcing controls implemented through technical, physical, and procedural means to achieve a common purpose. A FedRAMP Certification Package may demonstrate a provider capability through multiple controls, Key Security Indicators, policies, architecture information, assessment results, and ongoing evidence.
+Agency training is an agency implementation. The provider's workforce training does not replace training for agency users and administrators.
 
-For a provider-inherited control, the agency SSP can:
+## Assess and maintain the SSP
 
-1. Identify the selected control or control portion.
-2. Identify the FedRAMP Certified cloud service and package version or maintained source.
-3. Reference the relevant provider capability and supporting Certification Package information.
-4. State the assumptions, dependencies, and agency configuration required to inherit it.
-5. Explain how the agency will monitor changes to the provider capability over time.
+Assess the controls the agency implements and verify that its configuration works with the provider capabilities. Reuse the FedRAMP Certification Package as evidence for the provider's work.
 
-Do not paste provider implementation statements into the agency SSP. A durable reference to maintained FedRAMP Certification Data is more accurate and easier to keep current than a static copy.
+Keep agency Plans of Action and Milestones for weaknesses and actions the agency owns or accepts. Do not copy provider vulnerabilities into the agency POA&M unless they create an agency action, such as restricting use, adding a safeguard, or moving to another service.
 
-## Example Control Allocations
-
-The exact allocation depends on the service and agency architecture, but these examples show the intended level of documentation.
-
-### Awareness And Training
-
-The provider's training program for its workforce does not train agency users to use the service securely. For a selected awareness and training control, the agency SSP should describe the agency's training, rules of behavior, role-based instruction, completion frequency, and evidence.
-
-The SSP may reference provider training evidence only where the agency system specifically inherits a provider-operated portion of the control.
-
-### Identification And Authentication
-
-Identity and authentication capabilities are provided by the service but implemented by the agency:
-
-- The provider supplies and maintains the authentication, federation, session, and authorization capabilities described in the FedRAMP package.
-- The agency configures the tenant to use the agency identity provider, manages agency identities and groups, assigns privileges, protects administrative accounts, and performs access reviews.
-
-The agency SSP should reference the provider capabilities and describe the agency identity provider integration and account management procedures.
-
-### Audit Logging And SIEM Integration
-
-Logging and monitoring control capabilities are provided by the service but implemented by the agency:
-
-- The provider generates, protects, retains, and makes specified service events available.
-- The agency enables the necessary event categories, exports or ingests the events into the agency SIEM, configures alerts, reviews activity, investigates events, and retains agency copies as required.
-
-The SSP should document the agency configuration and monitoring process and reference the provider capabilities.
-
-### Data Protection
-
-The provider may protect stored and transmitted data inside the certified service, while the agency decides what information may enter the service, configures sharing and retention, manages agency-held keys when applicable, and controls data exported to other systems.
-
-The SSP should describe those agency decisions and dependencies rather than reproduce the provider's cryptographic or infrastructure implementation.
-
-## Assessment And Evidence
-
-Assess the controls and control portions implemented by the agency. Assess that the agency implementation works with the provider capabilities and that all conditions for inheritance are satisfied.
-
-Examples of agency evidence include:
-
-- Approved configuration exports or automated configuration results.
-- Identity provider, account lifecycle, and privileged access records.
-- SIEM ingestion tests, alerts, review records, and incident tickets.
-- Training completion and rules-of-behavior acknowledgments.
-- Data flow tests, retention settings, backup tests, and recovery exercises.
-- Procedures, approvals, access reviews, and change records.
-
-Use the FedRAMP Certification Package and ongoing Certification Data as evidence for provider-implemented controls. If the agency finds a package conflict or believes additional information is necessary, follow the [Agency Use rules](../../rules/agency-use.md){ data-preview } rather than creating an uncoordinated reassessment of the provider.
-
-## Document Risk And Authorization Conditions
-
-The SSP should make the responsibility boundary understandable to the authorizing official. The larger authorization package should clearly identify:
-
-- Weaknesses in agency-responsible controls.
-- Provider risks that materially affect the agency use case.
-- Compensating controls and use restrictions.
-- Assumptions and dependencies required to inherit controls.
-- Residual risk accepted by the authorizing official.
-- Conditions that would require reassessment, reauthorization, suspension, or termination of use.
-
-Maintain agency Plans of Action and Milestones for weaknesses, decisions, and corrective actions the agency owns or accepts. Do not copy every provider vulnerability or provider corrective action into the agency POA&M unless the agency has a Plan of Action and Milestones as a result of those vulnerabilities (such as a plan to move to a different cloud service offering).
-
-## Maintain The SSP Over Time
-
-Keep the SSP aligned with the operating information system, not the configuration that existed on authorization day. Update it when:
+Update the SSP when:
 
 - The agency changes the use case, information, boundary, integrations, or configuration.
-- The provider changes relevant capabilities, customer responsibilities, or Secure Configuration Guidance.
-- Ongoing FedRAMP Certification Data changes the agency's understanding of risk.
+- The provider changes a capability the agency uses or changes its Secure Configuration Guide.
 - Agency common controls or enterprise services change.
-- Assessment or monitoring identifies an inaccurate implementation statement or an unmet dependency.
+- Assessment or monitoring shows that an implementation statement is wrong or incomplete.
 
-Reuse standard agency control implementations, common controls, configuration profiles, and machine-readable components when possible. The agency SSP should be concise because it references authoritative sources—not because it omits selected controls or obscures responsibility.
+A concise SSP still accounts for every selected control and makes agency responsibilities clear.

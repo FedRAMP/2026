@@ -1,72 +1,41 @@
 ---
 picto:
   source: person
-  status: placeholder
+  status: stable
 ---
 
 # Accessing FedRAMP Certification Packages
 
-A FedRAMP Certification Package contains security information about the FedRAMP Certified cloud service offering. The information in the FedRAMP Certification Package is about how the cloud service provider maintains their cloud service offering. Federal agencies typically do not have control over the configuration choices reported in the FedRAMP Certification Package, since these are controlled by the cloud service provider.
+A FedRAMP Certification Package contains security information about a FedRAMP Certified cloud service offering and how the provider maintains it. Federal agencies typically cannot change the provider-controlled configurations described in the package.
 
-Historically, FedRAMP collected all Certification Package information into a single file sharing repository operated by OMB (OMB MAX) and then USDA (USDA Connect); however, collection of this information within
-legacy file-sharing folders in a single platform creates considerable risk and burden. All cloud service providers are currently transitioning to the use of FedRAMP-compatible Trust Centers (with a deadline of
-August 2027) to ensure that Certification Package information can be made available directly to agencies via modern services.
+FedRAMP historically collected Certification Package information in a single file-sharing repository operated first by OMB through OMB MAX, then by USDA through USDA Connect. Keeping this information in legacy folders on one platform creates risk and administrative burden. Cloud service providers are transitioning to FedRAMP-compatible trust centers by August 2027 so they can make Certification Package information available directly to agencies.
 
 !!! tip "GRC automation tools will bridge the gap!"
 
-    FedRAMP-compatible Trust Centers must make Certification Data available via API so that an agency GRC automation tool can continuously receive appropriately formatted data without humans needed to manually copy or download files.
+    FedRAMP-compatible trust centers must make Certification Data available through APIs. Agency GRC automation tools can then receive properly formatted data without staff manually copying or downloading files.
 
-The FedRAMP Marketplace identifies how a package is available, whether it is in a trust center or still in the legacy USDA connect.  When looking at the vendors listing in the marketplace, the package location will be listed on the top right.  For those packages that are self hosted, you will be directed to the CDS compliant trust center directly, or directed to contact the vendor through the contacts listed in the marketplace. For those vendors that are still leveraging a FedRAMP managed through USDA Connect, the same location will direct you to a package access request form, which must be signed by your agency’s Authorizing Official.
+The FedRAMP Marketplace shows how to access each package in the upper-right corner of the provider's listing. For self-hosted packages, it links to a trust center or provides contacts for requesting access. For packages still in the FedRAMP-managed USDA Connect repository, it links to a package access request form that the agency's authorizing official must sign.
 
-## Using FedRAMP-Compatible Trust Centers
+## Using FedRAMP-Compatible trust centers
 
-![Trust Center Example](../../../assets/accessing-packages-trust-center.png)
+![ trust center Example](../../../assets/accessing-packages-trust-center.png)
 
-The new process for accessing FedRAMP data will be managed completely by CSPs, by following the new FedRAMP  Certification Data Sharing ruleset.  FedRAMP will no longer play middle man between CSP information and Federal Agencies, nor will we dictate how commercial data that does not affect federal information be protected and disseminated.  This change will ensure agencies have access to the data they need faster, while giving CSPs the flexibility to control access to what matters most.
+Cloud service providers will manage package access under the FedRAMP Certification Data Sharing rules. FedRAMP will no longer act as an intermediary or dictate how providers protect and distribute commercial data that does not affect federal information. Agencies will receive needed data faster, while providers retain control over sensitive commercial information.
 
-It is important to remember that security information for a commercial entity is owned by that corporate entity.  Decisions around ownership, maintenance, and dissemination should be made by the CSP, not made by the government.  If a CSP does not want to do business with a specific agency, they have the ability to deny access requests.  FedRAMP must be notified, but this is a business decision.
+Commercial security information belongs to the company that produces it. The cloud service provider decides how to maintain and distribute that information. A provider may deny an access request if it does not want to do business with an agency. The provider must notify FedRAMP, but the decision remains a business matter.
 
-Most trust centers that adhere to the  Certification Data Sharing ruleset have the ability to be compliant with most Governance, Risk, and Compliance (GRC) Tools on the market.  GRC tools can simplify an agency’s view into enterprise level risk in near real time when integrated into the multitude of CSP trust centers.  FedRAMP does not endorse a specific tool and does not provide funding for agency GRC tooling.
+Most trust centers that follow the Certification Data Sharing rules can integrate with common Governance, Risk, and Compliance (GRC) tools. These integrations can give agencies a near-real-time view of enterprise risk across multiple cloud services. FedRAMP does not endorse a specific tool or fund agency GRC tooling.
 
 ## Using USDA Connect
 
 ![Legacy Example](../../../assets/accessing-packages-legacy.png)
 
-For legacy Rev5 packages, FedRAMP has traditionally hosted and managed access control for CSPs in the FedRAMP Repository in connect.gov for all Low and Moderate CSPs. This has allowed us to ensure consistency in structure and access across the federal government.
+For legacy Rev5 Low and Moderate packages, FedRAMP has traditionally hosted the FedRAMP Repository in connect.gov and managed access on behalf of cloud service providers. This gave the federal government a consistent package structure and access process.
 
-The initial steps to access FR hosted packages requires a .mil or .gov email address and an OMB MAX.gov account. The requesters submit the FedRAMP Package Access Request Form, which is manually reviewed by the FedRAMP PMO and grants access to the Secure Repository (SR), with access limits (time/folders) based on role and functions.
-
-All packages within the connect.gov portal will have the same folder structure to provide a consistent experience for CSPs, 3PAOs, and Agencies alike.
-
-“CSP NAME” Archive
-“CSP NAME” ATO Letters
-“CSP NAME” Continuous Monitoring
-“CSP NAME” Annual Assessments
-“CSP NAME” AA YYYY
-“CSP NAME” AA YYYY - POA&M
-“CSP NAME” AA YYYY - SAP
-“CSP NAME” AA YYYY - SAR
-“CSP NAME” AA YYYY - SSP
-“CSP NAME” AA YYYY - SSP Attachments
-“CSP NAME” Incident Information & Forms
-“CSP NAME” POA&M & Inventory
-“CSP NAME” Deviation Requests
-“CSP NAME” Significant Changes
-“CSP NAME” Vulnerability Scans
-“CSP NAME” Container Scans
-“CSP NAME” DB Scans
-“CSP NAME” OS Scans
-“CSP NAME” Web Scans
-“CSP NAME” Initial ATO Assessment
-“CSP NAME” POA&M
-“CSP NAME” SAP
-“CSP NAME” SAR
-“CSP NAME” SSP
-“CSP NAME” SSP Attachments
-“CSP NAME” PMO Review
-
-Please note, with the inception of CR26, no new packages will be created in the connect.gov repository starting on Dec 1, 2026.  It is expected that CSPs will transition to their own Certification Data Sharing complaint trust center as the expected shutdown date of all FedRAMP managed repositories is Feb 2, 2028.
+Access to FedRAMP-hosted packages requires a `.mil` or `.gov` email address and an OMB MAX.gov account. The requester submits the FedRAMP Package Access Request Form. The FedRAMP PMO reviews the form and grants time- and folder-limited access to the Secure Repository based on the requester's role and duties.
 
 ### Legacy Class D (High) Repositories
 
-Legacy Rev 5 Class D (High) certification packages have always been managed independently by CSPs, based on previous guidance.  The only requirements levied were that the environment must be Class D Authorized, access must be controlled based on need to know by CSPs, and FedRAMP must be provided access on an as needed basis.  This approach was inefficient, costly for CSPs, and not in line with best practices.  Current self managed Rev 5 Class D Repositories have until Aug 1, 2027 to transition to a Certification Data Sharing complaint trust center.
+Cloud service providers have always managed legacy Rev5 Class D (High) Certification Packages under previous guidance. The repository had to be Class D Authorized, the provider had to restrict access based on need to know, and FedRAMP had to receive access as needed. This approach was costly and inefficient.
+
+Existing self-managed Rev5 Class D repositories must transition to a FedRAMP-compatible trust center by August 1, 2027.

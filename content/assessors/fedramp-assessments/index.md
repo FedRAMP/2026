@@ -1,37 +1,53 @@
 ---
 picto:
   source: person
-  status: empty
+  status: stable
 ---
 
 # Performing FedRAMP Assessments
 
-During initial assessments, assessors act as impartial investigators who validate live processes, not just audits paperwork that was developed at a point-in-time. They are required to scrutinize both the automated tools and the human procedures that a provider uses to test KSI validations, verifying that these processes are effective, have integrity, and cover the entire system without any gaps.
+FedRAMP assessors establish whether a cloud service provider is actually doing what they think they are doing and producing outcomes that they intend to produce. This requires more than checking that the right words appear in a package.
 
+The [Independent Verification and Validation rules](../rules/independent-verification-and-validation.md){ data-preview } divide the work into two questions:
 
-Here’s how an assessor should approach an initial assessment:
-Focus on Live Processes, Not Just Documents:
-An assessor's primary goal is to verify the implementation of the processes (both machine-based and non-machine-based) behind a cloud provider's KSIs. They need to go beyond simply reading a procedure document, and assess whether those procedures are consistently followed by cloud provider systems and personnel in a live operational environment.
-Prioritize Dynamic Verification over Static Evidence:
-Assessors should not rely on static artifacts like screenshots or configuration files as primary evidence. Instead, they need to validate that a process creates its intended security outcome through dynamic methods. This includes live, over-the-shoulder observation, independent testing, and direct interaction with a system to confirm that a claimed result is real and verifiable.
-Employ a Hybrid Assessment Method:
-The assessment needs to be a blend of two approaches, and assessors need to document which is used for each aspect of their assessment:
-Quantitative: Using objective, data-driven analysis (e.g., analyzing raw vulnerability scan data, log files, or system metrics).
-Qualitative: Using expert judgment informed by engaging the provider’s experts in discussions to understand design decisions, operational trade-offs, and the "why" behind their processes.
-Deliver Factual Summaries, Not Final Judgments:
-Assessors need to deliver a high-level summary of their findings for each KSI as part of the final certification package submitted to FedRAMP. This report presents objective evidence and risk without offering an overall recommendation for authorization. The decision to grant an authorization is the sole responsibility of a federal agency's authorizing official, who uses this information to make their own risk-based determination.
+1. **Verification:** Did the provider implement what it documented?
+2. **Validation:** Does that implementation produce the intended results?
 
+Answer both questions against the operating cloud service. Documentation explains what to inspect, but it cannot prove that a measure exists or works. Assessors should inspect the technical implementation, observe live processes, test results, and trace important claims to reliable sources.
 
-FedRAMP 20x streamlines ongoing assessments by having cloud providers prove compliance through their own automated, real-time monitoring. This model reduces the need for constant manual assessor checks and refocuses their expertise on critical oversight. An assessor's essential role is now concentrated on three key areas during ongoing assessments:
+## Use evidence and judgment
 
+Some findings come from direct measurement. Others require technical judgment.
 
-Significant Change Evaluation:
+Assessors should use quantitative evidence where it answers the question: configuration data, event records, source data, metrics, test results, or a complete population of automated checks. Representative sampling remains useful when full review adds little value or cannot be performed.
 
+Qualitative work still matters. Speak with the provider's engineers and other experts to understand design choices, operating limits, and failure modes. Then test those explanations through independent research and technical review.
 
-When a significant change occurs, assessors need to evaluate its impact on a cloud offering's infrastructure and underlying security implementations. Their goal is to confirm that the modification has not introduced new vulnerabilities or degraded a cloud provider’s automated monitoring capabilities. They achieve this by reviewing documentation, validating the security impact of the change, and testing modified security implementations.
+Collaboration does not weaken independence. Assessors may identify unclear evidence, discuss better testing methods, and offer advice that improves security or reporting. They must keep enough distance to challenge the provider's claims and report disagreements plainly.
 
+!!! warning "The Consolidated Rules for 2026 expects assessment of each FedRAMP rule!"
 
-Annual Assessments:
-During annual assessment reviews, assessors test the effectiveness and reliability of a cloud provider’s entire continuous monitoring program, rather than just re-testing controls. This process confirms ongoing compliance and operational effectiveness, ensuring automated processes meet FedRAMP standards and rules.
-Optional Periodic Reviews:
-Cloud providers may optionally choose to engage assessors for additional periodic reviews prior to their required annual assessments. The timing, scope, and focus of these reviews are set by the cloud provider, often based on internal risk management, organizational needs, or the desire for additional third-party assurance.
+    Every single applicable FedRAMP rule provides important information about a provider's
+    security program and approach; each applicable FedRAMP rule must be assessed. The addition
+    of hundreds of FedRAMP rules expands the scope of a FedRAMP independent assessment
+    considerably, but in general these assessments should be quick and simple unless the
+    particular FedRAMP rule is a gnarly one.
+
+## Report what the assessment found
+
+Assessment summaries should tell FedRAMP and agency customers:
+
+- What the assessor examined and how.
+- What evidence supported the result.
+- Where the implementation worked as described.
+- Where it failed, lacked support, or remained disputed.
+- What risks or limits matter to a potential customer.
+
+The provider includes these summaries in its Security Decision Record and Certification Package Overview. The assessor must verify that the provider did not change their meaning.
+
+FedRAMP does not require a separate Security Assessment Plan or Security Assessment Report for Program Certification. The assessment record belongs with the maintained Certification Package, close to the security decisions and evidence it evaluates.
+
+The specific method for assessing FedRAMP Practices changes by Certification Type:
+
+- [FedRAMP 20x assessments](20x.md){ data-preview } examine outcome-based Key Security Indicators and their validation systems.
+- [FedRAMP Rev5 assessments](rev5.md){ data-preview } examine Rev5 Controls and must also account for the differences between Program Certification and legacy agency-sponsored assessments.
