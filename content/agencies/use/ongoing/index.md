@@ -4,6 +4,8 @@ picto:
   status: stable
 ---
 
+# Ongoing Agency Authorization
+
 Agencies are responsible for monitoring the federal information systems they authorize, including any FedRAMP Certified cloud service offerings used by those systems. FedRAMP Certification gives agencies reusable security information about the cloud service offering, but it does not replace the agency's own information security continuous monitoring program.
 
 Agencies should be active participants in Collaborative Continuous Monitoring. That means reviewing ongoing FedRAMP Certification Data, staying responsive to provider communications, and maintaining durable agency contact paths that keep working through personnel changes. Agency security teams should build practical working relationships with cloud service provider security teams, grounded in mutual trust, clear expectations, and timely communication.

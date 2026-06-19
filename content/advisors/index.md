@@ -1,6 +1,8 @@
 ---
 title: "Advisors"
 icon: material/head-question-outline
+hide:
+  - toc
 picto:
   source: person
   status: stable

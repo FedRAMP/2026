@@ -1,6 +1,8 @@
 ---
 title: "Agencies"
 icon: material/bank-outline
+hide:
+  - toc
 picto:
   source: person
   status: stable

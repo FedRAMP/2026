@@ -404,7 +404,27 @@ extra_javascript = [
 
 [project.extra]
 homepage = "/2026"
-generator = false
+
+
+[project.extra.analytics]
+provider = "google"
+property = "G-HBYXWFP794"
+
+[project.extra.analytics.feedback]
+title = "Was this page helpful?"
+
+[[project.extra.analytics.feedback.ratings]]
+icon = "material/emoticon-happy-outline"
+name = "This page was helpful"
+data = 1
+note = "Thanks for your feedback!"
+
+[[project.extra.analytics.feedback.ratings]]
+icon = "material/emoticon-sad-outline"
+name = "This page could be improved"
+data = 0
+note = "Thanks for your feedback!"
+
 
 [project.extra.tags]
 Rev5 = "rev5"
@@ -429,8 +449,10 @@ features = [
   "navigation.instant.prefetch",
   "navigation.instant.progress",
   "navigation.path",
+  "navigation.prune",
   "navigation.sections",
   "navigation.tabs",
+  "navigation.tabs.sticky",
   "navigation.top",
   "navigation.tracking",
   #"navigation.expand",

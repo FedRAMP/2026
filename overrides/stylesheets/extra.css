@@ -17,6 +17,10 @@ h3 {
     font-weight: 100 !important;
 }
 
+.md-grid {
+  max-width: 1440px;
+}
+
 .subset-applicability {
     line-height: 1.65;
     margin: 0 0 0.8rem;

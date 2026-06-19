@@ -1,6 +1,8 @@
 ---
 title: "Assessors"
 icon: material/eye-check-outline
+hide:
+  - toc
 picto:
   source: person
   status: stable

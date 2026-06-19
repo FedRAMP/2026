@@ -1,5 +1,7 @@
 ---
 icon: material/gavel
+hide:
+  - toc
 picto:
   source: person
   status: stable

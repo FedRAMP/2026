@@ -1,6 +1,8 @@
 ---
 title: "Providers"
 icon: material/cloud-lock-outline
+hide:
+  - toc
 picto:
   source: person
   status: stable
