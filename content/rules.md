@@ -1,7 +1,4 @@
 ---
-description: "Using the FedRAMP Consolidated Rules."
-purpose: "Explains the structure of the FedRAMP Consolidated Rules, how to read through them, how they apply, and how to use them."
-google_doc: ""
 picto:
   source: person
   status: stable
@@ -31,7 +28,7 @@ that explain FedRAMP's expectations for:
 - **Agencies**: Executive branch federal agencies seeking to meet statutory and policy requirements for information security while using cloud services within the scope of FedRAMP.
 - **Advisors**: Advisory services that wish to be listed on the FedRAMP Marketplace.
 
-FedRAMP Rules are structured as follows:
+FedRAMP Consolidated Rules are structured as follows:
 
 1. **Consolidated Rules** are the combined unified explanations of how things should be done with FedRAMP.
 2. **Rulesets** are the top-level collections of rules within the Consolidated Rules, grouped by process or subject.
@@ -45,7 +42,7 @@ information about FedRAMP and the rules (like this page). It is **only** intende
 not designed for actual direct use in the implementation of an information security program that seeks to obtain and
 maintain FedRAMP Certification.
 
-The original consolidated rules, with rich metadata designed for use in modern tools, is maintained in a structured machine-readable
+The original FedRAMP Consolidated Rules, with rich metadata designed for use in modern tools, is maintained in a structured machine-readable
 JSON format. Once a stakeholder is ready to move past reviewing the human-readable reference and into the actual
 implementation of the FedRAMP Consolidated Rules, they should rely on the original machine-readable rules instead of this website.
 
@@ -58,8 +55,8 @@ Rulesets has a purpose that is explained in the introduction, followed by subset
 
 ### Applicability
 
-There are hundreds of FedRAMP Rules that apply to different stakeholders in different ways; not all rules apply
-to everyone at every time. Applicability varies by FedRAMP Ruleset, subset, and individual rules.
+There are hundreds of FedRAMP rules that apply to different stakeholders in different ways; not all rules apply
+to everyone at every time. Applicability varies by ruleset, subset, and individual rules.
 
 The primary applicability indicators are:
 
@@ -76,7 +73,7 @@ many cases the definitions provide considerable clarity and specificity that is 
 rule.
 
 Terms that are used in a rule are displayed after each rule for quick reference, and included in an array in the
-underlying machine-readable rules. It is impossible to properly address a FedRAMP Rule that uses a defined term
+underlying machine-readable rules. It is impossible to properly address a FedRAMP rule that uses a defined term
 without also applying the specific FedRAMP Definition for the term.
 
 ## FedRAMP Subsets
@@ -98,7 +95,7 @@ Other subsets will be based on tasks and the applicability will vary.
 
 ## FedRAMP Rules
 
-FedRAMP Rules are organized statements that describe who it applies to, the force of the rule, and what action or condition is expected.
+FedRAMP rules are organized statements that describe who it applies to, the force of the rule, and what action or condition is expected.
 They are designed to be applied within context of the entire FedRAMP Consolidated Rules, including the FedRAMP Definitions and
 other rules.
 
@@ -115,7 +112,7 @@ Even apparently simple and straightforward rules often require application withi
     This means the provider is responsible, the action is required, and the rule explains what must be supplied and to whom.
 
     - This rule does not explain how providers will "supply" the certification data because that is subject to other rules.
-    - ""[Certification data](definitions.md#certification-data){ data-preview }" and "[all necessary parties](definitions.md#all-necessary-parties){ data-preview }" are official FedRAMP terms with a specific definition that add
+    - "[Certification data](definitions.md#certification-data){ data-preview }" and "[all necessary parties](definitions.md#all-necessary-parties){ data-preview }" are official FedRAMP terms with a specific definition that add
     intent to this example rule
     - "Current" is a plain-language word that is meant to convey something that is the most up to date, based on common usage and definitions
 
@@ -133,7 +130,7 @@ FedRAMP uses capitalized key words for the force of each rule based on [IETF RFC
 
 ### Identifiers
 
-Each FedRAMP Rule is identified by a triplet of 3 letter identifiers: the ruleset, the subset, and an individual rule key based on a human-readable name. Together, these form a stable rule identifier in the format `SET-SUBSET-KEY`.
+Each FedRAMP rule is identified by a triplet of 3 letter identifiers: the ruleset, the subset, and an individual rule key based on a human-readable name. Together, these form a stable rule identifier in the format `SET-SUBSET-KEY`.
 Rules should always be referred to by their stable rule identifier in code or writing, but should also include their name in discussions or writings for humans. Humans should be careful using the name or rule key themselves, as these are often
 duplicated across rulesets and subsets. To avoid any confusion, always ensure that other folks know what set and subset you are discussing before providing the key or name by itself.
 
@@ -159,7 +156,7 @@ duplicated across rulesets and subsets. To avoid any confusion, always ensure th
 
 ### It's Not a Trap!
 
-FedRAMP Rules are intentionally crafted to encourage flexibility and avoid opinionated implementations unless absolutely necessary.
+FedRAMP rules are intentionally crafted to encourage flexibility and avoid opinionated implementations unless absolutely necessary.
 Folks with traditional compliance backgrounds are often skeptical of this approach due to historical conflicts with reviewers and
 independent assessors who expected to see specific implementations... but it's not a trap.
 

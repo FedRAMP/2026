@@ -1,7 +1,4 @@
 ---
-description: "Overview of the FedRAMP rules that apply to agencies, how they are structured, and how they relate to the FedRAMP Authorization Act and OMB Memorandum M-24-15."
-purpose: "Agencies understand that FedRAMP rules summarize legal and policy expectations, but do not replace agency legal and policy analysis."
-google_doc: "https://docs.google.com/document/d/1UdOIjketHNMeQrpmDVJdX8KrdKClvVQ7stp97KEYw9I/edit?tab=t.fwm1gszdlzff"
 picto:
   source: person
   status: stable
@@ -29,13 +26,13 @@ In practice, agencies should use these rules to:
 
 2. Confirm when FedRAMP applies to an agency cloud use case.
 
-3. Reuse FedRAMP Certification packages and avoid duplicative assessment work.
+3. Reuse FedRAMP Certification Packages and avoid duplicative assessment work.
 
 4. Complete agency authorization activities for federal information systems that use FedRAMP Certified cloud service offerings.
 
 5. Notify FedRAMP when required, including after authorization and when requesting additional information beyond what FedRAMP normally requires.
 
-6. Review ongoing certification information and participate in collaborative continuous monitoring.
+6. Review ongoing certification information and participate in Collaborative Continuous Monitoring.
 
 7. Coordinate with FedRAMP when package conflicts, serious monitoring concerns, or agency-specific requirements arise.
 

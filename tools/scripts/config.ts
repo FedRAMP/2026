@@ -72,6 +72,11 @@ export interface RuleDocumentSourceConfig {
   groupBy?: RuleDocumentGrouping;
 }
 
+export interface RelatedRulesGroupConfig {
+  title: string;
+  sourceRuleIds: string[];
+}
+
 export interface RuleDocumentMappingConfig {
   id: string;
   title?: string;
@@ -84,6 +89,8 @@ export interface RuleDocumentMappingConfig {
   linkTargetScope?: RuleDocumentLinkTargetScope;
   relatedRulesOutput?: string;
   relatedRulesTitle?: string;
+  relatedRulesGroups?: RelatedRulesGroupConfig[];
+  relatedRulesUngroupedTitle?: string;
   emptyBehavior?: GeneratedEmptyBehavior;
   includeEffectiveDates?: boolean;
   source: RuleDocumentSourceConfig;
@@ -190,18 +197,8 @@ export interface ReferenceIndexDocumentMappingConfig {
   source: ReferenceIndexDocumentSourceConfig;
 }
 
-export interface TodoDocumentConfig {
-  title?: string;
-  output: string;
-  description: string;
-  purpose: string;
-  source: GeneratedDocumentSource;
-  status: GeneratedDocumentStatus;
-}
-
 export interface GeneratedConfig {
   manifest: string;
-  todo?: TodoDocumentConfig;
   definitions?: DefinitionsMappingConfig;
   definitionDocuments?: DefinitionDocumentMappingConfig[];
   ksiDocuments?: KsiDocumentMappingConfig[];

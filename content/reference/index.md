@@ -1,8 +1,5 @@
 ---
 title: "Ruleset Reference"
-description: "A reference section for reviewing complete FedRAMP rulesets without stakeholder-specific filtering."
-purpose: "Helps readers find complete generated rulesets for 20x, Rev5, and the full consolidated rules."
-google_doc: ""
 icon: material/information-outline
 picto:
   source: person

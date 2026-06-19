@@ -13,8 +13,12 @@ nav = [
     ] },
     { "About This Preview" = [
       { "Source Data" = "sources.md" },
-      { "Changelog" = "changelog.md" },
-      { "TO DO" = "todo.md" },
+      { "Changelog" = "changelog.md" }
+    ] },
+    { "Related External Sites" = [
+      { "⏳ Legacy Documentation Reference" = "https://fedramp.gov/legacy" },
+      { "🦾 Machine-Readable Rules" = "https://github.com/FedRAMP/rules" },
+      { "🆘 help.fedramp.gov" = "https://help.fedramp.gov" },
     ] },
   ] },
   { "FedRAMP" = [
@@ -108,6 +112,7 @@ nav = [
         { "Marketplace Listing Rules" = "providers/implement/marketplace/marketplace-listing.md" },
       ] },
       { "Do the Work" = "providers/implement/work.md" },
+      { "Addressing Rules" = "providers/implement/rules.md" },
       { "Finding an Assessor" = "providers/implement/assessor.md" },
       { "Getting Certified" = "providers/implement/get-certified.md" },
     ] },
@@ -393,7 +398,7 @@ site_dir = "html/"
 site_url = "https://preview.fedramp.gov/2026/"
 repo_url = "https://github.com/fedramp/2026"
 repo_name = "FedRAMP/2026"
-extra_css = ["stylesheets/custom.css", "stylesheets/extra.css"]
+extra_css = ["stylesheets/extra.css"]
 copyright = "fedramp.gov"
 
 extra_javascript = [
@@ -403,7 +408,27 @@ extra_javascript = [
 
 [project.extra]
 homepage = "/2026"
-generator = false
+
+
+[project.extra.analytics]
+provider = "google"
+property = "G-HBYXWFP794"
+
+[project.extra.analytics.feedback]
+title = "Was this page helpful?"
+
+[[project.extra.analytics.feedback.ratings]]
+icon = "material/emoticon-happy-outline"
+name = "This page was helpful"
+data = 1
+note = "Thanks for your feedback!"
+
+[[project.extra.analytics.feedback.ratings]]
+icon = "material/emoticon-sad-outline"
+name = "This page could be improved"
+data = 0
+note = "Thanks for your feedback!"
+
 
 [project.extra.tags]
 Rev5 = "rev5"
@@ -428,8 +453,10 @@ features = [
   "navigation.instant.prefetch",
   "navigation.instant.progress",
   "navigation.path",
+  "navigation.prune",
   "navigation.sections",
   "navigation.tabs",
+  "navigation.tabs.sticky",
   "navigation.top",
   "navigation.tracking",
   #"navigation.expand",

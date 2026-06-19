@@ -1,7 +1,4 @@
 ---
-description: "Explains how agencies can report concerns about suspicious behavior or other stuff to FedRAMP."
-purpose: "Folks know when and how to report stuff to us and what we will or won't do about it."
-google_doc: ""
 picto:
   source: person
   status: stable
@@ -9,7 +6,7 @@ picto:
 
 # Reporting Concerns to FedRAMP
 
-Once a cloud service provider attains a FedRAMP certification, their interactions with the FedRAMP PMO are limited. Agencies who are participating in collaborative continuous monitoring will typically have much greater insight into cloud service provider activities and will likely be the first to know if a provider is failing to meet FedRAMP’s standards.
+Once a cloud service provider obtains a FedRAMP Certification, their interactions with the FedRAMP PMO are limited. Agencies who are participating in collaborative continuous monitoring will typically have much greater insight into cloud service provider activities and will likely be the first to know if a provider is failing to meet FedRAMP’s standards.
 
 If a cloud service provider is failing to comply with FedRAMP requirements, we recommend that you take the following steps to address any compliance issues with your vendor:
 

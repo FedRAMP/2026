@@ -1,8 +1,7 @@
 ---
 icon: material/gavel
-description: "An overview of the FedRAMP section of these rules and what is in here."
-purpose: "Folks know where to go from here."
-google_doc: ""
+hide:
+  - toc
 picto:
   source: person
   status: stable
@@ -21,7 +20,7 @@ The Consolidated Rules for 2026 reflect that vision, establishing a full new set
     of that historical information no longer applies after FedRAMP was rescinded and replaced in 2024. Stakeholders should be extremely
     careful to avoid outdated information, especially that provided by Large Language Models and AI services.
 
-!!! tip "Point AI services at the source material for FedRAMP Rules"
+!!! tip "Point AI services at the source material for FedRAMP rules"
 
     The [Source Data](../sources.md) page in the Overview contains links to the raw source data used to
     generate the FedRAMP Consolidated Rules for 2026. Each of the repositories that contain source data

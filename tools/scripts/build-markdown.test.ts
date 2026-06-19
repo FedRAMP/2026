@@ -30,8 +30,6 @@ import {
   type ToolConfig,
 } from "./config";
 import { deploy } from "./deploy";
-import { buildTodo } from "./todo-builder";
-
 const execFileAsync = promisify(execFile);
 const RULES_REMOTE_URL = "https://github.com/FedRAMP/rules.git";
 const DEFAULT_RULES_REMOTE_BRANCH = "main";
@@ -62,8 +60,6 @@ const COLOR_RESET = "\x1b[0m";
 let unlinkedMarkdownWarningPaths: string[] = [];
 let boldMarkdownHeadingWarnings: string[] = [];
 let contentPictographWarnings: string[] = [];
-let contentFrontmatterWarnings: string[] = [];
-let emptyContentFrontmatterWarnings: string[] = [];
 let rulesSubmoduleSyncWarnings: string[] = [];
 const humanReadableFailureSummaries: string[] = [];
 
@@ -71,8 +67,6 @@ afterAll(() => {
   printUnlinkedMarkdownWarnings();
   printBoldMarkdownHeadingWarnings();
   printContentPictographWarnings();
-  printContentFrontmatterWarnings();
-  printEmptyContentFrontmatterWarnings();
   printRulesSubmoduleSyncWarnings();
   printHumanReadableFailureSummaries();
 });
@@ -126,42 +120,6 @@ function printContentPictographWarnings(): void {
       `${WARNING_ORANGE}${WARNING_MARK} Content markdown files should declare picto.source and picto.status in frontmatter:${WARNING_RESET}`,
       "",
       ...contentPictographWarnings.map(
-        (warning) => `    ${WARNING_ORANGE}${WARNING_MARK} ${warning}${WARNING_RESET}`,
-      ),
-      "",
-    ].join("\n"),
-  );
-}
-
-function printContentFrontmatterWarnings(): void {
-  if (!contentFrontmatterWarnings.length) {
-    return;
-  }
-
-  console.warn(
-    [
-      "",
-      `${WARNING_ORANGE}${WARNING_MARK} Content markdown files should declare description, purpose, and google_doc in frontmatter:${WARNING_RESET}`,
-      "",
-      ...contentFrontmatterWarnings.map(
-        (warning) => `    ${WARNING_ORANGE}${WARNING_MARK} ${warning}${WARNING_RESET}`,
-      ),
-      "",
-    ].join("\n"),
-  );
-}
-
-function printEmptyContentFrontmatterWarnings(): void {
-  if (!emptyContentFrontmatterWarnings.length) {
-    return;
-  }
-
-  console.warn(
-    [
-      "",
-      `${WARNING_ORANGE}${WARNING_MARK} Content markdown description and purpose frontmatter should not be empty:${WARNING_RESET}`,
-      "",
-      ...emptyContentFrontmatterWarnings.map(
         (warning) => `    ${WARNING_ORANGE}${WARNING_MARK} ${warning}${WARNING_RESET}`,
       ),
       "",
@@ -713,15 +671,6 @@ function stripGeneratedManualPageAdornments(contents: string): string {
       continue;
     }
 
-    if (trimmed === '??? info inline end "Page Info"') {
-      while (
-        index + 1 < lines.length &&
-        (lines[index + 1] === "" || /^\s/.test(lines[index + 1] ?? ""))
-      ) {
-        index++;
-      }
-      continue;
-    }
 
     outputLines.push(line);
   }
@@ -834,23 +783,6 @@ function navLocationsInZensicalConfig(
   return locationByPath;
 }
 
-function expectedTodoLocationFromZensicalConfig(
-  zensicalConfig: string,
-  pageTitle: string,
-  relativePath: string,
-): string {
-  const location = navLocationsInZensicalConfig(zensicalConfig).get(relativePath);
-  if (!location) {
-    throw new Error(`${relativePath} must be linked in zensical.toml`);
-  }
-
-  const sectionLink = location.sectionHref
-    ? `[${location.sectionLabel}](${location.sectionHref})`
-    : location.sectionLabel;
-
-  return `${sectionLink} :lucide-circle-arrow-out-down-right:<br> [${pageTitle}](${relativePath})`;
-}
-
 async function findBoldMarkdownHeadingWarnings(root: string): Promise<string[]> {
   const markdownPaths = (await listRelativeFiles(root))
     .filter((relativePath) => relativePath.endsWith(".md"))
@@ -927,59 +859,6 @@ function pictoFrontmatterValue(
   return value;
 }
 
-function validateRequiredContentFrontmatter(
-  relativePath: string,
-  contents: string,
-): string | null {
-  const frontmatter = frontmatterLines(contents);
-  if (!frontmatter) {
-    return `${relativePath}: missing yaml frontmatter`;
-  }
-
-  const declaredKeys = new Set(
-    frontmatter
-      .map((line) => line.match(/^([A-Za-z0-9_-]+):(?:\s|$)/)?.[1])
-      .filter((key): key is string => Boolean(key)),
-  );
-  const missingKeys = ["description", "purpose", "google_doc"].filter(
-    (key) => !declaredKeys.has(key),
-  );
-
-  if (!missingKeys.length) {
-    return null;
-  }
-
-  return `${relativePath}: missing ${missingKeys.join(", ")}`;
-}
-
-function validateNonEmptyContentFrontmatter(
-  relativePath: string,
-  contents: string,
-): string | null {
-  const frontmatter = frontmatterLines(contents);
-  if (!frontmatter) {
-    return null;
-  }
-
-  const emptyKeys = ["description", "purpose"].filter((key) => {
-    const line = frontmatter.find((frontmatterLine) =>
-      frontmatterLine.match(new RegExp(`^${key}:`)),
-    );
-    if (!line) {
-      return false;
-    }
-
-    const value = line.slice(line.indexOf(":") + 1).trim();
-    return value === "" || value === '""' || value === "''";
-  });
-
-  if (!emptyKeys.length) {
-    return null;
-  }
-
-  return `${relativePath}: empty ${emptyKeys.join(", ")}`;
-}
-
 function validatePictographFrontmatter(
   relativePath: string,
   contents: string,
@@ -1036,51 +915,11 @@ async function findContentPictographWarnings(
   return warnings;
 }
 
-async function findContentFrontmatterWarnings(root: string): Promise<string[]> {
-  const markdownPaths = (await listRelativeFiles(root))
-    .filter((relativePath) => relativePath.endsWith(".md"))
-    .sort();
-  const warnings: string[] = [];
-
-  for (const relativePath of markdownPaths) {
-    const contents = await readFile(path.join(root, relativePath), "utf8");
-    const warning = validateRequiredContentFrontmatter(relativePath, contents);
-    if (warning) {
-      warnings.push(warning);
-    }
-  }
-
-  return warnings;
-}
-
-async function findEmptyContentFrontmatterWarnings(
-  root: string,
-): Promise<string[]> {
-  const markdownPaths = (await listRelativeFiles(root))
-    .filter(
-      (relativePath) =>
-        relativePath.endsWith(".md") && !relativePath.startsWith("authority/"),
-    )
-    .sort();
-  const warnings: string[] = [];
-
-  for (const relativePath of markdownPaths) {
-    const contents = await readFile(path.join(root, relativePath), "utf8");
-    const warning = validateNonEmptyContentFrontmatter(relativePath, contents);
-    if (warning) {
-      warnings.push(warning);
-    }
-  }
-
-  return warnings;
-}
-
 function generatedMappingStatusFailures(config: ToolConfig): string[] {
   const configuredStatuses = new Set(Object.keys(config.pictographs.status));
   const generatedMappingGroups: Array<
     [string, Array<{ id?: unknown; status?: unknown }>]
   > = [
-    ["todo", config.generated.todo ? [config.generated.todo] : []],
     ["definitionDocuments", config.generated.definitionDocuments ?? []],
     ["ksiDocuments", config.generated.ksiDocuments ?? []],
     ["deadlineDocuments", config.generated.deadlineDocuments ?? []],
@@ -1330,12 +1169,6 @@ describe("build-markdown", () => {
         "",
         referenceIndexArtifact.context.statusSpan ?? "",
         "",
-        '??? info inline end "Page Info"',
-        "",
-        `    **Description:** ${referenceIndexArtifact.context.description ?? ""}`,
-        "    ",
-        `    **Purpose:** ${referenceIndexArtifact.context.purpose ?? ""}`,
-        "",
         `# ${referenceIndexArtifact.title}`,
       ].join("\n"),
     );
@@ -1535,10 +1368,40 @@ describe("build-markdown", () => {
       const contents = await readGeneratedArtifact(artifact);
       for (const section of artifact.context.sections) {
         expect(contents).toContain(`## ${section.title}`);
+        for (const group of section.applicabilityGroups) {
+          const expectedGroup = [
+            `<span class="subset-applicability__group subset-applicability__group--${group.key}">`,
+            `<span class="subset-applicability__label">${group.label}:</span>`,
+            '<span class="subset-applicability__values">',
+            ...group.values.map(
+              (value) =>
+                `<span class="subset-applicability__tag">${value}</span>`,
+            ),
+          ];
+          expectTextOrder(
+            contents,
+            expectedGroup,
+            `Generated FRR markdown should render ${group.label.toLowerCase()} applicability labels for ${section.title}`,
+          );
+        }
+
         const requirement = section.requirements[0];
         if (requirement) {
           expect(contents).toContain(requirement.id);
           expect(contents).toContain(`### ${requirement.title}`);
+        }
+
+        if (section.applicabilityGroups.length && requirement) {
+          expectTextOrder(
+            contents,
+            [
+              `## ${section.title}`,
+              section.descriptionParagraphs.at(-1) ?? "",
+              '<div class="subset-applicability" role="group" aria-label="Applicability">',
+              `### ${requirement.title}`,
+            ],
+            `Generated FRR markdown should place applicability labels after the subset description and before its requirements for ${section.title}`,
+          );
         }
       }
     }
@@ -1604,9 +1467,62 @@ describe("build-markdown", () => {
         `Expected ${notificationArtifact.relativePath} to include notification metadata.`,
       );
     }
+    const notificationDestination = notification.href
+      ? `[${notification.linkLabel}](${notification.href})`
+      : `${notification.name}${notification.targetDetail ?? ""}`;
     expect(notificationContents).toContain(
-      `Notify ${notification.party} by ${notification.method} using ${notification.target}.`,
+      `Notify ${notification.party} via ${notification.methodLabel}: ${notificationDestination}.`,
     );
+
+    const bracketedNotificationArtifact = firstArtifactMatching(
+      expectedArtifacts,
+      (artifact) =>
+        artifact.context.sections.some((section) =>
+          section.requirements.some((requirement) =>
+            requirement.notifications.some(
+              (entry) => entry.href && entry.linkLabel.includes("\\["),
+            ),
+          ),
+        ),
+      "an FRR artifact with bracketed notification link text",
+    );
+    const bracketedNotificationContents = await readGeneratedArtifact(
+      bracketedNotificationArtifact,
+    );
+    const bracketedNotification = bracketedNotificationArtifact.context.sections
+      .flatMap((section) => section.requirements)
+      .flatMap((requirement) => requirement.notifications)
+      .find((entry) => entry.href && entry.linkLabel.includes("\\["));
+    if (!bracketedNotification?.href) {
+      throw new Error(
+        `Expected ${bracketedNotificationArtifact.relativePath} to include bracketed notification link text.`,
+      );
+    }
+    expect(bracketedNotificationContents).toContain(
+      `[${bracketedNotification.linkLabel}](${bracketedNotification.href})`,
+    );
+
+    const classARelatedArtifact = findArtifact(
+      expectedArtifacts,
+      "reference/20x/a/related.md",
+    );
+    const classARelatedSectionTitles = classARelatedArtifact.context.sections.map(
+      (section) => section.title,
+    );
+    expect(classARelatedSectionTitles).toContain(
+      "Mandatory Class A Rules: Certification Data Sharing (CDS)",
+    );
+    expect(classARelatedSectionTitles).toContain(
+      "Recommended Class A Rules: Certification Package Overview (CPO)",
+    );
+    expect(classARelatedSectionTitles).toContain(
+      "Optional Class A Rules: Collaborative Continuous Monitoring (CCM)",
+    );
+    expect(
+      classARelatedArtifact.context.sections
+        .flatMap((section) => section.requirements)
+        .filter((requirement) => requirement.id === "CDS-CSO-AVR"),
+    ).toHaveLength(1);
 
     const referenceArtifact = firstArtifactMatching(
       expectedArtifacts,
@@ -1853,6 +1769,7 @@ describe("build-markdown", () => {
         description: "Rules specific to Class A.",
         applicability: {
           types: ["20x"],
+          paths: ["Program"],
           classes: ["A"],
           affects: ["Providers"],
         },
@@ -1862,8 +1779,9 @@ describe("build-markdown", () => {
         description: "Rules specific to Class B.",
         applicability: {
           types: ["20x"],
+          paths: ["Program", "Agency"],
           classes: ["B"],
-          affects: ["Providers"],
+          affects: ["Providers", "Agencies"],
         },
       },
       R5B: {
@@ -1871,6 +1789,7 @@ describe("build-markdown", () => {
         description: "Rules specific to Rev5 Class B.",
         applicability: {
           types: ["Rev5"],
+          paths: ["Agency"],
           classes: ["B"],
           affects: ["Providers"],
         },
@@ -2014,6 +1933,37 @@ describe("build-markdown", () => {
         ],
         ruleDocuments: [
           {
+            id: "complete-reference",
+            output: "reference/{FRR}.md",
+            outputMode: "documents",
+            status: "stable",
+            rulesHref: "../",
+            emptyBehavior: "skip",
+            source: {
+              collection: "FRR",
+              documents: ["SYN"],
+              types: ["all"],
+              includeAll: true,
+              allPosition: "first",
+            },
+          },
+          {
+            id: "provider-20x-rules",
+            output: "providers/20x/rules/{FRR}.md",
+            outputMode: "documents",
+            status: "stable",
+            rulesHref: "../../../",
+            emptyBehavior: "skip",
+            source: {
+              collection: "FRR",
+              documents: ["SYN"],
+              types: ["20x"],
+              affects: ["Providers"],
+              includeAll: true,
+              allPosition: "first",
+            },
+          },
+          {
             id: "20x-a-reference",
             output: "reference/20x/a/{FRR}.md",
             outputMode: "documents",
@@ -2059,6 +2009,14 @@ describe("build-markdown", () => {
       artifacts,
       "reference/20x/a/synthetic-ruleset.md",
     );
+    const completeRuleArtifact = findArtifact(
+      artifacts,
+      "reference/synthetic-ruleset.md",
+    );
+    const provider20xArtifact = findArtifact(
+      artifacts,
+      "providers/20x/rules/synthetic-ruleset.md",
+    );
     const classARequirement = classARuleArtifact.context.sections
       .flatMap((section) => section.requirements)
       .find((entry) => entry.id === "SYN-AON-ONE");
@@ -2068,8 +2026,61 @@ describe("build-markdown", () => {
     const requirement = ruleArtifact.context.sections
       .flatMap((section) => section.requirements)
       .find((entry) => entry.id === "SYN-BON-VAR");
+    const classBSection = ruleArtifact.context.sections.find(
+      (section) => section.title === "Class B Only",
+    );
+    const providerClassBSection = provider20xArtifact.context.sections.find(
+      (section) => section.title === "Class B Only",
+    );
+    const providerRequirementIds = provider20xArtifact.context.sections.flatMap(
+      (section) => section.requirements.map((entry) => entry.id),
+    );
+    const completeRev5Section = completeRuleArtifact.context.sections.find(
+      (section) => section.title === "Rev5 Class B",
+    );
 
     expect(requirementIds).toEqual(["SYN-BON-VAR"]);
+    expect(classBSection?.applicabilityGroups).toEqual([
+      { key: "types", label: "Type", values: ["20x"] },
+      {
+        key: "paths",
+        label: "Path",
+        values: ["Program", "Agency"],
+      },
+      { key: "classes", label: "Class", values: ["Class B"] },
+      {
+        key: "affects",
+        label: "Audience",
+        values: ["Providers", "Agencies"],
+      },
+    ]);
+    expect(providerClassBSection?.applicabilityGroups).toEqual([
+      { key: "types", label: "Type", values: ["20x"] },
+      {
+        key: "paths",
+        label: "Path",
+        values: ["Program", "Agency"],
+      },
+      { key: "classes", label: "Class", values: ["Class B"] },
+      {
+        key: "affects",
+        label: "Audience",
+        values: ["Providers"],
+      },
+    ]);
+    expect(providerRequirementIds).toContain("SYN-AON-ONE");
+    expect(providerRequirementIds).toContain("SYN-BON-VAR");
+    expect(providerRequirementIds).not.toContain("SYN-R5B-ONE");
+    expect(completeRev5Section?.applicabilityGroups).toEqual([
+      { key: "types", label: "Type", values: ["Rev5"] },
+      { key: "paths", label: "Path", values: ["Agency"] },
+      { key: "classes", label: "Class", values: ["Class B"] },
+      {
+        key: "affects",
+        label: "Audience",
+        values: ["Providers"],
+      },
+    ]);
     expect(requirement?.variantSections).toHaveLength(1);
     expect(requirement?.variantSections[0]?.title).toBe("Class B");
     expect(
@@ -2329,260 +2340,6 @@ describe("build-markdown", () => {
     expect(shortNames).not.toContain("FLT");
   });
 
-  test("adds page info admonitions below content pictograph spans", async () => {
-    const config = await loadToolConfig();
-    const tempDir = await mkdtemp(path.join(tmpdir(), "cr26-site-tools-"));
-    const tempContentDir = path.join(tempDir, "content");
-    const tempSrcDir = path.join(tempDir, "src");
-    const tempHtmlDir = path.join(tempDir, "html");
-
-    try {
-      await mkdir(tempContentDir, { recursive: true });
-      await mkdir(tempSrcDir, { recursive: true });
-      await writeFile(
-        path.join(tempSrcDir, "index.md"),
-        [
-          "---",
-          "description: This page contains an overview of the Public Preview, including descriptions of the content sources and status.",
-          "purpose: Helps folks understand the goals of the Public Preview and how to approach reviewing it.",
-          "picto:",
-          "  source: person",
-          "  status: stable",
-          "---",
-          "",
-          "# Public Preview",
-          "",
-        ].join("\n"),
-        "utf8",
-      );
-      await writeFile(
-        path.join(tempSrcDir, "purpose-only.md"),
-        [
-          "---",
-          'description: ""',
-          "purpose: Explains why this page exists.",
-          "picto:",
-          "  source: person",
-          "  status: stable",
-          "---",
-          "",
-          "# Purpose Only",
-          "",
-        ].join("\n"),
-        "utf8",
-      );
-      await writeFile(
-        path.join(tempSrcDir, "empty.md"),
-        [
-          "---",
-          'description: ""',
-          "purpose: ''",
-          "picto:",
-          "  source: person",
-          "  status: stable",
-          "---",
-          "",
-          "# Empty Page Info",
-          "",
-        ].join("\n"),
-        "utf8",
-      );
-
-      await buildMarkdown({
-        ...config,
-        paths: {
-          ...config.paths,
-          content: path.relative(resolveToolPath("."), tempContentDir),
-          src: path.relative(resolveToolPath("."), tempSrcDir),
-          html: path.relative(resolveToolPath("."), tempHtmlDir),
-        },
-        generated: {
-          ...config.generated,
-          definitions: undefined,
-          definitionDocuments: [],
-          ksiDocuments: [],
-          deadlineDocuments: [],
-          taggedDocumentSummaries: [],
-          referenceIndexDocuments: [],
-          frrCollectionDocuments: [],
-          ruleDocuments: [],
-        },
-      });
-
-      const indexContents = await readFile(
-        path.join(tempSrcDir, "index.md"),
-        "utf8",
-      );
-      expect(indexContents).toContain(
-        [
-          MANUAL_STABLE_STATUS_SPAN,
-          "",
-          '??? info inline end "Page Info"',
-          "",
-          "    **Description:** This page contains an overview of the Public Preview, including descriptions of the content sources and status.",
-          "    ",
-          "    **Purpose:** Helps folks understand the goals of the Public Preview and how to approach reviewing it.",
-        ].join("\n"),
-      );
-
-      const purposeOnlyContents = await readFile(
-        path.join(tempSrcDir, "purpose-only.md"),
-        "utf8",
-      );
-      expect(purposeOnlyContents).toContain(
-        [
-          MANUAL_STABLE_STATUS_SPAN,
-          "",
-          '??? info inline end "Page Info"',
-          "",
-          "    **Purpose:** Explains why this page exists.",
-        ].join("\n"),
-      );
-      expect(purposeOnlyContents).not.toContain("**Description:**");
-
-      const emptyContents = await readFile(
-        path.join(tempSrcDir, "empty.md"),
-        "utf8",
-      );
-      expect(emptyContents).toContain(`---\n\n${MANUAL_STABLE_STATUS_SPAN}`);
-      expect(emptyContents).not.toContain('??? info inline end "Page Info"');
-    } finally {
-      await rm(tempDir, { recursive: true, force: true });
-    }
-  });
-
-  test("builds a todo page from the completed src markdown set", async () => {
-    const config = await loadToolConfig();
-    const tempDir = await mkdtemp(path.join(tmpdir(), "cr26-site-tools-"));
-    const tempContentDir = path.join(tempDir, "content");
-    const tempSrcDir = path.join(tempDir, "src");
-    const tempHtmlDir = path.join(tempDir, "html");
-    const generatedAt = new Date("2026-05-03T12:00:00.000Z");
-
-    try {
-      await mkdir(tempContentDir, { recursive: true });
-      await mkdir(tempSrcDir, { recursive: true });
-      await writeFile(
-        path.join(tempSrcDir, "index.md"),
-        [
-          "---",
-          'description: "Manual description"',
-          'purpose: "Manual purpose"',
-          'google_doc: "https://docs.google.com/document/d/example/edit"',
-          "picto:",
-          "  source: person",
-          "  status: empty",
-          "---",
-          "",
-          "# Manual Page",
-          "",
-        ].join("\n"),
-        "utf8",
-      );
-      await mkdir(path.join(tempSrcDir, "authority", "law"), {
-        recursive: true,
-      });
-      await writeFile(
-        path.join(tempSrcDir, "authority", "law", "index.md"),
-        [
-          "---",
-          "picto:",
-          "  source: person",
-          "  status: stable",
-          "---",
-          "",
-          "# Authority Page",
-          "",
-        ].join("\n"),
-        "utf8",
-      );
-      await writeFile(
-        path.join(tempSrcDir, "generated.md"),
-        [
-          "---",
-          "tags:",
-          "  - 20x",
-          "---",
-          "",
-          STABLE_STATUS_SPAN,
-          "",
-          "# Generated Page",
-          "",
-        ].join("\n"),
-        "utf8",
-      );
-
-      const summary = await buildTodo(
-        {
-          ...config,
-          paths: {
-            ...config.paths,
-            content: path.relative(resolveToolPath("."), tempContentDir),
-            src: path.relative(resolveToolPath("."), tempSrcDir),
-            html: path.relative(resolveToolPath("."), tempHtmlDir),
-          },
-        },
-        { generatedAt },
-      );
-
-      expect(summary.relativePath).toBe("todo.md");
-      expect(summary.pageCount).toBe(3);
-
-      const contents = await readFile(path.join(tempSrcDir, "todo.md"), "utf8");
-      expect(contents).toStartWith(
-        [
-          "---",
-          `description: ${JSON.stringify(config.generated.todo?.description)}`,
-          `purpose: ${JSON.stringify(config.generated.todo?.purpose)}`,
-          'google_doc: ""',
-          "picto:",
-          "  source: machine",
-          "  status: placeholder",
-          "---",
-          "",
-          PLACEHOLDER_STATUS_SPAN,
-        ].join("\n"),
-      );
-      expect(contents).toContain("**Generated:** 2026-05-03T12:00:00.000Z");
-      expect(contents).toContain(
-        `## Stable Human-Written Pages ${PERSON_PICTOGRAPH} ${STABLE_PICTOGRAPH}`,
-      );
-      expect(contents).toContain(
-        `## Placeholder Human-Written Pages ${PERSON_PICTOGRAPH} ${PLACEHOLDER_PICTOGRAPH}`,
-      );
-      expect(contents).toContain(
-        `## Empty Human-Written Pages ${PERSON_PICTOGRAPH} ${EMPTY_PICTOGRAPH}`,
-      );
-      expect(contents).toContain(
-        `## Stable Machine-Generated Pages ${MACHINE_PICTOGRAPH} ${STABLE_PICTOGRAPH}`,
-      );
-      expect(contents).toContain(
-        `## Placeholder Machine-Generated Pages ${MACHINE_PICTOGRAPH} ${PLACEHOLDER_PICTOGRAPH}`,
-      );
-      expect(contents).toContain(
-        `## Empty Machine-Generated Pages ${MACHINE_PICTOGRAPH} ${EMPTY_PICTOGRAPH}`,
-      );
-      expect(contents).toContain(
-        `| [Overview](index.md) :lucide-circle-arrow-out-down-right:<br> [Manual Page](index.md) | ${PERSON_PICTOGRAPH} ${EMPTY_PICTOGRAPH} | Manual description | Manual purpose | [:material-file-edit-outline:](https://docs.google.com/document/d/example/edit){ title="Link to FedRAMP Internal Google Doc" } |`,
-      );
-      expect(contents).toContain(
-        `| Unlinked :lucide-circle-arrow-out-down-right:<br> [Generated Page](generated.md) | ${MACHINE_PICTOGRAPH} ${STABLE_PICTOGRAPH} |  |  | :material-language-markdown-outline: |`,
-      );
-      expect(contents).toContain(
-        `| [Overview](index.md) :lucide-circle-arrow-out-down-right:<br> [TO DO](todo.md) | ${MACHINE_PICTOGRAPH} ${PLACEHOLDER_PICTOGRAPH} | A table showing all pages, their source, and their progress along with links to internal documentation only available to FedRAMP. | The FedRAMP team will have a simple place to see progress that is machine-generated. | :material-language-markdown-outline: |`,
-      );
-      expect(contents).not.toContain("Authority Page");
-      expect(contents).not.toContain("authority/law/index.md");
-
-      const manifest = await readJson<{ files: string[] }>(
-        path.join(tempSrcDir, config.generated.manifest),
-      );
-      expect(manifest.files).toEqual(["todo.md"]);
-    } finally {
-      await rm(tempDir, { recursive: true, force: true });
-    }
-  });
-
   test("builds configured FRD definition document mappings", async () => {
     const config = await loadToolConfig();
     const tempDir = await mkdtemp(path.join(tmpdir(), "cr26-site-tools-"));
@@ -2761,26 +2518,6 @@ describe("content quality", () => {
     expect(Array.isArray(contentPictographWarnings)).toBe(true);
   });
 
-  test("warns when content markdown is missing required frontmatter fields", async () => {
-    const config = await loadToolConfig();
-    const contentPath = resolveToolPath(config.paths.content);
-
-    contentFrontmatterWarnings =
-      await findContentFrontmatterWarnings(contentPath);
-
-    expect(Array.isArray(contentFrontmatterWarnings)).toBe(true);
-  });
-
-  test("warns when content markdown has empty description or purpose frontmatter", async () => {
-    const config = await loadToolConfig();
-    const contentPath = resolveToolPath(config.paths.content);
-
-    emptyContentFrontmatterWarnings =
-      await findEmptyContentFrontmatterWarnings(contentPath);
-
-    expect(Array.isArray(emptyContentFrontmatterWarnings)).toBe(true);
-  });
-
   test("warns when markdown headings are wrapped in bold markers", async () => {
     const config = await loadToolConfig();
     const contentPath = resolveToolPath(config.paths.content);
@@ -2831,12 +2568,6 @@ describe("manual content source drift", () => {
           "---",
           "",
           MANUAL_STABLE_STATUS_SPAN,
-          "",
-          '??? info inline end "Page Info"',
-          "",
-          "    **Description:** Clean source page.",
-          "    ",
-          "    **Purpose:** Confirms generated adornments do not count as drift.",
           "",
           "# Clean",
           "",
@@ -2925,7 +2656,6 @@ describe("build pipeline", () => {
     const expectedArtifacts = collectArtifacts(rules, config);
     const expectedGeneratedFiles = expectedArtifacts
       .map((artifact) => artifact.relativePath)
-      .concat(config.generated.todo?.output ?? "todo.md")
       .sort();
     const srcPath = resolveToolPath(config.paths.src);
     const contentPath = resolveToolPath(config.paths.content);
@@ -2940,7 +2670,6 @@ describe("build pipeline", () => {
     expect(stdout).toContain(
       `Generated ${expectedArtifacts.length} markdown files.`,
     );
-    expect(stdout).toContain("Generated todo.md with ");
     expect(stdout).toContain("Build finished");
 
     const manifest = await readJson<{ files: string[] }>(
@@ -2965,12 +2694,6 @@ describe("build pipeline", () => {
         "---",
         "",
         MANUAL_STABLE_STATUS_SPAN,
-        "",
-        '??? info inline end "Page Info"',
-        "",
-        "    **Description:** This page contains an overview of the Public Preview, including descriptions of the content sources and status.",
-        "    ",
-        "    **Purpose:** Helps folks understand the goals of the Public Preview and how to approach reviewing it.",
         "",
         "# Public Preview",
       ].join("\n"),
@@ -3009,41 +2732,14 @@ describe("build pipeline", () => {
       expect(generatedMarkdown).not.toContain("[object Object]");
     }
 
-    const todoMarkdown = await readFile(path.join(srcPath, "todo.md"), "utf8");
-    expect(todoMarkdown).toContain("# TO DO");
-    expect(todoMarkdown).toContain("**Generated:**");
-    expect(todoMarkdown).toContain(
-      "| Location | Picto | Description | Purpose | :lucide-file-cog: |",
-    );
-    expect(todoMarkdown).toContain(
-      `## Stable Human-Written Pages ${PERSON_PICTOGRAPH} ${STABLE_PICTOGRAPH}`,
-    );
-    expect(todoMarkdown).toContain(
-      `## Placeholder Machine-Generated Pages ${MACHINE_PICTOGRAPH} ${PLACEHOLDER_PICTOGRAPH}`,
-    );
-    expect(todoMarkdown).toContain("[Public Preview](index.md)");
-    expect(todoMarkdown).toContain("[FedRAMP Definitions](definitions.md)");
-    expect(todoMarkdown).toContain("[FedRAMP](responsibilities/index.md)");
-    expect(todoMarkdown).toContain(
-      expectedTodoLocationFromZensicalConfig(
-        zensicalConfig,
-        "FedRAMP Definitions",
-        "definitions.md",
-      ),
-    );
-    expect(todoMarkdown).not.toContain("authority/");
-    expect(todoMarkdown).toContain(
-      "A table showing all pages, their source, and their progress along with links to internal documentation only available to FedRAMP.",
-    );
-    expect(todoMarkdown).not.toContain("{{");
-    expect(todoMarkdown).not.toContain("[object Object]");
+
 
     for (const relativePath of [
       "index.html",
       "search.json",
       "sitemap.xml",
       "assets/fr-only-logo-black.png",
-      "stylesheets/custom.css",
+      "stylesheets/extra.css",
       "authority/m-24-15/m-24-15-official.png",
     ]) {
       await access(path.join(htmlPath, relativePath));
@@ -3080,6 +2776,15 @@ describe("build pipeline", () => {
         artifact.relativePath.startsWith("agencies/rules/"),
       "a rendered agency rules artifact",
     );
+    const renderedApplicabilityArtifact = firstArtifactMatching(
+      expectedArtifacts,
+      (artifact) =>
+        artifact.documentType === "FRR" &&
+        artifact.context.sections.some(
+          (section) => section.applicabilityGroups.length > 0,
+        ),
+      "a rendered FRR artifact with subset applicability",
+    );
     if (!renderedKsiThemeIndicator) {
       throw new Error(
         `Expected ${renderedKsiThemeArtifact.relativePath} to include an indicator.`,
@@ -3109,6 +2814,10 @@ describe("build pipeline", () => {
     const renderedAgencyHtmlPath = path.relative(
       htmlPath,
       markdownToHtmlPath(htmlPath, renderedAgencyArtifact.relativePath),
+    );
+    const renderedApplicabilityHtmlPath = path.relative(
+      htmlPath,
+      markdownToHtmlPath(htmlPath, renderedApplicabilityArtifact.relativePath),
     );
 
     const renderedPages = [
@@ -3147,10 +2856,6 @@ describe("build pipeline", () => {
         path: renderedAgencyHtmlPath,
         expectedText: [renderedAgencyArtifact.title],
       },
-      {
-        path: "todo/index.html",
-        expectedText: ["TO DO", "Public Preview", "FedRAMP Definitions"],
-      },
     ];
 
     for (const page of renderedPages) {
@@ -3161,6 +2866,22 @@ describe("build pipeline", () => {
       }
       expect(contents).not.toContain("{{");
       expect(contents).not.toContain("[object Object]");
+    }
+
+    const renderedApplicabilityHtml = await readFile(
+      path.join(htmlPath, renderedApplicabilityHtmlPath),
+      "utf8",
+    );
+    const firstApplicabilityValue = renderedApplicabilityArtifact.context.sections
+      .flatMap((section) => section.applicabilityGroups)
+      .flatMap((group) => group.values)[0];
+    expect(renderedApplicabilityHtml).toContain(
+      '<div class="subset-applicability" role="group" aria-label="Applicability">',
+    );
+    if (firstApplicabilityValue) {
+      expect(renderedApplicabilityHtml).toContain(
+        `<span class="subset-applicability__tag">${firstApplicabilityValue}</span>`,
+      );
     }
   });
 });

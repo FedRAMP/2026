@@ -11,15 +11,10 @@ import {
   resolveToolPath,
 } from "./config";
 import { deploy } from "./deploy";
-import { buildTodo } from "./todo-builder";
 
 const BUILD_SCRIPT = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
   "build-markdown.ts",
-);
-const TODO_BUILDER_SCRIPT = path.join(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "todo-builder.ts",
 );
 
 export interface ContentSnapshot {
@@ -133,11 +128,6 @@ async function runPipeline(
 
     const summary = await buildMarkdown();
     console.log(`[dev] generated ${summary.artifactCount} markdown files`);
-    const todoSummary = await buildTodo();
-    console.log(
-      `[dev] generated ${todoSummary.relativePath} for ${todoSummary.pageCount} pages`,
-    );
-    reloadTargets.push(todoSummary.relativePath);
     await signalPreviewReload(reloadTargets);
   } catch (error) {
     console.error("[dev] site input build failed");
@@ -511,10 +501,6 @@ async function main(): Promise<void> {
     schedulePipeline("generator change");
   });
 
-  const todoBuilderWatcher = watch(TODO_BUILDER_SCRIPT, () => {
-    schedulePipeline("todo builder change");
-  });
-
   const configWatcher = watch(CONFIG_FILE, () => {
     schedulePipeline("config change", "full");
   });
@@ -528,7 +514,6 @@ async function main(): Promise<void> {
     partialsWatcher?.close();
     contentWatcher.close();
     buildWatcher.close();
-    todoBuilderWatcher.close();
     configWatcher.close();
     rulesWatcher.close();
 

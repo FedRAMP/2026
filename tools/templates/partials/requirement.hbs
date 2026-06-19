@@ -21,7 +21,7 @@
 {{#if notifications.length}}
 !!! warning "This FRR includes a notification requirement!"
 {{#each notifications}}
-    - Notify {{party}} by {{method}} using {{target}}.
+    - Notify {{party}} via {{methodLabel}}: {{#if href}}[{{linkLabel}}]({{href}}){{else}}{{name}}{{targetDetail}}{{/if}}.
 {{/each}}
 {{/if}}
 

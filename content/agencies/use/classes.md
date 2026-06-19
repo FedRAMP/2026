@@ -1,10 +1,7 @@
 ---
-description: "Explanations of Certification classes and their relevance to Security Categorization and why they are different."
-purpose: "Agencies will understand why Certification classes aren't the same as Security Categorization Levels and how to leverage Certifications of different classes in different agency information systems that have various security categorization levels."
-google_doc: "https://docs.google.com/document/d/1UdOIjketHNMeQrpmDVJdX8KrdKClvVQ7stp97KEYw9I/edit?tab=t.9414dt9x6r02"
 picto:
   source: person
-  status: placeholder
+  status: stable
 ---
 
 # FedRAMP Certification Classes
@@ -42,9 +39,9 @@ A simple way to think about it:
 
 Agencies should not treat Certification Classes as one-for-one replacements for Low, Moderate, or High impact levels. A cloud service’s Certification Class can help an agency understand what evidence is available, but the agency still has to decide whether the service is appropriate for the agency’s specific use, configuration, integrations, data, mission, and risk tolerance.
 
-In practice, agencies should categorize their own information system first, then review the FedRAMP Certification package to determine if the cloud service offering has sufficient protections in place. The agency authorization should document what the agency configures, what the agency operates, and any additional controls or compensating controls needed for the agency’s use case.
+In practice, agencies should categorize their own information system first, then review the FedRAMP Certification Package to determine if the cloud service offering has sufficient protections in place. The agency authorization should document what the agency configures, what the agency operates, and any additional controls or compensating controls needed for the agency’s use case.
 
-Certification classes may be used by agencies to quickly gauge the general level of investments into security capabilities that each service provider has made, however final agency risk determinations must take into account how the agency will use the cloud service. Federal information systems could be composed of components that separately process information at different security categorization levels. Agencies are encouraged to properly architect federal information systems to use cloud services that appropriately match the security categorization of the information
+Certification classes may be used by agencies to quickly gauge the general level of investments into security capabilities that each service provider has made, however final agency risk determinations must take into account how the agency will use the cloud service. Federal information systems could be composed of components that separately process information at different security categorization levels. Agencies are encouraged to properly architect federal information systems to use cloud services that appropriately match the security categorization of the information.
 
 ## Broad Considerations on Certification Classes
 

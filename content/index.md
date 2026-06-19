@@ -1,8 +1,5 @@
 ---
 title: "Public Preview Overview"
-description: "This page contains an overview of the Public Preview, including descriptions of the content sources and status."
-purpose: "Helps folks understand the goals of the Public Preview and how to approach reviewing it."
-google_doc: ""
 icon: material/information-outline
 picto:
   source: person

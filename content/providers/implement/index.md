@@ -1,7 +1,4 @@
 ---
-description: "An overview of the type of stuff you'll need to do to prepare, and why it's important to officially begin the preparation phase, along with ensuring they understand the scope of FedRAMP."
-purpose: "Folks will understand that preparing is a big deal and they should make it official and work through it, but also not waste their time if they're in the CMMC game or something."
-google_doc: ""
 picto:
   source: person
   status: stable
@@ -19,8 +16,8 @@ flowchart LR
 
 The initial implementation work can really begin once you're working with an advisor and have identified a target FedRAMP Certification Profile. You'll
 probably want to start by announcing to the world that you're advancing towards a FedRAMP Certification and getting listed in the FedRAMP Marketplace
-will be the first test of navigating FedRAMP rules in practice. Then you'll do the necessary work, following FedRAMP Rules, to implement the necessary
-changes in your information security program, partner with a FedRAMP Recognized Independent Assessment Service to help you verify and validate your
+will be the first test of navigating FedRAMP rules in practice. Then you'll do the necessary work, following FedRAMP rules, to implement the necessary
+changes in your information security program, partner with a FedRAMP Recognized independent assessment service to help you verify and validate your
 work, then apply for your target FedRAMP Certification.
 
 The time it takes to complete the Initial Implementation phase and apply for FedRAMP Certification varies wildly depending on a number of factor, including:
@@ -48,5 +45,5 @@ The time it takes to complete the Initial Implementation phase and apply for Fed
 | ---- | --------------------------------------------------------------------- | ---------------------------------------- |
 | **1**    | Get listed on the FedRAMP Marketplace as Implementing so agencies, assessors, and FedRAMP can see that your service is formally working toward FedRAMP Certification. This listing helps establish where you are in the process, but it also comes with expectations for progress. | [Getting Listed](marketplace/index.md){ data-preview }            |
 | **2**    | It's time to get to work - you'll need to review and address all applicable FedRAMP rules for Initial Certification and put everything in place to get ready for Ongoing Certification in advance. Then you'll build a FedRAMP Certification Package and work through your initial verification and validation process to ensure everything lines up. | [Do the Work](work.md){ data-preview }            |
-| **3**    | Find a FedRAMP Recognized Independent Assessment Service when your target class, type, and path require one. The assessor will be a major partner in the certification process, so choose one with relevant expertise and engage them early enough to avoid surprises.You can skip this for a Class A FedRAMP Certification but you're going to need one when it's time to move up to a permanent Certification Class. | [Finding an Assessor](assessor.md){data-preview }          |
+| **3**    | Find a FedRAMP Recognized independent assessment service when your target class, type, and path require one. The assessor will be a major partner in the certification process, so choose one with relevant expertise and engage them early enough to avoid surprises.You can skip this for a Class A FedRAMP Certification but you're going to need one when it's time to move up to a permanent Certification Class. | [Finding an Assessor](assessor.md){data-preview }          |
 | **4**   | Complete the required assessment, review, and certification activities for your selected profile. Getting that initial FedRAMP Certification takes you to a new beginning, starting an ongoing responsibility to maintain the security posture and evidence needed to keep that certification. | [Getting Certified](get-certified.md){ data-preview }       |

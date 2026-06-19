@@ -1,12 +1,9 @@
 ---
 tags:
   - Rev5
-description: "A description of the control baselines managed by FedRAMP and how to use them with FedRAMP-specific requirements, as a top-level section that will also include the machine-rendered lists. Explain how many controls are addressed with FedRAMP rules as well."
-purpose: "Folks will know how to approach the control baselines."
-google_doc: ""
 picto:
   source: person
-  status: placeholder
+  status: stable
 ---
 
 # Rev5 Controls

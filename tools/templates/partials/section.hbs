@@ -4,6 +4,14 @@
 {{this}}
 
 {{/each}}
+{{#if applicabilityGroups.length}}
+<div class="subset-applicability" role="group" aria-label="Applicability">
+{{#each applicabilityGroups}}
+<span class="subset-applicability__group subset-applicability__group--{{key}}"><span class="subset-applicability__label">{{label}}:</span> <span class="subset-applicability__values">{{#each values}}<span class="subset-applicability__tag">{{this}}</span>{{/each}}</span></span>{{#unless @last}}<br>{{/unless}}
+{{/each}}
+</div>
+
+{{/if}}
 {{#each requirements}}
 {{> requirement}}
 {{/each}}

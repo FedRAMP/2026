@@ -1,9 +1,8 @@
 ---
 title: "Agencies"
 icon: material/bank-outline
-description: "Welcome to federal agencies, explanation of who an agency is, and why FedRAMP matters to them and they need to get in the game."
-purpose: "Help agencies understand if FedRAMP applies and how to get involved and use it to their benefit."
-google_doc: ""
+hide:
+  - toc
 picto:
   source: person
   status: stable
@@ -13,7 +12,7 @@ picto:
 
 FedRAMP provides a standardized, reusable approach to security assessment and authorization for cloud computing products and services used by federal agencies. Federal agencies are
 required by both [the law](../authority/law/agencies.md){ data-preview } and [OMB policy](../authority/m-24-15/roles.md) to follow the processes and rules established by FedRAMP
-when using cloud services in agency information systems. This authority builds on "FISMA" requirements in the law and policy and may not be ignored;
+when using cloud services in agency information systems. This authority builds on existing requirements in the law and policy and may not be ignored;
 [M-24-15](../authority/m-24-15/implementation.md){ data-preview } explicitly requires agencies to update their agency policies to align with FedRAMP.
 
 !!! tip "FedRAMP was established to support agency mission delivery by standardizing how agencies use commercial cloud services."

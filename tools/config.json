@@ -28,14 +28,6 @@
   },
   "generated": {
     "manifest": ".generated-markdown.json",
-    "todo": {
-      "title": "TO DO",
-      "output": "todo.md",
-      "source": "machine",
-      "status": "placeholder",
-      "description": "A table showing all pages, their source, and their progress along with links to internal documentation only available to FedRAMP.",
-      "purpose": "The FedRAMP team will have a simple place to see progress that is machine-generated."
-    },
     "definitionDocuments": [
       {
         "id": "fedramp-definitions",
@@ -125,7 +117,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "ignoreDocuments": ["AGU", "SDR", "REC"],
+          "ignoreDocuments": ["AGU", "REC"],
           "types": ["all"],
           "affects": ["Providers"]
         }
@@ -462,6 +454,21 @@
         "linkTargetScope": "sameMappingOnly",
         "relatedRulesOutput": "reference/20x/a/related.md",
         "relatedRulesTitle": "20x Class A Related Rules",
+        "relatedRulesGroups": [
+          {
+            "title": "Mandatory Class A Rules",
+            "sourceRuleIds": ["FRC-CLA-MFR"]
+          },
+          {
+            "title": "Recommended Class A Rules",
+            "sourceRuleIds": ["FRC-CLA-RFR"]
+          },
+          {
+            "title": "Optional Class A Rules",
+            "sourceRuleIds": ["FRC-CLA-OFR"]
+          }
+        ],
+        "relatedRulesUngroupedTitle": "Other Related Rules",
         "emptyBehavior": "skip",
         "source": {
           "collection": "FRR",
@@ -576,7 +583,7 @@
         "definitionsHref": "../../definitions/",
         "rulesHref": "../../",
         "emptyBehavior": "skip",
-        "includeEffectiveDates": false,
+        "includeEffectiveDates": true,
         "source": {
           "collection": "FRR",
           "documents": "ALL",
@@ -594,7 +601,7 @@
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../../../",
         "emptyBehavior": "skip",
-        "includeEffectiveDates": false,
+        "includeEffectiveDates": true,
         "source": {
           "collection": "FRR",
           "documents": "ALL",
@@ -612,7 +619,7 @@
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../../../",
         "emptyBehavior": "skip",
-        "includeEffectiveDates": false,
+        "includeEffectiveDates": true,
         "source": {
           "collection": "FRR",
           "documents": "ALL",
@@ -630,7 +637,7 @@
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../",
         "emptyBehavior": "skip",
-        "includeEffectiveDates": false,
+        "includeEffectiveDates": true,
         "source": {
           "collection": "FRR",
           "documents": ["MKT"],
@@ -645,10 +652,10 @@
         "output": "assessors/rules/{FRR}.md",
         "outputMode": "documents",
         "status": "stable",
-        "definitionsHref": "../../../definitions/",
+        "definitionsHref": "../../definitions/",
         "rulesHref": "../",
         "emptyBehavior": "skip",
-        "includeEffectiveDates": false,
+        "includeEffectiveDates": true,
         "source": {
           "collection": "FRR",
           "documents": "ALL",
@@ -667,7 +674,7 @@
         "definitionsHref": "../../definitions/",
         "rulesHref": "../",
         "emptyBehavior": "skip",
-        "includeEffectiveDates": false,
+        "includeEffectiveDates": true,
         "source": {
           "collection": "FRR",
           "documents": ["MKT"],

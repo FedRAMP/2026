@@ -1,7 +1,4 @@
 ---
-description: ""
-purpose: ""
-google_doc: ""
 picto:
   source: person
   status: stable

@@ -20,9 +20,8 @@ The build pipeline:
 2. Clears generated directories as needed.
 3. Copies `../content` into `../src`.
 4. Generates Markdown from `rules/fedramp-consolidated-rules.json`.
-5. Builds `../src/todo.md` from the completed Markdown tree.
-6. Runs Zensical with `../zensical.toml`.
-7. Writes static output to `../html`.
+5. Runs Zensical with `../zensical.toml`.
+6. Writes static output to `../html`.
 
 `content/` is manual source content. Scripts should not write to it. Generated Markdown belongs in `src/`, and generated mappings must not shadow copied `content/` files.
 
@@ -32,9 +31,9 @@ The build pipeline:
 bun run dev
 ```
 
-Starts the local development pipeline and Zensical preview. It copies `../content` into `../src`, generates configured Markdown, builds `../src/todo.md`, then starts `zensical serve` with `../zensical.toml`.
+Starts the local development pipeline and Zensical preview. It copies `../content` into `../src`, generates configured Markdown, then starts `zensical serve` with `../zensical.toml`.
 
-The dev script watches manual content, templates, config, generator code, the todo builder, and the consolidated rules JSON. Watch rebuilds are debounced by `dev.watchDebounceMs` in `config.json`; the current default is 1000 milliseconds.
+The dev script watches manual content, templates, config, generator code, and the consolidated rules JSON. Watch rebuilds are debounced by `dev.watchDebounceMs` in `config.json`; the current default is 1000 milliseconds.
 
 ```bash
 bun test
@@ -46,7 +45,9 @@ Verifies the rules source schema, `tools/rules` sync status, generated Markdown 
 bun run check
 ```
 
-Runs the local quality gate: `bun test` followed by `bunx tsc -p tsconfig.json --noEmit`.
+Runs the local quality gate: `bun test`, TypeScript checking, and non-failing
+content style warnings. Style warnings print last so they remain visible in
+local and pre-commit output.
 
 ```bash
 bun run build
@@ -139,12 +140,6 @@ empty
 Tooltips and rendered icon definitions are configured in `pictographs` in `config.json`.
 For generated mappings, the mapping's `status` controls the rendered page pictograph. Status values from the rules JSON are content metadata and do not override the configured generated-page status.
 
-## Generated TO DO Page
-
-The `generated.todo` entry controls the machine-built TO DO page. The todo builder runs after manual content has been copied and generated pages have been written, so it can scan the completed `src/**/*.md` set.
-
-It writes separate source/status sections with rows containing a linked section-to-page location, combined picto source/status icons, description, purpose, an edit icon link when `google_doc` frontmatter is present, and a Markdown icon when it is not.
-
 ## Generated Definitions
 
 Add an entry to `generated.definitionDocuments` in `config.json`:
@@ -179,6 +174,10 @@ Definition mapping fields:
 - `source.allPosition`: place `data.all` definitions `first` or `last`.
 
 Generated definition pages render the FRD purpose first, then an **Important Related Terms** table for definitions with a `tag` value. Each table row has a stable anchor, and each definition that belongs to a group links back to that table row. Definitions themselves render as a single alphabetical list of `##` headings, regardless of whether they have a `tag`.
+
+## Generated Subset Applicability
+
+Generated FRR subset sections render the source `subsets.*.applicability` metadata as compact labels immediately after the subset description. Certification types, classes, and affected parties are narrowed to the current generated mapping. For example, a 20x Class B reference page shows `20x` and `Class B`, while the complete ruleset reference keeps every applicable type and class. Certification paths are shown as supplied by the rules source because generated mappings do not currently filter by path.
 
 ## Generated KSI Pages
 
@@ -346,6 +345,8 @@ Mapping fields:
 - `linkTargetScope`: optional related-rule link visibility. Use `sameMappingOnly` for complete reference mappings that should not become fallback link targets for stakeholder-specific pages.
 - `relatedRulesOutput`: optional companion page path for directly related FRR rules that are referenced by this mapping but are not otherwise included by its filters.
 - `relatedRulesTitle`: optional page H1 for the companion related-rules page.
+- `relatedRulesGroups`: optional ordered groups for the companion page. Each group supplies a `title` and `sourceRuleIds`; a related rule is assigned to the first group whose source rule references it, so the ordering also resolves overlaps.
+- `relatedRulesUngroupedTitle`: optional heading prefix for related rules that are not referenced by a configured group.
 - `emptyBehavior`: `write` keeps an empty page, `skip` omits it when no rules match.
 - `includeEffectiveDates`: set to `false` to omit the top applicability block.
 - `status`: pictograph status for generated frontmatter.
@@ -367,6 +368,7 @@ Generated rule pages also support selected rich rule metadata:
 - `following_information` renders as numbered items and `following_information_bullets` renders as bullet items.
 - `reference_url_web_name` links a rule reference to another generated ruleset page through `rulesHref`.
 - `pain_timeframes` renders a PAIN timeframe table inside applicable rule variants.
+- Notification entries render their required human-readable `name` and link form, web, and email targets when possible. Non-link targets remain visible as supporting destination details.
 
 The default template is `templates/template.hbs`, with partials in `templates/partials/`. New templates can use the same view model as the default template: effective entries, flows, sections, requirements, definitions, and requirement metadata such as terms, controls, notes, examples, and references.
 
