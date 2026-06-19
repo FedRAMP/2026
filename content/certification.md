@@ -9,9 +9,10 @@ picto:
 
 # FedRAMP Certification
 
-FedRAMP Certification, formerly referred to as “FedRAMP authorization,” is a certification by the Federal Risk and Authorization Management Program (FedRAMP) in the General Services Administration (GSA) that a cloud computing product or service has completed a standardized security assessment and review that is adequate for use by federal agencies in making initial and ongoing authorization to operate decisions for use of that cloud service.
+FedRAMP Certification, formerly referred to as “FedRAMP authorization,” is a certification that a cloud computing product or service has completed a standardized security assessment and review by FedRAMP. The resulting
+assessment and materials are presumed adequate for use by federal agencies to make Authorization to Operate (ATO) decisions related to the cloud service.
 
-FedRAMP does *not* grant an Authorization to Operate (ATO) of any kind or accept any risk on behalf of the federal government or federal agencies. The FedRAMP process establishes a standardized, reusable approach to ensuring agencies have timely and consistent access to the information necessary to make decisions and FedRAMP focuses on ensuring stakeholders follow this process within the limits of its authority and responsibilities. FedRAMP does not establish contracts or legal agreements for FedRAMP Certification and has minimal enforcement authority beyond requesting Corrective Action by a stakeholder that is not properly following the FedRAMP process.
+FedRAMP does *not* grant an Authorization to Operate of any kind or accept any risk on behalf of the federal government or federal agencies. The FedRAMP process establishes a standardized, reusable approach that ensures agencies have timely and consistent access to the information necessary to make decisions. FedRAMP ensures stakeholders follow this process within the limits of its authority and responsibilities. FedRAMP does not establish contracts or legal agreements for FedRAMP Certification and has minimal enforcement authority beyond requesting corrective action from a stakeholder that is not properly following the FedRAMP process.
 
 ## Types of FedRAMP Certification
 
@@ -72,7 +73,7 @@ Class D requires an immense investment and commitment for both initial and ongoi
 
 ## Paths for FedRAMP Certification
 
-There are 2 **paths** for FedRAMP Certification, with each path being restricted to certain types and classes of certification:
+There are 2 **paths** for FedRAMP Certification, with each path being restricted to certain types and classes of certification.
 
 !!! tip "See [Choosing a Certification Path](providers/start/path.md) in the Cloud Service Providers section for additional information on these paths."
 

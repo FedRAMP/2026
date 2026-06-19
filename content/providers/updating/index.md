@@ -22,7 +22,7 @@ for 2026 as quickly as possible.
 
 At the end of 2022, a new FedRAMP was created by Congress in the [FedRAMP Authorization
 Act](../../authority/law/index.md){data-preview}. This law superseded previous FedRAMP
-guidance and updated FISMA by applying a patch to the United States Code.
+guidance and updated existing laws (including the Federal Information Security Modernization Act or FISMA) by applying a patch to the United States Code.
 
 On July 25, 2024, the Office of Management and Budget released
 updated guidance, as directed by the FedRAMP Authorization Act, that turned FedRAMP on

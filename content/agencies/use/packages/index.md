@@ -9,11 +9,11 @@ picto:
 
 # Accessing FedRAMP Certification Packages
 
-A FedRAMP Certification Package contains security information about the FedRAMP certified cloud service offering. The information in the FedRAMP certification package is about how the cloud service provider maintains their cloud service offering. Federal agencies typically do not have control over the configuration choices reported in the FedRAMP certification package, since these are controlled by the cloud service provider.
+A FedRAMP Certification Package contains security information about the FedRAMP Certified cloud service offering. The information in the FedRAMP Certification Package is about how the cloud service provider maintains their cloud service offering. Federal agencies typically do not have control over the configuration choices reported in the FedRAMP Certification Package, since these are controlled by the cloud service provider.
 
-Historically FedRAMP collected all Certification Package information into a single file sharing repository operated by OMB (OMB MAX) then USDA (USDA Connect), however collection of this information in
+Historically, FedRAMP collected all Certification Package information into a single file sharing repository operated by OMB (OMB MAX) and then USDA (USDA Connect); however, collection of this information within
 legacy file-sharing folders in a single platform creates considerable risk and burden. All cloud service providers are currently transitioning to the use of FedRAMP-compatible Trust Centers (with a deadline of
-August, 2027) to ensure that Certification Package information can be made available directly to agencies via modern services.
+August 2027) to ensure that Certification Package information can be made available directly to agencies via modern services.
 
 !!! tip "GRC automation tools will bridge the gap!"
 

@@ -108,6 +108,7 @@ nav = [
         { "Marketplace Listing Rules" = "providers/implement/marketplace/marketplace-listing.md" },
       ] },
       { "Do the Work" = "providers/implement/work.md" },
+      { "Addressing Rules" = "providers/implement/rules.md" },
       { "Finding an Assessor" = "providers/implement/assessor.md" },
       { "Getting Certified" = "providers/implement/get-certified.md" },
     ] },

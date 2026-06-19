@@ -33,16 +33,16 @@ adjustments to the FedRAMP Rev5 and 20x processes:
 
 ## Understanding Ruleset Effective Dates
 
-Each FedRAMP Ruleset includes effective dates for both FedRAMP 20x and FedRAMP Rev5. Understanding
+Each FedRAMP ruleset includes effective dates for both FedRAMP 20x and FedRAMP Rev5. Understanding
 these dates is critical to informed planning. These dates can be loaded programmatically from
 the underlying [semi-structured machine-readable source](../../../sources.md) for the Consolidated Rules.
 
 | Critical Milestone | Explanation |
 | -- | -- |
-| Optional Adoption | Cloud service offerings may begin intentionally and responsibly adopting the FedRAMP Ruleset after this date; the entire FedRAMP Ruleset should be adopted as quickly as possible once adoption begins. |
-| Obtain | Cloud service offerings must be following the rules in the FedRAMP Ruleset in order to obtain a new FedRAMP Certification after this date. |
-| Maintain | Cloud service offerings with active FedRAMP Certifications must be following the rules in the FedRAMP Ruleset by this date in order to maintain their FedRAMP Certification; corrective action during the grace period will be requested by FedRAMP after this date. |
-| Grace Ends | Cloud service offerings with active FedRAMP Certifications that are not following the rules in the FedRAMP Ruleset by this date will lose their FedRAMP Certification until they follow the rules.<br><br>Some grace periods have fixed end dates while others coincide with the next completed FedRAMP independent assessment. |
+| Optional Adoption | Cloud service offerings may begin intentionally and responsibly adopting the FedRAMP ruleset after this date; the entire ruleset should be adopted as quickly as possible once adoption begins. |
+| Obtain | Cloud service offerings must be following the rules in the FedRAMP ruleset in order to obtain a new FedRAMP Certification after this date. |
+| Maintain | Cloud service offerings with active FedRAMP Certifications must be following the rules in the FedRAMP ruleset by this date in order to maintain their FedRAMP Certification; corrective action during the grace period will be requested by FedRAMP after this date. |
+| Grace Ends | Cloud service offerings with active FedRAMP Certifications that are not following the rules in the FedRAMP ruleset by this date will lose their FedRAMP Certification until they follow the rules.<br><br>Some grace periods have fixed end dates while others coincide with the next completed FedRAMP independent assessment. |
 
 !!! danger "There will be no extensions past the ending of the default grace period."
 

@@ -59,4 +59,4 @@ be listed in the FedRAMP Marketplace in the Implementation Phase:
 
 !!! tip "Next Steps"
 
-    Follow the [FedRAMP Rules for Marketplace Listing here](marketplace-listing.md)!
+    Follow the [FedRAMP rules for Marketplace Listing here](marketplace-listing.md)!

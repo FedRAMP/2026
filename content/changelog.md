@@ -268,7 +268,7 @@ picto:
 - `CDS-CSO-PUB` narrows the public information obligation to information that is available and applicable, splits contact information into sales and security contacts, adds product website and logo links, simplifies secure configuration guidance, and replaces several trust-center operational items with a trust-center landing page instruction. (note, this will likely change a few more times)
 - `CDS-UTC-PGD` was removed, eliminating the standalone Public Guidance for Certification Data requirement.
 - `CDS-UTC-AAD` keeps the 5-business-day agency access denial notification requirement but removes the email address from the statement text while retaining the structured notification metadata.
-- `CDS-UTC-AGA` changes the agency access recommendation from sharing the FedRAMP Certification package to supplying access to it upon agency request.
+- `CDS-UTC-AGA` changes the agency access recommendation from sharing the FedRAMP Certification Package to supplying access to it upon agency request.
 - `MKT-PRE-REQ` replaces broad “CDS: rules” and “CCM: rules” preparation-phase prerequisites with explicit references to `CDS-CSO-PUB` and `CDS-CSO-UTC`, adding related-rule metadata and the Trust Center term.
 - `MKT-PRE-DCP` moves continuous-progress evidence from quarterly Ongoing Certification Reports to Trust Center updates at least quarterly, replacing the Ongoing Certification term with Trust Center.
 

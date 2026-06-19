@@ -30,7 +30,7 @@ met in addition to FedRAMP's expectations.
     (such as the traditional Security Assessment Plan and Report), or detailed traditional
     static evidence (screenshots, etc.) then these should be provided to the agency sponsor
     so they can complete the agency authorization... however FedRAMP will still require
-    an assessment and materials that follow FedRAMP Rules in order to grant a FedRAMP
+    an assessment and materials that follow FedRAMP rules in order to grant a FedRAMP
     Certification.
 
 ## The Program Certification Process
@@ -67,8 +67,8 @@ aware of as FedRAMP modernizes:
    use modern tools to maintain their Certification Package and a considerable amount
    of flexibility is granted.
 
-2. The FedRAMP Rules create a new set of items that must be verified and validated.
-   Every single FedRAMP Rule must be verified and validated during each FedRAMP independent
+2. The FedRAMP rules create a new set of items that must be verified and validated.
+   Every single rule must be verified and validated during each FedRAMP independent
    assessment.
 
 3. There are no more ghost rules. If you cannot point to a specific written requirement
@@ -78,7 +78,7 @@ aware of as FedRAMP modernizes:
 ## Minimal Changes to FedRAMP Recognition
 
 The requirements for [FedRAMP Recognition](../rules/fedramp-recognition.md) have been
-moved from narrative into a modern FedRAMP Rules format with minimal changes to the
+moved from narrative into a modern FedRAMP rules format with minimal changes to the
 actual requirements.
 
 The single significant change is in

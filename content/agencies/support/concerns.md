@@ -9,7 +9,7 @@ picto:
 
 # Reporting Concerns to FedRAMP
 
-Once a cloud service provider attains a FedRAMP certification, their interactions with the FedRAMP PMO are limited. Agencies who are participating in collaborative continuous monitoring will typically have much greater insight into cloud service provider activities and will likely be the first to know if a provider is failing to meet FedRAMP’s standards.
+Once a cloud service provider obtains a FedRAMP Certification, their interactions with the FedRAMP PMO are limited. Agencies who are participating in collaborative continuous monitoring will typically have much greater insight into cloud service provider activities and will likely be the first to know if a provider is failing to meet FedRAMP’s standards.
 
 If a cloud service provider is failing to comply with FedRAMP requirements, we recommend that you take the following steps to address any compliance issues with your vendor:
 

@@ -29,7 +29,7 @@ This section helps independent assessment services understand the expectations f
 
     Learn how to get involved with the FedRAMP Community and what kind of support FedRAMP offers in public vs in private.
 
-    [Getting Support](support.md){ data-preview }
+    [Getting Support](../support.md){ data-preview }
 
 -   :material-update:{ .xl .middle .empty } **Been here awhile?**
 

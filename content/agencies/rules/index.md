@@ -29,7 +29,7 @@ In practice, agencies should use these rules to:
 
 2. Confirm when FedRAMP applies to an agency cloud use case.
 
-3. Reuse FedRAMP Certification packages and avoid duplicative assessment work.
+3. Reuse FedRAMP Certification Packages and avoid duplicative assessment work.
 
 4. Complete agency authorization activities for federal information systems that use FedRAMP Certified cloud service offerings.
 

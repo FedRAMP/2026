@@ -46,7 +46,9 @@ Verifies the rules source schema, `tools/rules` sync status, generated Markdown 
 bun run check
 ```
 
-Runs the local quality gate: `bun test` followed by `bunx tsc -p tsconfig.json --noEmit`.
+Runs the local quality gate: `bun test`, TypeScript checking, and non-failing
+content style warnings. Style warnings print last so they remain visible in
+local and pre-commit output.
 
 ```bash
 bun run build

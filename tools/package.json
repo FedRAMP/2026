@@ -9,7 +9,8 @@
     "fix": "bun run fix:headers",
     "fix:headers": "bun run ./scripts/fix-headers.ts",
     "sync": "./scripts/sync-rules-submodule.sh",
-    "check": "bun test && bunx tsc -p tsconfig.json --noEmit",
+    "check": "bun run ./scripts/check.ts",
+    "check:style": "bun run ./scripts/style-warnings.ts",
     "test": "bun test"
   },
   "devDependencies": {

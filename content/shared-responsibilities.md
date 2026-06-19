@@ -28,7 +28,7 @@ FedRAMP has considerable responsibility throughout the FedRAMP process, outlined
 7. Engaging with companies and the public to gather feedback on proposed changes to guidance and requirements.
 8. Owning government-wide outreach and information gathering from cloud services.
 
-Notably, FedRAMP does not enter into any legal agreements or contracts with cloud service providers, and has no legal enforcement authority or responsibility. FedRAMP can request corrective action by a cloud service provider or independent assessor and companies may choose to take action in such cases, but FedRAMP can not force them to do so. In cases where a company chooses not to take effective correction action, their FedRAMP Certification may be revoked by FedRAMP for some time but no other punitive action is available.
+Notably, FedRAMP does not enter into any legal agreements or contracts with cloud service providers, and has no legal enforcement authority or responsibility. FedRAMP can request corrective action by a cloud service provider or independent assessor and companies may choose to take action in such cases, but FedRAMP cannot force them to do so. In cases where a company chooses not to take effective correction action, their FedRAMP Certification may be revoked by FedRAMP for some time but no other punitive action is available.
 
 In short, FedRAMP grants or revokes FedRAMP Certification while companies choose whether or not to maintain their FedRAMP Certification by following FedRAMP rules.
 
@@ -60,13 +60,13 @@ Agencies may require cloud service providers to provide additional materials, im
 
 ## Agency Responsibilities
 
-Federal agencies must ensure that any cloud service they use has a FedRAMP Certification if their use is within the scope of FedRAMP. Furthermore, agencies must follow FedRAMP rules for assessment and use of a cloud service within a federal information system; this includes the process for using a FedRAMP Certification package. FedRAMP has the responsibility and authority in law and policy for the use of cloud services by agencies and provides instructions to ensure agencies meet their statutory obligations under both FISMA and the FedRAMP Authorization Act.
+Federal agencies must ensure that any cloud service they use has a FedRAMP Certification if their use is within the scope of FedRAMP. Furthermore, agencies must follow FedRAMP rules for assessment and use of a cloud service within a federal information system; this includes the process for using a FedRAMP Certification Package. FedRAMP has the responsibility and authority in law and policy for the use of cloud services by agencies and provides instructions to ensure agencies meet their statutory obligations.
 
 In their use of cloud services that are within the scope of FedRAMP, agencies are responsible for:
 
 1. Following the NIST Risk Management Framework, beginning with identifying the types of information an agency plans to use with a cloud service, categorizing the potential adverse impacts to that information, and selecting and documenting the necessary controls to protect that information to determine organizational security expectations for use of a cloud service.
 2. Reviewing FedRAMP Certification materials for cloud services to determine if the cloud service provides sufficient protection to meet the specific objectives for its use within an agency information system.
-3. Implementing and assessing the integration of FedRAMP Certified cloud services within the agency information system to ensure it has been securely configured and integrated into all necessary agency services in alignment with the required protections, including compensating controls as necessary. The resulting System Security Plan should ***only*** contain information that the agency is responsible for and should completely address each control identified in the selection step as either implemented by the agency or inherited from the cloud service provider.
+3. Implementing and assessing the integration of FedRAMP Certified cloud services within the agency information system to ensure it has been securely configured and integrated into all necessary agency services in alignment with the required protections, including compensating controls as necessary. The resulting System Security Plan should **only** contain information that the agency is responsible for and should completely address each control identified in the selection step as either implemented by the agency or inherited from the cloud service provider.
 4. Authorizing the operation of the information system and notifying FedRAMP of such.
 5. Monitoring the information system and all agency-responsible controls in alignment with agency policy, and monitoring the cloud service used within the information system in alignment with FedRAMP policy.
 
@@ -102,13 +102,13 @@ Throughout the lifecycle of a FedRAMP Certification for a cloud service provider
 5. Document, summarize, and provide evidence of the above activities to the cloud service provider and FedRAMP following rules set by FedRAMP.
 6. In the case of an agency sponsored FedRAMP Rev5 Certification, providing all materials to the sponsoring agency along with a recommendation or determination as required by the sponsoring agency.
 
-To be used in a FedRAMP Certification, independent assessors must be FedRAMP Recognized. It is the responsibility of FedRAMP Recognized independent assessment services to meet all necessary requirements to maintain FedRAMP Recognition.
+Independent assessors must be FedRAMP Recognized for their assessment to qualify for FedRAMP Certification. It is the responsibility of FedRAMP Recognized independent assessment services to meet all necessary requirements to maintain FedRAMP Recognition.
 
 [Learn more about Assessors](assessors/index.md){ .md-button }
 
 ## Advisory Service Responsibilities
 
-It can be incredibly difficult for companies to navigate the federal marketplace, and FedRAMP is just one small thing that makes providing services to the government different from private sector. Advisory services can help companies navigate these complexities and stay up to date - but be careful, as not all advisory services are created equal and tracking all of the modernization changes in government requires a lot of continuous effort.
+It can be incredibly difficult for companies to navigate the federal marketplace, and FedRAMP is just one small thing that makes providing services to the government different from the private sector. Advisory services can help companies navigate these complexities and stay up to date — but be careful, as not all advisory services are created equal and tracking all of the modernization changes in government requires a lot of continuous effort.
 
 Advisory services are optional within the FedRAMP shared responsibility model. FedRAMP does not certify, review, recommend, or officially recognize advisory services, but any advisory service may be listed in the FedRAMP Marketplace by meeting a few simple requirements.
 

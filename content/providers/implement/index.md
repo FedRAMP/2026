@@ -19,7 +19,7 @@ flowchart LR
 
 The initial implementation work can really begin once you're working with an advisor and have identified a target FedRAMP Certification Profile. You'll
 probably want to start by announcing to the world that you're advancing towards a FedRAMP Certification and getting listed in the FedRAMP Marketplace
-will be the first test of navigating FedRAMP rules in practice. Then you'll do the necessary work, following FedRAMP Rules, to implement the necessary
+will be the first test of navigating FedRAMP rules in practice. Then you'll do the necessary work, following FedRAMP rules, to implement the necessary
 changes in your information security program, partner with a FedRAMP Recognized independent assessment service to help you verify and validate your
 work, then apply for your target FedRAMP Certification.
 
