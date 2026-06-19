@@ -408,6 +408,8 @@ extra_javascript = [
 
 [project.extra]
 homepage = "/2026"
+social_image = "/2026/assets/preview.png"
+social_image_alt = "FedRAMP Consolidated Rules for 2026"
 
 
 [project.extra.analytics]
