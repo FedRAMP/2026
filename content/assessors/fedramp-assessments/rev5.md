@@ -20,6 +20,18 @@ and assessors should navigate this carefully.
     Assessors supporting agency sponsored Rev5 assessments will need to follow a hybrid of the legacy process for agencies combined with
     a more modern process for FedRAMP.
 
+Your interaction and focus will shift depending on whether the assessment is sponsored or sponsor-less. For a sponsored assessment, you are performing your duties with a clear agency partner as the primary consumer of your assessment materials. For a sponsor-less assessment, you are conducting the assessment with the understanding that your work will be scrutinized by FedRAMP for government-wide applicability, requiring a thorough and well-documented certification package.
+
+
+| Path | Sponsored Assessment | Program (Sponsor-less) Assessment |
+| -- | -- | -- |
+| Primary Audience | The specific sponsoring federal agency. | FedRAMP and its review team |
+| Key Stakeholder Interaction | You will likely participate in a kick-off meeting with the agency and cloud provider to align on scope, schedule, and the agency’s specific risk acceptance process. | Your engagement is primarily with the cloud provider, but your deliverables must be robust enough to withstand a formal FedRAMP review for government-wide reuse. |
+| End Goal | Your assessment deliverables support the sponsoring agency in making a risk-based decision to grant an Authority to Operate (ATO). |Your assessment deliverables support an initial ATO and a subsequent FedRAMP review to grant a "FedRAMP Certified" designation on the Marketplace.|
+
+
+
+
 ## The Legacy Agency Sponsored Assessment
 
 It is important that assessment services and cloud service providers work carefully with agency sponsors to provide
