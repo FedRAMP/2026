@@ -125,7 +125,7 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "ignoreDocuments": ["AGU", "SDR", "REC"],
+          "ignoreDocuments": ["AGU", "REC"],
           "types": ["all"],
           "affects": ["Providers"]
         }
@@ -591,7 +591,7 @@
         "definitionsHref": "../../definitions/",
         "rulesHref": "../../",
         "emptyBehavior": "skip",
-        "includeEffectiveDates": false,
+        "includeEffectiveDates": true,
         "source": {
           "collection": "FRR",
           "documents": "ALL",
@@ -609,7 +609,7 @@
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../../../",
         "emptyBehavior": "skip",
-        "includeEffectiveDates": false,
+        "includeEffectiveDates": true,
         "source": {
           "collection": "FRR",
           "documents": "ALL",
@@ -627,7 +627,7 @@
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../../../",
         "emptyBehavior": "skip",
-        "includeEffectiveDates": false,
+        "includeEffectiveDates": true,
         "source": {
           "collection": "FRR",
           "documents": "ALL",
@@ -645,7 +645,7 @@
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../",
         "emptyBehavior": "skip",
-        "includeEffectiveDates": false,
+        "includeEffectiveDates": true,
         "source": {
           "collection": "FRR",
           "documents": ["MKT"],
@@ -663,7 +663,7 @@
         "definitionsHref": "../../definitions/",
         "rulesHref": "../",
         "emptyBehavior": "skip",
-        "includeEffectiveDates": false,
+        "includeEffectiveDates": true,
         "source": {
           "collection": "FRR",
           "documents": "ALL",
@@ -682,7 +682,7 @@
         "definitionsHref": "../../definitions/",
         "rulesHref": "../",
         "emptyBehavior": "skip",
-        "includeEffectiveDates": false,
+        "includeEffectiveDates": true,
         "source": {
           "collection": "FRR",
           "documents": ["MKT"],
