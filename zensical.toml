@@ -15,6 +15,11 @@ nav = [
       { "Source Data" = "sources.md" },
       { "Changelog" = "changelog.md" }
     ] },
+    { "Related External Sites" = [
+      { "⏳ Legacy Documentation Reference" = "https://fedramp.gov/legacy" },
+      { "🦾 Machine-Readable Rules" = "https://github.com/FedRAMP/rules" },
+      { "🆘 help.fedramp.gov" = "https://help.fedramp.gov" },
+    ] },
   ] },
   { "FedRAMP" = [
     "responsibilities/index.md",

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Public Branch Changelog"
+  short_description: "Draft public changelogs from branch changes"
+  default_prompt: "Use $public-branch-changelog to summarize this branch for public readers."
