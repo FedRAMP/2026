@@ -711,15 +711,6 @@ function stripGeneratedManualPageAdornments(contents: string): string {
       continue;
     }
 
-    if (trimmed === '??? info inline end "Page Info"') {
-      while (
-        index + 1 < lines.length &&
-        (lines[index + 1] === "" || /^\s/.test(lines[index + 1] ?? ""))
-      ) {
-        index++;
-      }
-      continue;
-    }
 
     outputLines.push(line);
   }
@@ -1309,12 +1300,6 @@ describe("build-markdown", () => {
         "---",
         "",
         referenceIndexArtifact.context.statusSpan ?? "",
-        "",
-        '??? info inline end "Page Info"',
-        "",
-        `    **Description:** ${referenceIndexArtifact.context.description ?? ""}`,
-        "    ",
-        `    **Purpose:** ${referenceIndexArtifact.context.purpose ?? ""}`,
         "",
         `# ${referenceIndexArtifact.title}`,
       ].join("\n"),
@@ -2487,128 +2472,6 @@ describe("build-markdown", () => {
     expect(shortNames).not.toContain("FLT");
   });
 
-  test("adds page info admonitions below content pictograph spans", async () => {
-    const config = await loadToolConfig();
-    const tempDir = await mkdtemp(path.join(tmpdir(), "cr26-site-tools-"));
-    const tempContentDir = path.join(tempDir, "content");
-    const tempSrcDir = path.join(tempDir, "src");
-    const tempHtmlDir = path.join(tempDir, "html");
-
-    try {
-      await mkdir(tempContentDir, { recursive: true });
-      await mkdir(tempSrcDir, { recursive: true });
-      await writeFile(
-        path.join(tempSrcDir, "index.md"),
-        [
-          "---",
-          "description: This page contains an overview of the Public Preview, including descriptions of the content sources and status.",
-          "purpose: Helps folks understand the goals of the Public Preview and how to approach reviewing it.",
-          "picto:",
-          "  source: person",
-          "  status: stable",
-          "---",
-          "",
-          "# Public Preview",
-          "",
-        ].join("\n"),
-        "utf8",
-      );
-      await writeFile(
-        path.join(tempSrcDir, "purpose-only.md"),
-        [
-          "---",
-          'description: ""',
-          "purpose: Explains why this page exists.",
-          "picto:",
-          "  source: person",
-          "  status: stable",
-          "---",
-          "",
-          "# Purpose Only",
-          "",
-        ].join("\n"),
-        "utf8",
-      );
-      await writeFile(
-        path.join(tempSrcDir, "empty.md"),
-        [
-          "---",
-          'description: ""',
-          "purpose: ''",
-          "picto:",
-          "  source: person",
-          "  status: stable",
-          "---",
-          "",
-          "# Empty Page Info",
-          "",
-        ].join("\n"),
-        "utf8",
-      );
-
-      await buildMarkdown({
-        ...config,
-        paths: {
-          ...config.paths,
-          content: path.relative(resolveToolPath("."), tempContentDir),
-          src: path.relative(resolveToolPath("."), tempSrcDir),
-          html: path.relative(resolveToolPath("."), tempHtmlDir),
-        },
-        generated: {
-          ...config.generated,
-          definitions: undefined,
-          definitionDocuments: [],
-          ksiDocuments: [],
-          deadlineDocuments: [],
-          taggedDocumentSummaries: [],
-          referenceIndexDocuments: [],
-          frrCollectionDocuments: [],
-          ruleDocuments: [],
-        },
-      });
-
-      const indexContents = await readFile(
-        path.join(tempSrcDir, "index.md"),
-        "utf8",
-      );
-      expect(indexContents).toContain(
-        [
-          MANUAL_STABLE_STATUS_SPAN,
-          "",
-          '??? info inline end "Page Info"',
-          "",
-          "    **Description:** This page contains an overview of the Public Preview, including descriptions of the content sources and status.",
-          "    ",
-          "    **Purpose:** Helps folks understand the goals of the Public Preview and how to approach reviewing it.",
-        ].join("\n"),
-      );
-
-      const purposeOnlyContents = await readFile(
-        path.join(tempSrcDir, "purpose-only.md"),
-        "utf8",
-      );
-      expect(purposeOnlyContents).toContain(
-        [
-          MANUAL_STABLE_STATUS_SPAN,
-          "",
-          '??? info inline end "Page Info"',
-          "",
-          "    **Purpose:** Explains why this page exists.",
-        ].join("\n"),
-      );
-      expect(purposeOnlyContents).not.toContain("**Description:**");
-
-      const emptyContents = await readFile(
-        path.join(tempSrcDir, "empty.md"),
-        "utf8",
-      );
-      expect(emptyContents).toContain(`---\n\n${MANUAL_STABLE_STATUS_SPAN}`);
-      expect(emptyContents).not.toContain('??? info inline end "Page Info"');
-    } finally {
-      await rm(tempDir, { recursive: true, force: true });
-    }
-  });
-
   test("builds configured FRD definition document mappings", async () => {
     const config = await loadToolConfig();
     const tempDir = await mkdtemp(path.join(tmpdir(), "cr26-site-tools-"));
@@ -2858,12 +2721,6 @@ describe("manual content source drift", () => {
           "",
           MANUAL_STABLE_STATUS_SPAN,
           "",
-          '??? info inline end "Page Info"',
-          "",
-          "    **Description:** Clean source page.",
-          "    ",
-          "    **Purpose:** Confirms generated adornments do not count as drift.",
-          "",
           "# Clean",
           "",
           "Original content.",
@@ -2990,12 +2847,6 @@ describe("build pipeline", () => {
         "---",
         "",
         MANUAL_STABLE_STATUS_SPAN,
-        "",
-        '??? info inline end "Page Info"',
-        "",
-        "    **Description:** This page contains an overview of the Public Preview, including descriptions of the content sources and status.",
-        "    ",
-        "    **Purpose:** Helps folks understand the goals of the Public Preview and how to approach reviewing it.",
         "",
         "# Public Preview",
       ].join("\n"),

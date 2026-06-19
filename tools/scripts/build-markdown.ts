@@ -3952,62 +3952,6 @@ function meaningfulFrontmatterValue(value: string): string | undefined {
   return normalized ? normalized : undefined;
 }
 
-function renderPageInfoAdmonition(
-  frontmatterLines: string[],
-): string[] {
-  const description = frontmatterScalarValue(frontmatterLines, "description");
-  const purpose = frontmatterScalarValue(frontmatterLines, "purpose");
-  const googleDoc = frontmatterScalarValue(frontmatterLines, "google_doc");
-
-  if (!description && !purpose && !googleDoc) {
-    return [];
-  }
-
-  const lines = ['??? info inline end "Page Info"', ""];
-  if (description) {
-    lines.push(`    **Description:** ${description.replace(/\s+/g, " ")}`);
-  }
-
-  if (description && purpose) {
-    lines.push("    ");
-  }
-
-  if (purpose) {
-    lines.push(`    **Purpose:** ${purpose.replace(/\s+/g, " ")}`);
-  }
-
-  if (googleDoc) {
-    if (description || purpose) {
-      lines.push("    ");
-    }
-    const escapedHref = googleDoc.replaceAll("(", "%28").replaceAll(")", "%29");
-    lines.push(`    **Edit:** [:material-file-edit-outline:](${escapedHref}){ title="Link to FedRAMP Internal Google Doc" }`);
-  }
-
-  return lines;
-}
-
-function stripLeadingPageInfoAdmonition(bodyLines: string[]): void {
-  if (bodyLines[0]?.trim() !== '??? info inline end "Page Info"') {
-    return;
-  }
-
-  bodyLines.shift();
-  while (bodyLines.length) {
-    const line = bodyLines[0];
-    if (line === "" || line?.startsWith(" ")) {
-      bodyLines.shift();
-      continue;
-    }
-
-    break;
-  }
-
-  while (bodyLines[0] === "") {
-    bodyLines.shift();
-  }
-}
-
 function renderContentPictographSpan(
   relativePath: string,
   contents: string,
@@ -4048,25 +3992,18 @@ function renderContentPictographSpan(
     bodyLines.shift();
   }
 
-  stripLeadingPageInfoAdmonition(bodyLines);
-
   if (/^<span class="picto">.+<\/span>\s*$/.test(bodyLines[0]?.trim() ?? "")) {
     bodyLines.shift();
     while (bodyLines[0] === "") {
       bodyLines.shift();
     }
   }
-  stripLeadingPageInfoAdmonition(bodyLines);
-
-  const pageInfoAdmonition = renderPageInfoAdmonition(frontmatterLines);
 
   return [
     ...lines.slice(0, frontmatterEndIndex + 1),
     "",
     pictographSpan(config, picto.status, picto.source),
     "",
-    ...pageInfoAdmonition,
-    ...(pageInfoAdmonition.length ? [""] : []),
     ...bodyLines,
   ].join("\n");
 }
