@@ -1,3 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap');
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Merriweather', serif;
+}
+
+h1 {
+    font-size: 1.5rem !important;
+    font-weight: 100 !important;
+}
+
+h2 {
+    font-weight: 600 !important;
+}
+
+h3 {
+    font-weight: 100 !important;
+}
+
+.subset-applicability {
+    line-height: 1.65;
+    margin: 0 0 0.8rem;
+}
+
+.subset-applicability__group {
+    white-space: normal;
+}
+
+.subset-applicability__label {
+    color: var(--md-default-fg-color--light);
+    display: inline-block;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    margin: 0;
+    text-transform: uppercase;
+    width: 5.25rem;
+}
+
+.subset-applicability__values {
+    display: inline;
+}
+
+.subset-applicability__tag {
+    background-color: #565c65;
+    border-radius: 0.125rem;
+    color: #fff;
+    display: inline-block;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+    line-height: 1;
+    padding: 0.2rem 0.4rem;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.subset-applicability__tag + .subset-applicability__tag {
+    margin-left: 0.25rem;
+}
+
+[data-md-color-scheme="slate"] .subset-applicability__tag {
+    background-color: #dfe1e2;
+    color: #1b1b1b;
+}
+
 .picto {
     font-size: 1.5rem;
     font-weight: 600;
@@ -44,4 +111,3 @@
 .md-typeset .schema > summary::after {
   color: var(--fedramp-admonition-schema-color);
 }
-

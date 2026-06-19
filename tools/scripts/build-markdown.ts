@@ -354,12 +354,19 @@ interface ImportantRelatedTermViewModel {
   terms: TermLinkViewModel[];
 }
 
+interface ApplicabilityGroupViewModel {
+  key: "types" | "paths" | "classes" | "affects";
+  label: string;
+  values: string[];
+}
+
 interface SectionViewModel {
   title: string;
   anchorId: string;
   anchorAttribute: string;
   isSubsetSection: boolean;
   descriptionParagraphs: string[];
+  applicabilityGroups: ApplicabilityGroupViewModel[];
   requirements: RequirementViewModel[];
 }
 
@@ -689,6 +696,99 @@ function applicabilityClassesOverlapSelectedClasses(
   );
 }
 
+function uniqueApplicabilityValues(values: string[]): string[] {
+  const seen = new Set<string>();
+  const uniqueValues: string[] = [];
+
+  for (const value of values.map((entry) => entry.trim()).filter(Boolean)) {
+    const normalized = value.toLowerCase();
+    if (seen.has(normalized)) {
+      continue;
+    }
+
+    seen.add(normalized);
+    uniqueValues.push(value);
+  }
+
+  return uniqueValues;
+}
+
+function subsetApplicabilityGroups(
+  subset: SubsetSource | undefined,
+  mapping: {
+    id: string;
+    source: {
+      types?: readonly RuleTypeSelection[];
+      classes?: readonly string[];
+      affects?: readonly string[];
+    };
+  },
+): ApplicabilityGroupViewModel[] {
+  const applicability = subset?.applicability;
+  if (!applicability) {
+    return [];
+  }
+
+  const selectedVersions = sourceVersions(mapping);
+  const selectedClasses = mappingClasses(mapping);
+  const selectedAffectedParties = mapping.source.affects ?? [];
+  const types = Array.from(
+    new Set(
+      (applicability.types ?? [])
+        .map(normalizeApplicabilityType)
+        .filter(
+          (value): value is Version =>
+            value !== undefined && selectedVersions.includes(value),
+        ),
+    ),
+  ).map(humanizeVersion);
+  const paths = uniqueApplicabilityValues(applicability.paths ?? []);
+  const classes = Array.from(
+    new Set(
+      (applicability.classes ?? [])
+        .map(normalizeCertificationClass)
+        .filter(
+          (value) =>
+            value &&
+            (!selectedClasses.length || selectedClasses.includes(value)),
+        ),
+    ),
+  ).map((value) => `Class ${value}`);
+  const affects = uniqueApplicabilityValues(applicability.affects ?? []).filter(
+    (value) =>
+      !selectedAffectedParties.length ||
+      matchesAny(value, [...selectedAffectedParties]),
+  );
+
+  return [
+    { key: "types", label: "Type", values: types },
+    { key: "paths", label: "Path", values: paths },
+    { key: "classes", label: "Class", values: classes },
+    { key: "affects", label: "Audience", values: affects },
+  ].filter((group) => group.values.length > 0) as ApplicabilityGroupViewModel[];
+}
+
+function mergeApplicabilityGroups(
+  target: ApplicabilityGroupViewModel[],
+  additions: ApplicabilityGroupViewModel[],
+): void {
+  for (const addition of additions) {
+    const existing = target.find((group) => group.key === addition.key);
+    if (!existing) {
+      target.push({
+        ...addition,
+        values: [...addition.values],
+      });
+      continue;
+    }
+
+    existing.values = uniqueApplicabilityValues([
+      ...existing.values,
+      ...addition.values,
+    ]);
+  }
+}
+
 function subsetMatchesSourceApplicability(
   subset: SubsetSource | undefined,
   mapping: {
@@ -696,25 +796,56 @@ function subsetMatchesSourceApplicability(
     source: {
       types?: readonly RuleTypeSelection[];
       classes?: readonly string[];
+      affects?: readonly string[];
     };
   },
 ): boolean {
-  const classes = mappingClasses(mapping);
-  if (!classes.length) {
-    return true;
-  }
-
   const applicability = subset?.applicability;
   if (!applicability) {
     return true;
   }
 
-  return (
-    applicabilityTypesOverlapSelectedVersions(
+  const applicabilityTypes = (applicability.types ?? [])
+    .map(normalizeApplicabilityType)
+    .filter((value): value is Version => value !== undefined);
+  if (
+    applicabilityTypes.length &&
+    !applicabilityTypesOverlapSelectedVersions(
       applicability,
       sourceVersions(mapping),
-    ) && applicabilityClassesOverlapSelectedClasses(applicability, classes)
+    )
+  ) {
+    return false;
+  }
+
+  const classes = mappingClasses(mapping);
+  const applicabilityClasses = (applicability.classes ?? [])
+    .map(normalizeCertificationClass)
+    .filter(Boolean);
+  if (
+    classes.length &&
+    applicabilityClasses.length &&
+    !applicabilityClassesOverlapSelectedClasses(applicability, classes)
+  ) {
+    return false;
+  }
+
+  const affectedParties = mapping.source.affects ?? [];
+  const applicabilityAffectedParties = uniqueApplicabilityValues(
+    applicability.affects ?? [],
   );
+  if (
+    affectedParties.length &&
+    applicabilityAffectedParties.length &&
+    !affectsFiltersOverlap(
+      applicabilityAffectedParties,
+      [...affectedParties],
+    )
+  ) {
+    return false;
+  }
+
+  return true;
 }
 
 function humanizeStatus(value?: string): string {
@@ -2361,6 +2492,10 @@ function buildSectionViewModels(
         ),
         isSubsetSection: true,
         descriptionParagraphs: splitParagraphs(subset?.description),
+        applicabilityGroups: subsetApplicabilityGroups(subset, {
+          id: `legacy-${version}`,
+          source: { types: [version] },
+        }),
         requirements: [],
       };
 
@@ -2519,6 +2654,7 @@ function buildConfiguredSectionViewModels(
         ),
         isSubsetSection: true,
         descriptionParagraphs: splitParagraphs(subset?.description),
+        applicabilityGroups: subsetApplicabilityGroups(subset, mapping),
         requirements: [],
       };
 
@@ -2592,6 +2728,7 @@ function buildDocumentGroupedSectionViewModel(
   const definitionsHref = mapping.definitionsHref ?? "definitions/";
   const rulesHref = mapping.rulesHref ?? "";
   const subsets = subsetsForVersions(document.info, mappingVersions(mapping));
+  const applicabilityGroups: ApplicabilityGroupViewModel[] = [];
 
   for (const bucketName of configuredBuckets(mapping)) {
     const bucket = document.data[bucketName];
@@ -2609,11 +2746,19 @@ function buildDocumentGroupedSectionViewModel(
         continue;
       }
 
-      for (const [id, requirement] of Object.entries(sectionRequirements)) {
-        if (!requirementMatchesMapping(requirement, mapping)) {
-          continue;
-        }
+      const matchingRequirements = Object.entries(sectionRequirements).filter(
+        ([, requirement]) => requirementMatchesMapping(requirement, mapping),
+      );
+      if (!matchingRequirements.length) {
+        continue;
+      }
 
+      mergeApplicabilityGroups(
+        applicabilityGroups,
+        subsetApplicabilityGroups(subset, mapping),
+      );
+
+      for (const [id, requirement] of matchingRequirements) {
         requirements.push(
           buildRequirementViewModel(
             id,
@@ -2645,6 +2790,7 @@ function buildDocumentGroupedSectionViewModel(
     ),
     isSubsetSection: false,
     descriptionParagraphs: [],
+    applicabilityGroups,
     requirements,
   };
 }
@@ -4325,6 +4471,7 @@ function buildKsiThemeSectionViewModel(
     ),
     isSubsetSection: false,
     descriptionParagraphs: splitParagraphs(theme.theme),
+    applicabilityGroups: [],
     requirements: indicators,
   };
 }
@@ -4690,6 +4837,7 @@ function buildFrrCollectionSectionViewModel(
   const definitionsHref = mapping.definitionsHref ?? "definitions/";
   const rulesHref = mapping.rulesHref ?? "";
   const subsets = subsetsForVersions(document.info, mappingVersions(mapping));
+  const applicabilityGroups: ApplicabilityGroupViewModel[] = [];
 
   for (const bucketName of configuredBuckets(mapping)) {
     const bucket = document.data[bucketName];
@@ -4716,6 +4864,10 @@ function buildFrrCollectionSectionViewModel(
       addUniqueParagraphs(
         descriptionParagraphs,
         splitParagraphs(subsets[subsetKey]?.description),
+      );
+      mergeApplicabilityGroups(
+        applicabilityGroups,
+        subsetApplicabilityGroups(subsets[subsetKey], mapping),
       );
 
       for (const [id, requirement] of matchingRequirements) {
@@ -4750,6 +4902,7 @@ function buildFrrCollectionSectionViewModel(
     ),
     isSubsetSection: false,
     descriptionParagraphs,
+    applicabilityGroups,
     requirements,
   };
 }
@@ -5048,6 +5201,7 @@ function buildRelatedRuleSections(
       anchorAttribute: sectionAnchorAttribute(sectionKey, groupedSectionTitle),
       isSubsetSection: false,
       descriptionParagraphs: splitParagraphs(document.info.purpose),
+      applicabilityGroups: [],
       requirements: [],
     };
 

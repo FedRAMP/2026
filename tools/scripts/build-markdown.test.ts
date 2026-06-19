@@ -1535,10 +1535,40 @@ describe("build-markdown", () => {
       const contents = await readGeneratedArtifact(artifact);
       for (const section of artifact.context.sections) {
         expect(contents).toContain(`## ${section.title}`);
+        for (const group of section.applicabilityGroups) {
+          const expectedGroup = [
+            `<span class="subset-applicability__group subset-applicability__group--${group.key}">`,
+            `<span class="subset-applicability__label">${group.label}:</span>`,
+            '<span class="subset-applicability__values">',
+            ...group.values.map(
+              (value) =>
+                `<span class="subset-applicability__tag">${value}</span>`,
+            ),
+          ];
+          expectTextOrder(
+            contents,
+            expectedGroup,
+            `Generated FRR markdown should render ${group.label.toLowerCase()} applicability labels for ${section.title}`,
+          );
+        }
+
         const requirement = section.requirements[0];
         if (requirement) {
           expect(contents).toContain(requirement.id);
           expect(contents).toContain(`### ${requirement.title}`);
+        }
+
+        if (section.applicabilityGroups.length && requirement) {
+          expectTextOrder(
+            contents,
+            [
+              `## ${section.title}`,
+              section.descriptionParagraphs.at(-1) ?? "",
+              '<div class="subset-applicability" role="group" aria-label="Applicability">',
+              `### ${requirement.title}`,
+            ],
+            `Generated FRR markdown should place applicability labels after the subset description and before its requirements for ${section.title}`,
+          );
         }
       }
     }
@@ -1906,6 +1936,7 @@ describe("build-markdown", () => {
         description: "Rules specific to Class A.",
         applicability: {
           types: ["20x"],
+          paths: ["Program"],
           classes: ["A"],
           affects: ["Providers"],
         },
@@ -1915,8 +1946,9 @@ describe("build-markdown", () => {
         description: "Rules specific to Class B.",
         applicability: {
           types: ["20x"],
+          paths: ["Program", "Agency"],
           classes: ["B"],
-          affects: ["Providers"],
+          affects: ["Providers", "Agencies"],
         },
       },
       R5B: {
@@ -1924,6 +1956,7 @@ describe("build-markdown", () => {
         description: "Rules specific to Rev5 Class B.",
         applicability: {
           types: ["Rev5"],
+          paths: ["Agency"],
           classes: ["B"],
           affects: ["Providers"],
         },
@@ -2067,6 +2100,37 @@ describe("build-markdown", () => {
         ],
         ruleDocuments: [
           {
+            id: "complete-reference",
+            output: "reference/{FRR}.md",
+            outputMode: "documents",
+            status: "stable",
+            rulesHref: "../",
+            emptyBehavior: "skip",
+            source: {
+              collection: "FRR",
+              documents: ["SYN"],
+              types: ["all"],
+              includeAll: true,
+              allPosition: "first",
+            },
+          },
+          {
+            id: "provider-20x-rules",
+            output: "providers/20x/rules/{FRR}.md",
+            outputMode: "documents",
+            status: "stable",
+            rulesHref: "../../../",
+            emptyBehavior: "skip",
+            source: {
+              collection: "FRR",
+              documents: ["SYN"],
+              types: ["20x"],
+              affects: ["Providers"],
+              includeAll: true,
+              allPosition: "first",
+            },
+          },
+          {
             id: "20x-a-reference",
             output: "reference/20x/a/{FRR}.md",
             outputMode: "documents",
@@ -2112,6 +2176,14 @@ describe("build-markdown", () => {
       artifacts,
       "reference/20x/a/synthetic-ruleset.md",
     );
+    const completeRuleArtifact = findArtifact(
+      artifacts,
+      "reference/synthetic-ruleset.md",
+    );
+    const provider20xArtifact = findArtifact(
+      artifacts,
+      "providers/20x/rules/synthetic-ruleset.md",
+    );
     const classARequirement = classARuleArtifact.context.sections
       .flatMap((section) => section.requirements)
       .find((entry) => entry.id === "SYN-AON-ONE");
@@ -2121,8 +2193,61 @@ describe("build-markdown", () => {
     const requirement = ruleArtifact.context.sections
       .flatMap((section) => section.requirements)
       .find((entry) => entry.id === "SYN-BON-VAR");
+    const classBSection = ruleArtifact.context.sections.find(
+      (section) => section.title === "Class B Only",
+    );
+    const providerClassBSection = provider20xArtifact.context.sections.find(
+      (section) => section.title === "Class B Only",
+    );
+    const providerRequirementIds = provider20xArtifact.context.sections.flatMap(
+      (section) => section.requirements.map((entry) => entry.id),
+    );
+    const completeRev5Section = completeRuleArtifact.context.sections.find(
+      (section) => section.title === "Rev5 Class B",
+    );
 
     expect(requirementIds).toEqual(["SYN-BON-VAR"]);
+    expect(classBSection?.applicabilityGroups).toEqual([
+      { key: "types", label: "Type", values: ["20x"] },
+      {
+        key: "paths",
+        label: "Path",
+        values: ["Program", "Agency"],
+      },
+      { key: "classes", label: "Class", values: ["Class B"] },
+      {
+        key: "affects",
+        label: "Audience",
+        values: ["Providers", "Agencies"],
+      },
+    ]);
+    expect(providerClassBSection?.applicabilityGroups).toEqual([
+      { key: "types", label: "Type", values: ["20x"] },
+      {
+        key: "paths",
+        label: "Path",
+        values: ["Program", "Agency"],
+      },
+      { key: "classes", label: "Class", values: ["Class B"] },
+      {
+        key: "affects",
+        label: "Audience",
+        values: ["Providers"],
+      },
+    ]);
+    expect(providerRequirementIds).toContain("SYN-AON-ONE");
+    expect(providerRequirementIds).toContain("SYN-BON-VAR");
+    expect(providerRequirementIds).not.toContain("SYN-R5B-ONE");
+    expect(completeRev5Section?.applicabilityGroups).toEqual([
+      { key: "types", label: "Type", values: ["Rev5"] },
+      { key: "paths", label: "Path", values: ["Agency"] },
+      { key: "classes", label: "Class", values: ["Class B"] },
+      {
+        key: "affects",
+        label: "Audience",
+        values: ["Providers"],
+      },
+    ]);
     expect(requirement?.variantSections).toHaveLength(1);
     expect(requirement?.variantSections[0]?.title).toBe("Class B");
     expect(
@@ -3096,7 +3221,7 @@ describe("build pipeline", () => {
       "search.json",
       "sitemap.xml",
       "assets/fr-only-logo-black.png",
-      "stylesheets/custom.css",
+      "stylesheets/extra.css",
       "authority/m-24-15/m-24-15-official.png",
     ]) {
       await access(path.join(htmlPath, relativePath));
@@ -3133,6 +3258,15 @@ describe("build pipeline", () => {
         artifact.relativePath.startsWith("agencies/rules/"),
       "a rendered agency rules artifact",
     );
+    const renderedApplicabilityArtifact = firstArtifactMatching(
+      expectedArtifacts,
+      (artifact) =>
+        artifact.documentType === "FRR" &&
+        artifact.context.sections.some(
+          (section) => section.applicabilityGroups.length > 0,
+        ),
+      "a rendered FRR artifact with subset applicability",
+    );
     if (!renderedKsiThemeIndicator) {
       throw new Error(
         `Expected ${renderedKsiThemeArtifact.relativePath} to include an indicator.`,
@@ -3162,6 +3296,10 @@ describe("build pipeline", () => {
     const renderedAgencyHtmlPath = path.relative(
       htmlPath,
       markdownToHtmlPath(htmlPath, renderedAgencyArtifact.relativePath),
+    );
+    const renderedApplicabilityHtmlPath = path.relative(
+      htmlPath,
+      markdownToHtmlPath(htmlPath, renderedApplicabilityArtifact.relativePath),
     );
 
     const renderedPages = [
@@ -3214,6 +3352,22 @@ describe("build pipeline", () => {
       }
       expect(contents).not.toContain("{{");
       expect(contents).not.toContain("[object Object]");
+    }
+
+    const renderedApplicabilityHtml = await readFile(
+      path.join(htmlPath, renderedApplicabilityHtmlPath),
+      "utf8",
+    );
+    const firstApplicabilityValue = renderedApplicabilityArtifact.context.sections
+      .flatMap((section) => section.applicabilityGroups)
+      .flatMap((group) => group.values)[0];
+    expect(renderedApplicabilityHtml).toContain(
+      '<div class="subset-applicability" role="group" aria-label="Applicability">',
+    );
+    if (firstApplicabilityValue) {
+      expect(renderedApplicabilityHtml).toContain(
+        `<span class="subset-applicability__tag">${firstApplicabilityValue}</span>`,
+      );
     }
   });
 });

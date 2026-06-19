@@ -182,6 +182,10 @@ Definition mapping fields:
 
 Generated definition pages render the FRD purpose first, then an **Important Related Terms** table for definitions with a `tag` value. Each table row has a stable anchor, and each definition that belongs to a group links back to that table row. Definitions themselves render as a single alphabetical list of `##` headings, regardless of whether they have a `tag`.
 
+## Generated Subset Applicability
+
+Generated FRR subset sections render the source `subsets.*.applicability` metadata as compact labels immediately after the subset description. Certification types, classes, and affected parties are narrowed to the current generated mapping. For example, a 20x Class B reference page shows `20x` and `Class B`, while the complete ruleset reference keeps every applicable type and class. Certification paths are shown as supplied by the rules source because generated mappings do not currently filter by path.
+
 ## Generated KSI Pages
 
 Add an entry to `generated.ksiDocuments` in `config.json`:

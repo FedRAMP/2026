@@ -660,7 +660,7 @@
         "output": "assessors/rules/{FRR}.md",
         "outputMode": "documents",
         "status": "stable",
-        "definitionsHref": "../../../definitions/",
+        "definitionsHref": "../../definitions/",
         "rulesHref": "../",
         "emptyBehavior": "skip",
         "includeEffectiveDates": false,

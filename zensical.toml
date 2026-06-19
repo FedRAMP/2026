@@ -394,7 +394,7 @@ site_dir = "html/"
 site_url = "https://preview.fedramp.gov/2026/"
 repo_url = "https://github.com/fedramp/2026"
 repo_name = "FedRAMP/2026"
-extra_css = ["stylesheets/custom.css", "stylesheets/extra.css"]
+extra_css = ["stylesheets/extra.css"]
 copyright = "fedramp.gov"
 
 extra_javascript = [
