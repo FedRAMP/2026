@@ -1,7 +1,4 @@
 ---
-description: "How to get started in these consolidated rules and on your FedRAMP journey because it's a whole thing mate. Maybe some diagrams?"
-purpose: "Providers will learn to navigate through a lot of this, including the steps and whatnot."
-google_doc: ""
 picto:
   source: person
   status: stable

@@ -1,9 +1,6 @@
 ---
 title: "Advisors"
 icon: material/head-question-outline
-description: "An overview of the advisory services section."
-purpose: "Helps advisory services understand how to navigate effectively."
-google_doc: ""
 picto:
   source: person
   status: stable

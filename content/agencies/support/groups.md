@@ -1,7 +1,4 @@
 ---
-description: "Agency support groups provide help for agencies trying to use FedRAMP Certified cloud services."
-purpose: "Folks know what support groups are, how to join them, and why they should join them."
-google_doc: "https://docs.google.com/document/d/1UdOIjketHNMeQrpmDVJdX8KrdKClvVQ7stp97KEYw9I/edit?tab=t.7txzsjrakqs0"
 picto:
   source: person
   status: stable

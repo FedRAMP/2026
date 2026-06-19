@@ -1,9 +1,6 @@
 ---
 tags:
   - Rev5
-description: "A broad overview of the Rev5 path, the reasons to / to not go this path, the sponsorship situation in general, etc."
-purpose: "Folks know what's expected in general and how to work through the rest of this section."
-google_doc: "https://docs.google.com/document/d/16nRI1Sr3oAxriPB-y-6aOSG5BttCcxV4go3_NEQD7Mc/edit?tab=t.7tck04b1dww4"
 picto:
   source: person
   status: stable

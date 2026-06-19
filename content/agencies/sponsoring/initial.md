@@ -1,9 +1,6 @@
 ---
 tags:
   - Rev5
-description: "The steps and process for sponsoring an Initial Certification."
-purpose: "Agencies understand the step by step expectations for how the process works from both their perspective and FedRAMP's."
-google_doc: ""
 picto:
   source: person
   status: stable

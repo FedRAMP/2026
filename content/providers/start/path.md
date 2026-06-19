@@ -1,7 +1,4 @@
 ---
-description: "Overview of the Certification paths and how to choose one, including depending on the type and class expectations."
-purpose: "Folks know they should aim for Program Certification on 20x unless they need a Class D before early 2027."
-google_doc: ""
 picto:
   source: person
   status: stable

@@ -1,9 +1,6 @@
 ---
 title: "Assessors"
 icon: material/eye-check-outline
-description: "An explanation of what Independent Assessors are, why this term is used instead of 3PAOs now, and the general role of the assessor as now performing independent verification and validation."
-purpose: "Folks know why it's IAS instead of 3PAO and how to dig into this section."
-google_doc: ""
 picto:
   source: person
   status: stable

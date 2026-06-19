@@ -1,9 +1,6 @@
 ---
 tags:
   - Rev5
-description: "Explains when agency sponsorship still makes sense, why new sponsorship should usually be avoided, and how agencies should finish sponsorship work already underway."
-purpose: "Agencies understand that sponsoring is a legacy Rev5 path, that sponsors accept risk only for their own agency use, and that active sponsorship efforts should be completed quickly."
-google_doc: ""
 picto:
   source: person
   status: stable

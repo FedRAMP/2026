@@ -1,7 +1,4 @@
 ---
-description: "addressing the rules stuff"
-purpose: "folks will address the rules"
-google_doc: ""
 picto:
   source: person
   status: stable

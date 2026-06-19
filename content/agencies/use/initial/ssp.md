@@ -1,7 +1,4 @@
 ---
-description: "Explains how to create and maintain an agency System Security Plan for an information system that uses one or more FedRAMP Certified cloud services."
-purpose: "Agencies document their selected controls and their own implementation responsibilities without duplicating provider Certification Packages."
-google_doc: ""
 picto:
   source: person
   status: placeholder

@@ -1,7 +1,4 @@
 ---
-description: "Explains how agencies can report concerns about suspicious behavior or other stuff to FedRAMP."
-purpose: "Folks know when and how to report stuff to us and what we will or won't do about it."
-google_doc: ""
 picto:
   source: person
   status: stable

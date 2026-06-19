@@ -1,7 +1,4 @@
 ---
-description: "An explanation of how the deadlines will be enforced and how to broadly interpret them, along with general overall timelines for folks to think about (the specifics are rendered from machine-readable rules)."
-purpose: "Folks will know how to read dates and start making concrete plans."
-google_doc: ""
 picto:
   source: person
   status: stable

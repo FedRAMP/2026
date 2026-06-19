@@ -1,7 +1,4 @@
 ---
-description: "A step-by-step process for evaluating, configuring, and authorizing an agency information system that uses a FedRAMP Certified cloud service."
-purpose: "Agencies understand how to apply their normal risk management process, reuse a FedRAMP Certification Package, and focus authorization work on the agency's use and responsibilities."
-google_doc: ""
 picto:
   source: person
   status: placeholder

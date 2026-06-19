@@ -1,7 +1,4 @@
 ---
-description: "Explanation of the process for getting listed on the Marketplace in the preparation phase to start with, and how that changes during the lifecycle of the product. Reference the Applicable Rules for preparation but don't quote them. The Rules will be directly underneath this."
-purpose: "Folks will understand the reasons for getting listed and how to do it. "
-google_doc: ""
 picto:
   source: person
   status: stable

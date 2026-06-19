@@ -1,7 +1,4 @@
 ---
-description: "Using the FedRAMP Consolidated Rules."
-purpose: "Explains the structure of the FedRAMP Consolidated Rules, how to read through them, how they apply, and how to use them."
-google_doc: ""
 picto:
   source: person
   status: stable

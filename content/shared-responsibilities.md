@@ -1,7 +1,4 @@
 ---
-description: "Explanation of the expected responsibilities of all stakeholders and how those are shared throughout the FedRAMP game."
-purpose: "Helps folks understand what each party is expected to do."
-google_doc: ""
 picto:
   source: person
   status: stable

@@ -1,7 +1,4 @@
 ---
-description: "Explains how agencies need to manage their own POA&Ms for their own information systems, and why FedRAMP Certified cloud service providers maintain their own lists of vulnerabilities without providing copy/pasteable POA&Ms to agencies."
-purpose: "Agencies understand that they are accepting ongoing risk and making their own POA&Ms only for things they are responsible for."
-google_doc: ""
 picto:
   source: person
   status: stable

@@ -1,9 +1,6 @@
 ---
 title: "Providers"
 icon: material/cloud-lock-outline
-description: "Welcome to providers and a general overview of the expectations for FedRAMP and how to navigate this entire section."
-purpose: "Providers will know how to navigate the FedRAMP Consolidated for 2026."
-google_doc: ""
 picto:
   source: person
   status: stable

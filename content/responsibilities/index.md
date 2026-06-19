@@ -1,8 +1,5 @@
 ---
 icon: material/gavel
-description: "An overview of the FedRAMP section of these rules and what is in here."
-purpose: "Folks know where to go from here."
-google_doc: ""
 picto:
   source: person
   status: stable

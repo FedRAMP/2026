@@ -1,7 +1,4 @@
 ---
-description: "A reminder that folks with current FedRAMP Certifications need to invest in modernizing their programs or they will lose FedRAMP Certification, no more coasting with generic annual assessments and otherwise ignoring all of the changes."
-purpose: "Folks will know they need to start making changes."
-google_doc: ""
 picto:
   source: person
   status: stable

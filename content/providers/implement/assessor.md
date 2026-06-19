@@ -1,7 +1,4 @@
 ---
-description: "Overview of why you need an assessor for Class B/C/D, don't confuse them with advisors, when to get involved with an assessor (early plz), and how to find them on the Marketplace."
-purpose: "Folks will know they need to get a FedRAMP Recognized assessor when they are ready to go for Class B or up, and that sometimes it's okay to engage with them earlier."
-google_doc: ""
 picto:
   source: person
   status: stable

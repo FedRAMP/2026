@@ -1,7 +1,4 @@
 ---
-description: "How agencies can get support directly from FedRAMP when they need it."
-purpose: "Helps folks know who to reach out to and when, where to go for more info, and why it's okay to email us."
-google_doc: ""
 picto:
   source: person
   status: stable

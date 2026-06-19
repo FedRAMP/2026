@@ -1,7 +1,4 @@
 ---
-description: "Why providers absolutely should hire advisors and some general tips on finding them."
-purpose: "Folks will know they can't do this alone and stop trying."
-google_doc: ""
 picto:
   source: person
   status: stable

@@ -1,7 +1,4 @@
 ---
-description: "Overview of the FedRAMP rules that apply to agencies, how they are structured, and how they relate to the FedRAMP Authorization Act and OMB Memorandum M-24-15."
-purpose: "Agencies understand that FedRAMP rules summarize legal and policy expectations, but do not replace agency legal and policy analysis."
-google_doc: "https://docs.google.com/document/d/1UdOIjketHNMeQrpmDVJdX8KrdKClvVQ7stp97KEYw9I/edit?tab=t.fwm1gszdlzff"
 picto:
   source: person
   status: stable
