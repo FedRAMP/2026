@@ -20,9 +20,8 @@ The build pipeline:
 2. Clears generated directories as needed.
 3. Copies `../content` into `../src`.
 4. Generates Markdown from `rules/fedramp-consolidated-rules.json`.
-5. Builds `../src/todo.md` from the completed Markdown tree.
-6. Runs Zensical with `../zensical.toml`.
-7. Writes static output to `../html`.
+5. Runs Zensical with `../zensical.toml`.
+6. Writes static output to `../html`.
 
 `content/` is manual source content. Scripts should not write to it. Generated Markdown belongs in `src/`, and generated mappings must not shadow copied `content/` files.
 
@@ -32,9 +31,9 @@ The build pipeline:
 bun run dev
 ```
 
-Starts the local development pipeline and Zensical preview. It copies `../content` into `../src`, generates configured Markdown, builds `../src/todo.md`, then starts `zensical serve` with `../zensical.toml`.
+Starts the local development pipeline and Zensical preview. It copies `../content` into `../src`, generates configured Markdown, then starts `zensical serve` with `../zensical.toml`.
 
-The dev script watches manual content, templates, config, generator code, the todo builder, and the consolidated rules JSON. Watch rebuilds are debounced by `dev.watchDebounceMs` in `config.json`; the current default is 1000 milliseconds.
+The dev script watches manual content, templates, config, generator code, and the consolidated rules JSON. Watch rebuilds are debounced by `dev.watchDebounceMs` in `config.json`; the current default is 1000 milliseconds.
 
 ```bash
 bun test
@@ -140,12 +139,6 @@ empty
 
 Tooltips and rendered icon definitions are configured in `pictographs` in `config.json`.
 For generated mappings, the mapping's `status` controls the rendered page pictograph. Status values from the rules JSON are content metadata and do not override the configured generated-page status.
-
-## Generated TO DO Page
-
-The `generated.todo` entry controls the machine-built TO DO page. The todo builder runs after manual content has been copied and generated pages have been written, so it can scan the completed `src/**/*.md` set.
-
-It writes separate source/status sections with rows containing a linked section-to-page location, combined picto source/status icons, description, purpose, an edit icon link when `google_doc` frontmatter is present, and a Markdown icon when it is not.
 
 ## Generated Definitions
 

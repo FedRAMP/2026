@@ -6,6 +6,53 @@ picto:
 
 # Changelog
 
+## 2026.06.19.02-preview
+
+**Release Date:** June 19, 2026
+
+### Rules Updates
+
+- Added `FRD-FCR` defining FedRAMP Certification Reports and `FRD-SDR` defining Security Decision Records.
+- Added `CDS-CSO-FRC`, requiring providers to publish unmodified FedRAMP Certification Reports within two weeks of receipt.
+- Replaced placeholder `FRC-CCL-PLC` with `FRC-CCL-UCC`, `FRC-CCL-DCC`, and `FRC-CCL-DNP`, establishing upgrade, downgrade, and 120-day notification expectations.
+- Replaced `FRC-CLA-AFR` with `FRC-CLA-MFR`, `FRC-CLA-RFR`, and `FRC-CLA-OFR`, separating mandatory, recommended, and optional Class A rules.
+- `FRC-APP-FIA` now varies by class: a fresh three-month assessment is optional for Class A and mandatory for Classes B–D.
+- `FRC-CLA-ASF` now requires alternative-framework certification or assessment within the previous 12 months.
+- `FRC-CLA-EAM` now enumerates required SOC 2 Type II, FedRAMP Ready, and GovRAMP assessment materials.
+- `IVV-CSF-AIA` and `VDR-TFR-MVF` remove their Rev5 Class A variants.
+- `CDS-CSO-FID` clarifies that FedRAMP IDs are required once assigned and documents placeholder handling before assignment.
+- `CDS-CSO-HAD` replaces the three-year version-history requirement with Ongoing Certification Report-aligned snapshots retained throughout certification.
+- `AFC-CSO-NOC` routes FedRAMP Security Inbox address changes through the CSP notification form.
+- `AGU-AGC-NAI` routes additional agency information requests through the agency request form.
+- `AGU-AGC-NAL` routes ATO notifications through the Submit an ATO Letter form and updates the required supporting information.
+- `AGU-USE-NPC` identifies the provider’s security contact as the notification destination.
+- `CCM-OCR-AFS` permits feedback summaries in either an addendum or the next Ongoing Certification Report.
+- `CPO-CSO-OVR` replaces the assessment placeholder with `IVV-CSO-ICP` and adds the corresponding relationship.
+- `MKT-CSO-PML` replaces its placeholder reference with the operational Marketplace Provider Listing Request form.
+- `SCN-CSO-MAR` clarifies that significant-change audit records are supplied to FedRAMP upon request rather than continuously.
+- `KSI-RPL-RRO` now requires recovery objectives to be defined as well as persistently reviewed.
+- `SDR-CSF-ODP` corrects the Rev5 organization-defined-parameter requirement wording.
+- `FRC-CSF-RDY` changes its recommended conversion from Rev5 Class A to 20x Class A.
+- `SCG-CSO-RSC` expands secure-configuration guidance to cover privileged accounts as well as top-level administrative accounts.
+- `AFC-FRP-PNT` now targets FedRAMP Public Notices. `CDS-CSF-TCM` now identifies FedRAMP and agency security contacts. `CDS-UTC-AAD` now uses the CSP Agency Access Denial form.
+- `CCM-AGM-NAR`, `CCM-AGM-NFA`, `VER-AGM-DRE`, and `VER-AGM-NFR` now use the agency information and certification-change request form.
+- `IEC-CSO-FIR`, `IEC-CSO-IIR`, and `IEC-CSO-OIR` now provide named FedRAMP, agency, and trust-center incident-reporting destinations.
+- `REC-IAS-AFI` and `REC-IAS-CFI` now model the FOCI declaration as a named form notification.
+- `SCN-ADP-NTF`, `SCN-TRF-NAF`, `SCN-TRF-NAV`, `SCN-TRF-NFP`, and `SCN-TRF-NIP` add human-readable names to their Certification Data notifications.
+- `AGU-AGC-NAR` and `AGU-AGC-TPP` add names to their existing FedRAMP email notifications.
+- Mechanically synchronized the new FedRAMP Certification Report term across `AGU-USE-NFC`, `AGU-USE-NPC`, `AGU-USE-ROR`, `CCM-AGM-ROR`, `CCM-OCR-AFS`, `CCM-OCR-AVL`, `CCM-OCR-FBM`, `CCM-OCR-LSI`, `CCM-OCR-NRD`, `CCM-OCR-RPS`, `CCM-QTR-SAR`, `CDS-CSO-HAD`, and `CDS-CSO-PUB`.
+- Mechanically synchronized the new Security Decision Record term across `IVV-IAS-SUM`, `SDR-CSO-FRR`, `SDR-CSO-MTD`, and `SDR-CSX-KMT`.
+- Changed `CMU`, `CPO`, `FRC`, `IEC`, `IVV`, `MKT`, `REC`, and `SDR` document statuses to `stable`.
+- Structural: consolidated `MKT` framework-specific effective metadata into a common effective block beginning July 4, 2026, and removed unresolved Rev5 signup URL placeholders from affected FRR documents.
+- Reset all 356 surviving rule, definition, and indicator histories to the June 23, 2026 official-launch entry; new records use the same entry.
+- `CDS-CSO-PUB` replaces the public-information requirement for a direct FedRAMP Marketplace link with the FedRAMP ID and normalizes the independent-assessment-service terminology.
+- `CDS-CSO-FRC` is renamed from “FedRAMP Certification Information” to “FedRAMP Certification Reports.”
+- `IVV-IAS-VIM` and `IVV-IAS-VEF` clarify that assessors must technically review actual measures—including underlying code when appropriate—rather than relying only on documentation or screenshots.
+- `IVV-IAS-SUM` now requires assessment summaries for each defined FedRAMP Practice instead of separately naming each rule, control, and Key Security Indicator, and adds the corresponding term mapping.
+- The `CDS` purpose now uses the defined term “FedRAMP Certification Data.”
+- Terminology and capitalization were normalized without changing force, scope, timeframes, or applicability in `FRD-FIN`, `FRD-FPR`, `AGU-USE-RCF`, `CDS-CSO-FID`, `CDS-UTC-AGA`, `FRC-APP-FIA`, `IVV-CSO-FIA`, `MAS-CSO-SUP`, `SCG-CSO-AUP`, `SCN-CSO-MAR`, `SCN-CSO-NOM`, `SCN-CSO-EMG`, `SCN-TRF-UPD`, `SDR-CSO-FRR`, and `SDR-CSF-ODP`; the `REC` purpose received the same editorial normalization.
+
+
 ## 2026.06.17.01-preview
 
 **Release Date:** June 17, 2026
@@ -477,7 +524,3 @@ The following areas should not be treated as fully settled in the current previe
 - Security Decision Record rules are empty.
 - Many narrative pages in the 2026 Markdown corpus are empty or incomplete.
 - Some machine-generated sections still need tuning or have not yet been converted into the structured rules file.
-
-#### Monitoring TO DO
-
-A complete summary of the status of all pages based on their own metadata is available on the [TO DO](todo.md) page.

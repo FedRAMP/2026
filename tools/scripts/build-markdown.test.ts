@@ -2656,7 +2656,6 @@ describe("build pipeline", () => {
     const expectedArtifacts = collectArtifacts(rules, config);
     const expectedGeneratedFiles = expectedArtifacts
       .map((artifact) => artifact.relativePath)
-      .concat(config.generated.todo?.output ?? "todo.md")
       .sort();
     const srcPath = resolveToolPath(config.paths.src);
     const contentPath = resolveToolPath(config.paths.content);
@@ -2856,10 +2855,6 @@ describe("build pipeline", () => {
       {
         path: renderedAgencyHtmlPath,
         expectedText: [renderedAgencyArtifact.title],
-      },
-      {
-        path: "todo/index.html",
-        expectedText: ["TO DO", "Public Preview", "FedRAMP Definitions"],
       },
     ];
 

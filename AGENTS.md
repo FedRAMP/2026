@@ -78,7 +78,7 @@ If the change could affect generated content, also run a build before and after 
 - `bun run dev`: starts the local development pipeline and Zensical preview.
 - `bun test`: verifies the tool pipeline.
 - `bun run check`: runs `bun test`, TypeScript checking, and non-failing content style warnings.
-- `bun run build`: copies manual content, generates configured Markdown, builds `src/todo.md`, and builds the static site.
+- `bun run build`: copies manual content, generates configured Markdown, and builds the static site.
 - `bun run sync`: syncs the `tools/rules` submodule from `FedRAMP/rules`.
 
 The tracked `.githooks/pre-commit` hook runs `bun run check` from `tools/`. Enable it in a clone with:

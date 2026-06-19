@@ -13,8 +13,7 @@ nav = [
     ] },
     { "About This Preview" = [
       { "Source Data" = "sources.md" },
-      { "Changelog" = "changelog.md" },
-      { "TO DO" = "todo.md" },
+      { "Changelog" = "changelog.md" }
     ] },
   ] },
   { "FedRAMP" = [
