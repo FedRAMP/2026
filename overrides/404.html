@@ -355,6 +355,22 @@
       50% { transform: translateY(0.22rem); }
     }
 
+    @media screen and (max-width: 47.999rem) {
+      .error-title {
+        font-size: clamp(2.4rem, 12vw, 3.2rem) !important;
+        margin-block-end: 1.75rem;
+      }
+
+      .error-message {
+        padding-block: clamp(2rem, 8svh, 4rem) clamp(14rem, 44svh, 26rem);
+      }
+
+      .error-lede {
+        font-size: clamp(0.82rem, 3.5vw, 0.95rem);
+        margin-block-start: 1rem;
+      }
+    }
+
     @media screen and (max-width: 28rem) {
       .error-code {
         font-size: 0;
