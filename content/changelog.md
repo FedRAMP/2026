@@ -6,6 +6,27 @@ picto:
 
 # Changelog
 
+## 2026.06.20.01-preview
+
+**Release Date:** June 20, 2026
+
+### Site Structure
+
+- Added 14 Rev5 control-family pages to the provider navigation, including [Access Control](https://preview.fedramp.gov/2026/providers/rev5/controls/access-control/) and the other FedRAMP-relevant NIST control families.
+- Added a [complete Rev5 Controls reference](https://preview.fedramp.gov/2026/reference/rev5-controls/) to the Ruleset Reference section.
+
+### Generated Page Experience
+
+- Added official NIST SP 800-53 Rev. 5.2.0 control titles, statements, family names, identifiers, and parameter metadata from the NIST OSCAL catalog.
+- Added FedRAMP guidance and assigned parameter values to applicable controls, including class-specific tabs where requirements vary by certification class.
+- Improved readability with collapsible control metadata, nested guidance, structured control text, and human-readable parameter labels.
+
+### Tooling
+
+- Added local OSCAL catalog parsing and validation so builds use a pinned authoritative NIST source without downloading data at runtime.
+- Added combined-reference and per-family control generation modes, development watching, build coverage, and pipeline documentation.
+- Improved post-processing compatibility for installations managed through `pipx`.
+
 ## 2026.06.19.02-preview
 
 **Release Date:** June 19, 2026

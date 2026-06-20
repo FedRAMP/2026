@@ -9,9 +9,11 @@ export type GeneratedEmptyBehavior = "write" | "skip";
 export type AllRulesPosition = "first" | "last";
 export type RuleDocumentSelection = string[] | "ALL";
 export type KsiThemeSelection = string[] | "ALL";
+export type ControlFamilySelection = string[] | "ALL";
 export type RuleDocumentGrouping = "section" | "document";
 export type RuleDocumentOutputMode = "single" | "documents";
 export type KsiDocumentOutputMode = "single" | "themes";
+export type ControlDocumentOutputMode = "single" | "families";
 export type RuleDocumentLinkTargetScope = "default" | "sameMappingOnly";
 export type GeneratedDocumentStatus = "stable" | "placeholder" | "empty";
 export type GeneratedDocumentSource = "machine" | "person";
@@ -27,6 +29,7 @@ export interface ToolPathsConfig {
   content: string;
   html: string;
   rulesFile: string;
+  oscalCatalogFile: string;
   template: string;
   partials: string;
   zensicalConfig: string;
@@ -129,6 +132,22 @@ export interface KsiDocumentMappingConfig {
   source: KsiDocumentSourceConfig;
 }
 
+export interface ControlDocumentSourceConfig {
+  collection: "CTL";
+  families: ControlFamilySelection;
+}
+
+export interface ControlDocumentMappingConfig {
+  id: string;
+  title?: string;
+  output: string;
+  outputMode?: ControlDocumentOutputMode;
+  status: GeneratedDocumentStatus;
+  template?: string;
+  emptyBehavior?: GeneratedEmptyBehavior;
+  source: ControlDocumentSourceConfig;
+}
+
 export interface DeadlineDocumentSourceConfig {
   collection: "FRR";
   documents?: RuleDocumentSelection;
@@ -202,6 +221,7 @@ export interface GeneratedConfig {
   definitions?: DefinitionsMappingConfig;
   definitionDocuments?: DefinitionDocumentMappingConfig[];
   ksiDocuments?: KsiDocumentMappingConfig[];
+  controlDocuments?: ControlDocumentMappingConfig[];
   deadlineDocuments?: DeadlineDocumentMappingConfig[];
   taggedDocumentSummaries?: TaggedDocumentSummaryMappingConfig[];
   referenceIndexDocuments?: ReferenceIndexDocumentMappingConfig[];

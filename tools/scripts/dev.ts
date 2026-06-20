@@ -439,6 +439,7 @@ async function main(): Promise<void> {
   const templatesDir = path.dirname(resolveToolPath(config.paths.template));
   const partialsDir = resolveToolPath(config.paths.partials);
   const rulesFile = resolveToolPath(config.paths.rulesFile);
+  const oscalCatalogFile = resolveToolPath(config.paths.oscalCatalogFile);
   const zensicalConfig = resolveToolPath(config.paths.zensicalConfig);
 
   await runPipeline("initial build", {
@@ -509,6 +510,10 @@ async function main(): Promise<void> {
     schedulePipeline("rules source change");
   });
 
+  const oscalCatalogWatcher = watch(oscalCatalogFile, () => {
+    schedulePipeline("OSCAL catalog change");
+  });
+
   const cleanup = () => {
     templateWatcher.close();
     partialsWatcher?.close();
@@ -516,6 +521,7 @@ async function main(): Promise<void> {
     buildWatcher.close();
     configWatcher.close();
     rulesWatcher.close();
+    oscalCatalogWatcher.close();
 
     if (!zensical.killed) {
       zensical.kill("SIGTERM");

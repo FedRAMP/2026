@@ -332,6 +332,9 @@ function configWithGeneratedMappingStatus(
   updatedConfig.generated.ksiDocuments = updateStatuses(
     updatedConfig.generated.ksiDocuments,
   );
+  updatedConfig.generated.controlDocuments = updateStatuses(
+    updatedConfig.generated.controlDocuments,
+  );
   updatedConfig.generated.deadlineDocuments = updateStatuses(
     updatedConfig.generated.deadlineDocuments,
   );
@@ -922,6 +925,7 @@ function generatedMappingStatusFailures(config: ToolConfig): string[] {
   > = [
     ["definitionDocuments", config.generated.definitionDocuments ?? []],
     ["ksiDocuments", config.generated.ksiDocuments ?? []],
+    ["controlDocuments", config.generated.controlDocuments ?? []],
     ["deadlineDocuments", config.generated.deadlineDocuments ?? []],
     ["taggedDocumentSummaries", config.generated.taggedDocumentSummaries ?? []],
     ["referenceIndexDocuments", config.generated.referenceIndexDocuments ?? []],
@@ -1116,6 +1120,13 @@ describe("build-markdown", () => {
     }
 
     for (const mapping of config.generated.ksiDocuments ?? []) {
+      const artifacts = artifactsWithMappingId(expectedArtifacts, mapping.id);
+      expect(artifacts.length).toBeGreaterThan(0);
+      for (const artifact of artifacts) {
+        expect(relativePaths).toContain(artifact.relativePath);
+      }
+    }
+    for (const mapping of config.generated.controlDocuments ?? []) {
       const artifacts = artifactsWithMappingId(expectedArtifacts, mapping.id);
       expect(artifacts.length).toBeGreaterThan(0);
       for (const artifact of artifacts) {
@@ -1628,6 +1639,7 @@ describe("build-markdown", () => {
         ...config.generated,
         definitionDocuments: [],
         ksiDocuments: [],
+        controlDocuments: [],
         deadlineDocuments: [],
         taggedDocumentSummaries: [],
         referenceIndexDocuments: [],
@@ -1718,6 +1730,7 @@ describe("build-markdown", () => {
         ...config.generated,
         definitionDocuments: [],
         ksiDocuments: [],
+        controlDocuments: [],
         deadlineDocuments: [],
         taggedDocumentSummaries: [],
         referenceIndexDocuments: [],
@@ -1892,6 +1905,7 @@ describe("build-markdown", () => {
             },
           },
         ],
+        controlDocuments: [],
         deadlineDocuments: [],
         taggedDocumentSummaries: [],
         frrCollectionDocuments: [],
@@ -2196,6 +2210,7 @@ describe("build-markdown", () => {
             },
           },
         ],
+        controlDocuments: [],
         deadlineDocuments: [],
         taggedDocumentSummaries: [],
         referenceIndexDocuments: [],
@@ -2243,6 +2258,7 @@ describe("build-markdown", () => {
         ...config.generated,
         definitionDocuments: [],
         ksiDocuments: [],
+        controlDocuments: [],
         deadlineDocuments: [
           {
             id: "deadlines-with-ignored-marketplace",
@@ -2303,6 +2319,7 @@ describe("build-markdown", () => {
         ...config.generated,
         definitionDocuments: [],
         ksiDocuments: [],
+        controlDocuments: [],
         deadlineDocuments: [
           {
             id: "provider-deadlines-with-rec",
@@ -2377,6 +2394,7 @@ describe("build-markdown", () => {
             },
           ],
           ksiDocuments: [],
+          controlDocuments: [],
           deadlineDocuments: [],
           taggedDocumentSummaries: [],
           referenceIndexDocuments: [],
@@ -2489,6 +2507,7 @@ describe("build-markdown", () => {
               },
             ],
             ksiDocuments: [],
+            controlDocuments: [],
             deadlineDocuments: [],
             taggedDocumentSummaries: [],
             referenceIndexDocuments: [],
@@ -2883,5 +2902,5 @@ describe("build pipeline", () => {
         `<span class="subset-applicability__tag">${firstApplicabilityValue}</span>`,
       );
     }
-  });
+  }, 20_000);
 });

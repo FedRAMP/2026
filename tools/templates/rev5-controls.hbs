@@ -1,0 +1,105 @@
+{{#if tags.length}}
+---
+tags:
+{{#each tags}}
+  - {{this}}
+{{/each}}
+---
+
+{{/if}}
+{{#if statusSpan}}
+{{statusSpan}}
+
+{{/if}}
+# {{title}}
+
+{{#unless isControlFamilyDocument}}
+This reference contains the NIST SP 800-53 Revision 5 controls for which the FedRAMP Consolidated Rules define additional guidance or organization-assigned parameter values.
+
+{{#if controlCatalog}}
+!!! info "Official NIST OSCAL source"
+    **{{controlCatalog.title}}**
+
+    - **Catalog version:** {{controlCatalog.version}}
+    - **OSCAL version:** {{controlCatalog.oscalVersion}}
+    - **Catalog last modified:** {{controlCatalog.lastModified}}
+
+{{/if}}
+**Control families**
+
+{{#each controlFamilies}}
+- [{{title}} ({{id}})](#{{anchorId}})
+{{/each}}
+
+---
+
+{{/unless}}
+{{#each controlFamilies}}
+{{#unless ../isControlFamilyDocument}}
+## {{title}} ({{id}}) { #{{anchorId}} }
+
+{{/unless}}
+{{#each controls}}
+### {{title}} { #{{anchorId}} }
+
+??? abstract "{{officialId}}"
+    **NIST SP 800-53 Revision {{../../controlCatalog.version}}**
+
+    - **Official NIST control ID:** `{{officialId}}`
+    - **Catalog version:** {{../../controlCatalog.version}}
+    - **OSCAL version:** {{../../controlCatalog.oscalVersion}}
+    - **Catalog last modified:** {{../../controlCatalog.lastModified}}
+
+!!! quote ""
+{{#each statementLines}}
+    {{this}}
+{{/each}}
+
+{{#if hasFedrampContent}}
+    !!! note ""
+{{#if commonGuidance}}
+{{#if commonGuidance.guidance.length}}
+        **FedRAMP Guidance**
+
+{{#each commonGuidance.guidance}}
+        {{this}}
+
+{{/each}}
+{{/if}}
+{{#if commonGuidance.parameters.length}}
+        **FedRAMP Parameters**
+
+        | Parameter ID | NIST assignment | FedRAMP value |
+        | --- | --- | --- |
+{{#each commonGuidance.parameters}}
+        | `{{id}}` | {{label}} | {{value}} |
+{{/each}}
+
+{{/if}}
+{{/if}}
+{{#if classVariants.length}}
+{{#each classVariants}}
+        === "{{title}}"
+{{#if guidance.length}}
+{{#each guidance}}
+            {{this}}
+
+{{/each}}
+{{/if}}
+{{#if parameters.length}}
+            **FedRAMP Parameters**
+
+            | Parameter ID | NIST assignment | FedRAMP value |
+            | --- | --- | --- |
+{{#each parameters}}
+            | `{{id}}` | {{label}} | {{value}} |
+{{/each}}
+
+{{/if}}
+{{/each}}
+{{/if}}
+{{/if}}
+---
+
+{{/each}}
+{{/each}}
