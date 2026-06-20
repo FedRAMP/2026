@@ -11,7 +11,7 @@ The content and implementation are under active development. Treat this reposito
 This is a Zensical site that combines:
 
 - Manually maintained Markdown and assets in `content/`, including overview and stakeholder guidance pages.
-- Generated Markdown produced from `tools/rules/fedramp-consolidated-rules.json`, including definitions, stakeholder-specific rule pages, deadline pages, key security indicator pages, and the complete ruleset reference.
+- Generated Markdown produced from `tools/rules/fedramp-consolidated-rules.json`, including definitions, stakeholder-specific rule pages, deadline pages, key security indicator pages, Rev5 control references enriched from the local NIST OSCAL catalog, and the complete ruleset reference.
 - Static output built into `html/`.
 
 The machine-readable source of truth for consolidated rules, definitions, deadlines, responsibilities, and key security indicators is:

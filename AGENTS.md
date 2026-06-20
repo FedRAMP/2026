@@ -26,12 +26,21 @@ tools/rules/fedramp-consolidated-rules.json
 
 This JSON file is the machine-readable source of truth. Generated Markdown in `src/` and static output in `html/` are downstream renderings. Manual pages in `content/` can add context but are not canonical rule data.
 
+For NIST SP 800-53 Revision 5 control titles, statements, family names, and organization-assigned parameter metadata, use the vendored OSCAL catalog at:
+
+```text
+tools/data/NIST_SP-800-53_rev5_catalog.xml
+```
+
+Builds, tests, and agents must use this local catalog instead of downloading OSCAL content at runtime. Its pinned upstream release and checksum are documented in `tools/data/README.md`; update the local file and provenance together when intentionally moving to a newer official NIST release.
+
 The sister repository at <https://github.com/FedRAMP/2026-markdown> contains the rendered Markdown as a flat corpus. Change this repository for site or pipeline work; use the sister repository when only the corpus matters.
 
 ## Repository map
 
 - `content/`: protected, manually maintained Markdown and assets.
 - `tools/`: Bun scripts, tests, templates, shared configuration, and the `rules` submodule.
+- `tools/data/`: vendored external source data used by the generator, including the NIST OSCAL catalog.
 - `tools/config.json`: shared paths and generated Markdown mappings.
 - `tools/rules/fedramp-consolidated-rules.json`: canonical rules data.
 - `src/`: generated Zensical input. Builds clear and recreate it.

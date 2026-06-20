@@ -4,6 +4,7 @@
     "content": "../content",
     "html": "../html",
     "rulesFile": "rules/fedramp-consolidated-rules.json",
+    "oscalCatalogFile": "data/NIST_SP-800-53_rev5_catalog.xml",
     "template": "templates/template.hbs",
     "partials": "templates/partials",
     "zensicalConfig": "../zensical.toml"
@@ -104,6 +105,19 @@
           "collection": "KSI",
           "themes": "ALL",
           "classes": ["C"]
+        }
+      }
+    ],
+    "controlDocuments": [
+      {
+        "id": "complete-rev5-controls-reference",
+        "title": "Rev5 Controls",
+        "output": "reference/rev5-controls.md",
+        "status": "stable",
+        "template": "templates/rev5-controls.hbs",
+        "source": {
+          "collection": "CTL",
+          "families": "ALL"
         }
       }
     ],

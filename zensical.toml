@@ -379,6 +379,7 @@ nav = [
         { "Secure Configuration Guide" = "reference/secure-configuration-guide.md" },
       ] },
       { "Key Security Indicators" = "reference/key-security-indicators.md" },
+      { "Rev5 Controls" = "reference/rev5-controls.md" },
       { "Gov Rulesets" = [
         { "Agency Use of FedRAMP Certified Cloud Services" = "reference/agency-use.md" },
       ] },

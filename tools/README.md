@@ -20,6 +20,8 @@ The build pipeline:
 2. Clears generated directories as needed.
 3. Copies `../content` into `../src`.
 4. Generates Markdown from `rules/fedramp-consolidated-rules.json`.
+   Rev5 control references enrich the JSON `CTL` collection with the vendored
+   NIST OSCAL catalog in `data/NIST_SP-800-53_rev5_catalog.xml`.
 5. Runs Zensical with `../zensical.toml`.
 6. Writes static output to `../html`.
 
@@ -92,6 +94,7 @@ Important path settings:
 - `paths.content`: manually edited source content, currently `../content`.
 - `paths.html`: generated static output, currently `../html`.
 - `paths.rulesFile`: consolidated rules JSON.
+- `paths.oscalCatalogFile`: local NIST SP 800-53 Revision 5 OSCAL XML catalog.
 - `paths.template`: default Handlebars page template.
 - `paths.partials`: shared Handlebars partials.
 - `paths.zensicalConfig`: site configuration used by dev and build.
@@ -229,6 +232,39 @@ KSI mapping fields:
 - `source.theme`: one KSI theme key from the rules JSON, such as `CMT`.
 - `source.themes`: an array of KSI theme keys, such as `["CMT", "IAM"]`, or `"ALL"` to process every KSI theme.
 - `source.classes`: optional certification classes, such as `["B"]`. When present, indicators with `varies_by_class` render only the selected class variant.
+
+## Generated Rev5 Control Pages
+
+Add an entry to `generated.controlDocuments` in `config.json`:
+
+```json
+{
+  "id": "complete-rev5-controls-reference",
+  "title": "Rev5 Controls",
+  "output": "reference/rev5-controls.md",
+  "status": "stable",
+  "template": "templates/rev5-controls.hbs",
+  "source": {
+    "collection": "CTL",
+    "families": "ALL"
+  }
+}
+```
+
+Control documents select entries from the rules JSON `CTL` collection and enrich them with family names, control titles, official identifiers, control statements, assignment labels, and catalog version metadata from `paths.oscalCatalogFile`. The generator fails when a selected CTL control or parameter ID is absent from the local OSCAL catalog.
+
+Mapping fields:
+
+- `id`: stable identifier for the mapping.
+- `title`: page H1.
+- `output`: destination path relative to `paths.src`.
+- `template`: optional Handlebars template; defaults to `templates/rev5-controls.hbs`.
+- `emptyBehavior`: `write` keeps an empty page and `skip` omits it.
+- `status`: pictograph status for generated frontmatter.
+- `source.collection`: must be `CTL`.
+- `source.families`: an array of CTL family keys or `"ALL"`.
+
+The generated page groups controls under the human-readable NIST family title. Each control includes the NIST statement, catalog and OSCAL versions, FedRAMP guidance, class-specific tabs when `varies_by_class` is present, and FedRAMP parameter IDs, NIST assignment labels, and values.
 
 ## Generated Deadline Pages
 

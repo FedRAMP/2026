@@ -1,4 +1,5 @@
 import { access, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import Handlebars from "handlebars";
 import {
@@ -9,6 +10,7 @@ import {
   toPosixPath,
   type DefinitionDocumentMappingConfig,
   type DeadlineDocumentMappingConfig,
+  type ControlDocumentMappingConfig,
   type FrrCollectionDocumentMappingConfig,
   type GeneratedDocumentSource,
   type GeneratedDocumentStatus,
@@ -22,6 +24,12 @@ import {
   type TaggedDocumentSummaryMappingConfig,
   type ToolConfig,
 } from "./config";
+import {
+  parseOscalCatalog,
+  type OscalCatalog,
+  type OscalCatalogMetadata,
+  type OscalControl,
+} from "./oscal-catalog";
 
 export const RULES_FILE = resolveToolPath(DEFAULT_CONFIG.paths.rulesFile);
 export const OUTPUT_DIR = resolveToolPath(DEFAULT_CONFIG.paths.src);
@@ -41,6 +49,7 @@ interface RulesDocument {
   FRD: DefinitionsSource;
   FRR: Record<string, RequirementDocumentSource>;
   KSI: Record<string, KsiThemeSource>;
+  CTL: Record<string, Record<string, ControlEntrySource>>;
 }
 
 type EffectiveDateScalarSource = number | string;
@@ -241,6 +250,21 @@ interface KsiThemeSource {
   status?: string;
   theme?: string;
   indicators: Record<string, RequirementEntrySource>;
+}
+
+interface ControlParameterSource {
+  parameterId: string;
+  value: string;
+}
+
+interface ControlClassDataSource {
+  guidance?: string[];
+  parameters?: ControlParameterSource[];
+}
+
+interface ControlEntrySource {
+  all_classes?: ControlClassDataSource;
+  varies_by_class?: Record<string, ControlClassDataSource>;
 }
 
 interface EffectiveEntryViewModel {
@@ -482,6 +506,47 @@ interface KsiPageCandidate {
 
 type KsiPageIndex = ReadonlyMap<string, KsiPageCandidate[]>;
 
+interface ControlParameterViewModel {
+  id: string;
+  label: string;
+  value: string;
+}
+
+interface ControlGuidanceViewModel {
+  guidance: string[];
+  parameters: ControlParameterViewModel[];
+  isEmpty: boolean;
+}
+
+interface ControlClassVariantViewModel extends ControlGuidanceViewModel {
+  title: string;
+}
+
+interface ControlViewModel {
+  id: string;
+  officialId: string;
+  title: string;
+  anchorId: string;
+  statementLines: string[];
+  commonGuidance?: ControlGuidanceViewModel;
+  classVariants: ControlClassVariantViewModel[];
+  hasFedrampContent: boolean;
+}
+
+interface ControlFamilyViewModel {
+  id: string;
+  title: string;
+  anchorId: string;
+  controls: ControlViewModel[];
+}
+
+interface ControlCatalogMetadataViewModel {
+  title: string;
+  version: string;
+  oscalVersion: string;
+  lastModified: string;
+}
+
 interface RuleLinkContext {
   currentMapping: FrrRuleSourceMappingConfig;
   currentRelativePath: string;
@@ -506,12 +571,15 @@ interface DocumentViewModel {
   isDefinitionDocument: boolean;
   isRequirementsDocument: boolean;
   isKsiDocument: boolean;
+  isControlDocument: boolean;
   isDeadlineDocument: boolean;
   definitions: DefinitionViewModel[];
   importantRelatedTerms: ImportantRelatedTermViewModel[];
   sections: SectionViewModel[];
   themeParagraphs: string[];
   indicators: RequirementViewModel[];
+  controlCatalog?: ControlCatalogMetadataViewModel;
+  controlFamilies: ControlFamilyViewModel[];
   deadlineTables: DeadlineTableViewModel[];
   referenceIndexRows: ReferenceIndexRowViewModel[];
   taggedDocumentSummaryRows: TaggedDocumentSummaryRowViewModel[];
@@ -529,6 +597,7 @@ export interface BuildArtifact {
     | "FRD"
     | "FRR"
     | "KSI"
+    | "CTL"
     | "DEADLINES"
     | "FRR_REFERENCE_INDEX"
     | "FRR_TAGGED_SUMMARY";
@@ -3795,12 +3864,15 @@ function buildDocumentContext(
     isDefinitionDocument: options.isDefinitionDocument ?? false,
     isRequirementsDocument: options.isRequirementsDocument ?? false,
     isKsiDocument: options.isKsiDocument ?? false,
+    isControlDocument: options.isControlDocument ?? false,
     isDeadlineDocument: options.isDeadlineDocument ?? false,
     definitions: options.definitions ?? [],
     importantRelatedTerms: options.importantRelatedTerms ?? [],
     sections: options.sections ?? [],
     themeParagraphs: options.themeParagraphs ?? [],
     indicators: options.indicators ?? [],
+    controlCatalog: options.controlCatalog,
+    controlFamilies: options.controlFamilies ?? [],
     deadlineTables: options.deadlineTables ?? [],
     referenceIndexRows: options.referenceIndexRows ?? [],
     taggedDocumentSummaryRows: options.taggedDocumentSummaryRows ?? [],
@@ -4581,6 +4653,250 @@ function collectConfiguredKsiDocumentArtifacts(
   );
 }
 
+function sourceControlFamilyKeys(
+  rules: RulesDocument,
+  mapping: ControlDocumentMappingConfig,
+): string[] {
+  if (mapping.source.collection !== "CTL") {
+    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+  }
+
+  const selectedFamilies = mapping.source.families;
+  if (selectedFamilies === "ALL") {
+    return Object.keys(rules.CTL);
+  }
+
+  if (!selectedFamilies.length) {
+    throw new Error(
+      `Control document mapping "${mapping.id}" must select at least one control family.`,
+    );
+  }
+
+  return selectedFamilies.map((family) => family.toUpperCase());
+}
+
+function formatCatalogDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "long",
+    timeZone: "UTC",
+  }).format(date);
+}
+
+function controlCatalogMetadataViewModel(
+  metadata: OscalCatalogMetadata,
+): ControlCatalogMetadataViewModel {
+  return {
+    title: metadata.title,
+    version: metadata.version,
+    oscalVersion: metadata.oscalVersion,
+    lastModified: formatCatalogDate(metadata.lastModified),
+  };
+}
+
+function controlClassTitle(className: string): string {
+  return `Class ${className.toUpperCase()}`;
+}
+
+function classSortOrder(className: string): number {
+  const index = ["a", "b", "c", "d"].indexOf(className.toLowerCase());
+  return index === -1 ? Number.MAX_SAFE_INTEGER : index;
+}
+
+function linkifyBareUrls(value: string): string {
+  return value.replace(/https?:\/\/[^\s<]+/g, (match) => {
+    const trailingPunctuation = match.match(/[.,;:]+$/)?.[0] ?? "";
+    const url = trailingPunctuation
+      ? match.slice(0, -trailingPunctuation.length)
+      : match;
+    return `[${url}](${url})${trailingPunctuation}`;
+  });
+}
+
+function buildControlGuidanceViewModel(
+  data: ControlClassDataSource,
+  catalog: OscalCatalog,
+  control: OscalControl,
+): ControlGuidanceViewModel {
+  const parameters = (data.parameters ?? []).map(
+    ({ parameterId, value }): ControlParameterViewModel => {
+      const parameter = catalog.parameters.get(parameterId);
+      if (!parameter) {
+        throw new Error(
+          `FedRAMP control ${control.id} references OSCAL parameter "${parameterId}", but that parameter does not exist in the local catalog.`,
+        );
+      }
+
+      return {
+        id: parameterId,
+        label: parameter.label,
+        value,
+      };
+    },
+  );
+  const guidance = (data.guidance ?? []).map(linkifyBareUrls);
+
+  return {
+    guidance,
+    parameters,
+    isEmpty: guidance.length === 0 && parameters.length === 0,
+  };
+}
+
+function buildControlViewModel(
+  controlId: string,
+  source: ControlEntrySource,
+  catalog: OscalCatalog,
+): ControlViewModel {
+  const control = catalog.controls.get(controlId);
+  if (!control) {
+    throw new Error(
+      `FedRAMP CTL entry "${controlId}" does not exist in the local NIST OSCAL catalog.`,
+    );
+  }
+
+  if (!control.statementLines.length) {
+    throw new Error(
+      `NIST OSCAL control "${controlId}" does not contain a control statement.`,
+    );
+  }
+
+  const classVariants = Object.entries(source.varies_by_class ?? {})
+    .sort(
+      ([left], [right]) =>
+        classSortOrder(left) - classSortOrder(right) ||
+        left.localeCompare(right),
+    )
+    .map(([className, data]) => ({
+      title: controlClassTitle(className),
+      ...buildControlGuidanceViewModel(data, catalog, control),
+    }))
+    .filter((variant) => !variant.isEmpty);
+  const commonGuidance = source.all_classes
+    ? buildControlGuidanceViewModel(source.all_classes, catalog, control)
+    : undefined;
+
+  return {
+    id: controlId,
+    officialId: control.officialId,
+    title: control.title,
+    anchorId: slugifyHeading(`${controlId}-${control.title}`),
+    statementLines: control.statementLines,
+    commonGuidance:
+      commonGuidance && !commonGuidance.isEmpty ? commonGuidance : undefined,
+    classVariants,
+    hasFedrampContent:
+      Boolean(commonGuidance && !commonGuidance.isEmpty) ||
+      classVariants.length > 0,
+  };
+}
+
+function buildControlFamilyViewModels(
+  rules: RulesDocument,
+  mapping: ControlDocumentMappingConfig,
+  catalog: OscalCatalog,
+): ControlFamilyViewModel[] {
+  return sourceControlFamilyKeys(rules, mapping).map((familyId) => {
+    const controls = rules.CTL[familyId];
+    if (!controls) {
+      throw new Error(
+        `Control document mapping "${mapping.id}" references unknown CTL family "${familyId}".`,
+      );
+    }
+
+    const catalogFamily = catalog.families.get(familyId);
+    if (!catalogFamily) {
+      throw new Error(
+        `FedRAMP CTL family "${familyId}" does not exist in the local NIST OSCAL catalog.`,
+      );
+    }
+
+    return {
+      id: familyId,
+      title: catalogFamily.title,
+      anchorId: slugifyHeading(`${catalogFamily.title}-${familyId}`),
+      controls: Object.entries(controls)
+        .map(([controlId, source]) =>
+          buildControlViewModel(controlId, source, catalog),
+        )
+        .sort((left, right) =>
+          left.id.localeCompare(right.id, "en", { numeric: true }),
+        ),
+    };
+  });
+}
+
+function collectControlDocumentArtifact(
+  rules: RulesDocument,
+  config: ToolConfig,
+  mapping: ControlDocumentMappingConfig,
+  catalog: OscalCatalog,
+): BuildArtifact | null {
+  const controlFamilies = buildControlFamilyViewModels(rules, mapping, catalog);
+  if (!controlFamilies.length && mapping.emptyBehavior === "skip") {
+    return null;
+  }
+
+  const relativePath = normalizeGeneratedPath(mapping.output);
+
+  return {
+    relativePath,
+    outputPath: resolveGeneratedOutputPath(config, relativePath),
+    templatePath: resolveToolPath(
+      mapping.template ?? "templates/rev5-controls.hbs",
+    ),
+    mappingId: mapping.id,
+    title: mapping.title,
+    documentType: "CTL",
+    context: buildDocumentContext(mapping.title, {
+      statusSpan: pictographSpan(config, mapping.status),
+      tags: versionTags(["rev5"]),
+      isControlDocument: true,
+      controlCatalog: controlCatalogMetadataViewModel(catalog.metadata),
+      controlFamilies,
+    }),
+  };
+}
+
+function configuredOscalCatalog(
+  config: ToolConfig,
+): OscalCatalog | undefined {
+  if (!(config.generated.controlDocuments ?? []).length) {
+    return undefined;
+  }
+
+  const source = readFileSync(
+    resolveToolPath(config.paths.oscalCatalogFile),
+    "utf8",
+  );
+  return parseOscalCatalog(source);
+}
+
+function collectConfiguredControlDocumentArtifacts(
+  rules: RulesDocument,
+  config: ToolConfig,
+  catalog: OscalCatalog | undefined,
+): BuildArtifact[] {
+  const mappings = config.generated.controlDocuments ?? [];
+  if (!mappings.length) {
+    return [];
+  }
+
+  if (!catalog) {
+    throw new Error("Control document generation requires an OSCAL catalog.");
+  }
+
+  return mappings
+    .map((mapping) =>
+      collectControlDocumentArtifact(rules, config, mapping, catalog),
+    )
+    .filter((artifact): artifact is BuildArtifact => artifact !== null);
+}
+
 function collectDeadlineDocumentArtifactsForMapping(
   rules: RulesDocument,
   config: ToolConfig,
@@ -5288,6 +5604,7 @@ export function collectArtifacts(
   config: ToolConfig = DEFAULT_CONFIG,
 ): BuildArtifact[] {
   const artifacts: BuildArtifact[] = [];
+  const oscalCatalog = configuredOscalCatalog(config);
   const doNotLinkTerms = buildDoNotLinkTermIndex(rules.FRD);
   const ruleIndex = buildRuleIndex(rules);
   const ksiIndex = buildKsiIndex(rules);
@@ -5309,6 +5626,9 @@ export function collectArtifacts(
       ruleIndex,
       ksiIndex,
     ),
+  );
+  artifacts.push(
+    ...collectConfiguredControlDocumentArtifacts(rules, config, oscalCatalog),
   );
   artifacts.push(...collectDeadlineDocumentArtifacts(rules, config));
   artifacts.push(...collectTaggedDocumentSummaryArtifacts(rules, config));
