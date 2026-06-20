@@ -13,6 +13,7 @@ tags:
 {{/if}}
 # {{title}}
 
+{{#unless isControlFamilyDocument}}
 This reference contains the NIST SP 800-53 Revision 5 controls for which the FedRAMP Consolidated Rules define additional guidance or organization-assigned parameter values.
 
 {{#if controlCatalog}}
@@ -32,9 +33,12 @@ This reference contains the NIST SP 800-53 Revision 5 controls for which the Fed
 
 ---
 
+{{/unless}}
 {{#each controlFamilies}}
+{{#unless ../isControlFamilyDocument}}
 ## {{title}} ({{id}}) { #{{anchorId}} }
 
+{{/unless}}
 {{#each controls}}
 ### {{title}} { #{{anchorId}} }
 

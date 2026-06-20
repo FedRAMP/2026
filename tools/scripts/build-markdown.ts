@@ -11,6 +11,7 @@ import {
   type DefinitionDocumentMappingConfig,
   type DeadlineDocumentMappingConfig,
   type ControlDocumentMappingConfig,
+  type ControlDocumentOutputMode,
   type FrrCollectionDocumentMappingConfig,
   type GeneratedDocumentSource,
   type GeneratedDocumentStatus,
@@ -572,6 +573,7 @@ interface DocumentViewModel {
   isRequirementsDocument: boolean;
   isKsiDocument: boolean;
   isControlDocument: boolean;
+  isControlFamilyDocument: boolean;
   isDeadlineDocument: boolean;
   definitions: DefinitionViewModel[];
   importantRelatedTerms: ImportantRelatedTermViewModel[];
@@ -3865,6 +3867,7 @@ function buildDocumentContext(
     isRequirementsDocument: options.isRequirementsDocument ?? false,
     isKsiDocument: options.isKsiDocument ?? false,
     isControlDocument: options.isControlDocument ?? false,
+    isControlFamilyDocument: options.isControlFamilyDocument ?? false,
     isDeadlineDocument: options.isDeadlineDocument ?? false,
     definitions: options.definitions ?? [],
     importantRelatedTerms: options.importantRelatedTerms ?? [],
@@ -4675,6 +4678,29 @@ function sourceControlFamilyKeys(
   return selectedFamilies.map((family) => family.toUpperCase());
 }
 
+function controlDocumentOutputMode(
+  mapping: ControlDocumentMappingConfig,
+): ControlDocumentOutputMode {
+  return mapping.outputMode ?? "single";
+}
+
+function renderControlFamilyDocumentOutput(
+  mapping: ControlDocumentMappingConfig,
+  family: ControlFamilyViewModel,
+): string {
+  const normalizedKey = slugifyHeading(family.title);
+
+  if (mapping.output.includes("{CTL}")) {
+    return mapping.output.replaceAll("{CTL}", normalizedKey);
+  }
+
+  if (mapping.output.includes("{family}")) {
+    return mapping.output.replaceAll("{family}", normalizedKey);
+  }
+
+  return `${mapping.output.replace(/\/?$/, "/")}${normalizedKey}.md`;
+}
+
 function formatCatalogDate(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
@@ -4830,7 +4856,7 @@ function buildControlFamilyViewModels(
   });
 }
 
-function collectControlDocumentArtifact(
+function collectSingleControlDocumentArtifact(
   rules: RulesDocument,
   config: ToolConfig,
   mapping: ControlDocumentMappingConfig,
@@ -4842,6 +4868,7 @@ function collectControlDocumentArtifact(
   }
 
   const relativePath = normalizeGeneratedPath(mapping.output);
+  const title = mapping.title ?? "Rev5 Controls";
 
   return {
     relativePath,
@@ -4850,9 +4877,9 @@ function collectControlDocumentArtifact(
       mapping.template ?? "templates/rev5-controls.hbs",
     ),
     mappingId: mapping.id,
-    title: mapping.title,
+    title,
     documentType: "CTL",
-    context: buildDocumentContext(mapping.title, {
+    context: buildDocumentContext(title, {
       statusSpan: pictographSpan(config, mapping.status),
       tags: versionTags(["rev5"]),
       isControlDocument: true,
@@ -4860,6 +4887,40 @@ function collectControlDocumentArtifact(
       controlFamilies,
     }),
   };
+}
+
+function collectFamilyControlDocumentArtifacts(
+  rules: RulesDocument,
+  config: ToolConfig,
+  mapping: ControlDocumentMappingConfig,
+  catalog: OscalCatalog,
+): BuildArtifact[] {
+  return buildControlFamilyViewModels(rules, mapping, catalog).map((family) => {
+    const relativePath = normalizeGeneratedPath(
+      renderControlFamilyDocumentOutput(mapping, family),
+    );
+    const title = mapping.title ?? family.title;
+
+    return {
+      relativePath,
+      outputPath: resolveGeneratedOutputPath(config, relativePath),
+      templatePath: resolveToolPath(
+        mapping.template ?? "templates/rev5-controls.hbs",
+      ),
+      mappingId: mapping.id,
+      sourceDocument: family.id,
+      title,
+      documentType: "CTL",
+      context: buildDocumentContext(title, {
+        statusSpan: pictographSpan(config, mapping.status),
+        tags: versionTags(["rev5"]),
+        isControlDocument: true,
+        isControlFamilyDocument: true,
+        controlCatalog: controlCatalogMetadataViewModel(catalog.metadata),
+        controlFamilies: [family],
+      }),
+    };
+  });
 }
 
 function configuredOscalCatalog(
@@ -4890,11 +4951,24 @@ function collectConfiguredControlDocumentArtifacts(
     throw new Error("Control document generation requires an OSCAL catalog.");
   }
 
-  return mappings
-    .map((mapping) =>
-      collectControlDocumentArtifact(rules, config, mapping, catalog),
-    )
-    .filter((artifact): artifact is BuildArtifact => artifact !== null);
+  return mappings.flatMap((mapping) => {
+    if (controlDocumentOutputMode(mapping) === "families") {
+      return collectFamilyControlDocumentArtifacts(
+        rules,
+        config,
+        mapping,
+        catalog,
+      );
+    }
+
+    const artifact = collectSingleControlDocumentArtifact(
+      rules,
+      config,
+      mapping,
+      catalog,
+    );
+    return artifact ? [artifact] : [];
+  });
 }
 
 function collectDeadlineDocumentArtifactsForMapping(

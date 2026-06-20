@@ -253,11 +253,28 @@ Add an entry to `generated.controlDocuments` in `config.json`:
 
 Control documents select entries from the rules JSON `CTL` collection and enrich them with family names, control titles, official identifiers, control statements, assignment labels, and catalog version metadata from `paths.oscalCatalogFile`. The generator fails when a selected CTL control or parameter ID is absent from the local OSCAL catalog.
 
+Use `outputMode: "families"` to generate one page per selected control family:
+
+```json
+{
+  "id": "provider-rev5-controls",
+  "output": "providers/rev5/controls/{family}.md",
+  "outputMode": "families",
+  "status": "stable",
+  "template": "templates/rev5-controls.hbs",
+  "source": {
+    "collection": "CTL",
+    "families": "ALL"
+  }
+}
+```
+
 Mapping fields:
 
 - `id`: stable identifier for the mapping.
-- `title`: page H1.
-- `output`: destination path relative to `paths.src`.
+- `title`: optional page H1. Single pages default to `Rev5 Controls`; family pages default to the OSCAL family title.
+- `output`: destination path relative to `paths.src`. Family mappings can use `{family}` or `{CTL}` for the slugified OSCAL family title.
+- `outputMode`: omit or use `single` for one combined page; use `families` for one page per selected family.
 - `template`: optional Handlebars template; defaults to `templates/rev5-controls.hbs`.
 - `emptyBehavior`: `write` keeps an empty page and `skip` omits it.
 - `status`: pictograph status for generated frontmatter.

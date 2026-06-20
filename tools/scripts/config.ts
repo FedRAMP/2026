@@ -13,6 +13,7 @@ export type ControlFamilySelection = string[] | "ALL";
 export type RuleDocumentGrouping = "section" | "document";
 export type RuleDocumentOutputMode = "single" | "documents";
 export type KsiDocumentOutputMode = "single" | "themes";
+export type ControlDocumentOutputMode = "single" | "families";
 export type RuleDocumentLinkTargetScope = "default" | "sameMappingOnly";
 export type GeneratedDocumentStatus = "stable" | "placeholder" | "empty";
 export type GeneratedDocumentSource = "machine" | "person";
@@ -138,8 +139,9 @@ export interface ControlDocumentSourceConfig {
 
 export interface ControlDocumentMappingConfig {
   id: string;
-  title: string;
+  title?: string;
   output: string;
+  outputMode?: ControlDocumentOutputMode;
   status: GeneratedDocumentStatus;
   template?: string;
   emptyBehavior?: GeneratedEmptyBehavior;

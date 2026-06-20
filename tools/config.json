@@ -119,6 +119,17 @@
           "collection": "CTL",
           "families": "ALL"
         }
+      },
+      {
+        "id": "provider-rev5-controls",
+        "output": "providers/rev5/controls/{family}.md",
+        "outputMode": "families",
+        "status": "stable",
+        "template": "templates/rev5-controls.hbs",
+        "source": {
+          "collection": "CTL",
+          "families": "ALL"
+        }
       }
     ],
     "deadlineDocuments": [

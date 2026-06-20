@@ -13,7 +13,7 @@ nav = [
     ] },
     { "About This Preview" = [
       { "Source Data" = "sources.md" },
-      { "Changelog" = "changelog.md" }
+      { "Changelog" = "changelog.md" },
     ] },
     { "Related External Sites" = [
       { "⏳ Legacy Documentation Reference" = "https://fedramp.gov/legacy" },
@@ -193,6 +193,20 @@ nav = [
       ] },
       { "Rev5 Controls" = [
         "providers/rev5/controls/index.md",
+        { "Access Control" = "providers/rev5/controls/access-control.md" },
+        { "Audit and Accountability" = "providers/rev5/controls/audit-and-accountability.md" },
+        { "Assessment, Authorization, and Monitoring" = "providers/rev5/controls/assessment-authorization-and-monitoring.md" },
+        { "Configuration Management" = "providers/rev5/controls/configuration-management.md" },
+        { "Contingency Planning" = "providers/rev5/controls/contingency-planning.md" },
+        { "Identification and Authentication" = "providers/rev5/controls/identification-and-authentication.md" },
+        { "Incident Response" = "providers/rev5/controls/incident-response.md" },
+        { "Maintenance" = "providers/rev5/controls/maintenance.md" },
+        { "Personnel Security" = "providers/rev5/controls/personnel-security.md" },
+        { "Risk Assessment" = "providers/rev5/controls/risk-assessment.md" },
+        { "System and Services Acquisition" = "providers/rev5/controls/system-and-services-acquisition.md" },
+        { "System and Communications Protection" = "providers/rev5/controls/system-and-communications-protection.md" },
+        { "System and Information Integrity" = "providers/rev5/controls/system-and-information-integrity.md" },
+        { "Supply Chain Risk Management" = "providers/rev5/controls/supply-chain-risk-management.md" }
       ] },
     ] },
   ] },
@@ -213,7 +227,7 @@ nav = [
   ] },
   { "Advisors" = [
     "advisors/index.md",
-      { "Marketplace Listing" = "advisors/rules/marketplace-listing.md" },
+    { "Marketplace Listing" = "advisors/rules/marketplace-listing.md" },
   ] },
   { "Ruleset Reference" = [
     "reference/index.md",
