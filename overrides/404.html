@@ -1,0 +1,735 @@
+{% extends "base.html" %}
+
+{% block htmltitle %}
+  <title>404 — Page not found | FedRAMP</title>
+{% endblock %}
+
+{% block extrahead %}
+  <style>
+    html,
+    body,
+    .md-container,
+    .md-main,
+    .md-main__inner {
+      margin: 0;
+      max-width: none;
+      padding: 0;
+      width: 100%;
+    }
+
+    body {
+      overflow-x: clip;
+    }
+
+    .md-main__inner {
+      display: block;
+      height: auto;
+    }
+
+    .error-page {
+      --paper: #fff;
+      --ink: #000;
+      --art-filter: grayscale(1) contrast(1.12);
+      --cat-blend: multiply;
+      background: var(--paper);
+      box-sizing: border-box;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100svh;
+      overflow-x: clip;
+      width: 100vw;
+    }
+
+    .error-hero {
+      background: var(--paper);
+      isolation: isolate;
+      min-height: 100svh;
+      overflow: hidden;
+      position: relative;
+      width: 100vw;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      html:not([data-error-theme]) .error-page {
+        --paper: #000;
+        --ink: #fff;
+        --art-filter: grayscale(1) invert(1) contrast(1.15);
+        --cat-blend: screen;
+      }
+    }
+
+    html[data-error-theme="dark"] .error-page {
+      --paper: #000;
+      --ink: #fff;
+      --art-filter: grayscale(1) invert(1) contrast(1.15);
+      --cat-blend: screen;
+    }
+
+    html[data-error-theme="light"] .error-page {
+      --paper: #fff;
+      --ink: #000;
+      --art-filter: grayscale(1) contrast(1.12);
+      --cat-blend: multiply;
+    }
+
+    .error-page,
+    .error-page * {
+      box-sizing: border-box;
+    }
+
+    .error-page a {
+      color: inherit;
+    }
+
+    .error-page__topbar {
+      align-items: center;
+      border-block-end: 1px solid var(--ink);
+      display: flex;
+      justify-content: space-between;
+      margin-inline: 1.25rem;
+      min-height: 4.75rem;
+      position: relative;
+      z-index: 3;
+    }
+
+    .error-brand {
+      align-items: center;
+      display: inline-flex;
+      gap: 0.75rem;
+      text-decoration: none;
+    }
+
+    .error-brand__mark {
+      filter: var(--art-filter);
+      height: auto;
+      width: 2.75rem;
+    }
+
+    .error-brand__name {
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      line-height: 1;
+    }
+
+    .error-utility {
+      align-items: center;
+      display: flex;
+      gap: 0.85rem;
+      padding-inline-end: 0.2rem;
+    }
+
+    .error-code {
+      font-family: "Roboto Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 0.66rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .error-theme {
+      align-items: center;
+      display: flex;
+      min-height: 2.75rem;
+      min-width: 2.75rem;
+    }
+
+    .error-theme__button {
+      align-items: center;
+      background: transparent;
+      border: 1px solid var(--ink);
+      border-radius: 50%;
+      color: var(--ink);
+      cursor: pointer;
+      display: flex;
+      height: 2.75rem;
+      justify-content: center;
+      margin: 0;
+      padding: 0.7rem;
+      transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+      width: 2.75rem;
+    }
+
+    .error-theme__button svg {
+      fill: currentColor;
+      height: 1.2rem;
+      width: 1.2rem;
+    }
+
+    .error-theme__icon--sun {
+      display: none;
+    }
+
+    html[data-error-theme="dark"] .error-theme__icon--moon {
+      display: none;
+    }
+
+    html[data-error-theme="dark"] .error-theme__icon--sun {
+      display: block;
+    }
+
+    .error-theme__button:hover {
+      background: var(--ink);
+      color: var(--paper);
+      opacity: 1;
+      transform: rotate(8deg);
+    }
+
+    .error-theme__button:focus-visible {
+      outline: 3px solid var(--ink);
+      outline-offset: 3px;
+    }
+
+    .error-message {
+      margin-inline: 1.25rem;
+      min-height: calc(100svh - 4.75rem);
+      padding-block: clamp(3.5rem, 10svh, 6rem) clamp(21rem, 49svh, 30rem);
+      position: relative;
+      z-index: 2;
+    }
+
+    .error-headline {
+      display: block;
+      position: relative;
+      z-index: 2;
+    }
+
+    .error-title {
+      color: var(--ink);
+      font-family: Merriweather, Georgia, "Times New Roman", serif;
+      font-size: clamp(4.7rem, 20vw, 7.5rem) !important;
+      font-weight: 700;
+      letter-spacing: -0.075em;
+      line-height: 0.8;
+      margin: 0 0 3rem;
+    }
+
+    .error-subtitle {
+      font-family: Merriweather, Georgia, "Times New Roman", serif;
+      font-size: clamp(1.08rem, 4.8vw, 1.45rem);
+      font-weight: 400;
+      line-height: 1.25;
+      margin: 1rem 0 0;
+      max-width: 28rem;
+    }
+
+    .error-lede {
+      font-family: Merriweather, Georgia, "Times New Roman", serif !important;
+      font-size: clamp(0.98rem, 4vw, 1.12rem);
+      line-height: 1.55;
+      margin: 1.5rem 0 0;
+      max-width: 34rem;
+      position: relative;
+      text-wrap: pretty;
+      z-index: 2;
+    }
+
+    .error-cat {
+      bottom: 0;
+      line-height: 0;
+      margin: 0;
+      mix-blend-mode: var(--cat-blend);
+      pointer-events: none;
+      position: absolute;
+      right: 0;
+      top: auto;
+      transform: none;
+      width: min(92vw, 28rem);
+      z-index: 1;
+    }
+
+    .error-cat img {
+      display: block;
+      filter: var(--art-filter);
+      height: auto;
+      width: 100%;
+    }
+
+    .scroll-cue {
+      align-items: center;
+      background: var(--paper);
+      border: 1px solid var(--ink);
+      bottom: 1rem;
+      display: inline-flex;
+      font-family: "Roboto Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 0.66rem;
+      font-weight: 700;
+      gap: 0.65rem;
+      left: 0;
+      letter-spacing: 0.08em;
+      min-height: 2.75rem;
+      padding: 0.7rem 0.9rem;
+      position: absolute;
+      text-decoration: none;
+      text-transform: uppercase;
+      z-index: 3;
+    }
+
+    .scroll-cue__arrow {
+      animation: error-page-nudge 1.5s ease-in-out infinite;
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    .error-destinations {
+      background: var(--paper);
+      border-block-start: 1px solid var(--ink);
+      padding: 2.25rem 1.25rem 6rem;
+      position: relative;
+      z-index: 3;
+    }
+
+    .error-destinations h2 {
+      color: var(--ink);
+      font-family: Merriweather, Georgia, "Times New Roman", serif;
+      font-size: clamp(1.15rem, 5vw, 1.5rem);
+      font-weight: 700;
+      line-height: 1.3;
+      margin: 0 0 1.25rem;
+    }
+
+    .destination-list {
+      border-block-end: 1px solid var(--ink);
+      list-style: none;
+      margin: 0;
+      max-width: 46rem;
+      padding: 0;
+    }
+
+    .destination-list li {
+      border-block-start: 1px solid var(--ink);
+      margin: 0;
+    }
+
+    .destination-link {
+      align-items: center;
+      display: grid;
+      gap: 0.15rem 0.9rem;
+      grid-template-columns: 1.35rem minmax(0, 1fr);
+      min-height: 4.5rem;
+      padding: 0.75rem 0.2rem;
+      text-decoration: none;
+      transition: background-color 160ms ease, color 160ms ease, padding 160ms ease;
+    }
+
+    .destination-link::before {
+      content: "→";
+      font-size: 1.05rem;
+      grid-row: 1 / span 2;
+      transition: transform 160ms ease;
+    }
+
+    .destination-link__label {
+      font-size: 0.94rem;
+      font-weight: 750;
+      line-height: 1.25;
+    }
+
+    .destination-link__path {
+      font-family: "Roboto Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.025em;
+      opacity: 0.68;
+    }
+
+    .destination-link:hover {
+      background: var(--ink);
+      color: var(--paper);
+      padding-inline: 0.8rem;
+    }
+
+    .destination-link:hover::before {
+      transform: translateX(0.22rem);
+    }
+
+    .destination-link:focus-visible,
+    .scroll-cue:focus-visible,
+    .error-brand:focus-visible {
+      outline: 3px solid var(--ink);
+      outline-offset: 3px;
+    }
+
+    @keyframes error-page-nudge {
+      0%, 100% { transform: translateY(-0.12rem); }
+      50% { transform: translateY(0.22rem); }
+    }
+
+    @media screen and (max-width: 28rem) {
+      .error-code {
+        font-size: 0;
+      }
+
+      .error-code::after {
+        content: "404 / Not Found";
+        font-size: 0.62rem;
+      }
+    }
+
+    @media screen and (min-width: 48rem) and (max-width: 69.999rem) {
+      .error-page__topbar {
+        margin-inline: clamp(2rem, 4vw, 3.5rem);
+        min-height: 5.25rem;
+      }
+
+      .error-message {
+        margin-inline: clamp(2rem, 4vw, 3.5rem);
+        min-height: calc(100svh - 5.25rem);
+        padding-block: clamp(4rem, 9svh, 6rem) 0;
+        padding-inline-end: 48%;
+      }
+
+      .error-title {
+        font-size: clamp(5.25rem, 15vw, 6.75rem) !important;
+      }
+
+      .error-subtitle {
+        font-size: clamp(1.25rem, 2.2vw, 1.55rem);
+        margin-block-start: 1.2rem;
+      }
+
+      .error-lede {
+        font-family: Merriweather, Georgia, "Times New Roman", serif !important;
+        font-size: clamp(1rem, 1.6vw, 1.12rem);
+        margin-block-start: 1.75rem;
+        max-width: 29rem;
+      }
+
+      .error-cat {
+        bottom: 0;
+        right: 0;
+        top: auto;
+        transform: none;
+        width: min(61vw, 42rem);
+      }
+
+      .error-destinations {
+        padding-inline: clamp(2rem, 4vw, 3.5rem);
+      }
+    }
+
+    @media screen and (min-width: 70rem) {
+      .error-page__topbar {
+        margin-inline: clamp(2rem, 3.5vw, 3.5rem);
+        min-height: 5.25rem;
+      }
+
+      .error-brand {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.35rem;
+        padding-block-end: 0.75rem;
+      }
+
+      .error-brand__mark {
+        width: 3.15rem;
+      }
+
+      .error-brand__name {
+        font-size: 0.76rem;
+      }
+
+      .error-message {
+        margin-inline: clamp(2rem, 3.5vw, 3.5rem);
+        min-height: calc(100svh - 5.25rem);
+        padding: clamp(4rem, 10svh, 7rem) 48% 0 0;
+        position: relative;
+      }
+
+      .error-headline {
+        display: block;
+      }
+
+      .error-title {
+        font-size: clamp(7.5rem, 10vw, 10.5rem) !important;
+        line-height: 0.79;
+      }
+
+      .error-subtitle {
+        font-size: clamp(1.1rem, 1.65vw, 1.55rem);
+        margin: 1.2rem 0 0;
+        max-width: none;
+      }
+
+      .error-lede {
+        font-family: Merriweather, Georgia, "Times New Roman", serif !important;
+        font-size: clamp(0.95rem, 1.15vw, 1.08rem);
+        margin-block-start: clamp(1.25rem, 3vh, 2rem);
+        max-width: 36rem;
+      }
+
+      .error-destinations {
+        background: var(--paper);
+        border-block-start: 1px solid var(--ink);
+        padding: clamp(3rem, 6vw, 5rem) clamp(2rem, 3.5vw, 3.5rem) 7rem;
+      }
+
+      .error-destinations h2 {
+        font-size: clamp(1.25rem, 1.5vw, 1.6rem);
+        margin-block-end: 1.25rem;
+      }
+
+      .destination-link {
+        gap: 0 0.75rem;
+        grid-template-columns: 1.2rem minmax(0, 1fr) auto;
+        min-height: 3.75rem;
+        padding-block: 0.6rem;
+      }
+
+      .destination-link::before {
+        grid-row: 1;
+      }
+
+      .destination-link__label {
+        font-size: clamp(0.88rem, 1vw, 1rem);
+      }
+
+      .destination-link__path {
+        font-size: clamp(0.52rem, 0.62vw, 0.62rem);
+        grid-column: 3;
+        justify-self: end;
+      }
+
+      .error-cat {
+        bottom: 0;
+        left: auto;
+        margin: 0;
+        max-width: 50rem;
+        position: absolute;
+        right: 0;
+        top: auto;
+        transform: none;
+        width: min(54vw, 46rem);
+        z-index: 1;
+      }
+
+      .scroll-cue {
+        display: inline-flex;
+      }
+    }
+
+    @media screen and (min-width: 70rem) and (max-height: 42rem) {
+      .error-message {
+        padding-block-start: 2.25rem;
+      }
+
+      .error-title {
+        font-size: clamp(6rem, 9vw, 8.25rem) !important;
+      }
+
+      .error-subtitle {
+        margin-block-start: 0.75rem;
+      }
+
+      .error-lede {
+        margin-block-start: 1rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .error-page *,
+      .error-page *::before,
+      .error-page *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+  <script>
+    (() => {
+      let theme;
+
+      try {
+        const saved = __md_get("__palette");
+        const color = saved && saved.color;
+
+        if (color && color.media !== "(prefers-color-scheme)" && color.scheme) {
+          theme = color.scheme === "slate" ? "dark" : "light";
+        }
+      } catch (_) {
+        // Local storage can be unavailable in privacy-focused browser modes.
+      }
+
+      if (!theme) {
+        theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+
+      document.documentElement.setAttribute("data-error-theme", theme);
+    })();
+  </script>
+{% endblock %}
+
+{% block header %}{% endblock %}
+{% block tabs %}{% endblock %}
+{% block site_nav %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block container %}
+  <section class="error-page" id="__skip" aria-labelledby="error-title">
+    <div class="error-hero">
+      <header class="error-page__topbar">
+        <a class="error-brand" href="https://www.fedramp.gov/" aria-label="FedRAMP home">
+          <img
+            class="error-brand__mark"
+            src="{{ 'assets/fr-only-logo-black.png' | url }}"
+            width="2048"
+            height="1499"
+            alt=""
+          >
+          <span class="error-brand__name">FedRAMP</span>
+        </a>
+
+        <div class="error-utility">
+          <span class="error-code">Error / 404 Not Found</span>
+          <div class="error-theme">
+            <button
+              class="error-theme__button"
+              type="button"
+              aria-label="Switch color theme"
+              title="Switch color theme"
+            >
+              <svg class="error-theme__icon--moon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12.1 22A10.1 10.1 0 0 1 9.4 2.1a.75.75 0 0 1 .9.97 7.7 7.7 0 0 0 10.6 10.2.75.75 0 0 1 .96.9A10.1 10.1 0 0 1 12.1 22Z"/>
+              </svg>
+              <svg class="error-theme__icon--sun" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 18.25A6.25 6.25 0 1 1 12 5.75a6.25 6.25 0 0 1 0 12.5Zm0-10.5a4.25 4.25 0 1 0 0 8.5 4.25 4.25 0 0 0 0-8.5ZM12 4a1 1 0 0 1-1-1V1a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1Zm0 21a1 1 0 0 1-1-1v-2a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1ZM4.22 7.05a1 1 0 0 1-.7-.3L2.1 5.35a1 1 0 1 1 1.42-1.42l1.4 1.42a1 1 0 0 1-.7 1.7Zm15.56 15.56a1 1 0 0 1-.7-.29l-1.42-1.41a1 1 0 0 1 1.42-1.42l1.41 1.42a1 1 0 0 1-.71 1.7ZM3 13H1a1 1 0 1 1 0-2h2a1 1 0 1 1 0 2Zm20 0h-2a1 1 0 1 1 0-2h2a1 1 0 1 1 0 2ZM2.81 22.61a1 1 0 0 1-.7-1.7l1.4-1.42a1 1 0 0 1 1.42 1.42l-1.41 1.41a1 1 0 0 1-.71.29ZM18.37 7.05a1 1 0 0 1-.71-1.7l1.42-1.42a1 1 0 0 1 1.41 1.42l-1.41 1.4a1 1 0 0 1-.71.3Z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div class="error-message">
+        <div class="error-headline">
+          <h1 class="error-title" id="error-title">Oops!</h1>
+          <p class="error-subtitle">We probably moved that.</p>
+        </div>
+
+        <p class="error-lede">
+          A lot is changing with FedRAMP these days... including our website.
+        </p>
+
+        <a class="scroll-cue" href="#destinations">
+          Find the new location
+          <span class="scroll-cue__arrow" aria-hidden="true">↓</span>
+        </a>
+      </div>
+
+      <figure class="error-cat" aria-hidden="true">
+        <img
+          src="{{ 'assets/bwcat-404.jpg' | url }}"
+          width="900"
+          height="854"
+          alt=""
+          fetchpriority="high"
+          decoding="async"
+        >
+      </figure>
+    </div>
+
+    <nav class="error-destinations" id="destinations" aria-labelledby="destinations-title">
+      <h2 id="destinations-title">You might be looking for:</h2>
+      <ul class="destination-list">
+        <li>
+          <a class="destination-link" href="{{ base_url }}">
+            <span class="destination-link__label">The Consolidated Rules for 2026</span>
+            <span class="destination-link__path">fedramp.gov/2026</span>
+          </a>
+        </li>
+        <li>
+          <a class="destination-link" href="https://www.fedramp.gov/legacy/">
+            <span class="destination-link__label">Legacy Documentation and Materials Reference</span>
+            <span class="destination-link__path">fedramp.gov/legacy</span>
+          </a>
+        </li>
+        <li>
+          <a class="destination-link" href="https://www.fedramp.gov/marketplace/">
+            <span class="destination-link__label">The FedRAMP Marketplace</span>
+            <span class="destination-link__path">fedramp.gov/marketplace</span>
+          </a>
+        </li>
+        <li>
+          <a class="destination-link" href="https://www.fedramp.gov/notices/">
+            <span class="destination-link__label">Public Notices</span>
+            <span class="destination-link__path">fedramp.gov/notices</span>
+          </a>
+        </li>
+        <li>
+          <a class="destination-link" href="https://www.fedramp.gov/changelog/">
+            <span class="destination-link__label">FedRAMP.gov Changelog</span>
+            <span class="destination-link__path">fedramp.gov/changelog</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </section>
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const body = document.body;
+      const button = document.querySelector(".error-theme__button");
+      const systemTheme = matchMedia("(prefers-color-scheme: dark)");
+      let followsSystem = true;
+
+      try {
+        const saved = __md_get("__palette");
+        const media = saved && saved.color && saved.color.media;
+        followsSystem = !media || media === "(prefers-color-scheme)";
+      } catch (_) {
+        // Continue with the system theme when storage is unavailable.
+      }
+
+      const updateButton = (theme) => {
+        const next = theme === "dark" ? "light" : "dark";
+        const label = `Switch to ${next} mode`;
+        button.setAttribute("aria-label", label);
+        button.setAttribute("title", label);
+      };
+
+      const applyTheme = (theme, persist) => {
+        const dark = theme === "dark";
+        const scheme = dark ? "slate" : "default";
+        const media = dark
+          ? "(prefers-color-scheme: dark)"
+          : "(prefers-color-scheme: light)";
+
+        root.setAttribute("data-error-theme", theme);
+        body.setAttribute("data-md-color-scheme", scheme);
+        body.setAttribute("data-md-color-media", media);
+        updateButton(theme);
+
+        if (persist) {
+          followsSystem = false;
+
+          try {
+            __md_set("__palette", {
+              color: {
+                media,
+                scheme,
+                primary: body.getAttribute("data-md-color-primary") || "indigo",
+                accent: body.getAttribute("data-md-color-accent") || "indigo"
+              }
+            });
+          } catch (_) {
+            // The visual toggle still works when storage is unavailable.
+          }
+        }
+      };
+
+      applyTheme(root.getAttribute("data-error-theme") || "light", false);
+
+      button.addEventListener("click", () => {
+        const next = root.getAttribute("data-error-theme") === "dark" ? "light" : "dark";
+        applyTheme(next, true);
+      });
+
+      systemTheme.addEventListener("change", (event) => {
+        if (followsSystem) {
+          applyTheme(event.matches ? "dark" : "light", false);
+        }
+      });
+    })();
+  </script>
+{% endblock %}
