@@ -13,48 +13,34 @@ tags:
 {{/if}}
 # {{title}}
 
-{{#unless isControlFamilyDocument}}
-This reference contains FedRAMP guidance and organization-assigned parameter values for NIST SP 800-53 Revision 5 controls.
+This page contains all **{{controlCount}}** controls and control enhancements in the {{title}} family from the vendored NIST SP 800-53 Revision 5 OSCAL catalog.
 
-{{#if controlCatalog}}
 !!! info "Official NIST OSCAL source"
-    **{{controlCatalog.title}}**
-
     - **Catalog version:** {{controlCatalog.version}}
     - **OSCAL version:** {{controlCatalog.oscalVersion}}
     - **Catalog last modified:** {{controlCatalog.lastModified}}
 
-{{/if}}
-**Control families**
-
 {{#each controlFamilies}}
-- [{{title}} ({{id}})](#{{anchorId}})
-{{/each}}
-
----
-
-{{/unless}}
-{{#each controlFamilies}}
-{{#unless ../isControlFamilyDocument}}
-## {{title}} ({{id}}) { #{{anchorId}} }
-
-{{/unless}}
 {{#each controls}}
-### {{title}} { #{{anchorId}} }
+## {{displayId}} ({{title}}) { #{{anchorId}} }
 
-??? abstract "{{officialId}}"
-    **NIST SP 800-53 Revision {{../../controlCatalog.version}}**
+{{#if baselineClasses.length}}
+<div class="subset-applicability full-control-baselines" role="group" aria-label="FedRAMP Rev5 baseline applicability">
+<span class="subset-applicability__group subset-applicability__group--classes"><span class="subset-applicability__label">FedRAMP Rev5 Baselines:</span> <span class="subset-applicability__values">{{#each baselineClasses}}<span class="subset-applicability__tag">{{this}}</span>{{/each}}</span></span>
+</div>
 
-    - **Official NIST control ID:** `{{officialId}}`
-    - **Catalog version:** {{../../controlCatalog.version}}
-    - **OSCAL version:** {{../../controlCatalog.oscalVersion}}
-    - **Catalog last modified:** {{../../controlCatalog.lastModified}}
-
+{{/if}}
 !!! quote ""
 {{#each statementLines}}
     {{this}}
 {{/each}}
 
+    ---
+
+{{#unless hasFedrampContent}}
+    _This control does not have additional FedRAMP guidance or FedRAMP-assigned parameter values._
+
+{{/unless}}
 {{#if hasFedrampContent}}
     !!! info ""
 {{#if commonGuidance}}
@@ -99,6 +85,10 @@ This reference contains FedRAMP guidance and organization-assigned parameter val
 {{/each}}
 {{/if}}
 {{/if}}
+    ---
+
+    **External Link for Additional Information:** [myctrl.tools]({{externalUrl}})
+
 ---
 
 {{/each}}

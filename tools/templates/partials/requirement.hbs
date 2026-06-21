@@ -150,7 +150,7 @@
 {{/if}}
 {{#if controlLinks.length}}
 
-    **Related SP 800-53 Controls:** {{#each controlLinks}}[{{label}}]({{url}}){{#unless @last}}, {{/unless}}{{/each}}
+    **Related SP 800-53 Controls:** {{#each controlLinks}}[{{label}}]({{url}}){ data-preview }{{#unless @last}}, {{/unless}}{{/each}}
 
 {{/if}}
 {{#if reference}}

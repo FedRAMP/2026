@@ -2,7 +2,7 @@
 
 ## NIST SP 800-53 Revision 5 OSCAL catalog
 
-`NIST_SP-800-53_rev5_catalog.xml` is the local authoritative source for NIST control family names, control and enhancement titles, control statements, and organization-assigned parameter metadata used by generated Rev5 Control Guidance and rule-level control lists.
+`NIST_SP-800-53_rev5_catalog.xml` is the local authoritative source for the full Rev5 control reference, NIST control family names, control and enhancement titles, control statements, active or withdrawn status, and organization-assigned parameter metadata used by generated Rev5 Control Guidance and rule-level control links.
 
 - Upstream repository: <https://github.com/usnistgov/oscal-content>
 - OSCAL Content release: `v1.5.0`, published May 13, 2026

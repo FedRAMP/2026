@@ -335,6 +335,9 @@ function configWithGeneratedMappingStatus(
   updatedConfig.generated.controlDocuments = updateStatuses(
     updatedConfig.generated.controlDocuments,
   );
+  updatedConfig.generated.fullControlReferenceDocuments = updateStatuses(
+    updatedConfig.generated.fullControlReferenceDocuments,
+  );
   updatedConfig.generated.deadlineDocuments = updateStatuses(
     updatedConfig.generated.deadlineDocuments,
   );
@@ -926,6 +929,10 @@ function generatedMappingStatusFailures(config: ToolConfig): string[] {
     ["definitionDocuments", config.generated.definitionDocuments ?? []],
     ["ksiDocuments", config.generated.ksiDocuments ?? []],
     ["controlDocuments", config.generated.controlDocuments ?? []],
+    [
+      "fullControlReferenceDocuments",
+      config.generated.fullControlReferenceDocuments ?? [],
+    ],
     ["deadlineDocuments", config.generated.deadlineDocuments ?? []],
     ["taggedDocumentSummaries", config.generated.taggedDocumentSummaries ?? []],
     ["referenceIndexDocuments", config.generated.referenceIndexDocuments ?? []],
@@ -1133,6 +1140,14 @@ describe("build-markdown", () => {
         expect(relativePaths).toContain(artifact.relativePath);
       }
     }
+    for (const mapping of config.generated.fullControlReferenceDocuments ??
+      []) {
+      const artifacts = artifactsWithMappingId(expectedArtifacts, mapping.id);
+      expect(artifacts.length).toBe(21);
+      for (const artifact of artifacts) {
+        expect(relativePaths).toContain(artifact.relativePath);
+      }
+    }
 
     for (const mapping of config.generated.ruleDocuments) {
       const artifacts = artifactsWithMappingId(expectedArtifacts, mapping.id);
@@ -1305,7 +1320,10 @@ describe("build-markdown", () => {
     if (ksiThemeIndicator.controlLinks[0]) {
       const control = ksiThemeIndicator.controlLinks[0];
       expect(ksiThemeContents).toContain("**Related SP 800-53 Controls:**");
-      expect(ksiThemeContents).toContain(`[${control.label}](${control.url})`);
+      expect(ksiThemeContents).toContain(
+        `[${control.label}](${control.url}){ data-preview }`,
+      );
+      expect(control.url).toContain("reference/controls/");
     }
 
     const ksiReferenceArtifact = firstArtifactMatching(
@@ -1438,6 +1456,66 @@ describe("build-markdown", () => {
       "The interrelated controls of AC-20, CA-3, and SA-9 should be differentiated as follows:",
     );
 
+    const fullControlIndexArtifact = findArtifact(
+      expectedArtifacts,
+      "reference/controls/index.md",
+    );
+    const fullControlIndexContents = await readGeneratedArtifact(
+      fullControlIndexArtifact,
+    );
+    expect(fullControlIndexArtifact.context.controlCount).toBe(1014);
+    expect(fullControlIndexArtifact.context.controlFamilies).toHaveLength(20);
+    expect(fullControlIndexContents).toContain(
+      "| [Access Control](access-control.md){ data-preview } | `AC` | 131 |",
+    );
+    expect(fullControlIndexContents).toContain(
+      "Withdrawn controls are not included.",
+    );
+
+    const fullAccessControlArtifact = findArtifact(
+      expectedArtifacts,
+      "reference/controls/access-control.md",
+    );
+    const fullAccessControlContents = await readGeneratedArtifact(
+      fullAccessControlArtifact,
+    );
+    const fullAccessControls =
+      fullAccessControlArtifact.context.controlFamilies[0]?.controls ?? [];
+    const ac01 = fullAccessControls.find((control) => control.id === "AC-01");
+    const ac0201 = fullAccessControls.find(
+      (control) => control.id === "AC-02-01",
+    );
+    const ac20 = fullAccessControls.find((control) => control.id === "AC-20");
+    expect(fullAccessControls).toHaveLength(131);
+    expect(ac01?.baselineClasses).toEqual(["Class B", "Class C", "Class D"]);
+    expect(ac0201?.baselineClasses).toEqual(["Class C", "Class D"]);
+    expect(ac0201?.externalUrl).toBe(
+      "https://myctrl.tools/frameworks/nist-800-53-r5/ac-2-1",
+    );
+    expect(ac20?.hasFedrampContent).toBe(true);
+    expectTextOrder(
+      fullAccessControlContents,
+      [
+        "## AC-01 (Policy and Procedures) { #ac-01 }",
+        "FedRAMP Rev5 Baselines:",
+        "!!! quote",
+        "_This control does not have additional FedRAMP guidance or FedRAMP-assigned parameter values._",
+        "**External Link for Additional Information:**",
+        "## AC-02 (01) (Automated System Account Management) { #ac-02-01 }",
+        "https://myctrl.tools/frameworks/nist-800-53-r5/ac-2-1",
+      ],
+      "Full Rev5 control family pages should render active catalog statements, baseline tags, external links, and FedRAMP information",
+    );
+    expect(fullAccessControlContents).not.toContain(
+      "## AC-02 (10) (Shared and Group Account Credential Change)",
+    );
+    expect(fullAccessControlContents).not.toContain(
+      '??? abstract "Control information"',
+    );
+    const ac01Section =
+      fullAccessControlContents.split("## AC-02 (Account Management)")[0] ?? "";
+    expect(ac01Section).not.toContain('!!! info ""');
+
     const certificationArtifact = findArtifact(
       expectedArtifacts,
       "providers/rev5/rules/fedramp-certification.md",
@@ -1472,8 +1550,8 @@ describe("build-markdown", () => {
       [
         '???+ info "Rev5 Control List"',
         "- **Access Control (AC)**",
-        "- `AC-01` (Policy and Procedures)",
-        "- `AT-02 (02)` (Insider Threat)",
+        "- `AC-01` ([Policy and Procedures](../../../reference/controls/access-control.md#ac-01){ data-preview })",
+        "- `AT-02 (02)` ([Insider Threat](../../../reference/controls/awareness-and-training.md#at-02-02){ data-preview })",
       ],
       "Generated Rev5 baseline rules should render grouped, OSCAL-enriched control lists",
     );
@@ -1483,9 +1561,11 @@ describe("build-markdown", () => {
       "providers/rev5/rules/independent-verification-and-validation.md",
     );
     const assessmentContents = await readGeneratedArtifact(assessmentArtifact);
-    expect(assessmentContents).toContain("- `CA-08` (Penetration Testing)");
     expect(assessmentContents).toContain(
-      "- `CA-08 (01)` (Independent Penetration Testing Agent or Team)",
+      "- `CA-08` ([Penetration Testing](../../../reference/controls/assessment-authorization-and-monitoring.md#ca-08){ data-preview })",
+    );
+    expect(assessmentContents).toContain(
+      "- `CA-08 (01)` ([Independent Penetration Testing Agent or Team](../../../reference/controls/assessment-authorization-and-monitoring.md#ca-08-01){ data-preview })",
     );
 
     const workflowArtifact = firstArtifactMatching(
@@ -1711,6 +1791,7 @@ describe("build-markdown", () => {
         definitionDocuments: [],
         ksiDocuments: [],
         controlDocuments: [],
+        fullControlReferenceDocuments: [],
         deadlineDocuments: [],
         taggedDocumentSummaries: [],
         referenceIndexDocuments: [],
@@ -1802,6 +1883,7 @@ describe("build-markdown", () => {
         definitionDocuments: [],
         ksiDocuments: [],
         controlDocuments: [],
+        fullControlReferenceDocuments: [],
         deadlineDocuments: [],
         taggedDocumentSummaries: [],
         referenceIndexDocuments: [],
@@ -1977,6 +2059,7 @@ describe("build-markdown", () => {
           },
         ],
         controlDocuments: [],
+        fullControlReferenceDocuments: [],
         deadlineDocuments: [],
         taggedDocumentSummaries: [],
         frrCollectionDocuments: [],
@@ -2282,6 +2365,7 @@ describe("build-markdown", () => {
           },
         ],
         controlDocuments: [],
+        fullControlReferenceDocuments: [],
         deadlineDocuments: [],
         taggedDocumentSummaries: [],
         referenceIndexDocuments: [],
@@ -2330,6 +2414,7 @@ describe("build-markdown", () => {
         definitionDocuments: [],
         ksiDocuments: [],
         controlDocuments: [],
+        fullControlReferenceDocuments: [],
         deadlineDocuments: [
           {
             id: "deadlines-with-ignored-marketplace",
@@ -2391,6 +2476,7 @@ describe("build-markdown", () => {
         definitionDocuments: [],
         ksiDocuments: [],
         controlDocuments: [],
+        fullControlReferenceDocuments: [],
         deadlineDocuments: [
           {
             id: "provider-deadlines-with-rec",
@@ -2466,6 +2552,7 @@ describe("build-markdown", () => {
           ],
           ksiDocuments: [],
           controlDocuments: [],
+          fullControlReferenceDocuments: [],
           deadlineDocuments: [],
           taggedDocumentSummaries: [],
           referenceIndexDocuments: [],
@@ -2579,6 +2666,7 @@ describe("build-markdown", () => {
             ],
             ksiDocuments: [],
             controlDocuments: [],
+            fullControlReferenceDocuments: [],
             deadlineDocuments: [],
             taggedDocumentSummaries: [],
             referenceIndexDocuments: [],

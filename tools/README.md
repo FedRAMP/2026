@@ -21,7 +21,9 @@ The build pipeline:
 3. Copies `../content` into `../src`.
 4. Generates Markdown from `rules/fedramp-consolidated-rules.json`.
    Rev5 control references enrich the JSON `CTL` collection with the vendored
-   NIST OSCAL catalog in `data/NIST_SP-800-53_rev5_catalog.xml`.
+   NIST OSCAL catalog in `data/NIST_SP-800-53_rev5_catalog.xml`. The full Rev5
+   control reference is generated directly from every family and control in
+   that catalog.
 5. Runs Zensical with `../zensical.toml`.
 6. Writes static output to `../html`.
 
@@ -56,6 +58,9 @@ bun run build
 ```
 
 Runs the full static build and writes `../html`.
+The build wrapper removes Zensical's generated cache before invoking Zensical
+so large generated references receive a clean build without relying on
+Zensical's parallel `--clean` cache deletion.
 
 ```bash
 bun run sync
@@ -289,6 +294,39 @@ is looked up in the vendored catalog and displayed with its control title.
 Generation fails when a listed family or control is not present in the local
 catalog.
 
+## Generated Full Rev5 Control Reference
+
+Add one mapping to `generated.fullControlReferenceDocuments`:
+
+```json
+{
+  "id": "full-rev5-control-reference",
+  "title": "Full Rev5 Control Reference",
+  "output": "reference/controls",
+  "status": "stable",
+  "indexTemplate": "templates/full-rev5-control-reference-index.hbs",
+  "familyTemplate": "templates/full-rev5-control-reference-family.hbs",
+  "source": {
+    "collection": "OSCAL",
+    "families": "ALL"
+  }
+}
+```
+
+This mapping generates `index.md` plus one page for each selected OSCAL family.
+Unlike `generated.controlDocuments`, it includes every active catalog control
+and enhancement. Withdrawn entries are omitted. Each control shows:
+
+- The original NIST statement.
+- Class B, C, and D tags derived from `FRC-CSF-BSL`.
+- Any root-level or class-specific FedRAMP guidance and parameters from `CTL`.
+- A stable control anchor and a corresponding myctrl.tools link.
+- An italic statement inside the control quote when no FedRAMP-specific guidance or parameters exist.
+
+Structured `controls` references on rules and KSIs link to this full reference
+with `{ data-preview }`. `rev5_controls_list` links each OSCAL-enriched control
+name to the same target.
+
 ## Generated Deadline Pages
 
 Add an entry to `generated.deadlineDocuments` in `config.json`:
@@ -425,7 +463,8 @@ Generated rule pages also support selected rich rule metadata:
 - `info.flows` and certification-specific flows render as Mermaid activity workflow diagrams above the rules. Flow nodes link to matching rule headings when the flow node label matches a generated rule heading.
 - Rule `related` IDs are linked in statements, notes, variants, and following-information lists when the referenced rule appears in a compatible generated page. `linkTargetScope: "sameMappingOnly"` keeps complete reference pages from becoming fallback link targets for stakeholder-specific pages.
 - `following_information` renders as numbered items and `following_information_bullets` renders as bullet items.
-- `rev5_controls_list` renders a family-grouped list enriched with control titles from the vendored OSCAL catalog.
+- `controls` renders links to the generated full Rev5 control reference with preview cards.
+- `rev5_controls_list` renders a family-grouped list whose control names link to the generated full reference with preview cards.
 - `reference_url_web_name` links a rule reference to another generated ruleset page through `rulesHref`.
 - `pain_timeframes` renders a PAIN timeframe table inside applicable rule variants.
 - Notification entries render their required human-readable `name` and link form, web, and email targets when possible. Non-link targets remain visible as supporting destination details.

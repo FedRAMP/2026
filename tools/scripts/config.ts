@@ -148,6 +148,21 @@ export interface ControlDocumentMappingConfig {
   source: ControlDocumentSourceConfig;
 }
 
+export interface FullControlReferenceDocumentSourceConfig {
+  collection: "OSCAL";
+  families: ControlFamilySelection;
+}
+
+export interface FullControlReferenceDocumentMappingConfig {
+  id: string;
+  title: string;
+  output: string;
+  status: GeneratedDocumentStatus;
+  indexTemplate?: string;
+  familyTemplate?: string;
+  source: FullControlReferenceDocumentSourceConfig;
+}
+
 export interface DeadlineDocumentSourceConfig {
   collection: "FRR";
   documents?: RuleDocumentSelection;
@@ -222,6 +237,7 @@ export interface GeneratedConfig {
   definitionDocuments?: DefinitionDocumentMappingConfig[];
   ksiDocuments?: KsiDocumentMappingConfig[];
   controlDocuments?: ControlDocumentMappingConfig[];
+  fullControlReferenceDocuments?: FullControlReferenceDocumentMappingConfig[];
   deadlineDocuments?: DeadlineDocumentMappingConfig[];
   taggedDocumentSummaries?: TaggedDocumentSummaryMappingConfig[];
   referenceIndexDocuments?: ReferenceIndexDocumentMappingConfig[];

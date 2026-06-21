@@ -132,6 +132,20 @@
         }
       }
     ],
+    "fullControlReferenceDocuments": [
+      {
+        "id": "full-rev5-control-reference",
+        "title": "Full Rev5 Control Reference",
+        "output": "reference/controls",
+        "status": "stable",
+        "indexTemplate": "templates/full-rev5-control-reference-index.hbs",
+        "familyTemplate": "templates/full-rev5-control-reference-family.hbs",
+        "source": {
+          "collection": "OSCAL",
+          "families": "ALL"
+        }
+      }
+    ],
     "deadlineDocuments": [
       {
         "id": "provider-important-deadlines",

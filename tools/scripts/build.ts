@@ -1,4 +1,6 @@
 import { spawn } from "node:child_process";
+import { rm } from "node:fs/promises";
+import path from "node:path";
 import { buildMarkdown } from "./build-markdown";
 import { REPO_ROOT, loadToolConfig, resolveToolPath } from "./config";
 import { deploy } from "./deploy";
@@ -39,9 +41,9 @@ async function main(): Promise<void> {
     console.log(`- ${artifact.relativePath}`);
   }
 
+  await rm(path.join(REPO_ROOT, ".cache"), { recursive: true, force: true });
   await runCommand("zensical", [
     "build",
-    "--clean",
     "-f",
     resolveToolPath(config.paths.zensicalConfig),
   ]);
