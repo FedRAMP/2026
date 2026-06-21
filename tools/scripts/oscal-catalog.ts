@@ -138,10 +138,11 @@ function directPropValue(
   return undefined;
 }
 
-function canonicalControlId(officialId: string, sortId: string): string {
-  const source = officialId || sortId;
-  return source
+export function normalizeOscalControlId(value: string): string {
+  return value
+    .trim()
     .replace(/\((\d+)\)/g, "-$1")
+    .replace(/\s+/g, "")
     .replaceAll(".", "-")
     .toUpperCase();
 }
@@ -327,7 +328,7 @@ function parseControl(
     "";
   const sortId =
     directPropValue(children, "sort-id") ?? attribute(node, "id") ?? "";
-  const id = canonicalControlId(officialId, sortId);
+  const id = normalizeOscalControlId(officialId || sortId);
   const title = directElementText(children, "title");
   const parameters = new Map<string, OscalParameter>();
 

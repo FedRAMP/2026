@@ -191,7 +191,7 @@ nav = [
         { "Security Decision Record" = "providers/rev5/rules/security-decision-record.md" },
         { "Secure Configuration Guide" = "providers/rev5/rules/secure-configuration-guide.md" },
       ] },
-      { "Rev5 Controls" = [
+      { "Rev5 Control Guidance" = [
         "providers/rev5/controls/index.md",
         { "Access Control" = "providers/rev5/controls/access-control.md" },
         { "Audit and Accountability" = "providers/rev5/controls/audit-and-accountability.md" },
@@ -393,7 +393,7 @@ nav = [
         { "Secure Configuration Guide" = "reference/secure-configuration-guide.md" },
       ] },
       { "Key Security Indicators" = "reference/key-security-indicators.md" },
-      { "Rev5 Controls" = "reference/rev5-controls.md" },
+      { "Rev5 Control Guidance" = "reference/rev5-control-guidance.md" },
       { "Gov Rulesets" = [
         { "Agency Use of FedRAMP Certified Cloud Services" = "reference/agency-use.md" },
       ] },

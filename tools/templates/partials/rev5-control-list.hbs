@@ -1,0 +1,10 @@
+{{#if rev5ControlFamilies.length}}
+???+ info "Rev5 Control List"
+{{#each rev5ControlFamilies}}
+    - **{{title}} ({{id}})**
+{{#each controls}}
+        - `{{id}}` ({{title}})
+{{/each}}
+{{/each}}
+
+{{/if}}

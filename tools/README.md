@@ -233,15 +233,15 @@ KSI mapping fields:
 - `source.themes`: an array of KSI theme keys, such as `["CMT", "IAM"]`, or `"ALL"` to process every KSI theme.
 - `source.classes`: optional certification classes, such as `["B"]`. When present, indicators with `varies_by_class` render only the selected class variant.
 
-## Generated Rev5 Control Pages
+## Generated Rev5 Control Guidance Pages
 
 Add an entry to `generated.controlDocuments` in `config.json`:
 
 ```json
 {
   "id": "complete-rev5-controls-reference",
-  "title": "Rev5 Controls",
-  "output": "reference/rev5-controls.md",
+  "title": "Rev5 Control Guidance",
+  "output": "reference/rev5-control-guidance.md",
   "status": "stable",
   "template": "templates/rev5-controls.hbs",
   "source": {
@@ -272,7 +272,7 @@ Use `outputMode: "families"` to generate one page per selected control family:
 Mapping fields:
 
 - `id`: stable identifier for the mapping.
-- `title`: optional page H1. Single pages default to `Rev5 Controls`; family pages default to the OSCAL family title.
+- `title`: optional page H1. Single pages default to `Rev5 Control Guidance`; family pages default to the OSCAL family title.
 - `output`: destination path relative to `paths.src`. Family mappings can use `{family}` or `{CTL}` for the slugified OSCAL family title.
 - `outputMode`: omit or use `single` for one combined page; use `families` for one page per selected family.
 - `template`: optional Handlebars template; defaults to `templates/rev5-controls.hbs`.
@@ -282,6 +282,12 @@ Mapping fields:
 - `source.families`: an array of CTL family keys or `"ALL"`.
 
 The generated page groups controls under the human-readable NIST family title. Each control includes the NIST statement, catalog and OSCAL versions, FedRAMP guidance, class-specific tabs when `varies_by_class` is present, and FedRAMP parameter IDs, NIST assignment labels, and values.
+
+For normal FedRAMP rule pages, `rev5_controls_list` renders as a collapsible
+list grouped by OSCAL family name. Each uppercase, zero-padded source identifier
+is looked up in the vendored catalog and displayed with its control title.
+Generation fails when a listed family or control is not present in the local
+catalog.
 
 ## Generated Deadline Pages
 
@@ -419,6 +425,7 @@ Generated rule pages also support selected rich rule metadata:
 - `info.flows` and certification-specific flows render as Mermaid activity workflow diagrams above the rules. Flow nodes link to matching rule headings when the flow node label matches a generated rule heading.
 - Rule `related` IDs are linked in statements, notes, variants, and following-information lists when the referenced rule appears in a compatible generated page. `linkTargetScope: "sameMappingOnly"` keeps complete reference pages from becoming fallback link targets for stakeholder-specific pages.
 - `following_information` renders as numbered items and `following_information_bullets` renders as bullet items.
+- `rev5_controls_list` renders a family-grouped list enriched with control titles from the vendored OSCAL catalog.
 - `reference_url_web_name` links a rule reference to another generated ruleset page through `rulesHref`.
 - `pain_timeframes` renders a PAIN timeframe table inside applicable rule variants.
 - Notification entries render their required human-readable `name` and link form, web, and email targets when possible. Non-link targets remain visible as supporting destination details.

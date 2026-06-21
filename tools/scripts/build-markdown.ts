@@ -26,6 +26,7 @@ import {
   type ToolConfig,
 } from "./config";
 import {
+  normalizeOscalControlId,
   parseOscalCatalog,
   type OscalCatalog,
   type OscalCatalogMetadata,
@@ -164,6 +165,7 @@ interface VariantSource {
   statement?: string;
   following_information?: string[];
   following_information_bullets?: string[];
+  rev5_controls_list?: Rev5ControlsListSource;
   effective_date?: EffectiveDatesSource;
   timeframe_type?: string;
   timeframe_num?: number | string;
@@ -190,6 +192,7 @@ interface RequirementEntrySource {
   statement?: string;
   following_information?: string[];
   following_information_bullets?: string[];
+  rev5_controls_list?: Rev5ControlsListSource;
   varies_by_class?: Record<string, VariantSource>;
   varies_by_level?: Record<string, VariantSource>;
   effective_date?: EffectiveDatesSource;
@@ -263,10 +266,11 @@ interface ControlClassDataSource {
   parameters?: ControlParameterSource[];
 }
 
-interface ControlEntrySource {
-  all_classes?: ControlClassDataSource;
+interface ControlEntrySource extends ControlClassDataSource {
   varies_by_class?: Record<string, ControlClassDataSource>;
 }
+
+type Rev5ControlsListSource = Record<string, string[]>;
 
 interface EffectiveEntryViewModel {
   audienceLabel: string;
@@ -293,6 +297,7 @@ interface VariantViewModel {
   statementParagraphs: string[];
   numberedItems: string[];
   bulletItems: string[];
+  rev5ControlFamilies: Rev5ControlFamilyViewModel[];
   effectiveDateLines: Array<{ label: string; value: string }>;
   timeframe?: string;
   painTimeframeColumns: PainTimeframeColumnViewModel[];
@@ -342,6 +347,7 @@ interface RequirementViewModel {
   timeframe?: string;
   numberedItems: string[];
   bulletItems: string[];
+  rev5ControlFamilies: Rev5ControlFamilyViewModel[];
   noteParagraphs: string[];
   notes: string[];
   dangerParagraphs: string[];
@@ -548,6 +554,17 @@ interface ControlCatalogMetadataViewModel {
   lastModified: string;
 }
 
+interface Rev5ControlViewModel {
+  id: string;
+  title: string;
+}
+
+interface Rev5ControlFamilyViewModel {
+  id: string;
+  title: string;
+  controls: Rev5ControlViewModel[];
+}
+
 interface RuleLinkContext {
   currentMapping: FrrRuleSourceMappingConfig;
   currentRelativePath: string;
@@ -555,6 +572,7 @@ interface RuleLinkContext {
   rulePageIndex: RulePageIndex;
   ksiIndex: KsiIndex;
   ksiPageIndex: KsiPageIndex;
+  oscalCatalog: OscalCatalog;
 }
 
 interface DocumentViewModel {
@@ -2186,11 +2204,57 @@ function normalizePainTimeframes(
   };
 }
 
+function buildRev5ControlFamilies(
+  source: Rev5ControlsListSource | undefined,
+  catalog: OscalCatalog | undefined,
+  sourceLabel: string,
+): Rev5ControlFamilyViewModel[] {
+  if (!source) {
+    return [];
+  }
+
+  if (!catalog) {
+    throw new Error(
+      `${sourceLabel} includes rev5_controls_list, but no OSCAL catalog is available.`,
+    );
+  }
+
+  return Object.entries(source).map(([familyId, controlIds]) => {
+    const normalizedFamilyId = familyId.toUpperCase();
+    const family = catalog.families.get(normalizedFamilyId);
+    if (!family) {
+      throw new Error(
+        `${sourceLabel} references OSCAL control family "${familyId}", but that family does not exist in the local catalog.`,
+      );
+    }
+
+    return {
+      id: normalizedFamilyId,
+      title: family.title,
+      controls: controlIds.map((sourceControlId) => {
+        const controlId = normalizeOscalControlId(sourceControlId);
+        const control = family.controls.get(controlId);
+        if (!control) {
+          throw new Error(
+            `${sourceLabel} lists Rev5 control "${sourceControlId}" under family "${familyId}", but that control does not exist in that family in the local OSCAL catalog.`,
+          );
+        }
+
+        return {
+          id: sourceControlId,
+          title: control.title,
+        };
+      }),
+    };
+  });
+}
+
 function buildVariantViewModel(
   title: string,
   entry: VariantSource,
   relatedRuleIds: string[] | undefined,
   ruleLinkContext: RuleLinkContext | undefined,
+  requirementId: string,
 ): VariantViewModel {
   const painTimeframes = normalizePainTimeframes(entry.pain_timeframes);
 
@@ -2211,6 +2275,11 @@ function buildVariantViewModel(
       relatedRuleIds,
       ruleLinkContext,
     ),
+    rev5ControlFamilies: buildRev5ControlFamilies(
+      entry.rev5_controls_list,
+      ruleLinkContext?.oscalCatalog,
+      `${requirementId} ${title}`,
+    ),
     effectiveDateLines: toDateLines(entry.effective_date),
     timeframe: formatDuration(entry.timeframe_type, entry.timeframe_num),
     ...painTimeframes,
@@ -2228,6 +2297,7 @@ function buildVariantViewModel(
 }
 
 function buildVariantSections(
+  requirementId: string,
   entry: RequirementEntrySource,
   ruleLinkContext?: RuleLinkContext,
   selectedClasses: string[] = [],
@@ -2251,6 +2321,7 @@ function buildVariantSections(
         classEntry,
         relatedRuleIds,
         ruleLinkContext,
+        requirementId,
       ),
     );
   }
@@ -2264,6 +2335,7 @@ function buildVariantSections(
         levelEntry,
         relatedRuleIds,
         ruleLinkContext,
+        requirementId,
       ),
     );
   }
@@ -2386,6 +2458,7 @@ function buildRequirementViewModel(
       ruleLinkContext,
     ),
     variantSections: buildVariantSections(
+      id,
       entry,
       ruleLinkContext,
       selectedClasses,
@@ -2401,6 +2474,11 @@ function buildRequirementViewModel(
       entry.following_information_bullets,
       relatedRuleIds,
       ruleLinkContext,
+    ),
+    rev5ControlFamilies: buildRev5ControlFamilies(
+      entry.rev5_controls_list,
+      ruleLinkContext?.oscalCatalog,
+      id,
     ),
     noteParagraphs: linkRelatedRuleReferenceParagraphs(
       entry.note,
@@ -4802,9 +4880,11 @@ function buildControlViewModel(
       ...buildControlGuidanceViewModel(data, catalog, control),
     }))
     .filter((variant) => !variant.isEmpty);
-  const commonGuidance = source.all_classes
-    ? buildControlGuidanceViewModel(source.all_classes, catalog, control)
-    : undefined;
+  const commonGuidance = buildControlGuidanceViewModel(
+    source,
+    catalog,
+    control,
+  );
 
   return {
     id: controlId,
@@ -4813,11 +4893,10 @@ function buildControlViewModel(
     anchorId: slugifyHeading(`${controlId}-${control.title}`),
     statementLines: control.statementLines,
     commonGuidance:
-      commonGuidance && !commonGuidance.isEmpty ? commonGuidance : undefined,
+      !commonGuidance.isEmpty ? commonGuidance : undefined,
     classVariants,
     hasFedrampContent:
-      Boolean(commonGuidance && !commonGuidance.isEmpty) ||
-      classVariants.length > 0,
+      !commonGuidance.isEmpty || classVariants.length > 0,
   };
 }
 
@@ -4868,7 +4947,7 @@ function collectSingleControlDocumentArtifact(
   }
 
   const relativePath = normalizeGeneratedPath(mapping.output);
-  const title = mapping.title ?? "Rev5 Controls";
+  const title = mapping.title ?? "Rev5 Control Guidance";
 
   return {
     relativePath,
@@ -4923,13 +5002,7 @@ function collectFamilyControlDocumentArtifacts(
   });
 }
 
-function configuredOscalCatalog(
-  config: ToolConfig,
-): OscalCatalog | undefined {
-  if (!(config.generated.controlDocuments ?? []).length) {
-    return undefined;
-  }
-
+function configuredOscalCatalog(config: ToolConfig): OscalCatalog {
   const source = readFileSync(
     resolveToolPath(config.paths.oscalCatalogFile),
     "utf8",
@@ -4940,15 +5013,11 @@ function configuredOscalCatalog(
 function collectConfiguredControlDocumentArtifacts(
   rules: RulesDocument,
   config: ToolConfig,
-  catalog: OscalCatalog | undefined,
+  catalog: OscalCatalog,
 ): BuildArtifact[] {
   const mappings = config.generated.controlDocuments ?? [];
   if (!mappings.length) {
     return [];
-  }
-
-  if (!catalog) {
-    throw new Error("Control document generation requires an OSCAL catalog.");
   }
 
   return mappings.flatMap((mapping) => {
@@ -5243,6 +5312,7 @@ function collectFrrCollectionDocumentArtifact(
   rulePageIndex: RulePageIndex,
   ksiIndex: KsiIndex,
   ksiPageIndex: KsiPageIndex,
+  oscalCatalog: OscalCatalog,
 ): BuildArtifact | null {
   if (mapping.source.collection !== "FRR") {
     throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
@@ -5263,6 +5333,7 @@ function collectFrrCollectionDocumentArtifact(
           rulePageIndex,
           ksiIndex,
           ksiPageIndex,
+          oscalCatalog,
         },
       ),
     )
@@ -5296,6 +5367,7 @@ function collectFrrCollectionDocumentArtifacts(
   rulePageIndex: RulePageIndex,
   ksiIndex: KsiIndex,
   ksiPageIndex: KsiPageIndex,
+  oscalCatalog: OscalCatalog,
 ): BuildArtifact[] {
   return (config.generated.frrCollectionDocuments ?? [])
     .map((mapping) =>
@@ -5308,6 +5380,7 @@ function collectFrrCollectionDocumentArtifacts(
         rulePageIndex,
         ksiIndex,
         ksiPageIndex,
+        oscalCatalog,
       ),
     )
     .filter((artifact): artifact is BuildArtifact => artifact !== null);
@@ -5322,6 +5395,7 @@ function collectSingleRuleDocumentArtifact(
   rulePageIndex: RulePageIndex,
   ksiIndex: KsiIndex,
   ksiPageIndex: KsiPageIndex,
+  oscalCatalog: OscalCatalog,
 ): BuildArtifact | null {
   if (mapping.source.collection !== "FRR") {
     throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
@@ -5347,6 +5421,7 @@ function collectSingleRuleDocumentArtifact(
       rulePageIndex,
       ksiIndex,
       ksiPageIndex,
+      oscalCatalog,
     },
   );
   if (!sections.length && mapping.emptyBehavior === "skip") {
@@ -5401,6 +5476,7 @@ function collectDocumentRuleDocumentArtifacts(
   rulePageIndex: RulePageIndex,
   ksiIndex: KsiIndex,
   ksiPageIndex: KsiPageIndex,
+  oscalCatalog: OscalCatalog,
 ): BuildArtifact[] {
   if (mapping.source.collection !== "FRR") {
     throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
@@ -5423,6 +5499,7 @@ function collectDocumentRuleDocumentArtifacts(
           rulePageIndex,
           ksiIndex,
           ksiPageIndex,
+          oscalCatalog,
         },
       );
       if (!sections.length && mapping.emptyBehavior === "skip") {
@@ -5558,6 +5635,7 @@ function collectRelatedRuleDocumentArtifact(
   rulePageIndex: RulePageIndex,
   ksiIndex: KsiIndex,
   ksiPageIndex: KsiPageIndex,
+  oscalCatalog: OscalCatalog,
 ): BuildArtifact | null {
   if (!mapping.relatedRulesOutput) {
     return null;
@@ -5587,6 +5665,7 @@ function collectRelatedRuleDocumentArtifact(
       rulePageIndex,
       ksiIndex,
       ksiPageIndex,
+      oscalCatalog,
     },
   );
 
@@ -5620,6 +5699,7 @@ function collectRelatedRuleDocumentArtifacts(
   rulePageIndex: RulePageIndex,
   ksiIndex: KsiIndex,
   ksiPageIndex: KsiPageIndex,
+  oscalCatalog: OscalCatalog,
 ): BuildArtifact[] {
   return config.generated.ruleDocuments
     .map((mapping) =>
@@ -5632,6 +5712,7 @@ function collectRelatedRuleDocumentArtifacts(
         rulePageIndex,
         ksiIndex,
         ksiPageIndex,
+        oscalCatalog,
       ),
     )
     .filter((artifact): artifact is BuildArtifact => artifact !== null);
@@ -5646,6 +5727,7 @@ function collectRuleDocumentArtifacts(
   rulePageIndex: RulePageIndex,
   ksiIndex: KsiIndex,
   ksiPageIndex: KsiPageIndex,
+  oscalCatalog: OscalCatalog,
 ): BuildArtifact[] {
   if (mapping.outputMode === "documents") {
     return collectDocumentRuleDocumentArtifacts(
@@ -5657,6 +5739,7 @@ function collectRuleDocumentArtifacts(
       rulePageIndex,
       ksiIndex,
       ksiPageIndex,
+      oscalCatalog,
     );
   }
 
@@ -5669,6 +5752,7 @@ function collectRuleDocumentArtifacts(
     rulePageIndex,
     ksiIndex,
     ksiPageIndex,
+    oscalCatalog,
   );
   return artifact ? [artifact] : [];
 }
@@ -5716,6 +5800,7 @@ export function collectArtifacts(
       rulePageIndex,
       ksiIndex,
       ksiPageIndex,
+      oscalCatalog,
     ),
   );
 
@@ -5730,6 +5815,7 @@ export function collectArtifacts(
         rulePageIndex,
         ksiIndex,
         ksiPageIndex,
+        oscalCatalog,
       ),
     );
   }
@@ -5742,6 +5828,7 @@ export function collectArtifacts(
       rulePageIndex,
       ksiIndex,
       ksiPageIndex,
+      oscalCatalog,
     ),
   );
 

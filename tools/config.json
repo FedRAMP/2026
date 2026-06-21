@@ -111,8 +111,8 @@
     "controlDocuments": [
       {
         "id": "complete-rev5-controls-reference",
-        "title": "Rev5 Controls",
-        "output": "reference/rev5-controls.md",
+        "title": "Rev5 Control Guidance",
+        "output": "reference/rev5-control-guidance.md",
         "status": "stable",
         "template": "templates/rev5-controls.hbs",
         "source": {

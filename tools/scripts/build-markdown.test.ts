@@ -1417,6 +1417,77 @@ describe("build-markdown", () => {
       }
     }
 
+    const controlGuidanceArtifact = findArtifact(
+      expectedArtifacts,
+      "reference/rev5-control-guidance.md",
+    );
+    const controlGuidanceContents = await readGeneratedArtifact(
+      controlGuidanceArtifact,
+    );
+    const accessControlFamily =
+      controlGuidanceArtifact.context.controlFamilies.find(
+        (family) => family.id === "AC",
+      );
+    const externalSystemsControl = accessControlFamily?.controls.find(
+      (control) => control.id === "AC-20",
+    );
+    expect(controlGuidanceArtifact.title).toBe("Rev5 Control Guidance");
+    expect(relativePaths).not.toContain("reference/rev5-controls.md");
+    expect(controlGuidanceContents).toContain("# Rev5 Control Guidance");
+    expect(externalSystemsControl?.commonGuidance?.guidance).toContain(
+      "The interrelated controls of AC-20, CA-3, and SA-9 should be differentiated as follows:",
+    );
+
+    const certificationArtifact = findArtifact(
+      expectedArtifacts,
+      "providers/rev5/rules/fedramp-certification.md",
+    );
+    const certificationContents = await readGeneratedArtifact(
+      certificationArtifact,
+    );
+    const baselineRequirement = certificationArtifact.context.sections
+      .flatMap((section) => section.requirements)
+      .find((requirement) => requirement.id === "FRC-CSF-BSL");
+    if (!baselineRequirement) {
+      throw new Error(
+        "Expected the Rev5 FedRAMP Certification page to include FRC-CSF-BSL.",
+      );
+    }
+    const baselineCounts = Object.fromEntries(
+      baselineRequirement.variantSections.map((variant) => [
+        variant.title,
+        variant.rev5ControlFamilies.reduce(
+          (count, family) => count + family.controls.length,
+          0,
+        ),
+      ]),
+    );
+    expect(baselineCounts).toEqual({
+      "Class B": 155,
+      "Class C": 322,
+      "Class D": 409,
+    });
+    expectTextOrder(
+      certificationContents,
+      [
+        '???+ info "Rev5 Control List"',
+        "- **Access Control (AC)**",
+        "- `AC-01` (Policy and Procedures)",
+        "- `AT-02 (02)` (Insider Threat)",
+      ],
+      "Generated Rev5 baseline rules should render grouped, OSCAL-enriched control lists",
+    );
+
+    const assessmentArtifact = findArtifact(
+      expectedArtifacts,
+      "providers/rev5/rules/independent-verification-and-validation.md",
+    );
+    const assessmentContents = await readGeneratedArtifact(assessmentArtifact);
+    expect(assessmentContents).toContain("- `CA-08` (Penetration Testing)");
+    expect(assessmentContents).toContain(
+      "- `CA-08 (01)` (Independent Penetration Testing Agent or Team)",
+    );
+
     const workflowArtifact = firstArtifactMatching(
       expectedArtifacts,
       (artifact) => artifact.context.flows.length > 0,
