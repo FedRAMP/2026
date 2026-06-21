@@ -1,4 +1,6 @@
 ---
+tags:
+  - Guidance
 hide:
   - toc
 picto:

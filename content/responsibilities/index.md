@@ -1,4 +1,7 @@
 ---
+tags:
+  - FedRAMP
+  - Guidance
 icon: material/gavel
 hide:
   - toc

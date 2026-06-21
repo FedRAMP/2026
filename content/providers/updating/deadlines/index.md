@@ -1,4 +1,7 @@
 ---
+tags:
+  - Cloud Service Providers
+  - Deadlines
 picto:
   source: person
   status: stable

@@ -1,4 +1,6 @@
 ---
+tags:
+  - Guidance
 title: "Public Preview Overview"
 icon: material/information-outline
 picto:

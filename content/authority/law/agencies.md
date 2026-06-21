@@ -1,4 +1,7 @@
 ---
+tags:
+  - Federal Agencies
+  - Legal Authority
 picto:
   source: person
   status: stable

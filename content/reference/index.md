@@ -1,4 +1,11 @@
 ---
+tags:
+  - Federal Agencies
+  - Cloud Service Providers
+  - Independent Assessors
+  - Advisors
+  - FedRAMP
+  - Rules
 title: "Ruleset Reference"
 icon: material/information-outline
 picto:

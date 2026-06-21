@@ -1,4 +1,7 @@
 ---
+tags:
+  - Cloud Service Providers
+  - Guidance
 picto:
   source: person
   status: stable
@@ -111,7 +114,6 @@ completed assessment (if it was not completed), to qualify for a Class B or Clas
 
     To confirm eligibility, follow the instructions at [help.fedramp.gov/lost-sponsor](https://help.fedramp.gov).
     **Note: This URL and landing page does not exist yet!**
-
 
 
 
