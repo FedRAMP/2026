@@ -70,6 +70,7 @@
 {{/each}}
 
 {{/if}}
+        {{> rev5-control-list}}
 {{#if effectiveDateLines.length}}
         **Effective Date(s):**
 {{#each effectiveDateLines}}
@@ -118,6 +119,7 @@
 {{/each}}
 
 {{/if}}
+    {{> rev5-control-list}}
 {{#if correctiveActions.length}}
     !!! warning "Corrective Actions"
 {{#each correctiveActions}}
@@ -148,7 +150,7 @@
 {{/if}}
 {{#if controlLinks.length}}
 
-    **Related SP 800-53 Controls:** {{#each controlLinks}}[{{label}}]({{url}}){{#unless @last}}, {{/unless}}{{/each}}
+    **Related SP 800-53 Controls:** {{#each controlLinks}}[{{label}}]({{url}}){ data-preview }{{#unless @last}}, {{/unless}}{{/each}}
 
 {{/if}}
 {{#if reference}}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rev5 OSCAL Generation"
+  short_description: "Build and verify Rev5 OSCAL references"
+  default_prompt: "Use $rev5-oscal-generation to update and verify the repository Rev5 OSCAL generation pipeline."

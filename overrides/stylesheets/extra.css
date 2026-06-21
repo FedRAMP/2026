@@ -64,6 +64,12 @@ h3 {
     margin-left: 0.25rem;
 }
 
+.full-control-baselines .subset-applicability__label {
+    margin-right: 0.35rem;
+    white-space: nowrap;
+    width: 9.75rem;
+}
+
 [data-md-color-scheme="slate"] .subset-applicability__tag {
     background-color: #dfe1e2;
     color: #1b1b1b;

@@ -111,8 +111,8 @@
     "controlDocuments": [
       {
         "id": "complete-rev5-controls-reference",
-        "title": "Rev5 Controls",
-        "output": "reference/rev5-controls.md",
+        "title": "Rev5 Control Guidance",
+        "output": "reference/rev5-control-guidance.md",
         "status": "stable",
         "template": "templates/rev5-controls.hbs",
         "source": {
@@ -128,6 +128,20 @@
         "template": "templates/rev5-controls.hbs",
         "source": {
           "collection": "CTL",
+          "families": "ALL"
+        }
+      }
+    ],
+    "fullControlReferenceDocuments": [
+      {
+        "id": "full-rev5-control-reference",
+        "title": "Full Rev5 Control Reference",
+        "output": "reference/controls",
+        "status": "stable",
+        "indexTemplate": "templates/full-rev5-control-reference-index.hbs",
+        "familyTemplate": "templates/full-rev5-control-reference-family.hbs",
+        "source": {
+          "collection": "OSCAL",
           "families": "ALL"
         }
       }

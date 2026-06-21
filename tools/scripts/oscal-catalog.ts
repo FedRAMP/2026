@@ -20,6 +20,7 @@ export interface OscalControl {
   officialId: string;
   sortId: string;
   title: string;
+  status?: string;
   statementLines: string[];
   parameters: ReadonlyMap<string, OscalParameter>;
 }
@@ -138,12 +139,26 @@ function directPropValue(
   return undefined;
 }
 
-function canonicalControlId(officialId: string, sortId: string): string {
-  const source = officialId || sortId;
-  return source
+export function normalizeOscalControlId(value: string): string {
+  const normalized = value
+    .trim()
     .replace(/\((\d+)\)/g, "-$1")
+    .replace(/\s+/g, "")
     .replaceAll(".", "-")
     .toUpperCase();
+  const [family = "", ...segments] = normalized.split("-");
+  if (
+    !/^[A-Z]{2}$/.test(family) ||
+    segments.length < 1 ||
+    segments.length > 2 ||
+    segments.some((segment) => !/^\d+$/.test(segment))
+  ) {
+    return normalized;
+  }
+
+  return [family, ...segments.map((segment) => segment.padStart(2, "0"))].join(
+    "-",
+  );
 }
 
 function parameterAssignment(
@@ -327,8 +342,9 @@ function parseControl(
     "";
   const sortId =
     directPropValue(children, "sort-id") ?? attribute(node, "id") ?? "";
-  const id = canonicalControlId(officialId, sortId);
+  const id = normalizeOscalControlId(officialId || sortId);
   const title = directElementText(children, "title");
+  const status = directPropValue(children, "status");
   const parameters = new Map<string, OscalParameter>();
 
   for (const parameterNode of directElements(children, "param")) {
@@ -354,6 +370,7 @@ function parseControl(
     officialId,
     sortId,
     title,
+    status,
     statementLines: renderStatement(children, allParameters),
     parameters,
   };

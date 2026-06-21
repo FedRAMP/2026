@@ -13,6 +13,7 @@ import {
   type ControlDocumentMappingConfig,
   type ControlDocumentOutputMode,
   type FrrCollectionDocumentMappingConfig,
+  type FullControlReferenceDocumentMappingConfig,
   type GeneratedDocumentSource,
   type GeneratedDocumentStatus,
   type KsiDocumentOutputMode,
@@ -26,6 +27,7 @@ import {
   type ToolConfig,
 } from "./config";
 import {
+  normalizeOscalControlId,
   parseOscalCatalog,
   type OscalCatalog,
   type OscalCatalogMetadata,
@@ -164,6 +166,7 @@ interface VariantSource {
   statement?: string;
   following_information?: string[];
   following_information_bullets?: string[];
+  rev5_controls_list?: Rev5ControlsListSource;
   effective_date?: EffectiveDatesSource;
   timeframe_type?: string;
   timeframe_num?: number | string;
@@ -190,6 +193,7 @@ interface RequirementEntrySource {
   statement?: string;
   following_information?: string[];
   following_information_bullets?: string[];
+  rev5_controls_list?: Rev5ControlsListSource;
   varies_by_class?: Record<string, VariantSource>;
   varies_by_level?: Record<string, VariantSource>;
   effective_date?: EffectiveDatesSource;
@@ -263,10 +267,11 @@ interface ControlClassDataSource {
   parameters?: ControlParameterSource[];
 }
 
-interface ControlEntrySource {
-  all_classes?: ControlClassDataSource;
+interface ControlEntrySource extends ControlClassDataSource {
   varies_by_class?: Record<string, ControlClassDataSource>;
 }
+
+type Rev5ControlsListSource = Record<string, string[]>;
 
 interface EffectiveEntryViewModel {
   audienceLabel: string;
@@ -293,6 +298,7 @@ interface VariantViewModel {
   statementParagraphs: string[];
   numberedItems: string[];
   bulletItems: string[];
+  rev5ControlFamilies: Rev5ControlFamilyViewModel[];
   effectiveDateLines: Array<{ label: string; value: string }>;
   timeframe?: string;
   painTimeframeColumns: PainTimeframeColumnViewModel[];
@@ -342,6 +348,7 @@ interface RequirementViewModel {
   timeframe?: string;
   numberedItems: string[];
   bulletItems: string[];
+  rev5ControlFamilies: Rev5ControlFamilyViewModel[];
   noteParagraphs: string[];
   notes: string[];
   dangerParagraphs: string[];
@@ -526,9 +533,12 @@ interface ControlClassVariantViewModel extends ControlGuidanceViewModel {
 interface ControlViewModel {
   id: string;
   officialId: string;
+  displayId: string;
   title: string;
   anchorId: string;
   statementLines: string[];
+  baselineClasses: string[];
+  externalUrl: string;
   commonGuidance?: ControlGuidanceViewModel;
   classVariants: ControlClassVariantViewModel[];
   hasFedrampContent: boolean;
@@ -538,6 +548,8 @@ interface ControlFamilyViewModel {
   id: string;
   title: string;
   anchorId: string;
+  href?: string;
+  controlCount: number;
   controls: ControlViewModel[];
 }
 
@@ -548,6 +560,18 @@ interface ControlCatalogMetadataViewModel {
   lastModified: string;
 }
 
+interface Rev5ControlViewModel {
+  id: string;
+  title: string;
+  href: string;
+}
+
+interface Rev5ControlFamilyViewModel {
+  id: string;
+  title: string;
+  controls: Rev5ControlViewModel[];
+}
+
 interface RuleLinkContext {
   currentMapping: FrrRuleSourceMappingConfig;
   currentRelativePath: string;
@@ -555,6 +579,21 @@ interface RuleLinkContext {
   rulePageIndex: RulePageIndex;
   ksiIndex: KsiIndex;
   ksiPageIndex: KsiPageIndex;
+  oscalCatalog: OscalCatalog;
+  controlReferenceIndex: ControlReferenceIndex;
+}
+
+interface ControlReferenceTarget {
+  relativePath: string;
+  anchorId: string;
+  displayId: string;
+}
+
+type ControlReferenceIndex = ReadonlyMap<string, ControlReferenceTarget>;
+
+interface ControlLinkContext {
+  currentRelativePath: string;
+  controlReferenceIndex: ControlReferenceIndex;
 }
 
 interface DocumentViewModel {
@@ -574,6 +613,8 @@ interface DocumentViewModel {
   isKsiDocument: boolean;
   isControlDocument: boolean;
   isControlFamilyDocument: boolean;
+  isFullControlReferenceIndex: boolean;
+  isFullControlReferenceFamily: boolean;
   isDeadlineDocument: boolean;
   definitions: DefinitionViewModel[];
   importantRelatedTerms: ImportantRelatedTermViewModel[];
@@ -582,6 +623,7 @@ interface DocumentViewModel {
   indicators: RequirementViewModel[];
   controlCatalog?: ControlCatalogMetadataViewModel;
   controlFamilies: ControlFamilyViewModel[];
+  controlCount: number;
   deadlineTables: DeadlineTableViewModel[];
   referenceIndexRows: ReferenceIndexRowViewModel[];
   taggedDocumentSummaryRows: TaggedDocumentSummaryRowViewModel[];
@@ -600,6 +642,7 @@ export interface BuildArtifact {
     | "FRR"
     | "KSI"
     | "CTL"
+    | "CTL_REFERENCE"
     | "DEADLINES"
     | "FRR_REFERENCE_INDEX"
     | "FRR_TAGGED_SUMMARY";
@@ -611,7 +654,8 @@ export interface BuildSummary {
   artifacts: BuildArtifact[];
 }
 
-const CONTROL_FREAK_BASE_URL = "https://controlfreak.risk-redux.io/controls/";
+const MYCTRL_NIST_REV5_BASE_URL =
+  "https://myctrl.tools/frameworks/nist-800-53-r5/";
 
 function splitParagraphs(value?: string): string[] {
   if (!value) {
@@ -622,6 +666,33 @@ function splitParagraphs(value?: string): string[] {
     .split(/\n\s*\n/g)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean);
+}
+
+function displayOscalControlId(controlId: string): string {
+  const normalized = normalizeOscalControlId(controlId);
+  const match = normalized.match(/^([A-Z]{2})-(\d{2})(?:-(\d{2}))?$/);
+  if (!match) {
+    return normalized;
+  }
+
+  const [, family, control, enhancement] = match;
+  return enhancement
+    ? `${family}-${control} (${enhancement})`
+    : `${family}-${control}`;
+}
+
+function controlAnchorId(controlId: string): string {
+  return normalizeOscalControlId(controlId).toLowerCase();
+}
+
+function myctrlControlUrl(controlId: string): string {
+  const pathSegments = normalizeOscalControlId(controlId)
+    .toLowerCase()
+    .split("-")
+    .map((segment, index) =>
+      index === 0 ? segment : String(Number.parseInt(segment, 10)),
+    );
+  return `${MYCTRL_NIST_REV5_BASE_URL}${pathSegments.join("-")}`;
 }
 
 function titleCase(value: string): string {
@@ -1782,16 +1853,31 @@ function linkRelatedRuleReferenceParagraphs(
   );
 }
 
-function controlUrl(controlId: string): string {
-  if (controlId.includes(".")) {
-    const [main = "", sub = ""] = controlId.split(".");
-    const [prefix = "", number = ""] = main.split("-");
-
-    return `${CONTROL_FREAK_BASE_URL}${prefix.toUpperCase()}-${number.padStart(2, "0")}(${sub.padStart(2, "0")})`;
+function controlReferenceHref(
+  controlId: string,
+  context: ControlLinkContext | undefined,
+): string {
+  if (!context) {
+    throw new Error(
+      `Cannot link Rev5 control "${controlId}" without a full control reference context.`,
+    );
   }
 
-  const [prefix = "", number = ""] = controlId.split("-");
-  return `${CONTROL_FREAK_BASE_URL}${prefix.toUpperCase()}-${number.padStart(2, "0")}`;
+  const normalizedControlId = normalizeOscalControlId(controlId);
+  const target = context.controlReferenceIndex.get(normalizedControlId);
+  if (!target) {
+    throw new Error(
+      `Rev5 control "${controlId}" does not exist in the generated full control reference.`,
+    );
+  }
+
+  const relativePath = toPosixPath(
+    path.posix.relative(
+      path.posix.dirname(context.currentRelativePath),
+      target.relativePath,
+    ),
+  );
+  return `${relativePath || path.posix.basename(target.relativePath)}#${target.anchorId}`;
 }
 
 function effectiveDateValue(value?: EffectiveDateScalarSource): string {
@@ -2186,11 +2272,60 @@ function normalizePainTimeframes(
   };
 }
 
+function buildRev5ControlFamilies(
+  source: Rev5ControlsListSource | undefined,
+  catalog: OscalCatalog | undefined,
+  controlLinkContext: ControlLinkContext | undefined,
+  sourceLabel: string,
+): Rev5ControlFamilyViewModel[] {
+  if (!source) {
+    return [];
+  }
+
+  if (!catalog) {
+    throw new Error(
+      `${sourceLabel} includes rev5_controls_list, but no OSCAL catalog is available.`,
+    );
+  }
+
+  return Object.entries(source).map(([familyId, controlIds]) => {
+    const normalizedFamilyId = familyId.toUpperCase();
+    const family = catalog.families.get(normalizedFamilyId);
+    if (!family) {
+      throw new Error(
+        `${sourceLabel} references OSCAL control family "${familyId}", but that family does not exist in the local catalog.`,
+      );
+    }
+
+    return {
+      id: normalizedFamilyId,
+      title: family.title,
+      controls: controlIds.map((sourceControlId) => {
+        const controlId = normalizeOscalControlId(sourceControlId);
+        const control = family.controls.get(controlId);
+        if (!control) {
+          throw new Error(
+            `${sourceLabel} lists Rev5 control "${sourceControlId}" under family "${familyId}", but that control does not exist in that family in the local OSCAL catalog.`,
+          );
+        }
+
+        return {
+          id: sourceControlId,
+          title: control.title,
+          href: controlReferenceHref(controlId, controlLinkContext),
+        };
+      }),
+    };
+  });
+}
+
 function buildVariantViewModel(
   title: string,
   entry: VariantSource,
   relatedRuleIds: string[] | undefined,
   ruleLinkContext: RuleLinkContext | undefined,
+  controlLinkContext: ControlLinkContext | undefined,
+  requirementId: string,
 ): VariantViewModel {
   const painTimeframes = normalizePainTimeframes(entry.pain_timeframes);
 
@@ -2211,6 +2346,12 @@ function buildVariantViewModel(
       relatedRuleIds,
       ruleLinkContext,
     ),
+    rev5ControlFamilies: buildRev5ControlFamilies(
+      entry.rev5_controls_list,
+      ruleLinkContext?.oscalCatalog,
+      controlLinkContext,
+      `${requirementId} ${title}`,
+    ),
     effectiveDateLines: toDateLines(entry.effective_date),
     timeframe: formatDuration(entry.timeframe_type, entry.timeframe_num),
     ...painTimeframes,
@@ -2228,8 +2369,10 @@ function buildVariantViewModel(
 }
 
 function buildVariantSections(
+  requirementId: string,
   entry: RequirementEntrySource,
   ruleLinkContext?: RuleLinkContext,
+  controlLinkContext?: ControlLinkContext,
   selectedClasses: string[] = [],
 ): VariantViewModel[] {
   const sections: VariantViewModel[] = [];
@@ -2251,6 +2394,8 @@ function buildVariantSections(
         classEntry,
         relatedRuleIds,
         ruleLinkContext,
+        controlLinkContext,
+        requirementId,
       ),
     );
   }
@@ -2264,6 +2409,8 @@ function buildVariantSections(
         levelEntry,
         relatedRuleIds,
         ruleLinkContext,
+        controlLinkContext,
+        requirementId,
       ),
     );
   }
@@ -2370,9 +2517,18 @@ function buildRequirementViewModel(
   doNotLinkTerms: DoNotLinkTermIndex,
   ruleLinkContext?: RuleLinkContext,
   selectedClasses: string[] = [],
+  controlLinkContext?: ControlLinkContext,
 ): RequirementViewModel {
   const title = entry.name ?? id;
   const relatedRuleIds = entry.related;
+  const resolvedControlLinkContext =
+    controlLinkContext ??
+    (ruleLinkContext
+      ? {
+          currentRelativePath: ruleLinkContext.currentRelativePath,
+          controlReferenceIndex: ruleLinkContext.controlReferenceIndex,
+        }
+      : undefined);
 
   return {
     id,
@@ -2386,8 +2542,10 @@ function buildRequirementViewModel(
       ruleLinkContext,
     ),
     variantSections: buildVariantSections(
+      id,
       entry,
       ruleLinkContext,
+      resolvedControlLinkContext,
       selectedClasses,
     ),
     effectiveDateLines: toDateLines(entry.effective_date),
@@ -2401,6 +2559,12 @@ function buildRequirementViewModel(
       entry.following_information_bullets,
       relatedRuleIds,
       ruleLinkContext,
+    ),
+    rev5ControlFamilies: buildRev5ControlFamilies(
+      entry.rev5_controls_list,
+      ruleLinkContext?.oscalCatalog,
+      resolvedControlLinkContext,
+      id,
     ),
     noteParagraphs: linkRelatedRuleReferenceParagraphs(
       entry.note,
@@ -2418,8 +2582,8 @@ function buildRequirementViewModel(
     correctiveActions: entry.corrective_actions ?? [],
     affects: entry.affects ?? [],
     controlLinks: (entry.controls ?? []).map((controlId) => ({
-      label: controlId.toUpperCase(),
-      url: controlUrl(controlId),
+      label: displayOscalControlId(controlId),
+      url: controlReferenceHref(controlId, resolvedControlLinkContext),
     })),
     reference: buildRequirementReference(entry, rulesRelativePath),
     examples: (entry.examples ?? []).map((example) => ({
@@ -3868,6 +4032,10 @@ function buildDocumentContext(
     isKsiDocument: options.isKsiDocument ?? false,
     isControlDocument: options.isControlDocument ?? false,
     isControlFamilyDocument: options.isControlFamilyDocument ?? false,
+    isFullControlReferenceIndex:
+      options.isFullControlReferenceIndex ?? false,
+    isFullControlReferenceFamily:
+      options.isFullControlReferenceFamily ?? false,
     isDeadlineDocument: options.isDeadlineDocument ?? false,
     definitions: options.definitions ?? [],
     importantRelatedTerms: options.importantRelatedTerms ?? [],
@@ -3876,6 +4044,7 @@ function buildDocumentContext(
     indicators: options.indicators ?? [],
     controlCatalog: options.controlCatalog,
     controlFamilies: options.controlFamilies ?? [],
+    controlCount: options.controlCount ?? 0,
     deadlineTables: options.deadlineTables ?? [],
     referenceIndexRows: options.referenceIndexRows ?? [],
     taggedDocumentSummaryRows: options.taggedDocumentSummaryRows ?? [],
@@ -4435,6 +4604,7 @@ function buildKsiIndicatorViewModels(
   mapping: KsiDocumentMappingConfig,
   doNotLinkTerms: DoNotLinkTermIndex,
   relatedIndicatorIds: ReadonlySet<string> | undefined,
+  controlLinkContext: ControlLinkContext,
 ): RequirementViewModel[] {
   return Object.entries(theme.indicators ?? {})
     .filter(([id, indicator]) =>
@@ -4449,6 +4619,7 @@ function buildKsiIndicatorViewModels(
         doNotLinkTerms,
         undefined,
         mappingClasses(mapping),
+        controlLinkContext,
       ),
     );
 }
@@ -4459,12 +4630,14 @@ function buildKsiThemeSectionViewModel(
   mapping: KsiDocumentMappingConfig,
   doNotLinkTerms: DoNotLinkTermIndex,
   relatedIndicatorIds: ReadonlySet<string> | undefined,
+  controlLinkContext: ControlLinkContext,
 ): SectionViewModel | null {
   const indicators = buildKsiIndicatorViewModels(
     theme,
     mapping,
     doNotLinkTerms,
     relatedIndicatorIds,
+    controlLinkContext,
   );
 
   if (
@@ -4495,6 +4668,7 @@ function collectSingleKsiDocumentArtifact(
   doNotLinkTerms: DoNotLinkTermIndex,
   ruleIndex: RuleIndex,
   ksiIndex: KsiIndex,
+  controlReferenceIndex: ControlReferenceIndex,
 ): BuildArtifact | null {
   if (mapping.source.collection !== "KSI") {
     throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
@@ -4507,6 +4681,11 @@ function collectSingleKsiDocumentArtifact(
     ksiIndex,
     mapping,
   );
+  const relativePath = normalizeGeneratedPath(mapping.output);
+  const controlLinkContext = {
+    currentRelativePath: relativePath,
+    controlReferenceIndex,
+  };
   const sections = sourceKsiThemes(rules, mapping)
     .map(({ key, theme }) =>
       buildKsiThemeSectionViewModel(
@@ -4515,6 +4694,7 @@ function collectSingleKsiDocumentArtifact(
         mapping,
         doNotLinkTerms,
         relatedIndicatorIds,
+        controlLinkContext,
       ),
     )
     .filter((section): section is SectionViewModel => section !== null);
@@ -4526,7 +4706,6 @@ function collectSingleKsiDocumentArtifact(
     return null;
   }
 
-  const relativePath = normalizeGeneratedPath(mapping.output);
   const title = mapping.title ?? "Key Security Indicators";
 
   return {
@@ -4553,6 +4732,7 @@ function collectThemeKsiDocumentArtifacts(
   doNotLinkTerms: DoNotLinkTermIndex,
   ruleIndex: RuleIndex,
   ksiIndex: KsiIndex,
+  controlReferenceIndex: ControlReferenceIndex,
 ): BuildArtifact[] {
   if (mapping.source.collection !== "KSI") {
     throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
@@ -4568,11 +4748,18 @@ function collectThemeKsiDocumentArtifacts(
 
   return sourceKsiThemes(rules, mapping)
     .map(({ key, theme }): BuildArtifact | null => {
+      const relativePath = normalizeGeneratedPath(
+        renderKsiDocumentOutput(mapping, theme),
+      );
       const indicators = buildKsiIndicatorViewModels(
         theme,
         mapping,
         doNotLinkTerms,
         relatedIndicatorIds,
+        {
+          currentRelativePath: relativePath,
+          controlReferenceIndex,
+        },
       );
 
       if (
@@ -4582,9 +4769,6 @@ function collectThemeKsiDocumentArtifacts(
         return null;
       }
 
-      const relativePath = normalizeGeneratedPath(
-        renderKsiDocumentOutput(mapping, theme),
-      );
       const title = mapping.title ?? theme.name;
 
       return {
@@ -4614,6 +4798,7 @@ function collectKsiDocumentArtifacts(
   doNotLinkTerms: DoNotLinkTermIndex,
   ruleIndex: RuleIndex,
   ksiIndex: KsiIndex,
+  controlReferenceIndex: ControlReferenceIndex,
 ): BuildArtifact[] {
   if (ksiDocumentOutputMode(mapping) === "single") {
     const artifact = collectSingleKsiDocumentArtifact(
@@ -4623,6 +4808,7 @@ function collectKsiDocumentArtifacts(
       doNotLinkTerms,
       ruleIndex,
       ksiIndex,
+      controlReferenceIndex,
     );
     return artifact ? [artifact] : [];
   }
@@ -4634,6 +4820,7 @@ function collectKsiDocumentArtifacts(
     doNotLinkTerms,
     ruleIndex,
     ksiIndex,
+    controlReferenceIndex,
   );
 }
 
@@ -4643,6 +4830,7 @@ function collectConfiguredKsiDocumentArtifacts(
   doNotLinkTerms: DoNotLinkTermIndex,
   ruleIndex: RuleIndex,
   ksiIndex: KsiIndex,
+  controlReferenceIndex: ControlReferenceIndex,
 ): BuildArtifact[] {
   return (config.generated.ksiDocuments ?? []).flatMap((mapping) =>
     collectKsiDocumentArtifacts(
@@ -4652,6 +4840,7 @@ function collectConfiguredKsiDocumentArtifacts(
       doNotLinkTerms,
       ruleIndex,
       ksiIndex,
+      controlReferenceIndex,
     ),
   );
 }
@@ -4722,6 +4911,90 @@ function controlCatalogMetadataViewModel(
     oscalVersion: metadata.oscalVersion,
     lastModified: formatCatalogDate(metadata.lastModified),
   };
+}
+
+function fullControlReferenceMapping(
+  config: ToolConfig,
+): FullControlReferenceDocumentMappingConfig | undefined {
+  const mappings = config.generated.fullControlReferenceDocuments ?? [];
+  if (mappings.length > 1) {
+    throw new Error(
+      `At most one generated.fullControlReferenceDocuments mapping is supported; found ${mappings.length}.`,
+    );
+  }
+
+  return mappings[0];
+}
+
+function selectedFullControlFamilyIds(
+  mapping: FullControlReferenceDocumentMappingConfig,
+  catalog: OscalCatalog,
+): string[] {
+  if (mapping.source.collection !== "OSCAL") {
+    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+  }
+
+  if (mapping.source.families === "ALL") {
+    return Array.from(catalog.families.keys());
+  }
+
+  if (!mapping.source.families.length) {
+    throw new Error(
+      `Full control reference mapping "${mapping.id}" must select at least one control family.`,
+    );
+  }
+
+  return mapping.source.families.map((familyId) => familyId.toUpperCase());
+}
+
+function fullControlReferenceIndexPath(
+  mapping: FullControlReferenceDocumentMappingConfig,
+): string {
+  return normalizeGeneratedPath(path.posix.join(mapping.output, "index.md"));
+}
+
+function fullControlReferenceFamilyPath(
+  mapping: FullControlReferenceDocumentMappingConfig,
+  familyTitle: string,
+): string {
+  return normalizeGeneratedPath(
+    path.posix.join(mapping.output, `${slugifyHeading(familyTitle)}.md`),
+  );
+}
+
+function buildControlReferenceIndex(
+  config: ToolConfig,
+  catalog: OscalCatalog,
+): ControlReferenceIndex {
+  const mapping = fullControlReferenceMapping(config);
+  const index = new Map<string, ControlReferenceTarget>();
+  if (!mapping) {
+    return index;
+  }
+
+  for (const familyId of selectedFullControlFamilyIds(mapping, catalog)) {
+    const family = catalog.families.get(familyId);
+    if (!family) {
+      throw new Error(
+        `Full control reference mapping "${mapping.id}" references unknown OSCAL family "${familyId}".`,
+      );
+    }
+
+    const relativePath = fullControlReferenceFamilyPath(mapping, family.title);
+    for (const control of family.controls.values()) {
+      if (control.status === "withdrawn") {
+        continue;
+      }
+
+      index.set(control.id, {
+        relativePath,
+        anchorId: controlAnchorId(control.id),
+        displayId: displayOscalControlId(control.id),
+      });
+    }
+  }
+
+  return index;
 }
 
 function controlClassTitle(className: string): string {
@@ -4802,22 +5075,26 @@ function buildControlViewModel(
       ...buildControlGuidanceViewModel(data, catalog, control),
     }))
     .filter((variant) => !variant.isEmpty);
-  const commonGuidance = source.all_classes
-    ? buildControlGuidanceViewModel(source.all_classes, catalog, control)
-    : undefined;
+  const commonGuidance = buildControlGuidanceViewModel(
+    source,
+    catalog,
+    control,
+  );
 
   return {
     id: controlId,
     officialId: control.officialId,
+    displayId: displayOscalControlId(control.id),
     title: control.title,
     anchorId: slugifyHeading(`${controlId}-${control.title}`),
     statementLines: control.statementLines,
+    baselineClasses: [],
+    externalUrl: myctrlControlUrl(control.id),
     commonGuidance:
-      commonGuidance && !commonGuidance.isEmpty ? commonGuidance : undefined,
+      !commonGuidance.isEmpty ? commonGuidance : undefined,
     classVariants,
     hasFedrampContent:
-      Boolean(commonGuidance && !commonGuidance.isEmpty) ||
-      classVariants.length > 0,
+      !commonGuidance.isEmpty || classVariants.length > 0,
   };
 }
 
@@ -4852,8 +5129,202 @@ function buildControlFamilyViewModels(
         .sort((left, right) =>
           left.id.localeCompare(right.id, "en", { numeric: true }),
         ),
+      controlCount: Object.keys(controls).length,
     };
   });
+}
+
+function buildRev5BaselineClassIndex(
+  rules: RulesDocument,
+): ReadonlyMap<string, string[]> {
+  const baselineRequirement =
+    rules.FRR.FRC?.data.rev5?.CSF?.["FRC-CSF-BSL"];
+  if (!baselineRequirement?.varies_by_class) {
+    throw new Error(
+      "FRC-CSF-BSL class variants are required to build the full Rev5 control reference.",
+    );
+  }
+
+  const classesByControl = new Map<string, string[]>();
+  for (const className of ["b", "c", "d"]) {
+    const controlsList =
+      baselineRequirement.varies_by_class[className]?.rev5_controls_list;
+    if (!controlsList) {
+      throw new Error(
+        `FRC-CSF-BSL is missing the Class ${className.toUpperCase()} rev5_controls_list.`,
+      );
+    }
+
+    for (const controlIds of Object.values(controlsList)) {
+      for (const controlId of controlIds) {
+        const normalizedControlId = normalizeOscalControlId(controlId);
+        const classes = classesByControl.get(normalizedControlId) ?? [];
+        classes.push(`Class ${className.toUpperCase()}`);
+        classesByControl.set(normalizedControlId, classes);
+      }
+    }
+  }
+
+  return classesByControl;
+}
+
+function buildFullControlViewModel(
+  control: OscalControl,
+  source: ControlEntrySource,
+  catalog: OscalCatalog,
+  baselineClasses: ReadonlyMap<string, string[]>,
+): ControlViewModel {
+  const classVariants = Object.entries(source.varies_by_class ?? {})
+    .sort(
+      ([left], [right]) =>
+        classSortOrder(left) - classSortOrder(right) ||
+        left.localeCompare(right),
+    )
+    .map(([className, data]) => ({
+      title: controlClassTitle(className),
+      ...buildControlGuidanceViewModel(data, catalog, control),
+    }))
+    .filter((variant) => !variant.isEmpty);
+  const commonGuidance = buildControlGuidanceViewModel(
+    source,
+    catalog,
+    control,
+  );
+
+  return {
+    id: control.id,
+    officialId: control.officialId,
+    displayId: displayOscalControlId(control.id),
+    title: control.title,
+    anchorId: controlAnchorId(control.id),
+    statementLines: control.statementLines,
+    baselineClasses: baselineClasses.get(control.id) ?? [],
+    externalUrl: myctrlControlUrl(control.id),
+    commonGuidance:
+      !commonGuidance.isEmpty ? commonGuidance : undefined,
+    classVariants,
+    hasFedrampContent:
+      !commonGuidance.isEmpty || classVariants.length > 0,
+  };
+}
+
+function buildFullControlFamilyViewModels(
+  rules: RulesDocument,
+  mapping: FullControlReferenceDocumentMappingConfig,
+  catalog: OscalCatalog,
+): ControlFamilyViewModel[] {
+  const baselineClasses = buildRev5BaselineClassIndex(rules);
+
+  return selectedFullControlFamilyIds(mapping, catalog).map((familyId) => {
+    const family = catalog.families.get(familyId);
+    if (!family) {
+      throw new Error(
+        `Full control reference mapping "${mapping.id}" references unknown OSCAL family "${familyId}".`,
+      );
+    }
+
+    const relativePath = fullControlReferenceFamilyPath(mapping, family.title);
+    const fedrampControls = rules.CTL[familyId] ?? {};
+    const controls = Array.from(family.controls.values())
+      .filter((control) => control.status !== "withdrawn")
+      .map((control) =>
+        buildFullControlViewModel(
+          control,
+          fedrampControls[control.id] ?? {},
+          catalog,
+          baselineClasses,
+        ),
+      );
+
+    return {
+      id: family.id,
+      title: family.title,
+      anchorId: slugifyHeading(`${family.title}-${family.id}`),
+      href: relativePath,
+      controlCount: controls.length,
+      controls,
+    };
+  });
+}
+
+function collectFullControlReferenceArtifacts(
+  rules: RulesDocument,
+  config: ToolConfig,
+  catalog: OscalCatalog,
+): BuildArtifact[] {
+  return (config.generated.fullControlReferenceDocuments ?? []).flatMap(
+    (mapping) => {
+      const families = buildFullControlFamilyViewModels(
+        rules,
+        mapping,
+        catalog,
+      );
+      const indexRelativePath = fullControlReferenceIndexPath(mapping);
+      const indexFamilies = families.map((family) => ({
+        ...family,
+        href: relativeGeneratedHref(indexRelativePath, family.href ?? ""),
+        controls: [],
+      }));
+      const controlCount = families.reduce(
+        (count, family) => count + family.controlCount,
+        0,
+      );
+      const indexArtifact: BuildArtifact = {
+        relativePath: indexRelativePath,
+        outputPath: resolveGeneratedOutputPath(config, indexRelativePath),
+        templatePath: resolveToolPath(
+          mapping.indexTemplate ??
+            "templates/full-rev5-control-reference-index.hbs",
+        ),
+        mappingId: mapping.id,
+        title: mapping.title,
+        documentType: "CTL_REFERENCE",
+        context: buildDocumentContext(mapping.title, {
+          statusSpan: pictographSpan(config, mapping.status),
+          tags: versionTags(["rev5"]),
+          isControlDocument: true,
+          isFullControlReferenceIndex: true,
+          controlCatalog: controlCatalogMetadataViewModel(catalog.metadata),
+          controlFamilies: indexFamilies,
+          controlCount,
+        }),
+      };
+      const familyArtifacts = families.map((family): BuildArtifact => {
+        const relativePath = family.href;
+        if (!relativePath) {
+          throw new Error(
+            `Full control reference family "${family.id}" is missing an output path.`,
+          );
+        }
+
+        const title = `${family.title} (${family.id})`;
+        return {
+          relativePath,
+          outputPath: resolveGeneratedOutputPath(config, relativePath),
+          templatePath: resolveToolPath(
+            mapping.familyTemplate ??
+              "templates/full-rev5-control-reference-family.hbs",
+          ),
+          mappingId: mapping.id,
+          sourceDocument: family.id,
+          title,
+          documentType: "CTL_REFERENCE",
+          context: buildDocumentContext(title, {
+            statusSpan: pictographSpan(config, mapping.status),
+            tags: versionTags(["rev5"]),
+            isControlDocument: true,
+            isControlFamilyDocument: true,
+            isFullControlReferenceFamily: true,
+            controlCatalog: controlCatalogMetadataViewModel(catalog.metadata),
+            controlFamilies: [family],
+            controlCount: family.controlCount,
+          }),
+        };
+      });
+
+      return [indexArtifact, ...familyArtifacts];
+    },
+  );
 }
 
 function collectSingleControlDocumentArtifact(
@@ -4868,7 +5339,7 @@ function collectSingleControlDocumentArtifact(
   }
 
   const relativePath = normalizeGeneratedPath(mapping.output);
-  const title = mapping.title ?? "Rev5 Controls";
+  const title = mapping.title ?? "Rev5 Control Guidance";
 
   return {
     relativePath,
@@ -4923,13 +5394,7 @@ function collectFamilyControlDocumentArtifacts(
   });
 }
 
-function configuredOscalCatalog(
-  config: ToolConfig,
-): OscalCatalog | undefined {
-  if (!(config.generated.controlDocuments ?? []).length) {
-    return undefined;
-  }
-
+function configuredOscalCatalog(config: ToolConfig): OscalCatalog {
   const source = readFileSync(
     resolveToolPath(config.paths.oscalCatalogFile),
     "utf8",
@@ -4940,15 +5405,11 @@ function configuredOscalCatalog(
 function collectConfiguredControlDocumentArtifacts(
   rules: RulesDocument,
   config: ToolConfig,
-  catalog: OscalCatalog | undefined,
+  catalog: OscalCatalog,
 ): BuildArtifact[] {
   const mappings = config.generated.controlDocuments ?? [];
   if (!mappings.length) {
     return [];
-  }
-
-  if (!catalog) {
-    throw new Error("Control document generation requires an OSCAL catalog.");
   }
 
   return mappings.flatMap((mapping) => {
@@ -5243,6 +5704,8 @@ function collectFrrCollectionDocumentArtifact(
   rulePageIndex: RulePageIndex,
   ksiIndex: KsiIndex,
   ksiPageIndex: KsiPageIndex,
+  oscalCatalog: OscalCatalog,
+  controlReferenceIndex: ControlReferenceIndex,
 ): BuildArtifact | null {
   if (mapping.source.collection !== "FRR") {
     throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
@@ -5263,6 +5726,8 @@ function collectFrrCollectionDocumentArtifact(
           rulePageIndex,
           ksiIndex,
           ksiPageIndex,
+          oscalCatalog,
+          controlReferenceIndex,
         },
       ),
     )
@@ -5296,6 +5761,8 @@ function collectFrrCollectionDocumentArtifacts(
   rulePageIndex: RulePageIndex,
   ksiIndex: KsiIndex,
   ksiPageIndex: KsiPageIndex,
+  oscalCatalog: OscalCatalog,
+  controlReferenceIndex: ControlReferenceIndex,
 ): BuildArtifact[] {
   return (config.generated.frrCollectionDocuments ?? [])
     .map((mapping) =>
@@ -5308,6 +5775,8 @@ function collectFrrCollectionDocumentArtifacts(
         rulePageIndex,
         ksiIndex,
         ksiPageIndex,
+        oscalCatalog,
+        controlReferenceIndex,
       ),
     )
     .filter((artifact): artifact is BuildArtifact => artifact !== null);
@@ -5322,6 +5791,8 @@ function collectSingleRuleDocumentArtifact(
   rulePageIndex: RulePageIndex,
   ksiIndex: KsiIndex,
   ksiPageIndex: KsiPageIndex,
+  oscalCatalog: OscalCatalog,
+  controlReferenceIndex: ControlReferenceIndex,
 ): BuildArtifact | null {
   if (mapping.source.collection !== "FRR") {
     throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
@@ -5347,6 +5818,8 @@ function collectSingleRuleDocumentArtifact(
       rulePageIndex,
       ksiIndex,
       ksiPageIndex,
+      oscalCatalog,
+      controlReferenceIndex,
     },
   );
   if (!sections.length && mapping.emptyBehavior === "skip") {
@@ -5401,6 +5874,8 @@ function collectDocumentRuleDocumentArtifacts(
   rulePageIndex: RulePageIndex,
   ksiIndex: KsiIndex,
   ksiPageIndex: KsiPageIndex,
+  oscalCatalog: OscalCatalog,
+  controlReferenceIndex: ControlReferenceIndex,
 ): BuildArtifact[] {
   if (mapping.source.collection !== "FRR") {
     throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
@@ -5423,6 +5898,8 @@ function collectDocumentRuleDocumentArtifacts(
           rulePageIndex,
           ksiIndex,
           ksiPageIndex,
+          oscalCatalog,
+          controlReferenceIndex,
         },
       );
       if (!sections.length && mapping.emptyBehavior === "skip") {
@@ -5558,6 +6035,8 @@ function collectRelatedRuleDocumentArtifact(
   rulePageIndex: RulePageIndex,
   ksiIndex: KsiIndex,
   ksiPageIndex: KsiPageIndex,
+  oscalCatalog: OscalCatalog,
+  controlReferenceIndex: ControlReferenceIndex,
 ): BuildArtifact | null {
   if (!mapping.relatedRulesOutput) {
     return null;
@@ -5587,6 +6066,8 @@ function collectRelatedRuleDocumentArtifact(
       rulePageIndex,
       ksiIndex,
       ksiPageIndex,
+      oscalCatalog,
+      controlReferenceIndex,
     },
   );
 
@@ -5620,6 +6101,8 @@ function collectRelatedRuleDocumentArtifacts(
   rulePageIndex: RulePageIndex,
   ksiIndex: KsiIndex,
   ksiPageIndex: KsiPageIndex,
+  oscalCatalog: OscalCatalog,
+  controlReferenceIndex: ControlReferenceIndex,
 ): BuildArtifact[] {
   return config.generated.ruleDocuments
     .map((mapping) =>
@@ -5632,6 +6115,8 @@ function collectRelatedRuleDocumentArtifacts(
         rulePageIndex,
         ksiIndex,
         ksiPageIndex,
+        oscalCatalog,
+        controlReferenceIndex,
       ),
     )
     .filter((artifact): artifact is BuildArtifact => artifact !== null);
@@ -5646,6 +6131,8 @@ function collectRuleDocumentArtifacts(
   rulePageIndex: RulePageIndex,
   ksiIndex: KsiIndex,
   ksiPageIndex: KsiPageIndex,
+  oscalCatalog: OscalCatalog,
+  controlReferenceIndex: ControlReferenceIndex,
 ): BuildArtifact[] {
   if (mapping.outputMode === "documents") {
     return collectDocumentRuleDocumentArtifacts(
@@ -5657,6 +6144,8 @@ function collectRuleDocumentArtifacts(
       rulePageIndex,
       ksiIndex,
       ksiPageIndex,
+      oscalCatalog,
+      controlReferenceIndex,
     );
   }
 
@@ -5669,6 +6158,8 @@ function collectRuleDocumentArtifacts(
     rulePageIndex,
     ksiIndex,
     ksiPageIndex,
+    oscalCatalog,
+    controlReferenceIndex,
   );
   return artifact ? [artifact] : [];
 }
@@ -5679,6 +6170,10 @@ export function collectArtifacts(
 ): BuildArtifact[] {
   const artifacts: BuildArtifact[] = [];
   const oscalCatalog = configuredOscalCatalog(config);
+  const controlReferenceIndex = buildControlReferenceIndex(
+    config,
+    oscalCatalog,
+  );
   const doNotLinkTerms = buildDoNotLinkTermIndex(rules.FRD);
   const ruleIndex = buildRuleIndex(rules);
   const ksiIndex = buildKsiIndex(rules);
@@ -5699,10 +6194,18 @@ export function collectArtifacts(
       doNotLinkTerms,
       ruleIndex,
       ksiIndex,
+      controlReferenceIndex,
     ),
   );
   artifacts.push(
     ...collectConfiguredControlDocumentArtifacts(rules, config, oscalCatalog),
+  );
+  artifacts.push(
+    ...collectFullControlReferenceArtifacts(
+      rules,
+      config,
+      oscalCatalog,
+    ),
   );
   artifacts.push(...collectDeadlineDocumentArtifacts(rules, config));
   artifacts.push(...collectTaggedDocumentSummaryArtifacts(rules, config));
@@ -5716,6 +6219,8 @@ export function collectArtifacts(
       rulePageIndex,
       ksiIndex,
       ksiPageIndex,
+      oscalCatalog,
+      controlReferenceIndex,
     ),
   );
 
@@ -5730,6 +6235,8 @@ export function collectArtifacts(
         rulePageIndex,
         ksiIndex,
         ksiPageIndex,
+        oscalCatalog,
+        controlReferenceIndex,
       ),
     );
   }
@@ -5742,6 +6249,8 @@ export function collectArtifacts(
       rulePageIndex,
       ksiIndex,
       ksiPageIndex,
+      oscalCatalog,
+      controlReferenceIndex,
     ),
   );
 
