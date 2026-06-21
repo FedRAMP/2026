@@ -10,6 +10,29 @@ picto:
 
 **Release Date:** June 20, 2026
 
+### Rules Updates
+
+- Updated `info.version` from `2026.06.19.02-preview` to `2026.06.21.01-preview` and `info.last_updated` to `2026-06-21`.
+- FRD-FIR, FRD-IIR, and FRD-OIR now reference FedRAMP Incident Evaluation and Response rules instead of Incident Communications Procedures.
+- AGU-AGC-NAL was renamed AGU-AGC-NAA and now more precisely describes the required agency ATO letter and supplemental submission information.
+- AGU-USE-RCF removed “baseline” from its reference to the FedRAMP Certification Package.
+- FRC-CSX-VVK adds class-specific automated KSI verification and validation expectations, ranging from optional for Class A to at least four automated methods per KSI for Class D.
+- FRC-CSX-MOT adds historical KSI metrics expectations, including six months for Class C and eighteen months for Class D.
+- FRC-CSX-VVR adds class-specific expectations for automated verification and validation of FedRAMP rule information in the Security Decision Record.
+- FRC-CSF-BSL establishes required Rev5 baseline control lists for Classes B, C, and D, containing 155, 322, and 409 controls respectively.
+- FRC-CSF-ACP requires providers to assign organization-defined control parameters and document them in the Security Decision Record.
+- FRC-CSF-FFG requires providers to follow FedRAMP Rev5 Controls Guidance.
+- IVV-CSF-AIA reorganizes annual independent-assessment controls by family and adds CA-08 for Class B and CA-08 (01) for Classes C and D.
+- IEC-FRP-ORV and IEC-CSO-EFR replace Incident Communications Procedures references with Incident Evaluation and Response rules and add the Vulnerability Response term.
+- CA-07, CM-08, RA-05, RA-05-02, RA-05-03, RA-05-04, RA-05-05, RA-05-08, RA-05-11, RA-07, SI-02, SI-02-02, SI-04-01, SI-04-02, SI-04-04, and SI-04-05 now direct users to both Vulnerability Detection and Response and Vulnerability Evaluation and Reporting rules.
+- IR-01, IR-02, IR-02-01, IR-02-02, IR-03, IR-03-02, IR-04, IR-04-01, IR-04-02, IR-04-04, IR-04-06, IR-04-11, IR-05, IR-05-01, IR-06, IR-06-01, IR-06-03, IR-07, IR-07-01, IR-08, IR-09, IR-09-02, IR-09-03, and IR-09-04 now reference the FedRAMP Incident Evaluation and Reporting rules.
+- CM-12 and CM-12-01 clarify their references to FedRAMP Minimum Assessment Scope rules.
+- CA-02-03 changes its assessor parameter to “FedRAMP Recognized independent assessment service”; CP-02-03 and CP-10-04 expand “SLA” to “Service Level Agreements.”
+- CM-08-03 was removed, including its continuous inventory monitoring parameter assignments; RA-05-02 removes the “prior to a new scan” parameter assignment.
+- MA-05-01 changes its baseline reference from Moderate to Class C; SA-05, SC-13, SI-05, and SR-08 update guidance references to current FedRAMP rule names.
+- PS-07, SA-09-05, and SC-07 receive minor capitalization, spacing, and normative-word presentation corrections.
+
+
 ### Site Structure
 
 - Added 14 Rev5 control-family pages to the provider navigation, including [Access Control](https://preview.fedramp.gov/2026/providers/rev5/controls/access-control/) and the other FedRAMP-relevant NIST control families.
