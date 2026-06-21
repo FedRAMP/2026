@@ -3,6 +3,12 @@ title: "{{title}}"
 description: "{{description}}"
 purpose: "{{purpose}}"
 google_doc: ""
+{{#if tags.length}}
+tags:
+{{#each tags}}
+  - {{this}}
+{{/each}}
+{{/if}}
 picto:
   source: {{pictoSource}}
   status: {{pictoStatus}}

@@ -33,6 +33,7 @@ import {
   type OscalCatalogMetadata,
   type OscalControl,
 } from "./oscal-catalog";
+import { mergePathZensicalTags } from "./zensical-tags";
 
 export const RULES_FILE = resolveToolPath(DEFAULT_CONFIG.paths.rulesFile);
 export const OUTPUT_DIR = resolveToolPath(DEFAULT_CONFIG.paths.src);
@@ -6254,7 +6255,16 @@ export function collectArtifacts(
     ),
   );
 
-  return artifacts;
+  return artifacts.map((artifact) => ({
+    ...artifact,
+    context: {
+      ...artifact.context,
+      tags: mergePathZensicalTags(
+        artifact.context.tags,
+        artifact.relativePath,
+      ),
+    },
+  }));
 }
 
 interface GeneratedManifest {

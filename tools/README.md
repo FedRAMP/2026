@@ -43,7 +43,7 @@ The dev script watches manual content, templates, config, generator code, and th
 bun test
 ```
 
-Verifies the rules source schema, `tools/rules` sync status, generated Markdown pipeline, full static build output, and warns when built `src/*.md` pages are not linked from `zensical.toml`.
+Verifies the rules source schema, `tools/rules` sync status, generated Markdown pipeline, full static build output, and warns when built `src/*.md` pages are not linked from `zensical.toml` or are inside a `20x/` or `rev5/` directory without the matching Zensical tag.
 
 ```bash
 bun run check

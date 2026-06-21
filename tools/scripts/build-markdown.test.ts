@@ -30,6 +30,11 @@ import {
   type ToolConfig,
 } from "./config";
 import { deploy } from "./deploy";
+import {
+  findZensicalTagWarnings,
+  printZensicalTagWarnings,
+  type ZensicalTagWarning,
+} from "./zensical-tag-warnings";
 const execFileAsync = promisify(execFile);
 const RULES_REMOTE_URL = "https://github.com/FedRAMP/rules.git";
 const DEFAULT_RULES_REMOTE_BRANCH = "main";
@@ -61,6 +66,7 @@ let unlinkedMarkdownWarningPaths: string[] = [];
 let boldMarkdownHeadingWarnings: string[] = [];
 let contentPictographWarnings: string[] = [];
 let rulesSubmoduleSyncWarnings: string[] = [];
+let zensicalTagWarnings: ZensicalTagWarning[] = [];
 const humanReadableFailureSummaries: string[] = [];
 
 afterAll(() => {
@@ -68,6 +74,7 @@ afterAll(() => {
   printBoldMarkdownHeadingWarnings();
   printContentPictographWarnings();
   printRulesSubmoduleSyncWarnings();
+  printZensicalTagWarnings(zensicalTagWarnings);
   printHumanReadableFailureSummaries();
 });
 
@@ -1218,6 +1225,20 @@ describe("build-markdown", () => {
       referenceIndexRowMarkdown(referenceIndexArtifact),
       "Generated reference index should render source-derived rows in acronym order",
     );
+
+    for (const [relativePath, expectedTag] of [
+      ["reference/20x/index.md", "20x"],
+      ["reference/rev5/index.md", "Rev5"],
+    ] as const) {
+      const pathTaggedArtifact = findArtifact(expectedArtifacts, relativePath);
+      const pathTaggedContents =
+        await readGeneratedArtifact(pathTaggedArtifact);
+
+      expect(pathTaggedArtifact.context.tags).toContain(expectedTag);
+      expect(pathTaggedContents).toContain(
+        `tags:\n  - ${expectedTag}\npicto:`,
+      );
+    }
 
     const effectiveDateArtifact = firstArtifactMatching(
       expectedArtifacts,
@@ -2887,6 +2908,7 @@ describe("build pipeline", () => {
     const srcMarkdownPaths = (await listRelativeFiles(srcPath))
       .filter((relativePath) => relativePath.endsWith(".md"))
       .sort();
+    zensicalTagWarnings = await findZensicalTagWarnings(srcPath);
     const unlinkedMarkdownPaths = srcMarkdownPaths.filter(
       (relativePath) => !linkedMarkdownPaths.has(relativePath),
     );
