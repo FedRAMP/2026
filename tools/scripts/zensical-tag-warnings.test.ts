@@ -6,7 +6,12 @@ import {
   findZensicalTagWarnings,
   zensicalTagsFromFrontmatter,
 } from "./zensical-tag-warnings";
-import { requiredZensicalTags } from "./zensical-tags";
+import {
+  affectedPartyZensicalTags,
+  contentTypeZensicalTags,
+  pathAudienceZensicalTags,
+  requiredZensicalTags,
+} from "./zensical-tags";
 
 describe("Zensical tag warnings", () => {
   test("reads block and inline tags from YAML front matter", () => {
@@ -32,6 +37,38 @@ describe("Zensical tag warnings", () => {
       "Rev5",
     ]);
     expect(requiredZensicalTags("reference/20x-overview.md")).toEqual([]);
+  });
+
+  test("maps audience directories and canonical affected parties to public labels", () => {
+    expect(pathAudienceZensicalTags("providers/20x/index.md")).toEqual([
+      "Cloud Service Providers",
+    ]);
+    expect(pathAudienceZensicalTags("reference/20x/index.md")).toEqual([]);
+    expect(
+      affectedPartyZensicalTags([
+        "Agencies",
+        "Providers",
+        "Assessors",
+        "Advisors",
+        "FedRAMP",
+      ]),
+    ).toEqual([
+      "Federal Agencies",
+      "Cloud Service Providers",
+      "Independent Assessors",
+      "Advisors",
+      "FedRAMP",
+    ]);
+  });
+
+  test("maps generated document types to content-type tags", () => {
+    expect(contentTypeZensicalTags("FRR")).toEqual(["Rules"]);
+    expect(contentTypeZensicalTags("FRD")).toEqual(["Definitions"]);
+    expect(contentTypeZensicalTags("KSI")).toEqual([
+      "Key Security Indicators",
+    ]);
+    expect(contentTypeZensicalTags("CTL_REFERENCE")).toEqual(["Controls"]);
+    expect(contentTypeZensicalTags("DEADLINES")).toEqual(["Deadlines"]);
   });
 
   test("finds missing tags without treating them as test failures", async () => {

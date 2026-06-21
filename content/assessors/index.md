@@ -1,4 +1,7 @@
 ---
+tags:
+  - Independent Assessors
+  - Guidance
 title: "Assessors"
 icon: material/eye-check-outline
 hide:

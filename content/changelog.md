@@ -1,4 +1,6 @@
 ---
+tags:
+  - Historical
 picto:
   source: person
   status: stable

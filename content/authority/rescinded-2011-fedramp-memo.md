@@ -1,4 +1,8 @@
 ---
+tags:
+  - FedRAMP
+  - Legal Authority
+  - Historical
 picto:
   source: person
   status: stable

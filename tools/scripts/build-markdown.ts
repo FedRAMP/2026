@@ -33,7 +33,7 @@ import {
   type OscalCatalogMetadata,
   type OscalControl,
 } from "./oscal-catalog";
-import { mergePathZensicalTags } from "./zensical-tags";
+import { mergeGeneratedZensicalTags } from "./zensical-tags";
 
 export const RULES_FILE = resolveToolPath(DEFAULT_CONFIG.paths.rulesFile);
 export const OUTPUT_DIR = resolveToolPath(DEFAULT_CONFIG.paths.src);
@@ -4053,6 +4053,64 @@ function buildDocumentContext(
   };
 }
 
+function configuredMappingAffectedParties(
+  config: ToolConfig,
+  mappingId: string,
+): string[] {
+  const mappings: Array<{
+    id: string;
+    source: { affects?: string[] };
+  }> = [
+    ...(config.generated.deadlineDocuments ?? []),
+    ...(config.generated.taggedDocumentSummaries ?? []),
+    ...(config.generated.referenceIndexDocuments ?? []),
+    ...(config.generated.frrCollectionDocuments ?? []),
+    ...config.generated.ruleDocuments,
+  ];
+
+  return (
+    mappings.find((mapping) => mapping.id === mappingId)?.source.affects ?? []
+  );
+}
+
+function renderedArtifactAffectedParties(artifact: BuildArtifact): string[] {
+  return uniqueApplicabilityValues(
+    artifact.context.sections.flatMap((section) => [
+      ...section.applicabilityGroups
+        .filter((group) => group.key === "affects")
+        .flatMap((group) => group.values),
+      ...section.requirements.flatMap((requirement) => requirement.affects),
+    ]),
+  );
+}
+
+function generatedArtifactAffectedParties(
+  artifact: BuildArtifact,
+  config: ToolConfig,
+): string[] {
+  const configuredAffectedParties = configuredMappingAffectedParties(
+    config,
+    artifact.mappingId,
+  );
+  if (configuredAffectedParties.length) {
+    return configuredAffectedParties;
+  }
+
+  const renderedAffectedParties = renderedArtifactAffectedParties(artifact);
+  if (renderedAffectedParties.length) {
+    return renderedAffectedParties;
+  }
+
+  if (
+    artifact.documentType === "FRD" ||
+    artifact.documentType === "FRR_REFERENCE_INDEX"
+  ) {
+    return ["Agencies", "Providers", "Assessors", "Advisors", "FedRAMP"];
+  }
+
+  return [];
+}
+
 function pictographSpan(
   config: ToolConfig,
   status: GeneratedDocumentStatus,
@@ -6259,9 +6317,11 @@ export function collectArtifacts(
     ...artifact,
     context: {
       ...artifact.context,
-      tags: mergePathZensicalTags(
+      tags: mergeGeneratedZensicalTags(
         artifact.context.tags,
         artifact.relativePath,
+        artifact.documentType,
+        generatedArtifactAffectedParties(artifact, config),
       ),
     },
   }));

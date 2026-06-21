@@ -1,4 +1,7 @@
 ---
+tags:
+  - Cloud Service Providers
+  - Guidance
 title: "Providers"
 icon: material/cloud-lock-outline
 hide:

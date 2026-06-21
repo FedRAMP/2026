@@ -1,4 +1,7 @@
 ---
+tags:
+  - Independent Assessors
+  - Guidance
 picto:
   source: person
   status: stable

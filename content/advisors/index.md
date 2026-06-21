@@ -1,4 +1,7 @@
 ---
+tags:
+  - Advisors
+  - Guidance
 title: "Advisors"
 icon: material/head-question-outline
 hide:

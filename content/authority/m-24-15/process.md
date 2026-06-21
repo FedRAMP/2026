@@ -1,4 +1,10 @@
 ---
+tags:
+  - Federal Agencies
+  - Cloud Service Providers
+  - Independent Assessors
+  - FedRAMP
+  - Legal Authority
 picto:
   source: person
   status: stable

@@ -1,6 +1,8 @@
 ---
 tags:
   - Rev5
+  - Cloud Service Providers
+  - Rules
 picto:
   source: person
   status: stable

@@ -1,6 +1,8 @@
 ---
 tags:
   - 20x
+  - Cloud Service Providers
+  - Rules
 picto:
   source: person
   status: stable

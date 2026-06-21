@@ -1,4 +1,7 @@
 ---
+tags:
+  - Federal Agencies
+  - Rules
 picto:
   source: person
   status: stable

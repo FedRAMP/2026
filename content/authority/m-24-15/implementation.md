@@ -1,4 +1,8 @@
 ---
+tags:
+  - Federal Agencies
+  - FedRAMP
+  - Legal Authority
 picto:
   source: person
   status: stable

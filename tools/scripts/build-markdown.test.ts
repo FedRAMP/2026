@@ -34,6 +34,7 @@ import {
   findZensicalTagWarnings,
   printZensicalTagWarnings,
   type ZensicalTagWarning,
+  zensicalTagsFromFrontmatter,
 } from "./zensical-tag-warnings";
 const execFileAsync = promisify(execFile);
 const RULES_REMOTE_URL = "https://github.com/FedRAMP/rules.git";
@@ -1173,9 +1174,42 @@ describe("build-markdown", () => {
       ).length,
     );
 
+    const contentTypeTagByDocumentType = new Map([
+      ["CTL", "Controls"],
+      ["CTL_REFERENCE", "Controls"],
+      ["DEADLINES", "Deadlines"],
+      ["FRD", "Definitions"],
+      ["FRR", "Rules"],
+      ["FRR_REFERENCE_INDEX", "Rules"],
+      ["FRR_TAGGED_SUMMARY", "Rules"],
+      ["KSI", "Key Security Indicators"],
+    ]);
+    const audienceTagByPathPrefix = new Map([
+      ["advisors/", "Advisors"],
+      ["agencies/", "Federal Agencies"],
+      ["assessors/", "Independent Assessors"],
+      ["providers/", "Cloud Service Providers"],
+      ["responsibilities/", "FedRAMP"],
+    ]);
+
     for (const artifact of expectedArtifacts) {
       await access(artifact.outputPath);
       const contents = await readFile(artifact.outputPath, "utf8");
+      const expectedContentTypeTag = contentTypeTagByDocumentType.get(
+        artifact.documentType,
+      );
+      if (!expectedContentTypeTag) {
+        throw new Error(
+          `Missing expected content-type tag for ${artifact.documentType}`,
+        );
+      }
+      expect(artifact.context.tags).toContain(expectedContentTypeTag);
+
+      for (const [pathPrefix, audienceTag] of audienceTagByPathPrefix) {
+        if (artifact.relativePath.startsWith(pathPrefix)) {
+          expect(artifact.context.tags).toContain(audienceTag);
+        }
+      }
 
       expect(contents).toContain(`# ${artifact.title}`);
       expect(contents.trim().length).toBeGreaterThan(0);
@@ -1195,6 +1229,8 @@ describe("build-markdown", () => {
         `description: ${JSON.stringify(referenceIndexArtifact.context.description ?? "")}`,
         `purpose: ${JSON.stringify(referenceIndexArtifact.context.purpose ?? "")}`,
         'google_doc: ""',
+        "tags:",
+        ...referenceIndexArtifact.context.tags.map((tag) => `  - ${tag}`),
         "picto:",
         "  source: machine",
         `  status: ${referenceIndexArtifact.context.pictoStatus}`,
@@ -1235,9 +1271,8 @@ describe("build-markdown", () => {
         await readGeneratedArtifact(pathTaggedArtifact);
 
       expect(pathTaggedArtifact.context.tags).toContain(expectedTag);
-      expect(pathTaggedContents).toContain(
-        `tags:\n  - ${expectedTag}\npicto:`,
-      );
+      expect(pathTaggedContents).toContain("tags:");
+      expect(pathTaggedContents).toContain(`  - ${expectedTag}`);
     }
 
     const effectiveDateArtifact = firstArtifactMatching(
@@ -1288,7 +1323,7 @@ describe("build-markdown", () => {
 
     expect(definitionsPurpose).toBeTruthy();
     expect(definitionsContents).toStartWith(
-      `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${definitionsArtifact.context.statusSpan}\n\n# ${definitionsArtifact.title}`,
+      `---\ntags:\n${definitionsArtifact.context.tags.map((tag) => `  - ${tag}`).join("\n")}\n---\n\n${definitionsArtifact.context.statusSpan}\n\n# ${definitionsArtifact.title}`,
     );
     expectTextOrder(
       definitionsContents,
@@ -1333,7 +1368,7 @@ describe("build-markdown", () => {
       );
     }
     expect(ksiThemeContents).toStartWith(
-      `---\ntags:\n  - 20x\n---\n\n${ksiThemeArtifact.context.statusSpan}\n\n# ${ksiThemeArtifact.title}`,
+      `---\ntags:\n${ksiThemeArtifact.context.tags.map((tag) => `  - ${tag}`).join("\n")}\n---\n\n${ksiThemeArtifact.context.statusSpan}\n\n# ${ksiThemeArtifact.title}`,
     );
     expect(ksiThemeContents).not.toContain("**Subsets**");
     expect(ksiThemeContents).toContain(ksiThemeIndicator.id);
@@ -1362,7 +1397,7 @@ describe("build-markdown", () => {
       );
     }
     expect(ksiReferenceContents).toStartWith(
-      `---\ntags:\n  - 20x\n---\n\n${ksiReferenceArtifact.context.statusSpan}\n\n# ${ksiReferenceArtifact.title}`,
+      `---\ntags:\n${ksiReferenceArtifact.context.tags.map((tag) => `  - ${tag}`).join("\n")}\n---\n\n${ksiReferenceArtifact.context.statusSpan}\n\n# ${ksiReferenceArtifact.title}`,
     );
     expect(ksiReferenceContents).not.toContain("**Subsets**");
     expectTextOrder(
@@ -1934,7 +1969,12 @@ describe("build-markdown", () => {
       section.requirements.map((requirement) => requirement.id),
     );
 
-    expect(artifact.context.tags).toEqual(["20x", "Rev5"]);
+    expect(artifact.context.tags).toEqual([
+      "20x",
+      "Rev5",
+      "Cloud Service Providers",
+      "Rules",
+    ]);
     expect(requirementIds).toContain("SYN-GEN-ONE");
     expect(requirementIds).toContain("SYN-20X-ONE");
     expect(requirementIds).toContain("SYN-REV5-ONE");
@@ -2594,7 +2634,23 @@ describe("build-markdown", () => {
       );
       expect(contents).toContain("# Custom FedRAMP Definitions");
       expect(contents).toStartWith(
-        `---\ntags:\n  - 20x\n  - Rev5\n---\n\n${PLACEHOLDER_STATUS_SPAN}\n\n# Custom FedRAMP Definitions`,
+        [
+          "---",
+          "tags:",
+          "  - 20x",
+          "  - Rev5",
+          "  - Federal Agencies",
+          "  - Cloud Service Providers",
+          "  - Independent Assessors",
+          "  - Advisors",
+          "  - FedRAMP",
+          "  - Definitions",
+          "---",
+          "",
+          PLACEHOLDER_STATUS_SPAN,
+          "",
+          "# Custom FedRAMP Definitions",
+        ].join("\n"),
       );
       expect(contents).toContain("## Important Related Terms");
       expect(contents).not.toContain("## General Terms");
@@ -2705,6 +2761,46 @@ describe("build-markdown", () => {
 });
 
 describe("content quality", () => {
+  test("manual content declares audience and content-type tags", async () => {
+    const config = await loadToolConfig();
+    const contentPath = resolveToolPath(config.paths.content);
+    const markdownPaths = (await listRelativeFiles(contentPath)).filter(
+      (relativePath) => relativePath.endsWith(".md"),
+    );
+    const contentTypeTags = new Set([
+      "Controls",
+      "Deadlines",
+      "Definitions",
+      "Guidance",
+      "Historical",
+      "Key Security Indicators",
+      "Legal Authority",
+      "Rules",
+    ]);
+    const audienceTagByPathPrefix = new Map([
+      ["advisors/", "Advisors"],
+      ["agencies/", "Federal Agencies"],
+      ["assessors/", "Independent Assessors"],
+      ["providers/", "Cloud Service Providers"],
+      ["responsibilities/", "FedRAMP"],
+    ]);
+
+    for (const relativePath of markdownPaths) {
+      const contents = await readFile(path.join(contentPath, relativePath), "utf8");
+      const tags = zensicalTagsFromFrontmatter(contents);
+      expect(
+        tags.some((tag) => contentTypeTags.has(tag)),
+        `${relativePath} should declare a content-type tag`,
+      ).toBe(true);
+
+      for (const [pathPrefix, audienceTag] of audienceTagByPathPrefix) {
+        if (relativePath.startsWith(pathPrefix)) {
+          expect(tags).toContain(audienceTag);
+        }
+      }
+    }
+  });
+
   test("warns when content markdown is missing valid pictograph frontmatter", async () => {
     const config = await loadToolConfig();
     const contentPath = resolveToolPath(config.paths.content);

@@ -1,4 +1,9 @@
 ---
+tags:
+  - Federal Agencies
+  - Cloud Service Providers
+  - FedRAMP
+  - Guidance
 picto:
   source: person
   status: stable
