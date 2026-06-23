@@ -35,7 +35,7 @@ FedRAMP **Rev5** is best for non-cloud-native services (such as those that run t
 
 FedRAMP **20x** is a new cloud-native process designed for commercial cloud services that are built on FedRAMP Certified infrastructure and platforms. It is designed to highlight commercial security best practices and allows flexible implementation that can grow with adoption and customer needs. Cloud service providers must share information about Key Security Indicators that summarize their security capabilities. This requires deploying automation capabilities to persistently monitor and enforce the desired security state and to report on the performance of Key Security Indicators within the organization.
 
-FedRAMP **20x** is best for cloud-native services built with modern infrastructure and security engineering practices in mind, especially those with highly empowered Governance, Risk and Compliance (GRC) engineering teams. These types of cloud service providers are best positioned to adopt FedRAMP **20x** within their existing commercial cloud service without requiring government-specific versions. FedRAMP **20x** is not available to cloud service providers that run their own infrastructure or those seeking Class D (High) Certification.
+FedRAMP **20x** is best for cloud-native services built with modern infrastructure and security engineering practices in mind, especially those with highly empowered Governance, Risk and Compliance (GRC) engineering teams. These types of cloud service providers are best positioned to adopt FedRAMP **20x** within their existing commercial cloud service without requiring government-specific versions. FedRAMP **20x** will not available to cloud service providers that run their own infrastructure or those seeking Class D (High) Certification until 2027.
 
 ## Classes of FedRAMP Certification
 
@@ -52,7 +52,6 @@ More detailed information about the requirements for each FedRAMP Certification 
 **Class A Certifications** are for cloud services with mature security and compliance programs that are looking to enter the federal marketplace. Class A requires a small amount of information in advance and a small subset of initial ongoing monitoring and reporting requirements.
 
 Cloud service providers are expected to transition to a Class B, C, or D FedRAMP Certification after initial agency adoption.
-
 
 ### Class B Certification
 
@@ -85,7 +84,7 @@ There are 2 **paths** for FedRAMP Certification, with each path being restricted
 
 The **Program Certification** path is new in the Consolidated Rules for 2026 and allows cloud service providers to submit certification packages directly to FedRAMP for initial FedRAMP Certification. This is the preferred path for qualifying cloud service offerings and does not require an initial agency partner or sponsor.
 
-FedRAMP Certification Profiles for Program Certification in the Consolidated Rules for 2026 include::
+FedRAMP Certification Profiles for Program Certification in the Consolidated Rules for 2026 include:
 
 1. FedRAMP 20x Class A, B, or C
 

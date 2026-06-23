@@ -4,21 +4,23 @@ nav = [
 
   { "Overview" = [
     "index.md",
-    { "Understanding FedRAMP" = [
+    { "FedRAMP Overview" = [
       { "FedRAMP Certification" = "certification.md" },
       { "Shared Responsibility Model" = "shared-responsibilities.md" },
-      { "FedRAMP Definitions" = "definitions.md" },
+    ]},
+    { "Rules Overview" = [
       { "Using the Consolidated Rules" = "rules.md" },
+      { "FedRAMP Definitions" = "definitions.md" },
       { "Important Dates" = "timeline.md" },
-    ] },
-    { "About This Preview" = [
-      { "Source Data" = "sources.md" },
+    ]},
+    { "Updates and Sources" = [
       { "Changelog" = "changelog.md" },
+      { "Source Data" = "sources.md" },
     ] },
-    { "Related External Sites" = [
-      { "⏳ Legacy Documentation Reference" = "https://fedramp.gov/legacy" },
-      { "🦾 Machine-Readable Rules" = "https://github.com/FedRAMP/rules" },
-      { "🆘 help.fedramp.gov" = "https://help.fedramp.gov" },
+    { "Related FedRAMP Sites" = [
+      { "Legacy Documentation Reference" = "https://fedramp.gov/legacy" },
+      { "Machine-Readable Rules" = "https://github.com/FedRAMP/rules" },
+      { "help.fedramp.gov" = "https://help.fedramp.gov" },
     ] },
   ] },
   { "FedRAMP" = [
@@ -430,12 +432,12 @@ nav = [
   { "--> return to FedRAMP.gov" = "https://fedramp.gov" },
 ]
 
-site_name = "FedRAMP Consolidated Rules for 2026 Public Preview"
-site_description = "This site contains a Public Preview of FedRAMP's upcoming Consolidated Rules for 2026, under active development. It should not be used after July 1, 2026."
+site_name = "FedRAMP Consolidated Rules for 2026"
+site_description = "This site contains FedRAMP's Consolidated Rules for 2026."
 site_author = "pete@fedramp.gov"
 docs_dir = "src/"
 site_dir = "html/"
-site_url = "https://preview.fedramp.gov/2026/"
+site_url = "https://fedramp.gov/2026/"
 repo_url = "https://github.com/fedramp/2026"
 repo_name = "FedRAMP/2026"
 extra_css = ["stylesheets/extra.css"]
