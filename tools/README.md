@@ -35,7 +35,7 @@ The build pipeline:
 bun run dev
 ```
 
-Starts the local development pipeline and Zensical preview. It copies `../content` into `../src`, generates configured Markdown, then starts `zensical serve` with `../zensical.toml`.
+Starts the local development pipeline and Zensical development server. It copies `../content` into `../src`, generates configured Markdown, then starts `zensical serve` with `../zensical.toml`.
 
 The dev script watches manual content, templates, config, generator code, and the consolidated rules JSON. Watch rebuilds are debounced by `dev.watchDebounceMs` in `config.json`; the current default is 1000 milliseconds.
 
@@ -306,8 +306,8 @@ and enhancement. Withdrawn entries are omitted. Each control shows:
 - An italic statement inside the control quote when no FedRAMP-specific guidance or parameters exist.
 
 Structured `controls` references on rules and KSIs link to this full reference
-with `{ data-preview }`. `rev5_controls_list` links each OSCAL-enriched control
-name to the same target.
+with hover cards. `rev5_controls_list` links each OSCAL-enriched control name
+to the same target.
 
 ## Generated Deadline Pages
 
@@ -441,8 +441,8 @@ Generated rule pages also support selected rich rule metadata:
 - `info.flows` and certification-specific flows render as Mermaid activity workflow diagrams above the rules. Flow nodes link to matching rule headings when the flow node label matches a generated rule heading.
 - Rule `related` IDs are linked in statements, notes, variants, and following-information lists when the referenced rule appears in a compatible generated page. `linkTargetScope: "sameMappingOnly"` keeps complete reference pages from becoming fallback link targets for stakeholder-specific pages.
 - `following_information` renders as numbered items and `following_information_bullets` renders as bullet items.
-- `controls` renders links to the generated full Rev5 control reference with preview cards.
-- `rev5_controls_list` renders a family-grouped list whose control names link to the generated full reference with preview cards.
+- `controls` renders links to the generated full Rev5 control reference with hover cards.
+- `rev5_controls_list` renders a family-grouped list whose control names link to the generated full reference with hover cards.
 - `reference_url_web_name` links a rule reference to another generated ruleset page through `rulesHref`.
 - `pain_timeframes` renders a PAIN timeframe table inside applicable rule variants.
 - Notification entries render their required human-readable `name` and link form, web, and email targets when possible. Non-link targets remain visible as supporting destination details.

@@ -1,10 +1,8 @@
-# FedRAMP 2026 Preview Site
+# FedRAMP Consolidated Rules for 2026
 
-This repository builds the static site for the FedRAMP Consolidated Rules for 2026 preview.
+This repository builds the official static site for the FedRAMP Consolidated Rules for 2026.
 
-Preview site: <https://preview.fedramp.gov/2026>
-
-The content and implementation are under active development. Treat this repository as provisional preview material, not final FedRAMP guidance.
+Official site: <https://www.fedramp.gov/2026/>
 
 ## What Is Here
 
@@ -78,5 +76,4 @@ bun run build
 python scripts/postprocess.py
 ```
 
-You should now have a full html site rendered in `src/`. Copy those files to `static/2026` in fedramp.gov. Voila.
-
+You should now have a full HTML site rendered in `html/`. Copy those files to `static/2026` in fedramp.gov.

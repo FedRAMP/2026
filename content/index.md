@@ -11,9 +11,7 @@ picto:
 
 # FedRAMP Consolidated Rules for 2026
 
-Welcome to the preview site for the FedRAMP Consolidated Rules for 2026. This site brings the rules, definitions, timelines, stakeholder guidance, and source material together so agencies, cloud service providers, independent assessors, advisors, and FedRAMP can work from the same public reference.
-
-The material here is designed for human review during the preview period. When implementing or automating against the rules, use the structured source data linked below as the source of truth.
+Welcome to the FedRAMP Consolidated Rules for 2026. This site brings the rules, definitions, timelines, stakeholder guidance, and source material together so agencies, cloud service providers, independent assessors, advisors, and FedRAMP can work from the same public reference.
 
 ---
 
