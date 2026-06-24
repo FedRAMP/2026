@@ -61,4 +61,22 @@ pip install zensical mkdocs-ultralytics-plugin
 
 (replace `bun install` or `pip install` with node or pipx/uv/etc. as desired)
 
-3.
+3. If needed, sync the rules submodule
+
+```
+cd tools
+bun run sync
+```
+
+(this should only be necessary if the rules submodule has been updated - make sure to commit after doing this)
+
+4. Build the site
+
+```
+cd tools
+bun run build
+python scripts/postprocess.py
+```
+
+You should now have a full html site rendered in `src/`. Copy those files to `static/2026` in fedramp.gov. Voila.
+
