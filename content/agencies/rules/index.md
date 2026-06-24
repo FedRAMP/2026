@@ -4,7 +4,6 @@ tags:
   - Rules
 picto:
   source: person
-  status: stable
 ---
 
 # Agency Specific Rules

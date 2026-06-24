@@ -5,7 +5,6 @@ hide:
   - toc
 picto:
   source: person
-  status: stable
 ---
 
 # Source Data

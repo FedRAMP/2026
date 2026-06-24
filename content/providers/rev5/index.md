@@ -5,7 +5,6 @@ tags:
   - Rules
 picto:
   source: person
-  status: stable
 ---
 
 # FedRAMP Rev5 Certification Rules

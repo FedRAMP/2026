@@ -4,10 +4,9 @@ tags:
   - Legal Authority
 picto:
   source: person
-  status: stable
 ---
 
-# FedRAMP in United States Law
+# FedRAMP Authorization Act
 
 !!! abstract "The Statutory Establishment of FedRAMP"
 

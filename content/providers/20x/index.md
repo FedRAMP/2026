@@ -5,7 +5,6 @@ tags:
   - Rules
 picto:
   source: person
-  status: stable
 ---
 
 # FedRAMP 20x Certification Rules

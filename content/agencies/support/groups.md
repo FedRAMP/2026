@@ -4,7 +4,6 @@ tags:
   - Guidance
 picto:
   source: person
-  status: stable
 ---
 
 # FedRAMP Agency Support Groups

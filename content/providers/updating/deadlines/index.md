@@ -4,7 +4,6 @@ tags:
   - Deadlines
 picto:
   source: person
-  status: stable
 ---
 
 # Important Deadlines

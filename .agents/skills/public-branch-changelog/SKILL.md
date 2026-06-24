@@ -1,6 +1,6 @@
 ---
 name: public-branch-changelog
-description: Review the current Git branch and produce a public-facing Markdown changelog for the FedRAMP 2026 preview site. Use when the user asks for a changelog, branch changelog, public change summary, or summary of all changes on the current branch.
+description: Review the current Git branch and produce a public-facing Markdown changelog for the official FedRAMP 2026 rules site. Use when the user asks for a changelog, branch changelog, public change summary, or summary of all changes on the current branch.
 ---
 
 # Public branch changelog
@@ -84,11 +84,11 @@ Return only a fenced Markdown block, with no commentary before or after it:
 
 ### Content Updates
 
-- [Page Title](https://preview.fedramp.gov/2026/path/): Clarified ...
+- [Page Title](https://fedramp.gov/2026/path/): Clarified ...
 
 ### Site Structure
 
-- Added [Page Title](https://preview.fedramp.gov/2026/path/) to ...
+- Added [Page Title](https://fedramp.gov/2026/path/) to ...
 
 ### Generated Page Experience
 

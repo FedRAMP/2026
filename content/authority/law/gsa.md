@@ -4,7 +4,6 @@ tags:
   - Legal Authority
 picto:
   source: person
-  status: stable
 ---
 
 # FedRAMP Authorization Act on GSA

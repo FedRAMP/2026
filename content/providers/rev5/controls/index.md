@@ -5,10 +5,9 @@ tags:
   - Controls
 picto:
   source: person
-  status: stable
 ---
 
-# Rev5 Controls
+# Rev5 Control Guidance
 
 FedRAMP Rev5 uses controls from [NIST Special Publication 800-53 Revision 5](https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final)
 as the detailed security and privacy requirements for cloud service offerings. A control is a named safeguard or

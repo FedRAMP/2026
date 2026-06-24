@@ -4,21 +4,27 @@ nav = [
 
   { "Overview" = [
     "index.md",
-    { "Understanding FedRAMP" = [
-      { "FedRAMP Certification" = "certification.md" },
-      { "Shared Responsibility Model" = "shared-responsibilities.md" },
-      { "FedRAMP Definitions" = "definitions.md" },
+    { "Rules Overview" = [
       { "Using the Consolidated Rules" = "rules.md" },
+      { "FedRAMP Definitions" = "definitions.md" },
       { "Important Dates" = "timeline.md" },
-    ] },
-    { "About This Preview" = [
-      { "Source Data" = "sources.md" },
+    ]},
+    { "Shared Responsibilities" = [
+      {"FedRAMP" = "responsibilities/fedramp.md"},
+      {"Federal Agencies" = "responsibilities/agencies.md"},
+      {"Cloud Service Providers" = "responsibilities/providers.md"},
+      {"Independent Assessors" = "responsibilities/assessors.md"},
+      {"Advisors" = "responsibilities/advisors.md"},
+    ]},
+
+    { "Updates and Sources" = [
       { "Changelog" = "changelog.md" },
+      { "Source Data" = "sources.md" },
     ] },
-    { "Related External Sites" = [
-      { "⏳ Legacy Documentation Reference" = "https://fedramp.gov/legacy" },
-      { "🦾 Machine-Readable Rules" = "https://github.com/FedRAMP/rules" },
-      { "🆘 help.fedramp.gov" = "https://help.fedramp.gov" },
+    { "Related FedRAMP Sites" = [
+      { "Legacy Documentation Reference" = "https://fedramp.gov/legacy" },
+      { "Machine-Readable Rules" = "https://github.com/FedRAMP/rules" },
+      { "help.fedramp.gov" = "https://help.fedramp.gov" },
     ] },
   ] },
   { "FedRAMP" = [
@@ -26,7 +32,7 @@ nav = [
     { "Getting Support" = "support.md" },
     { "Scope of FedRAMP" = "scope.md" },
     { "FedRAMP Marketplace" = "marketplace.md" },
-    { "FedRAMP's Responsibilities" = "responsibilities/rules.md" },
+    { "FedRAMP's Responsibilities in the Rules" = "responsibilities/rules.md" },
     { "FedRAMP's Authority" = [
       { "FedRAMP Authorization Act" = [
         "authority/law/index.md",
@@ -39,7 +45,7 @@ nav = [
         { "Reports to Congress" = "authority/law/reports.md" },
         { "FSCAC" = "authority/law/fscac.md" },
       ] },
-      { "M-24-15" = [
+      { "OMB Memorandum M-24-15" = [
         "authority/m-24-15/index.md",
         { "Background" = "authority/m-24-15/background.md" },
         { "Vision" = "authority/m-24-15/vision.md" },
@@ -430,12 +436,12 @@ nav = [
   { "--> return to FedRAMP.gov" = "https://fedramp.gov" },
 ]
 
-site_name = "FedRAMP Consolidated Rules for 2026 Public Preview"
-site_description = "This site contains a Public Preview of FedRAMP's upcoming Consolidated Rules for 2026, under active development. It should not be used after July 1, 2026."
+site_name = "FedRAMP Consolidated Rules for 2026"
+site_description = "This site contains FedRAMP's Consolidated Rules for 2026."
 site_author = "pete@fedramp.gov"
 docs_dir = "src/"
 site_dir = "html/"
-site_url = "https://preview.fedramp.gov/2026/"
+site_url = "https://fedramp.gov/2026/"
 repo_url = "https://github.com/fedramp/2026"
 repo_name = "FedRAMP/2026"
 extra_css = ["stylesheets/extra.css"]
@@ -448,7 +454,7 @@ extra_javascript = [
 
 [project.extra]
 homepage = "/2026"
-social_image = "/2026/assets/preview.png"
+social_image = "/2026/assets/thumbnail.png"
 social_image_alt = "FedRAMP Consolidated Rules for 2026"
 
 

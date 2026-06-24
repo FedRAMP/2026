@@ -5,7 +5,6 @@ tags:
   - Key Security Indicators
 picto:
   source: person
-  status: stable
 ---
 
 # Key Security Indicators

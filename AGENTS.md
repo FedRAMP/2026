@@ -1,10 +1,10 @@
 # Repository instructions
 
-This repository builds the Zensical site for the FedRAMP Consolidated Rules for 2026 preview:
+This repository builds the Zensical site for the official FedRAMP Consolidated Rules for 2026:
 
-<https://preview.fedramp.gov/2026>
+<https://fedramp.gov/2026/>
 
-The site is under active development. Treat it as provisional preview material, not final FedRAMP guidance.
+Treat the machine-readable rules data as the canonical source for official 2026 rules content, and treat generated Markdown and static output as downstream renderings.
 
 ## Keep these instructions useful
 
@@ -68,7 +68,7 @@ bun run sync
 bunx tsc -p tsconfig.json --noEmit
 ```
 
-- `bun run dev`: start the local generation pipeline and Zensical preview.
+- `bun run dev`: start the local generation pipeline and Zensical development server.
 - `bun test`: test the rules source, generation pipeline, and built output.
 - `bun run check`: run tests, TypeScript checks, and non-failing content style warnings.
 - `bun run build`: regenerate `src/` and build `html/`.

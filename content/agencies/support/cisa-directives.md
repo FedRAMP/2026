@@ -4,7 +4,6 @@ tags:
   - Guidance
 picto:
   source: person
-  status: stable
 ---
 
 # Responding to CISA Emergency and Binding Operational Directives

@@ -7,7 +7,6 @@ hide:
   - toc
 picto:
   source: person
-  status: stable
 ---
 
 # The Federal Risk and Authorization Management Program

@@ -5,7 +5,6 @@ tags:
   - Guidance
 picto:
   source: person
-  status: stable
 ---
 
 # Sponsoring a FedRAMP Certification

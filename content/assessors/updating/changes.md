@@ -4,7 +4,6 @@ tags:
   - Guidance
 picto:
   source: person
-  status: stable
 ---
 
 # What's Changing in 2026

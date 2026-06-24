@@ -15,13 +15,11 @@ export type RuleDocumentOutputMode = "single" | "documents";
 export type KsiDocumentOutputMode = "single" | "themes";
 export type ControlDocumentOutputMode = "single" | "families";
 export type RuleDocumentLinkTargetScope = "default" | "sameMappingOnly";
-export type GeneratedDocumentStatus = "stable" | "placeholder" | "empty";
 export type GeneratedDocumentSource = "machine" | "person";
 
 export interface PictographsConfig {
   source: Record<GeneratedDocumentSource, string>;
-  status: Record<GeneratedDocumentStatus, string>;
-  tooltips: Record<GeneratedDocumentSource | GeneratedDocumentStatus, string>;
+  tooltips: Record<GeneratedDocumentSource, string>;
 }
 
 export interface ToolPathsConfig {
@@ -39,7 +37,6 @@ export interface DefinitionsMappingConfig {
   enabled: boolean;
   title?: string;
   output: string;
-  status?: GeneratedDocumentStatus;
   template?: string;
 }
 
@@ -54,7 +51,6 @@ export interface DefinitionDocumentMappingConfig {
   id: string;
   title?: string;
   output: string;
-  status: GeneratedDocumentStatus;
   template?: string;
   emptyBehavior?: GeneratedEmptyBehavior;
   includeEffectiveDates?: boolean;
@@ -85,7 +81,6 @@ export interface RuleDocumentMappingConfig {
   title?: string;
   output: string;
   outputMode?: RuleDocumentOutputMode;
-  status: GeneratedDocumentStatus;
   template?: string;
   definitionsHref?: string;
   rulesHref?: string;
@@ -103,7 +98,6 @@ export interface FrrCollectionDocumentMappingConfig {
   id: string;
   title: string;
   output: string;
-  status: GeneratedDocumentStatus;
   template?: string;
   definitionsHref?: string;
   rulesHref?: string;
@@ -124,7 +118,6 @@ export interface KsiDocumentMappingConfig {
   title?: string;
   output: string;
   outputMode?: KsiDocumentOutputMode;
-  status: GeneratedDocumentStatus;
   template?: string;
   definitionsHref?: string;
   relatedIndicatorsFromRuleDocumentMappingId?: string;
@@ -142,7 +135,6 @@ export interface ControlDocumentMappingConfig {
   title?: string;
   output: string;
   outputMode?: ControlDocumentOutputMode;
-  status: GeneratedDocumentStatus;
   template?: string;
   emptyBehavior?: GeneratedEmptyBehavior;
   source: ControlDocumentSourceConfig;
@@ -157,7 +149,6 @@ export interface FullControlReferenceDocumentMappingConfig {
   id: string;
   title: string;
   output: string;
-  status: GeneratedDocumentStatus;
   indexTemplate?: string;
   familyTemplate?: string;
   source: FullControlReferenceDocumentSourceConfig;
@@ -175,7 +166,6 @@ export interface DeadlineDocumentMappingConfig {
   id: string;
   title?: string;
   output: string;
-  status: GeneratedDocumentStatus;
   template?: string;
   source: DeadlineDocumentSourceConfig;
 }
@@ -198,7 +188,6 @@ export interface TaggedDocumentSummaryMappingConfig {
   id: string;
   title: string;
   output: string;
-  status: GeneratedDocumentStatus;
   template?: string;
   emptyBehavior?: GeneratedEmptyBehavior;
   source: TaggedDocumentSummarySourceConfig;
@@ -223,7 +212,6 @@ export interface ReferenceIndexDocumentMappingConfig {
   purpose: string;
   introduction?: string;
   output: string;
-  status: GeneratedDocumentStatus;
   template?: string;
   ruleDocumentMappingId?: string;
   ruleDocumentMappingIds?: string[];

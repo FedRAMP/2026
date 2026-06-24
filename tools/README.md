@@ -35,7 +35,7 @@ The build pipeline:
 bun run dev
 ```
 
-Starts the local development pipeline and Zensical preview. It copies `../content` into `../src`, generates configured Markdown, then starts `zensical serve` with `../zensical.toml`.
+Starts the local development pipeline and Zensical development server. It copies `../content` into `../src`, generates configured Markdown, then starts `zensical serve` with `../zensical.toml`.
 
 The dev script watches manual content, templates, config, generator code, and the consolidated rules JSON. Watch rebuilds are debounced by `dev.watchDebounceMs` in `config.json`; the current default is 1000 milliseconds.
 
@@ -108,7 +108,7 @@ Generated files are tracked in the manifest named by `generated.manifest`, curre
 
 ## Page Pictographs
 
-Manual Markdown pages can declare one source and one status in frontmatter. During build, the copy step reads this `picto` frontmatter and inserts the rendered pictograph span below the frontmatter before the first heading.
+Manual Markdown pages can declare one source in frontmatter. During build, the copy step reads this `picto` frontmatter and inserts the rendered pictograph span below the frontmatter before the first heading.
 
 Manual source pages usually use:
 
@@ -116,7 +116,6 @@ Manual source pages usually use:
 ---
 picto:
   source: person
-  status: stable
 ---
 ```
 
@@ -126,7 +125,6 @@ Generated or machine-sourced pages use:
 ---
 picto:
   source: machine
-  status: stable
 ---
 ```
 
@@ -137,16 +135,8 @@ person
 machine
 ```
 
-Status values:
-
-```text
-stable
-placeholder
-empty
-```
-
 Tooltips and rendered icon definitions are configured in `pictographs` in `config.json`.
-For generated mappings, the mapping's `status` controls the rendered page pictograph. Status values from the rules JSON are content metadata and do not override the configured generated-page status.
+Generated pages always render the machine source pictograph. Status values from the rules JSON remain content metadata and do not render a page pictograph.
 
 ## Generated Definitions
 
@@ -175,7 +165,6 @@ Definition mapping fields:
 - `template`: optional Handlebars template path relative to `tools/`; defaults to `paths.template`.
 - `emptyBehavior`: `write` keeps an empty page, `skip` omits it when no definitions match.
 - `includeEffectiveDates`: set to `false` to omit the top applicability block.
-- `status`: pictograph status for generated frontmatter.
 - `source.collection`: must be `FRD`.
 - `source.types`: one or more certification types, such as `["20x"]` or `["rev5"]`.
 - `source.includeAll`: include `data.all` definitions with each selected type.
@@ -196,7 +185,6 @@ Add an entry to `generated.ksiDocuments` in `config.json`:
   "id": "provider-20x-key-security-indicators",
   "output": "providers/20x/key-security-indicators/{KSI}.md",
   "outputMode": "themes",
-  "status": "stable",
   "definitionsHref": "../../../definitions/",
   "source": {
     "collection": "KSI",
@@ -213,7 +201,6 @@ Use `outputMode: "single"` when selected KSI themes should be grouped into one g
   "title": "Key Security Indicators",
   "output": "reference/key-security-indicators.md",
   "outputMode": "single",
-  "status": "stable",
   "definitionsHref": "../definitions/",
   "source": {
     "collection": "KSI",
@@ -232,7 +219,6 @@ KSI mapping fields:
 - `definitionsHref`: relative link prefix for generated term links.
 - `relatedIndicatorsFromRuleDocumentMappingId`: optional `generated.ruleDocuments` mapping id. When set, the KSI page includes only indicators directly referenced by rules included in that rule mapping.
 - `emptyBehavior`: `write` keeps an empty page, `skip` omits it when no indicators match.
-- `status`: pictograph status for generated frontmatter.
 - `source.collection`: must be `KSI`.
 - `source.theme`: one KSI theme key from the rules JSON, such as `CMT`.
 - `source.themes`: an array of KSI theme keys, such as `["CMT", "IAM"]`, or `"ALL"` to process every KSI theme.
@@ -247,7 +233,6 @@ Add an entry to `generated.controlDocuments` in `config.json`:
   "id": "complete-rev5-controls-reference",
   "title": "Rev5 Control Guidance",
   "output": "reference/rev5-control-guidance.md",
-  "status": "stable",
   "template": "templates/rev5-controls.hbs",
   "source": {
     "collection": "CTL",
@@ -265,7 +250,6 @@ Use `outputMode: "families"` to generate one page per selected control family:
   "id": "provider-rev5-controls",
   "output": "providers/rev5/controls/{family}.md",
   "outputMode": "families",
-  "status": "stable",
   "template": "templates/rev5-controls.hbs",
   "source": {
     "collection": "CTL",
@@ -282,7 +266,6 @@ Mapping fields:
 - `outputMode`: omit or use `single` for one combined page; use `families` for one page per selected family.
 - `template`: optional Handlebars template; defaults to `templates/rev5-controls.hbs`.
 - `emptyBehavior`: `write` keeps an empty page and `skip` omits it.
-- `status`: pictograph status for generated frontmatter.
 - `source.collection`: must be `CTL`.
 - `source.families`: an array of CTL family keys or `"ALL"`.
 
@@ -303,7 +286,6 @@ Add one mapping to `generated.fullControlReferenceDocuments`:
   "id": "full-rev5-control-reference",
   "title": "Full Rev5 Control Reference",
   "output": "reference/controls",
-  "status": "stable",
   "indexTemplate": "templates/full-rev5-control-reference-index.hbs",
   "familyTemplate": "templates/full-rev5-control-reference-family.hbs",
   "source": {
@@ -324,8 +306,8 @@ and enhancement. Withdrawn entries are omitted. Each control shows:
 - An italic statement inside the control quote when no FedRAMP-specific guidance or parameters exist.
 
 Structured `controls` references on rules and KSIs link to this full reference
-with `{ data-preview }`. `rev5_controls_list` links each OSCAL-enriched control
-name to the same target.
+with hover cards. `rev5_controls_list` links each OSCAL-enriched control name
+to the same target.
 
 ## Generated Deadline Pages
 
@@ -361,7 +343,6 @@ Add an entry to `generated.taggedDocumentSummaries` in `config.json`:
   "id": "provider-20x-initial-rules-summary",
   "title": "Initial Certification",
   "output": "providers/20x/initial/index.md",
-  "status": "placeholder",
   "template": "templates/tagged-document-summary.hbs",
   "source": {
     "collection": "FRR",
@@ -391,7 +372,6 @@ Add an entry to `generated.referenceIndexDocuments` in `config.json`:
   "purpose": "This content allows folks to see the full rules together without them broken apart by stakeholder.",
   "introduction": "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset with all related content in a single rule as an overall reference. The individual stakeholder sections of this site contain only the specific rules that apply in different circumstances for different stakeholders, while the reference rulesets are entirely unabridged.",
   "output": "reference/index.md",
-  "status": "stable",
   "template": "templates/reference-index.hbs",
   "source": {
     "collection": "FRR",
@@ -415,7 +395,6 @@ Add an entry to `generated.ruleDocuments` in `config.json`:
   "id": "provider-fsi-rules",
   "output": "providers/{type}/rules/{FRR}.md",
   "outputMode": "documents",
-  "status": "stable",
   "definitionsHref": "../../../definitions/",
   "rulesHref": "../../../",
   "emptyBehavior": "skip",
@@ -446,7 +425,6 @@ Mapping fields:
 - `relatedRulesUngroupedTitle`: optional heading prefix for related rules that are not referenced by a configured group.
 - `emptyBehavior`: `write` keeps an empty page, `skip` omits it when no rules match.
 - `includeEffectiveDates`: set to `false` to omit the top applicability block.
-- `status`: pictograph status for generated frontmatter.
 - `source.document`: one FRR key from the rules JSON, such as `FSI`.
 - `source.documents`: an array of FRR keys, such as `["FSI", "ICP"]`, or `"ALL"` to process every FRR.
 - `source.ignoreDocuments`: optional array of FRR keys to remove after `source.document` or `source.documents` is resolved.
@@ -463,8 +441,8 @@ Generated rule pages also support selected rich rule metadata:
 - `info.flows` and certification-specific flows render as Mermaid activity workflow diagrams above the rules. Flow nodes link to matching rule headings when the flow node label matches a generated rule heading.
 - Rule `related` IDs are linked in statements, notes, variants, and following-information lists when the referenced rule appears in a compatible generated page. `linkTargetScope: "sameMappingOnly"` keeps complete reference pages from becoming fallback link targets for stakeholder-specific pages.
 - `following_information` renders as numbered items and `following_information_bullets` renders as bullet items.
-- `controls` renders links to the generated full Rev5 control reference with preview cards.
-- `rev5_controls_list` renders a family-grouped list whose control names link to the generated full reference with preview cards.
+- `controls` renders links to the generated full Rev5 control reference with hover cards.
+- `rev5_controls_list` renders a family-grouped list whose control names link to the generated full reference with hover cards.
 - `reference_url_web_name` links a rule reference to another generated ruleset page through `rulesHref`.
 - `pain_timeframes` renders a PAIN timeframe table inside applicable rule variants.
 - Notification entries render their required human-readable `name` and link form, web, and email targets when possible. Non-link targets remain visible as supporting destination details.
@@ -480,7 +458,6 @@ Add an entry to `generated.frrCollectionDocuments` in `config.json` when selecte
   "id": "fedramp-responsibilities",
   "title": "FedRAMP's Responsibilities",
   "output": "responsibilities/rules.md",
-  "status": "placeholder",
   "definitionsHref": "../definitions/",
   "rulesHref": "../",
   "emptyBehavior": "skip",
@@ -498,4 +475,4 @@ Add an entry to `generated.frrCollectionDocuments` in `config.json` when selecte
 
 FRR collection mappings output a single Markdown page. Each matched FRR ruleset renders as a `##` section with the FRR purpose, then the matching subset description, then the rules selected by `source.affects` and `source.sections`. These collection pages intentionally omit effective-date blocks and activity workflow diagrams.
 
-Mapping fields are the same as generated rule pages except `title` is required, `outputMode`, `includeEffectiveDates`, and `source.groupBy` are not used, and `status` controls the overall page pictograph status directly.
+Mapping fields are the same as generated rule pages except `title` is required, and `outputMode`, `includeEffectiveDates`, and `source.groupBy` are not used.

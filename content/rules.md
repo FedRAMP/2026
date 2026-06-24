@@ -8,34 +8,12 @@ tags:
   - Guidance
 picto:
   source: person
-  status: stable
 ---
 
 # Using the FedRAMP Consolidated Rules
 
-!!! tip "FedRAMP Consolidated Rules provide a standardized approach to agency security assessment and authorization."
-
-    Federal agencies are expected to meet **extensive** statutory and policy responsibilities to protect
-    federal information systems. These responsibilities are placed upon agencies by Congress, the President,
-    the Office of Management and Budget, the Department of Commerce (usually via the National Institute of
-    Standards and Technology), and the Department of Homeland Security (usually via the Cybersecurity and
-    Infrastructure Security Agency).
-
-    Think of FedRAMP Consolidated Rules as a standardized translation layer that allows private sector companies to share
-    information with and make standardized commitments about their information security to federal
-    agencies so that these companies don't need to navigate each individual agency's bespoke information
-    security process.
-
-FedRAMP Consolidated Rules replace long narrative documents with concise, declarative, plain-language statements
-that explain FedRAMP's expectations for:
-
-- **FedRAMP**: The Federal Risk and Authorization Management Program itself.
-- **Providers**: Cloud service providers seeking to obtain or maintain a FedRAMP Certification for their cloud service offering.
-- **Assessors**: Independent assessment services seeking to obtain or maintain FedRAMP Recognition and to participate in independent verification and validation on behalf of FedRAMP.
-- **Agencies**: Executive branch federal agencies seeking to meet statutory and policy requirements for information security while using cloud services within the scope of FedRAMP.
-- **Advisors**: Advisory services that wish to be listed on the FedRAMP Marketplace.
-
-FedRAMP Consolidated Rules are structured as follows:
+FedRAMP Consolidated Rules replace long narrative documents with concise, declarative, plain-language statements.
+They are structured as follows:
 
 1. **Consolidated Rules** are the combined unified explanations of how things should be done with FedRAMP.
 2. **Rulesets** are the top-level collections of rules within the Consolidated Rules, grouped by process or subject.
@@ -50,10 +28,20 @@ not designed for actual direct use in the implementation of an information secur
 maintain FedRAMP Certification.
 
 The original FedRAMP Consolidated Rules, with rich metadata designed for use in modern tools, is maintained in a structured machine-readable
-JSON format. Once a stakeholder is ready to move past reviewing the human-readable reference and into the actual
-implementation of the FedRAMP Consolidated Rules, they should rely on the original machine-readable rules instead of this website.
+JSON format. The [FedRAMP Rules repository on GitHub](https://github.com/FedRAMP/rules) is the machine-readable source of truth for these rules.
 
-The [FedRAMP Rules repository on GitHub](https://github.com/FedRAMP/rules) is the machine-readable source of truth for these rules.
+!!! tip "Once a stakeholder is ready to move past reviewing the human-readable reference and into the actual implementation of the FedRAMP Consolidated Rules, they should rely on the original machine-readable rules instead of this website."
+
+## Definitions
+
+The [FedRAMP Definitions](definitions.md){ data-preview } play a **vital** role in the FedRAMP Consolidated Ruleset.
+These terms act as a function or subroutine that keeps rules simple through the use of a defined term. In
+many cases the definitions provide considerable clarity and specificity that is necessary to understand and apply the
+rule.
+
+Terms that are used in a rule are displayed after each rule for quick reference, and included in an array in the
+underlying machine-readable rules. It is impossible to properly address a FedRAMP rule that uses a defined term
+without also applying the specific FedRAMP Definition for the term.
 
 ## FedRAMP Rulesets
 
@@ -71,17 +59,6 @@ The primary applicability indicators are:
 - **Stakeholder** applicability is defined within each rule, though rulesets and subsets are often grouped by stakeholder as well.
 - **Task** or **process** applicability is often applied to a specific subset of rules.
 - **Class** applicability is universal by default, but may be defined in specific rules or occasionally in a subset of rules when expectations vary by class.
-
-### Definitions
-
-The [FedRAMP Definitions](definitions.md){ data-preview } play a **vital** role in the FedRAMP Consolidated Ruleset.
-These terms act as a function or subroutine that keeps rules simple through the use of a clearly defined term. In
-many cases the definitions provide considerable clarity and specificity that is necessary to understand and apply the
-rule.
-
-Terms that are used in a rule are displayed after each rule for quick reference, and included in an array in the
-underlying machine-readable rules. It is impossible to properly address a FedRAMP rule that uses a defined term
-without also applying the specific FedRAMP Definition for the term.
 
 ## FedRAMP Subsets
 
@@ -129,8 +106,8 @@ FedRAMP uses capitalized key words for the force of each rule based on [IETF RFC
 
 | Key Word | Force |
 | -- | -- |
-| MUST | The rule is an absolute requirement.<br><br>Parties MUST meet such rules and address them in their security documentation. Not meeting such a rule may lead to corrective action and the denial of initial or ongoing FedRAMP Certification.|
-| MUST NOT | The rule is an absolute prohibition.<br><br>Parties MUST meet such rules and address them in their security documentation. Not meeting such a rule may lead to corrective action and the denial of initial or ongoing FedRAMP Certification.|
+| MUST | The rule is an absolute requirement.<br><br>Parties MUST meet such rules and address them in their security documentation. Failure to follow the rule is a vulnerability that may lead to corrective action and the denial of initial or ongoing FedRAMP Certification.|
+| MUST NOT | The rule is an absolute prohibition.<br><br>Parties MUST meet such rules and address them in their security documentation. Failure to follow the rule is a vulnerability that may lead to corrective action and the denial of initial or ongoing FedRAMP Certification.|
 | SHOULD | There may exist valid reasons in particular circumstances to ignore this rule, but the full implications must be understood and carefully weighed.<br><br>Parties MUST address such rules in their security documentation by explaining their decisions about how they handle such rules.|
 | SHOULD NOT | There may exist valid reasons in particular circumstances when the particular action is acceptable or even useful, but the full implications must be understand and carefully weighed.<br><br>Parties MUST address such rules in their security documentation by explaining their decisions about how they handle such rules. |
 | MAY | The rule is truly optional.<br><br>Parties SHOULD address such rules in their security documentation by explaining their decisions about how they handle such rules.|
@@ -161,7 +138,7 @@ duplicated across rulesets and subsets. To avoid any confusion, always ensure th
     - `QTR` = Quarterly Reviews (Subset)
     - `NRD` = Rule key aligned to the name of the rule
 
-### It's Not a Trap!
+## It's Not a Trap!
 
 FedRAMP rules are intentionally crafted to encourage flexibility and avoid opinionated implementations unless absolutely necessary.
 Folks with traditional compliance backgrounds are often skeptical of this approach due to historical conflicts with reviewers and
