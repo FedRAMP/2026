@@ -14,17 +14,9 @@
       "machine": ":lucide-computer:{ .machine }",
       "person": ":lucide-person-standing:{ .person }"
     },
-    "status": {
-      "stable": ":lucide-book-open-check:{ .stable }",
-      "placeholder": ":lucide-pencil:{ .placeholder }",
-      "empty": ":lucide-circle-slash:{ .empty }"
-    },
     "tooltips": {
       "machine": "This content is machine-generated from FedRAMP Machine-Readable Rules.",
-      "person": "This content was written by a human just for this page.",
-      "stable": "This content is relatively stable and only minor changes are expected.",
-      "placeholder": "This content is a placeholder and is not complete.",
-      "empty": "This content has not been produced or ported to this website yet."
+      "person": "This content was written by a human just for this page."
     }
   },
   "generated": {
@@ -34,7 +26,6 @@
         "id": "fedramp-definitions",
         "title": "FedRAMP Definitions",
         "output": "definitions.md",
-        "status": "stable",
         "includeEffectiveDates": false,
         "source": {
           "collection": "FRD",
@@ -50,7 +41,6 @@
         "title": "Key Security Indicators",
         "output": "reference/key-security-indicators.md",
         "outputMode": "single",
-        "status": "stable",
         "definitionsHref": "../definitions/",
         "source": {
           "collection": "KSI",
@@ -60,7 +50,6 @@
       {
         "id": "provider-20x-key-security-indicators",
         "output": "providers/20x/key-security-indicators/{KSI}.md",
-        "status": "stable",
         "definitionsHref": "../../../definitions/",
         "source": {
           "collection": "KSI",
@@ -72,7 +61,6 @@
         "title": "Key Security Indicators",
         "output": "reference/20x/a/key-security-indicators.md",
         "outputMode": "single",
-        "status": "stable",
         "definitionsHref": "../../../definitions/",
         "relatedIndicatorsFromRuleDocumentMappingId": "20x-a-ruleset-reference",
         "source": {
@@ -86,7 +74,6 @@
         "title": "Key Security Indicators",
         "output": "reference/20x/b/key-security-indicators.md",
         "outputMode": "single",
-        "status": "stable",
         "definitionsHref": "../../../definitions/",
         "source": {
           "collection": "KSI",
@@ -99,7 +86,6 @@
         "title": "Key Security Indicators",
         "output": "reference/20x/c/key-security-indicators.md",
         "outputMode": "single",
-        "status": "stable",
         "definitionsHref": "../../../definitions/",
         "source": {
           "collection": "KSI",
@@ -113,7 +99,6 @@
         "id": "complete-rev5-controls-reference",
         "title": "Rev5 Control Guidance",
         "output": "reference/rev5-control-guidance.md",
-        "status": "stable",
         "template": "templates/rev5-controls.hbs",
         "source": {
           "collection": "CTL",
@@ -124,7 +109,6 @@
         "id": "provider-rev5-controls",
         "output": "providers/rev5/controls/{family}.md",
         "outputMode": "families",
-        "status": "stable",
         "template": "templates/rev5-controls.hbs",
         "source": {
           "collection": "CTL",
@@ -137,7 +121,6 @@
         "id": "full-rev5-control-reference",
         "title": "Full Rev5 Control Reference",
         "output": "reference/controls",
-        "status": "stable",
         "indexTemplate": "templates/full-rev5-control-reference-index.hbs",
         "familyTemplate": "templates/full-rev5-control-reference-family.hbs",
         "source": {
@@ -151,7 +134,6 @@
         "id": "provider-important-deadlines",
         "title": "Important Deadlines",
         "output": "providers/updating/deadlines/{type}.md",
-        "status": "stable",
         "template": "templates/deadlines.hbs",
         "source": {
           "collection": "FRR",
@@ -167,7 +149,6 @@
         "id": "provider-20x-boundary-rules-summary",
         "title": "The 20x FedRAMP Boundary",
         "output": "providers/20x/boundary/index.md",
-        "status": "stable",
         "template": "templates/tagged-document-summary.hbs",
         "source": {
           "collection": "FRR",
@@ -183,7 +164,6 @@
         "id": "provider-rev5-boundary-rules-summary",
         "title": "The Rev5 FedRAMP Boundary",
         "output": "providers/rev5/boundary/index.md",
-        "status": "stable",
         "template": "templates/tagged-document-summary.hbs",
         "source": {
           "collection": "FRR",
@@ -199,7 +179,6 @@
         "id": "provider-20x-assurance-rules-summary",
         "title": "Assurance",
         "output": "providers/20x/assurance/index.md",
-        "status": "stable",
         "template": "templates/tagged-document-summary.hbs",
         "source": {
           "collection": "FRR",
@@ -215,7 +194,6 @@
         "id": "provider-rev5-assurance-rules-summary",
         "title": "Assurance",
         "output": "providers/rev5/assurance/index.md",
-        "status": "stable",
         "template": "templates/tagged-document-summary.hbs",
         "source": {
           "collection": "FRR",
@@ -231,7 +209,6 @@
         "id": "provider-20x-materials-rules-summary",
         "title": "Package Materials",
         "output": "providers/20x/package/index.md",
-        "status": "stable",
         "template": "templates/tagged-document-summary.hbs",
         "source": {
           "collection": "FRR",
@@ -247,7 +224,6 @@
         "id": "provider-rev5-materials-rules-summary",
         "title": "Package Materials",
         "output": "providers/rev5/package/index.md",
-        "status": "stable",
         "template": "templates/tagged-document-summary.hbs",
         "source": {
           "collection": "FRR",
@@ -268,7 +244,6 @@
         "purpose": "This content allows folks to see the full rules together without them broken apart by stakeholder.",
         "introduction": "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset with all related content in a single rule as an overall reference. The individual stakeholder sections of this site contain only the specific rules that apply in different circumstances for different stakeholders, while the reference rulesets are entirely unabridged.",
         "output": "reference/complete-rulesets/index.md",
-        "status": "stable",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingId": "complete-ruleset-reference",
         "source": {
@@ -283,7 +258,6 @@
         "purpose": "This content allows folks to see the 20x rules together without them broken apart by stakeholder.",
         "introduction": "This section contains the FedRAMP 20x rulesets with content that applies to one or more 20x classes.",
         "output": "reference/20x/index.md",
-        "status": "stable",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingIds": [
           "20x-a-ruleset-reference",
@@ -307,7 +281,6 @@
         "purpose": "This content allows folks to see the full rules together without them broken apart by stakeholder.",
         "introduction": "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset with all related content in a single rule as an overall reference. The individual stakeholder sections of this site contain only the specific rules that apply in different circumstances for different stakeholders, while the reference rulesets are entirely unabridged.",
         "output": "reference/20x/a/index.md",
-        "status": "stable",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingId": "20x-a-ruleset-reference",
         "source": {
@@ -327,7 +300,6 @@
         "purpose": "This content allows folks to see the full rules together without them broken apart by stakeholder.",
         "introduction": "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset with all related content in a single rule as an overall reference. The individual stakeholder sections of this site contain only the specific rules that apply in different circumstances for different stakeholders, while the reference rulesets are entirely unabridged.",
         "output": "reference/20x/b/index.md",
-        "status": "stable",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingId": "20x-b-ruleset-reference",
         "source": {
@@ -347,7 +319,6 @@
         "purpose": "This content allows folks to see the full rules together without them broken apart by stakeholder.",
         "introduction": "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset with all related content in a single rule as an overall reference. The individual stakeholder sections of this site contain only the specific rules that apply in different circumstances for different stakeholders, while the reference rulesets are entirely unabridged.",
         "output": "reference/20x/c/index.md",
-        "status": "stable",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingId": "20x-c-ruleset-reference",
         "source": {
@@ -367,7 +338,6 @@
         "purpose": "This content allows folks to see the Rev5 rules together without them broken apart by stakeholder.",
         "introduction": "This section contains the FedRAMP Rev5 rulesets with content that applies to one or more Rev5 classes.",
         "output": "reference/rev5/index.md",
-        "status": "stable",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingIds": [
           "rev5-b-ruleset-reference",
@@ -391,7 +361,6 @@
         "purpose": "This content allows folks to see Rev5 Class B rules together without them broken apart by stakeholder.",
         "introduction": "This section contains the FedRAMP Rev5 rulesets with content that applies to Rev5 Class B.",
         "output": "reference/rev5/b/index.md",
-        "status": "stable",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingId": "rev5-b-ruleset-reference",
         "source": {
@@ -411,7 +380,6 @@
         "purpose": "This content allows folks to see Rev5 Class C rules together without them broken apart by stakeholder.",
         "introduction": "This section contains the FedRAMP Rev5 rulesets with content that applies to Rev5 Class C.",
         "output": "reference/rev5/c/index.md",
-        "status": "stable",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingId": "rev5-c-ruleset-reference",
         "source": {
@@ -431,7 +399,6 @@
         "purpose": "This content allows folks to see Rev5 Class D rules together without them broken apart by stakeholder.",
         "introduction": "This section contains the FedRAMP Rev5 rulesets with content that applies to Rev5 Class D.",
         "output": "reference/rev5/d/index.md",
-        "status": "stable",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingId": "rev5-d-ruleset-reference",
         "source": {
@@ -450,7 +417,6 @@
         "id": "fedramp-responsibilities",
         "title": "FedRAMP's Responsibilities",
         "output": "responsibilities/rules.md",
-        "status": "stable",
         "definitionsHref": "../definitions/",
         "rulesHref": "../",
         "emptyBehavior": "skip",
@@ -470,7 +436,6 @@
         "id": "complete-ruleset-reference",
         "output": "reference/{FRR}.md",
         "outputMode": "documents",
-        "status": "stable",
         "definitionsHref": "../definitions/",
         "rulesHref": "../",
         "linkTargetScope": "sameMappingOnly",
@@ -487,7 +452,6 @@
         "id": "20x-a-ruleset-reference",
         "output": "reference/20x/a/{FRR}.md",
         "outputMode": "documents",
-        "status": "stable",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../",
         "linkTargetScope": "sameMappingOnly",
@@ -523,7 +487,6 @@
         "id": "20x-b-ruleset-reference",
         "output": "reference/20x/b/{FRR}.md",
         "outputMode": "documents",
-        "status": "stable",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../",
         "linkTargetScope": "sameMappingOnly",
@@ -542,7 +505,6 @@
         "id": "20x-c-ruleset-reference",
         "output": "reference/20x/c/{FRR}.md",
         "outputMode": "documents",
-        "status": "stable",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../",
         "linkTargetScope": "sameMappingOnly",
@@ -561,7 +523,6 @@
         "id": "rev5-b-ruleset-reference",
         "output": "reference/rev5/b/{FRR}.md",
         "outputMode": "documents",
-        "status": "stable",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../",
         "linkTargetScope": "sameMappingOnly",
@@ -580,7 +541,6 @@
         "id": "rev5-c-ruleset-reference",
         "output": "reference/rev5/c/{FRR}.md",
         "outputMode": "documents",
-        "status": "stable",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../",
         "linkTargetScope": "sameMappingOnly",
@@ -599,7 +559,6 @@
         "id": "rev5-d-ruleset-reference",
         "output": "reference/rev5/d/{FRR}.md",
         "outputMode": "documents",
-        "status": "stable",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../",
         "linkTargetScope": "sameMappingOnly",
@@ -618,7 +577,6 @@
         "id": "agency-specific-rules",
         "output": "agencies/rules/{FRR}.md",
         "outputMode": "documents",
-        "status": "stable",
         "definitionsHref": "../../definitions/",
         "rulesHref": "../../",
         "emptyBehavior": "skip",
@@ -636,7 +594,6 @@
         "id": "provider-specific-rules-20x",
         "output": "providers/20x/rules/{FRR}.md",
         "outputMode": "documents",
-        "status": "stable",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../../../",
         "emptyBehavior": "skip",
@@ -654,7 +611,6 @@
         "id": "provider-specific-rules-rev5",
         "output": "providers/rev5/rules/{FRR}.md",
         "outputMode": "documents",
-        "status": "stable",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../../../",
         "emptyBehavior": "skip",
@@ -672,7 +628,6 @@
         "id": "provider-implementation-marketplace",
         "output": "providers/implement/marketplace/{FRR}.md",
         "outputMode": "documents",
-        "status": "stable",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../",
         "emptyBehavior": "skip",
@@ -690,7 +645,6 @@
         "id": "assessor-rules",
         "output": "assessors/rules/{FRR}.md",
         "outputMode": "documents",
-        "status": "stable",
         "definitionsHref": "../../definitions/",
         "rulesHref": "../",
         "emptyBehavior": "skip",
@@ -708,7 +662,6 @@
         "id": "advisors-marketplace",
         "output": "advisors/rules/{FRR}.md",
         "outputMode": "documents",
-        "status": "stable",
 
         "definitionsHref": "../../definitions/",
         "rulesHref": "../",

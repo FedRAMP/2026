@@ -42,3 +42,23 @@ bun run sync
 ```
 
 Use `bun run sync` to update the `tools/rules` submodule from the FedRAMP rules repository. See `tools/README.md` for the detailed pipeline, configuration, generated page mappings, and content safety notes.
+
+## Building for Deployment on fedramp.gov
+
+1. Make sure you clone the repo recursively
+
+```
+git clone --recurse-submodules https://github.com/FedRAMP/2026.git
+```
+
+2. Install dependencies
+
+```
+cd tools
+bun install
+pip install zensical mkdocs-ultralytics-plugin
+```
+
+(replace `bun install` or `pip install` with node or pipx/uv/etc. as desired)
+
+3.

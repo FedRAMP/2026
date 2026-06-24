@@ -6,7 +6,6 @@ tags:
   - Legal Authority
 picto:
   source: person
-  status: stable
 ---
 
 # M-24-15 Section III. Scope of FedRAMP

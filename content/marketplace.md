@@ -10,7 +10,6 @@ hide:
   - toc
 picto:
   source: person
-  status: stable
 ---
 
 # The FedRAMP Marketplace

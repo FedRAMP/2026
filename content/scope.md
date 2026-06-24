@@ -6,7 +6,6 @@ tags:
   - Guidance
 picto:
   source: person
-  status: stable
 ---
 
 # Scope of FedRAMP

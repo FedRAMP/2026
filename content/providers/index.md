@@ -8,7 +8,6 @@ hide:
   - toc
 picto:
   source: person
-  status: stable
 ---
 
 # Cloud Service Providers

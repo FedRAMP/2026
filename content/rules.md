@@ -8,7 +8,6 @@ tags:
   - Guidance
 picto:
   source: person
-  status: stable
 ---
 
 # Using the FedRAMP Consolidated Rules

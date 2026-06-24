@@ -26,7 +26,6 @@ import {
   loadToolConfig,
   REPO_ROOT,
   resolveToolPath,
-  type GeneratedDocumentStatus,
   type ToolConfig,
 } from "./config";
 import { deploy } from "./deploy";
@@ -46,18 +45,8 @@ const MACHINE_PICTOGRAPH =
   ':lucide-computer:{ .machine title="This content is machine-generated from FedRAMP Machine-Readable Rules." }';
 const PERSON_PICTOGRAPH =
   ':lucide-person-standing:{ .person title="This content was written by a human just for this page." }';
-const STABLE_PICTOGRAPH =
-  ':lucide-book-open-check:{ .stable title="This content is relatively stable and only minor changes are expected." }';
-const PLACEHOLDER_PICTOGRAPH =
-  ':lucide-pencil:{ .placeholder title="This content is a placeholder and is not complete." }';
-const EMPTY_PICTOGRAPH =
-  ':lucide-circle-slash:{ .empty title="This content has not been produced or ported to this website yet." }';
-const STABLE_STATUS_SPAN =
-  '<span class="picto">:lucide-computer:{ .machine title="This content is machine-generated from FedRAMP Machine-Readable Rules." } :lucide-book-open-check:{ .stable title="This content is relatively stable and only minor changes are expected." }</span>';
-const PLACEHOLDER_STATUS_SPAN =
-  '<span class="picto">:lucide-computer:{ .machine title="This content is machine-generated from FedRAMP Machine-Readable Rules." } :lucide-pencil:{ .placeholder title="This content is a placeholder and is not complete." }</span>';
-const MANUAL_STABLE_STATUS_SPAN =
-  '<span class="picto">:lucide-person-standing:{ .person title="This content was written by a human just for this page." } :lucide-book-open-check:{ .stable title="This content is relatively stable and only minor changes are expected." }</span>';
+const MACHINE_PICTO_SPAN = `<span class="picto">${MACHINE_PICTOGRAPH}</span>`;
+const PERSON_PICTO_SPAN = `<span class="picto">${PERSON_PICTOGRAPH}</span>`;
 const WARNING_ORANGE = "\x1b[38;5;208m";
 const WARNING_RESET = "\x1b[0m";
 const WARNING_MARK = "⚠";
@@ -125,7 +114,7 @@ function printContentPictographWarnings(): void {
   console.warn(
     [
       "",
-      `${WARNING_ORANGE}${WARNING_MARK} Content markdown files should declare picto.source and picto.status in frontmatter:${WARNING_RESET}`,
+      `${WARNING_ORANGE}${WARNING_MARK} Content markdown files should declare picto.source in frontmatter:${WARNING_RESET}`,
       "",
       ...contentPictographWarnings.map(
         (warning) => `    ${WARNING_ORANGE}${WARNING_MARK} ${warning}${WARNING_RESET}`,
@@ -320,54 +309,9 @@ function artifactsOfType(
   return artifacts.filter((artifact) => artifact.documentType === documentType);
 }
 
-function configWithGeneratedMappingStatus(
-  config: ToolConfig,
-  status: GeneratedDocumentStatus,
-): ToolConfig {
-  const updatedConfig = structuredClone(config);
-
-  const updateStatuses = <T extends { status: GeneratedDocumentStatus }>(
-    mappings: T[] | undefined,
-  ): T[] | undefined =>
-    mappings?.map((mapping) => ({
-      ...mapping,
-      status,
-    }));
-
-  updatedConfig.generated.definitionDocuments = updateStatuses(
-    updatedConfig.generated.definitionDocuments,
-  );
-  updatedConfig.generated.ksiDocuments = updateStatuses(
-    updatedConfig.generated.ksiDocuments,
-  );
-  updatedConfig.generated.controlDocuments = updateStatuses(
-    updatedConfig.generated.controlDocuments,
-  );
-  updatedConfig.generated.fullControlReferenceDocuments = updateStatuses(
-    updatedConfig.generated.fullControlReferenceDocuments,
-  );
-  updatedConfig.generated.deadlineDocuments = updateStatuses(
-    updatedConfig.generated.deadlineDocuments,
-  );
-  updatedConfig.generated.taggedDocumentSummaries = updateStatuses(
-    updatedConfig.generated.taggedDocumentSummaries,
-  );
-  updatedConfig.generated.referenceIndexDocuments = updateStatuses(
-    updatedConfig.generated.referenceIndexDocuments,
-  );
-  updatedConfig.generated.frrCollectionDocuments = updateStatuses(
-    updatedConfig.generated.frrCollectionDocuments,
-  );
-  updatedConfig.generated.ruleDocuments = updateStatuses(
-    updatedConfig.generated.ruleDocuments,
-  ) ?? [];
-
-  return updatedConfig;
-}
-
 function setRulesSourceStatuses(
   rules: RulesForTest,
-  status: GeneratedDocumentStatus,
+  status: "stable" | "placeholder" | "empty",
 ): void {
   rules.FRD.info.status = status;
 
@@ -885,7 +829,6 @@ function validatePictographFrontmatter(
   }
 
   const knownSources = new Set(Object.keys(config.pictographs.source));
-  const knownStatuses = new Set(Object.keys(config.pictographs.status));
 
   if (!picto.source) {
     return `${relativePath}: missing picto.source`;
@@ -895,12 +838,8 @@ function validatePictographFrontmatter(
     return `${relativePath}: unknown picto.source "${picto.source}"`;
   }
 
-  if (!picto.status) {
-    return `${relativePath}: missing picto.status`;
-  }
-
-  if (!knownStatuses.has(picto.status)) {
-    return `${relativePath}: unknown picto.status "${picto.status}"`;
+  if (picto.status) {
+    return `${relativePath}: picto.status is no longer supported`;
   }
 
   return null;
@@ -930,23 +869,24 @@ async function findContentPictographWarnings(
   return warnings;
 }
 
-function generatedMappingStatusFailures(config: ToolConfig): string[] {
-  const configuredStatuses = new Set(Object.keys(config.pictographs.status));
+function generatedMappingPictoStatusFailures(config: ToolConfig): string[] {
+  const asRecords = (mappings: unknown[] | undefined) =>
+    (mappings ?? []) as Array<Record<string, unknown>>;
   const generatedMappingGroups: Array<
-    [string, Array<{ id?: unknown; status?: unknown }>]
+    [string, Array<Record<string, unknown>>]
   > = [
-    ["definitionDocuments", config.generated.definitionDocuments ?? []],
-    ["ksiDocuments", config.generated.ksiDocuments ?? []],
-    ["controlDocuments", config.generated.controlDocuments ?? []],
+    ["definitionDocuments", asRecords(config.generated.definitionDocuments)],
+    ["ksiDocuments", asRecords(config.generated.ksiDocuments)],
+    ["controlDocuments", asRecords(config.generated.controlDocuments)],
     [
       "fullControlReferenceDocuments",
-      config.generated.fullControlReferenceDocuments ?? [],
+      asRecords(config.generated.fullControlReferenceDocuments),
     ],
-    ["deadlineDocuments", config.generated.deadlineDocuments ?? []],
-    ["taggedDocumentSummaries", config.generated.taggedDocumentSummaries ?? []],
-    ["referenceIndexDocuments", config.generated.referenceIndexDocuments ?? []],
-    ["frrCollectionDocuments", config.generated.frrCollectionDocuments ?? []],
-    ["ruleDocuments", config.generated.ruleDocuments],
+    ["deadlineDocuments", asRecords(config.generated.deadlineDocuments)],
+    ["taggedDocumentSummaries", asRecords(config.generated.taggedDocumentSummaries)],
+    ["referenceIndexDocuments", asRecords(config.generated.referenceIndexDocuments)],
+    ["frrCollectionDocuments", asRecords(config.generated.frrCollectionDocuments)],
+    ["ruleDocuments", asRecords(config.generated.ruleDocuments)],
   ];
   const failures: string[] = [];
 
@@ -955,16 +895,9 @@ function generatedMappingStatusFailures(config: ToolConfig): string[] {
       const mappingLabel =
         typeof mapping.id === "string" ? mapping.id : "unknown mapping";
 
-      if (typeof mapping.status !== "string") {
+      if (Object.hasOwn(mapping, "status")) {
         failures.push(
-          `generated.${groupName}[${index}] (${mappingLabel}) is missing status`,
-        );
-        return;
-      }
-
-      if (!configuredStatuses.has(mapping.status)) {
-        failures.push(
-          `generated.${groupName}[${index}] (${mappingLabel}) uses unknown status "${mapping.status}"`,
+          `generated.${groupName}[${index}] (${mappingLabel}) declares removed pictograph status`,
         );
       }
     });
@@ -975,10 +908,9 @@ function generatedMappingStatusFailures(config: ToolConfig): string[] {
 
 function pictographTooltipFailures(config: ToolConfig): string[] {
   const failures: string[] = [];
-  const tooltipKeys = [
-    ...Object.keys(config.pictographs.source),
-    ...Object.keys(config.pictographs.status),
-  ] as Array<keyof ToolConfig["pictographs"]["tooltips"]>;
+  const tooltipKeys = Object.keys(config.pictographs.source) as Array<
+    keyof ToolConfig["pictographs"]["tooltips"]
+  >;
 
   for (const key of tooltipKeys) {
     if (!config.pictographs.tooltips[key]?.trim()) {
@@ -994,11 +926,11 @@ describe("build-markdown", () => {
     await access(RULES_FILE);
   });
 
-  test("generated config mappings declare known statuses", async () => {
+  test("generated config mappings do not declare pictograph statuses", async () => {
     const config = await loadToolConfig();
-    const failures = generatedMappingStatusFailures(config);
+    const failures = generatedMappingPictoStatusFailures(config);
     const statusFailureSummary = [
-      "Generated markdown mappings in tools/config.json must declare a status from pictographs.status.",
+      "Generated markdown mappings in tools/config.json must not declare pictograph status.",
       ...failures,
     ].join("\n");
 
@@ -1233,10 +1165,9 @@ describe("build-markdown", () => {
         ...referenceIndexArtifact.context.tags.map((tag) => `  - ${tag}`),
         "picto:",
         "  source: machine",
-        `  status: ${referenceIndexArtifact.context.pictoStatus}`,
         "---",
         "",
-        referenceIndexArtifact.context.statusSpan ?? "",
+        referenceIndexArtifact.context.pictoSpan ?? "",
         "",
         `# ${referenceIndexArtifact.title}`,
       ].join("\n"),
@@ -1323,7 +1254,7 @@ describe("build-markdown", () => {
 
     expect(definitionsPurpose).toBeTruthy();
     expect(definitionsContents).toStartWith(
-      `---\ntags:\n${definitionsArtifact.context.tags.map((tag) => `  - ${tag}`).join("\n")}\n---\n\n${definitionsArtifact.context.statusSpan}\n\n# ${definitionsArtifact.title}`,
+      `---\ntags:\n${definitionsArtifact.context.tags.map((tag) => `  - ${tag}`).join("\n")}\n---\n\n${definitionsArtifact.context.pictoSpan}\n\n# ${definitionsArtifact.title}`,
     );
     expectTextOrder(
       definitionsContents,
@@ -1368,7 +1299,7 @@ describe("build-markdown", () => {
       );
     }
     expect(ksiThemeContents).toStartWith(
-      `---\ntags:\n${ksiThemeArtifact.context.tags.map((tag) => `  - ${tag}`).join("\n")}\n---\n\n${ksiThemeArtifact.context.statusSpan}\n\n# ${ksiThemeArtifact.title}`,
+      `---\ntags:\n${ksiThemeArtifact.context.tags.map((tag) => `  - ${tag}`).join("\n")}\n---\n\n${ksiThemeArtifact.context.pictoSpan}\n\n# ${ksiThemeArtifact.title}`,
     );
     expect(ksiThemeContents).not.toContain("**Subsets**");
     expect(ksiThemeContents).toContain(ksiThemeIndicator.id);
@@ -1397,7 +1328,7 @@ describe("build-markdown", () => {
       );
     }
     expect(ksiReferenceContents).toStartWith(
-      `---\ntags:\n${ksiReferenceArtifact.context.tags.map((tag) => `  - ${tag}`).join("\n")}\n---\n\n${ksiReferenceArtifact.context.statusSpan}\n\n# ${ksiReferenceArtifact.title}`,
+      `---\ntags:\n${ksiReferenceArtifact.context.tags.map((tag) => `  - ${tag}`).join("\n")}\n---\n\n${ksiReferenceArtifact.context.pictoSpan}\n\n# ${ksiReferenceArtifact.title}`,
     );
     expect(ksiReferenceContents).not.toContain("**Subsets**");
     expectTextOrder(
@@ -1786,40 +1717,19 @@ describe("build-markdown", () => {
     await expect(access(contentDefinitionsPath)).rejects.toThrow();
   });
 
-  test("uses configured mapping statuses for generated pictographs", async () => {
+  test("renders source-only pictographs for generated pages", async () => {
     const config = await loadToolConfig();
+    const rules = structuredClone(await loadRules(config));
+    setRulesSourceStatuses(rules, "placeholder");
 
-    for (const { mappingStatus, sourceStatus, expectedSpan } of [
-      {
-        mappingStatus: "stable" as const,
-        sourceStatus: "placeholder" as const,
-        expectedSpan: STABLE_STATUS_SPAN,
-      },
-      {
-        mappingStatus: "placeholder" as const,
-        sourceStatus: "stable" as const,
-        expectedSpan: PLACEHOLDER_STATUS_SPAN,
-      },
-    ]) {
-      const rules = structuredClone(await loadRules(config));
-      setRulesSourceStatuses(rules, sourceStatus);
+    const artifacts = collectArtifacts(rules, config);
 
-      const artifacts = collectArtifacts(
-        rules,
-        configWithGeneratedMappingStatus(config, mappingStatus),
-      );
-
-      expect(artifacts.length).toBeGreaterThan(0);
-      for (const artifact of artifacts) {
-        expect(
-          artifact.context.statusSpan,
-          `${artifact.relativePath} should use its generated mapping status`,
-        ).toBe(expectedSpan);
-
-        if (artifact.documentType === "FRR_REFERENCE_INDEX") {
-          expect(artifact.context.pictoStatus).toBe(mappingStatus);
-        }
-      }
+    expect(artifacts.length).toBeGreaterThan(0);
+    for (const artifact of artifacts) {
+      expect(
+        artifact.context.pictoSpan,
+        `${artifact.relativePath} should render only the machine source pictograph`,
+      ).toBe(MACHINE_PICTO_SPAN);
     }
   });
 
@@ -1857,7 +1767,6 @@ describe("build-markdown", () => {
             id: "assessor-20x-with-ignored-marketplace",
             output: "assessors/20x/rules/{FRR}.md",
             outputMode: "documents",
-            status: "placeholder",
             emptyBehavior: "skip",
             source: {
               collection: "FRR",
@@ -1949,7 +1858,6 @@ describe("build-markdown", () => {
             id: "agnostic-provider-rules",
             output: "agnostic/{FRR}.md",
             outputMode: "documents",
-            status: "stable",
             emptyBehavior: "skip",
             source: {
               collection: "FRR",
@@ -2109,7 +2017,6 @@ describe("build-markdown", () => {
             title: "Key Security Indicators",
             output: "reference/20x/a/key-security-indicators.md",
             outputMode: "single",
-            status: "stable",
             definitionsHref: "../../../definitions/",
             relatedIndicatorsFromRuleDocumentMappingId: "20x-a-reference",
             source: {
@@ -2131,7 +2038,6 @@ describe("build-markdown", () => {
             description: "Synthetic top-level reference index.",
             purpose: "Verifies class-specific reference links.",
             output: "reference/20x/index.md",
-            status: "stable",
             ruleDocumentMappingIds: ["20x-a-reference", "20x-b-reference"],
             source: {
               collection: "FRR",
@@ -2148,7 +2054,6 @@ describe("build-markdown", () => {
             description: "Synthetic reference index.",
             purpose: "Verifies class-specific reference index rows.",
             output: "reference/20x/b/index.md",
-            status: "stable",
             ruleDocumentMappingId: "20x-b-reference",
             source: {
               collection: "FRR",
@@ -2165,7 +2070,6 @@ describe("build-markdown", () => {
             id: "complete-reference",
             output: "reference/{FRR}.md",
             outputMode: "documents",
-            status: "stable",
             rulesHref: "../",
             emptyBehavior: "skip",
             source: {
@@ -2180,7 +2084,6 @@ describe("build-markdown", () => {
             id: "provider-20x-rules",
             output: "providers/20x/rules/{FRR}.md",
             outputMode: "documents",
-            status: "stable",
             rulesHref: "../../../",
             emptyBehavior: "skip",
             source: {
@@ -2196,7 +2099,6 @@ describe("build-markdown", () => {
             id: "20x-a-reference",
             output: "reference/20x/a/{FRR}.md",
             outputMode: "documents",
-            status: "stable",
             rulesHref: "../",
             relatedRulesOutput: "reference/20x/a/related.md",
             relatedRulesTitle: "20x Class A Related Rules",
@@ -2214,7 +2116,6 @@ describe("build-markdown", () => {
             id: "20x-b-reference",
             output: "reference/20x/b/{FRR}.md",
             outputMode: "documents",
-            status: "stable",
             rulesHref: "../",
             emptyBehavior: "skip",
             source: {
@@ -2417,7 +2318,6 @@ describe("build-markdown", () => {
             title: "Key Security Indicators",
             output: "reference/20x/b/key-security-indicators.md",
             outputMode: "single",
-            status: "stable",
             source: {
               collection: "KSI",
               themes: "ALL",
@@ -2481,7 +2381,6 @@ describe("build-markdown", () => {
             id: "deadlines-with-ignored-marketplace",
             title: "Important Deadlines",
             output: "providers/updating/deadlines/{type}.md",
-            status: "stable",
             template: "templates/deadlines.hbs",
             source: {
               collection: "FRR",
@@ -2543,7 +2442,6 @@ describe("build-markdown", () => {
             id: "provider-deadlines-with-rec",
             title: "Important Deadlines",
             output: "providers/updating/deadlines/{type}.md",
-            status: "stable",
             template: "templates/deadlines.hbs",
             source: {
               collection: "FRR",
@@ -2601,7 +2499,6 @@ describe("build-markdown", () => {
               id: "custom-definitions",
               title: "Custom FedRAMP Definitions",
               output: "reference/fedramp-definitions.md",
-              status: "placeholder",
               includeEffectiveDates: false,
               source: {
                 collection: "FRD",
@@ -2647,7 +2544,7 @@ describe("build-markdown", () => {
           "  - Definitions",
           "---",
           "",
-          PLACEHOLDER_STATUS_SPAN,
+          MACHINE_PICTO_SPAN,
           "",
           "# Custom FedRAMP Definitions",
         ].join("\n"),
@@ -2718,7 +2615,6 @@ describe("build-markdown", () => {
                 id: "first-definitions",
                 title: "First Definitions",
                 output: "definitions.md",
-                status: "stable",
                 includeEffectiveDates: false,
                 source: {
                   collection: "FRD",
@@ -2731,7 +2627,6 @@ describe("build-markdown", () => {
                 id: "second-definitions",
                 title: "Second Definitions",
                 output: "definitions.md",
-                status: "stable",
                 includeEffectiveDates: false,
                 source: {
                   collection: "FRD",
@@ -2841,7 +2736,6 @@ describe("manual content source drift", () => {
           "purpose: Confirms generated adornments do not count as drift.",
           "picto:",
           "  source: person",
-          "  status: stable",
           "---",
           "",
           "# Clean",
@@ -2859,10 +2753,9 @@ describe("manual content source drift", () => {
           "purpose: Confirms generated adornments do not count as drift.",
           "picto:",
           "  source: person",
-          "  status: stable",
           "---",
           "",
-          MANUAL_STABLE_STATUS_SPAN,
+          PERSON_PICTO_SPAN,
           "",
           "# Clean",
           "",
@@ -2879,7 +2772,6 @@ describe("manual content source drift", () => {
           "purpose: Confirms direct src edits are caught.",
           "picto:",
           "  source: person",
-          "  status: stable",
           "---",
           "",
           "# Drift",
@@ -2897,10 +2789,9 @@ describe("manual content source drift", () => {
           "purpose: Confirms direct src edits are caught.",
           "picto:",
           "  source: person",
-          "  status: stable",
           "---",
           "",
-          MANUAL_STABLE_STATUS_SPAN,
+          PERSON_PICTO_SPAN,
           "",
           "# Drift",
           "",
@@ -2919,7 +2810,6 @@ describe("manual content source drift", () => {
           "purpose: Confirms frontmatter spacing does not count as drift.",
           "picto:",
           "  source: person",
-          "  status: stable",
           "---",
           "# Tight",
           "",
@@ -2936,10 +2826,9 @@ describe("manual content source drift", () => {
           "purpose: Confirms frontmatter spacing does not count as drift.",
           "picto:",
           "  source: person",
-          "  status: stable",
           "---",
           "",
-          MANUAL_STABLE_STATUS_SPAN,
+          PERSON_PICTO_SPAN,
           "",
           "# Tight",
           "",

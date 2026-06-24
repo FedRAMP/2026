@@ -6,7 +6,6 @@ hide:
   - toc
 picto:
   source: person
-  status: stable
 ---
 
 # Using a FedRAMP Certified Cloud Service

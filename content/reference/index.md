@@ -10,7 +10,6 @@ title: "Ruleset Reference"
 icon: material/information-outline
 picto:
   source: person
-  status: stable
 ---
 
 # Ruleset Reference

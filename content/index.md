@@ -7,7 +7,6 @@ hide:
   - toc
 picto:
   source: person
-  status: stable
 ---
 
 # FedRAMP Consolidated Rules for 2026

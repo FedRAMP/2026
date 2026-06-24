@@ -4,7 +4,6 @@ tags:
   - Legal Authority
 picto:
   source: person
-  status: stable
 ---
 
 # OMB Memorandum M-24-15

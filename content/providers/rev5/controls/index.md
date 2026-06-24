@@ -5,7 +5,6 @@ tags:
   - Controls
 picto:
   source: person
-  status: stable
 ---
 
 # Rev5 Control Guidance
