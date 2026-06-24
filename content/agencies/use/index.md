@@ -13,7 +13,7 @@ picto:
 
 Agencies use FedRAMP Certifications as reusable security evidence, but each agency still authorizes its own federal information systems. FedRAMP certifies the cloud service offering; the agency authorizing official accepts risk for the agency’s specific use of that service, including the information processed, the configuration selected, the integrations enabled, and the controls the agency is responsible for operating.
 
-This is the core of the [FedRAMP shared responsibility model](../../shared-responsibilities.md){ data-preview }: FedRAMP establishes the government-wide process, cloud service providers maintain their certifications, and agencies decide how a certified service fits into an agency system. Agencies should reuse FedRAMP Certification materials to the greatest extent possible instead of recreating the provider’s assessment.
+This is the core of the [FedRAMP shared responsibility model](../../responsibilities/fedramp.md): FedRAMP establishes the government-wide process, cloud service providers maintain their certifications, and agencies decide how a certified service fits into an agency system. Agencies should reuse FedRAMP Certification materials to the greatest extent possible instead of recreating the provider’s assessment.
 
 !!! warning "Do not simply ATO a cloud service offering itself!"
 

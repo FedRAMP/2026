@@ -7,7 +7,7 @@ picto:
   status: stable
 ---
 
-# M-24-15: Modernizing the Federal Risk and Authorization Management Program
+# OMB Memorandum M-24-15
 
 !!! abstract "The rescission and replacement of FedRAMP"
 

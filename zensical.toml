@@ -4,15 +4,19 @@ nav = [
 
   { "Overview" = [
     "index.md",
-    { "FedRAMP Overview" = [
-      { "FedRAMP Certification" = "certification.md" },
-      { "Shared Responsibility Model" = "shared-responsibilities.md" },
-    ]},
     { "Rules Overview" = [
       { "Using the Consolidated Rules" = "rules.md" },
       { "FedRAMP Definitions" = "definitions.md" },
       { "Important Dates" = "timeline.md" },
     ]},
+    { "Shared Responsibilities" = [
+      {"FedRAMP" = "responsibilities/fedramp.md"},
+      {"Federal Agencies" = "responsibilities/agencies.md"},
+      {"Cloud Service Providers" = "responsibilities/providers.md"},
+      {"Independent Assessors" = "responsibilities/assessors.md"},
+      {"Advisors" = "responsibilities/advisors.md"},
+    ]},
+
     { "Updates and Sources" = [
       { "Changelog" = "changelog.md" },
       { "Source Data" = "sources.md" },
@@ -28,7 +32,7 @@ nav = [
     { "Getting Support" = "support.md" },
     { "Scope of FedRAMP" = "scope.md" },
     { "FedRAMP Marketplace" = "marketplace.md" },
-    { "FedRAMP's Responsibilities" = "responsibilities/rules.md" },
+    { "FedRAMP's Responsibilities in the Rules" = "responsibilities/rules.md" },
     { "FedRAMP's Authority" = [
       { "FedRAMP Authorization Act" = [
         "authority/law/index.md",
@@ -41,7 +45,7 @@ nav = [
         { "Reports to Congress" = "authority/law/reports.md" },
         { "FSCAC" = "authority/law/fscac.md" },
       ] },
-      { "M-24-15" = [
+      { "OMB Memorandum M-24-15" = [
         "authority/m-24-15/index.md",
         { "Background" = "authority/m-24-15/background.md" },
         { "Vision" = "authority/m-24-15/vision.md" },

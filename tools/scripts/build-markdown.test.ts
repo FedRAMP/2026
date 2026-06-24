@@ -2990,8 +2990,12 @@ describe("build pipeline", () => {
         "",
         MANUAL_STABLE_STATUS_SPAN,
         "",
-        "# Public Preview",
+        "# FedRAMP Consolidated Rules for 2026",
       ].join("\n"),
+    );
+    expect(copiedIndexMarkdown).toContain("**Shared Responsibility Model**");
+    expect(copiedIndexMarkdown).toContain(
+      "[Source Data](sources.md){ data-preview }",
     );
 
     const zensicalConfig = await readFile(
