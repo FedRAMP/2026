@@ -1,6 +1,7 @@
 ---
 tags:
   - FedRAMP
+   - Guidance
 picto:
   source: person
   status: stable

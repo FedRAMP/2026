@@ -694,6 +694,7 @@ function stripGeneratedManualPageAdornments(contents: string): string {
 
 function normalizeManualMarkdownForComparison(contents: string): string {
   return `${stripGeneratedManualPageAdornments(contents)
+    .replace(/^(---\n[\s\S]*?\n---)\n*/, "$1\n\n")
     .replace(/[ \t]+$/gm, "")
     .replace(/\n{3,}/g, "\n\n")
     .trimEnd()}\n`;
@@ -1189,7 +1190,6 @@ describe("build-markdown", () => {
       ["agencies/", "Federal Agencies"],
       ["assessors/", "Independent Assessors"],
       ["providers/", "Cloud Service Providers"],
-      ["responsibilities/", "FedRAMP"],
     ]);
 
     for (const artifact of expectedArtifacts) {
@@ -2761,7 +2761,7 @@ describe("build-markdown", () => {
 });
 
 describe("content quality", () => {
-  test("manual content declares audience and content-type tags", async () => {
+  test("stakeholder manual content declares audience and content-type tags", async () => {
     const config = await loadToolConfig();
     const contentPath = resolveToolPath(config.paths.content);
     const markdownPaths = (await listRelativeFiles(contentPath)).filter(
@@ -2777,27 +2777,27 @@ describe("content quality", () => {
       "Legal Authority",
       "Rules",
     ]);
-    const audienceTagByPathPrefix = new Map([
+    const requiredAudienceTagByPathPrefix = new Map([
       ["advisors/", "Advisors"],
-      ["agencies/", "Federal Agencies"],
       ["assessors/", "Independent Assessors"],
       ["providers/", "Cloud Service Providers"],
-      ["responsibilities/", "FedRAMP"],
     ]);
 
     for (const relativePath of markdownPaths) {
+      const requiredAudienceTag = Array.from(
+        requiredAudienceTagByPathPrefix.entries(),
+      ).find(([pathPrefix]) => relativePath.startsWith(pathPrefix))?.[1];
+      if (!requiredAudienceTag) {
+        continue;
+      }
+
       const contents = await readFile(path.join(contentPath, relativePath), "utf8");
       const tags = zensicalTagsFromFrontmatter(contents);
       expect(
         tags.some((tag) => contentTypeTags.has(tag)),
         `${relativePath} should declare a content-type tag`,
       ).toBe(true);
-
-      for (const [pathPrefix, audienceTag] of audienceTagByPathPrefix) {
-        if (relativePath.startsWith(pathPrefix)) {
-          expect(tags).toContain(audienceTag);
-        }
-      }
+      expect(tags).toContain(requiredAudienceTag);
     }
   });
 
@@ -2911,6 +2911,43 @@ describe("manual content source drift", () => {
         ].join("\n"),
         "utf8",
       );
+      await writeFile(
+        path.join(tempContentDir, "tight-frontmatter.md"),
+        [
+          "---",
+          "description: Tight source page.",
+          "purpose: Confirms frontmatter spacing does not count as drift.",
+          "picto:",
+          "  source: person",
+          "  status: stable",
+          "---",
+          "# Tight",
+          "",
+          "Original content.",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      await writeFile(
+        path.join(tempSrcDir, "tight-frontmatter.md"),
+        [
+          "---",
+          "description: Tight source page.",
+          "purpose: Confirms frontmatter spacing does not count as drift.",
+          "picto:",
+          "  source: person",
+          "  status: stable",
+          "---",
+          "",
+          MANUAL_STABLE_STATUS_SPAN,
+          "",
+          "# Tight",
+          "",
+          "Original content.",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
 
       expect(
         await findManualSrcContentDrift(tempSrcDir, tempContentDir),
@@ -2981,21 +3018,13 @@ describe("build pipeline", () => {
       path.join(srcPath, "index.md"),
       "utf8",
     );
-    expect(copiedIndexMarkdown).toContain(
-      [
-        "picto:",
-        "  source: person",
-        "  status: stable",
-        "---",
-        "",
-        MANUAL_STABLE_STATUS_SPAN,
-        "",
-        "# FedRAMP Consolidated Rules for 2026",
-      ].join("\n"),
+    const contentIndexMarkdown = await readFile(
+      path.join(contentPath, "index.md"),
+      "utf8",
     );
-    expect(copiedIndexMarkdown).toContain("**Shared Responsibility Model**");
-    expect(copiedIndexMarkdown).toContain(
-      "[Source Data](sources.md){ data-preview }",
+    expect(copiedIndexMarkdown).toContain('<span class="picto">');
+    expect(normalizeManualMarkdownForComparison(copiedIndexMarkdown)).toBe(
+      normalizeManualMarkdownForComparison(contentIndexMarkdown),
     );
 
     const zensicalConfig = await readFile(

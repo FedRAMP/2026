@@ -1,6 +1,7 @@
 ---
 tags:
   - Cloud Service Providers
+  - Guidance
 picto:
   source: person
   status: stable

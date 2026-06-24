@@ -1,10 +1,12 @@
 ---
 tags:
   - Independent Assessors
+  - Guidance
 picto:
   source: person
   status: stable
 ---
+
 # Independent Assessment Service Responsibilities
 
 FedRAMP relies on independent assessment services (also known as independent assessors, formerly referred to as Third-Party Assessment Organizations or 3PAOs) to analyze, validate, and attest to the quality and compliance of security assessment materials provided by cloud service providers seeking to obtain or maintain FedRAMP Certification. Independent assessors are contracted by cloud service providers to perform the bulk of the verification and validation necessary for FedRAMP to complete the assessment.

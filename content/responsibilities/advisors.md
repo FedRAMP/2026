@@ -1,10 +1,12 @@
 ---
 tags:
   - Advisors
+  - Guidance
 picto:
   source: person
   status: stable
 ---
+
 # Advisory Service Responsibilities
 
 It can be incredibly difficult for companies to navigate the federal marketplace, and FedRAMP is just one small thing that makes providing services to the government different from the private sector. Advisory services can help companies navigate these complexities and stay up to date — but be careful, as not all advisory services are created equal and tracking all of the modernization changes in government requires a lot of continuous effort.
