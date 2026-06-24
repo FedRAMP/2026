@@ -21,7 +21,7 @@ Throughout the lifecycle of a FedRAMP Certification for a cloud service provider
 
 ## FedRAMP Recognition
 
-Independent assessors must be [FedRAMP Recognized](http://localhost:8000/2026/definitions/#fedramp-recognized){ data-preview } for their assessment to qualify for FedRAMP Certification. It is the responsibility of FedRAMP Recognized independent assessment services to meet all necessary requirements to maintain FedRAMP Recognition.
+Independent assessors must be [FedRAMP Recognized](../definitions/#fedramp-recognized){ data-preview } for their assessment to qualify for FedRAMP Certification. It is the responsibility of FedRAMP Recognized independent assessment services to meet all necessary requirements to maintain FedRAMP Recognition.
 
 ---
 
