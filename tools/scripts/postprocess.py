@@ -20,7 +20,7 @@ if __name__ == "__main__":
         site_dir="../html",  # Your build output directory
         docs_dir="../src",  # Your source docs directory
         site_url="https://fedramp.gov/2026",
-        default_image="https://preview.fedramp.gov/2026/assets/preview.png",
+        default_image="https://preview.fedramp.gov/2026/assets/thumbnail.png",
         default_author="pete@fedramp.gov",
         add_desc=True,
         add_image=True,
