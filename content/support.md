@@ -50,7 +50,7 @@ and often.
     Just make sure they are configured to rely only on these materials, as there's a glut of incorrect historical
     material about FedRAMP that no longer applies.
 
-    Our [Source Data](../sources.md) page explains how to point agents at the underlying source data directly
+    Our [Source Data](sources.md) page explains how to point agents at the underlying source data directly
     for an optimal experience.
 
 ## The FedRAMP Community

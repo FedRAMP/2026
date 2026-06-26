@@ -1890,7 +1890,7 @@ function effectiveGraceEnds(date?: EffectiveDatesSource): string {
   }
 
   if (date?.grace?.until_next_assessment) {
-    return `On the first FedRAMP independent assessment completed after ${defaultDate}`;
+    return `On the first FedRAMP independent assessment started after ${defaultDate}`;
   }
 
   return defaultDate;
