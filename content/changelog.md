@@ -14,19 +14,6 @@ picto:
     Rules to the maximum extent possible but may occasionally need to update things due to typos,
     confusion, or urgent critical updates.
 
-## 2026.07.01.01 (July 1, 2026)
-
-This update contains minor enhancements and fixes to make the content more accurate and easier to understand. No signifincat changes to requirements are included.
-
-## General Updates
-
-
-## Rule Changes
-
-
-## Content Updates
-
-- [Choosing a Certification Path](https://fedramp.gov/2026/providers/start/path/): Fixed two instances of "Ready Conversation" to "Ready Conversion" — one in the introductory eligibility description and one in the FedRAMP help form link label.
 
 ## 2026.07.01.01 (July 1, 2026)
 
@@ -47,6 +34,7 @@ This update contains minor enhancements and fixes to make the content more accur
 ## Content Updates
 
 - Added tooltips to the PAIN timeframe table column headers in `VDR-TFR-PVR`, `IEC-CSO-IIR`, `IEC-CSO-OIR`, and `IEC-CSO-FIR`. Hovering over `PAIN`, `LEV + IRV`, `LEV + NIRV`, or `NLEV` now shows the full acronym expansion.
+- [Choosing a Certification Path](https://fedramp.gov/2026/providers/start/path/): Fixed two instances of "Ready Conversation" to "Ready Conversion" — one in the introductory eligibility description and one in the FedRAMP help form link label.
 
 ## 2026.06.25.01 (June 25, 2026)
 
