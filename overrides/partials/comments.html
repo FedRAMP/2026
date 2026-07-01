@@ -1,25 +1,37 @@
 
+<div id="__comments-container">
   <h2 id="__comments">{{ lang.t("meta.comments") }}</h2>
   <!-- Insert generated snippet here -->
-<script src="https://giscus.app/client.js"
-        data-repo="FedRAMP/2026"
-        data-repo-id="R_kgDORpyFmQ"
-        data-category="Page Discussion"
-        data-category-id="DIC_kwDORpyFmc4C77Oi"
-        data-mapping="pathname"
-        data-strict="0"
-        data-reactions-enabled="1"
-        data-emit-metadata="0"
-        data-input-position="top"
-        data-theme="preferred_color_scheme"
-        data-lang="en"
-        data-loading="lazy"
-        crossorigin="anonymous"
-        async>
-</script>
-  <!-- Synchronize Giscus theme with palette -->
-  <script>
-    var giscus = document.querySelector("script[src*=giscus]")
+</div>
+<script>
+  (function() {
+    // Giscus is only enabled on the production domain; preview deployments
+    // (e.g. preview.fedramp.gov) share this same build and must not show it.
+    var allowedHosts = ["fedramp.gov", "www.fedramp.gov"]
+    if (allowedHosts.indexOf(window.location.hostname) === -1) {
+      var container = document.getElementById("__comments-container")
+      if (container) {
+        container.style.display = "none"
+      }
+      return
+    }
+
+    var giscus = document.createElement("script")
+    giscus.src = "https://giscus.app/client.js"
+    giscus.setAttribute("data-repo", "FedRAMP/2026")
+    giscus.setAttribute("data-repo-id", "R_kgDORpyFmQ")
+    giscus.setAttribute("data-category", "Page Discussion")
+    giscus.setAttribute("data-category-id", "DIC_kwDORpyFmc4C77Oi")
+    giscus.setAttribute("data-mapping", "pathname")
+    giscus.setAttribute("data-strict", "0")
+    giscus.setAttribute("data-reactions-enabled", "1")
+    giscus.setAttribute("data-emit-metadata", "0")
+    giscus.setAttribute("data-input-position", "top")
+    giscus.setAttribute("data-theme", "preferred_color_scheme")
+    giscus.setAttribute("data-lang", "en")
+    giscus.setAttribute("data-loading", "lazy")
+    giscus.crossOrigin = "anonymous"
+    giscus.async = true
 
     // Set palette on initial load
     var palette = __md_get("__palette")
@@ -32,6 +44,9 @@
       giscus.setAttribute("data-theme", theme)
     }
 
+    document.getElementById("__comments-container").appendChild(giscus)
+
+    // Synchronize Giscus theme with palette
     // Register event handlers after documented loaded
     document.addEventListener("DOMContentLoaded", function() {
       var ref = document.querySelector("[data-md-component=palette]")
@@ -51,5 +66,6 @@
         }
       })
     })
-  </script>
+  })()
+</script>
 
