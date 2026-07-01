@@ -20,6 +20,20 @@ This update contains minor enhancements and fixes to make the content more accur
 
 ## General Updates
 
+
+## Rule Changes
+
+
+## Content Updates
+
+- [Choosing a Certification Path](https://fedramp.gov/2026/providers/start/path/): Fixed two instances of "Ready Conversation" to "Ready Conversion" — one in the introductory eligibility description and one in the FedRAMP help form link label.
+
+## 2026.07.01.01 (July 1, 2026)
+
+This update contains minor enhancements and fixes to make the content more accurate and easier to understand. No signifincat changes to requirements are included.
+
+## General Updates
+
 - Rename assessor and advisor schema files from versioned format to date format. 
 - Rename certification overview package schema file to certification package overview, and update corresponding $id and title references.
 - Fix typos in field names: correct "frrAssesment" to "frrAssessment" and "ksiAssesment" to "ksiAssessment" in `fedramp-security-decision-record-schema-2026-06-24.json`.
