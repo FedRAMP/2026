@@ -286,6 +286,7 @@ interface EffectiveEntryViewModel {
 
 interface PainTimeframeColumnViewModel {
   label: string;
+  tooltip?: string;
 }
 
 interface PainTimeframeRowViewModel {
@@ -2208,6 +2209,16 @@ function painTimeframeColumnLabel(key: string): string {
   return labels[key] ?? titleCase(key);
 }
 
+function painTimeframeColumnTooltip(key: string): string | undefined {
+  const tooltips: Record<string, string> = {
+    irv_lev: "Likely Exploitable Vulnerability (LEV) + Internet-Reachable Vulnerability (IRV)",
+    nirv_lev: "Likely Exploitable Vulnerability (LEV) + Not Internet-Reachable Vulnerability (NIRV)",
+    nlev: "Not Likely Exploitable Vulnerability (NLEV)",
+  };
+
+  return tooltips[key];
+}
+
 function normalizePainTimeframes(
   painTimeframes?: PainTimeframesSource,
 ): Pick<VariantViewModel, "painTimeframeColumns" | "painTimeframeRows"> {
@@ -2218,9 +2229,9 @@ function normalizePainTimeframes(
   if (Array.isArray(painTimeframes)) {
     return {
       painTimeframeColumns: [
-        { label: "LEV + IRV" },
-        { label: "LEV + NIRV" },
-        { label: "NLEV" },
+        { label: "LEV + IRV", tooltip: painTimeframeColumnTooltip("irv_lev") },
+        { label: "LEV + NIRV", tooltip: painTimeframeColumnTooltip("nirv_lev") },
+        { label: "NLEV", tooltip: painTimeframeColumnTooltip("nlev") },
       ],
       painTimeframeRows: painTimeframes.map((timeframe) => ({
         pain: String(timeframe.pain ?? ""),
@@ -2260,6 +2271,7 @@ function normalizePainTimeframes(
   return {
     painTimeframeColumns: columnKeys.map((key) => ({
       label: painTimeframeColumnLabel(key),
+      tooltip: painTimeframeColumnTooltip(key),
     })),
     painTimeframeRows: Object.entries(painTimeframes)
       .sort(([left], [right]) => Number(right) - Number(left))

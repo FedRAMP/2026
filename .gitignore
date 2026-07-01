@@ -6,3 +6,6 @@ html/
 src/
 output/
 
+/CLAUDE.md
+/tools/.venv
+/.idea
