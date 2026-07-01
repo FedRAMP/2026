@@ -65,7 +65,7 @@ will close on June 11, 2027, when FedRAMP stops accepting FedRAMP Rev5 Certifica
 
     On January 1, 2027, all Consolidated Rules for 2026 requirements become mandatory for any
     cloud service provider seeking to obtain a FedRAMP Certification. These requirements will apply
-    on that date to any **Ready Conversation** or **Lost Sponsor** applicant that did not apply
+    on that date to any **Ready Conversion** or **Lost Sponsor** applicant that did not apply
     prior to that date.
 
 ### Ready Conversion
@@ -83,7 +83,7 @@ Rev5 by February 19, 2027.
 
 !!! info "FedRAMP must confirm eligibility prior to submission."
 
-    To confirm eligibility, fill out the "[[For CSPs] Ready Conversation Form](https://help.fedramp.gov/hc/en-us/requests/new?ticket_form_id=52069750514459)".
+    To confirm eligibility, fill out the "[[For CSPs] Ready Conversion Form](https://help.fedramp.gov/hc/en-us/requests/new?ticket_form_id=52069750514459)".
 
 ### Lost Sponsor
 
