@@ -14,6 +14,26 @@ picto:
     Rules to the maximum extent possible but may occasionally need to update things due to typos,
     confusion, or urgent critical updates.
 
+## 2026.07.01.01 (July 1, 2026)
+
+This update contains minor enhancements and fixes to make the content more accurate and easier to understand. No signifincat changes to requirements are included.
+
+## General Updates
+
+- Rename assessor and advisor schema files from versioned format to date format. 
+- Rename certification overview package schema file to certification package overview, and update corresponding $id and title references.
+- Fix typos in field names: correct "frrAssesment" to "frrAssessment" and "ksiAssesment" to "ksiAssessment" in `fedramp-security-decision-record-schema-2026-06-24.json`.
+
+## Rule Changes
+
+- `FRC-CLA-MFR` removed Independent Verification and Validation: IVV-CSF-AIA (Annual Independent Assessments for Rev5) from the class a requirements. All class a packages will use the 20x rules.
+- `FRC-CSO-PKG` Fixed a typo which incorrectly referenced class b specifically.  This rule applies to all classes.
+- `CDS-CSO-AVR` appeared in both Mandatory and Recommended FedRAMP Rules for Class A. Removed this rule from the Mandatory list.
+
+## Content Updates
+
+- Added tooltips to the PAIN timeframe table column headers in `VDR-TFR-PVR`, `IEC-CSO-IIR`, `IEC-CSO-OIR`, and `IEC-CSO-FIR`. Hovering over `PAIN`, `LEV + IRV`, `LEV + NIRV`, or `NLEV` now shows the full acronym expansion.
+
 ## 2026.06.25.01 (June 25, 2026)
 
 This update contains minor adjustments after initial release to clarify some content and fix some
