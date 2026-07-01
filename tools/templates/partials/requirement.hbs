@@ -82,7 +82,7 @@
 
         **Potential Agency Impact N-rating (PAIN) Timeframes:**
 
-        | PAIN Rating |{{#each painTimeframeColumns}} {{label}} |{{/each}}
+        | <abbr title="Potential Agency Impact N-rating">PAIN</abbr> Rating |{{#each painTimeframeColumns}} {{#if tooltip}}<abbr title="{{tooltip}}">{{label}}</abbr>{{else}}{{label}}{{/if}} |{{/each}}
         |--------------------------|{{#each painTimeframeColumns}}---|{{/each}}
 {{#each painTimeframeRows}}
         | PAIN-{{pain}} |{{#each cells}} {{this}} |{{/each}}
