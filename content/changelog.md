@@ -17,7 +17,7 @@ picto:
 
 ## 2026.07.01.01 (July 1, 2026)
 
-This update contains minor enhancements and fixes to make the content more accurate and easier to understand. No signifincat changes to requirements are included.
+This update contains minor enhancements and fixes to make the content more accurate and easier to understand. No significant changes to requirements are included.
 
 ## General Updates
 
