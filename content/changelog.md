@@ -14,6 +14,15 @@ picto:
     Rules to the maximum extent possible but may occasionally need to update things due to typos,
     confusion, or urgent critical updates.
 
+## 2026.07.02.01 (July 2, 2026)
+
+This update fixes several typos in the FedRAMP consolidated rules. No significant changes to requirements are included.
+
+## General Updates
+
+- Corrected a typo in the description of "significant change evaluation."
+- Updated terminology across multiple definitions and statements, replacing "Response" with "Communication" in FedRAMP Incident Evaluation rules to enhance clarity and consistency.
+- Many updates to key names in schema files to improve consistency and readability.
 
 ## 2026.07.01.01 (July 1, 2026)
 
