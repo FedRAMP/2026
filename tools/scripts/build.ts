@@ -6,7 +6,7 @@ import {
   REPO_ROOT,
   loadToolConfig,
   resolveToolPath,
-  zensicalCommand,
+  zensicalBinary,
 } from "./config";
 import { deploy } from "./deploy";
 
@@ -47,12 +47,11 @@ async function main(): Promise<void> {
   }
 
   await rm(path.join(REPO_ROOT, ".cache"), { recursive: true, force: true });
-  const zensical = zensicalCommand(
+  await runCommand(zensicalBinary(), [
     "build",
     "-f",
     resolveToolPath(config.paths.zensicalConfig),
-  );
-  await runCommand(zensical.command, zensical.args);
+  ]);
 }
 
 main().catch((error) => {

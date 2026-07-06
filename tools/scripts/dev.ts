@@ -9,7 +9,7 @@ import {
   REPO_ROOT,
   loadToolConfig,
   resolveToolPath,
-  zensicalCommand,
+  zensicalBinary,
 } from "./config";
 import { deploy } from "./deploy";
 
@@ -452,8 +452,7 @@ async function main(): Promise<void> {
 
   const trackContentChange = createContentChangeTracker(contentDir);
 
-  const zensicalServe = zensicalCommand("serve", "-f", zensicalConfig);
-  const zensical = spawn(zensicalServe.command, zensicalServe.args, {
+  const zensical = spawn(zensicalBinary(), ["serve", "-f", zensicalConfig], {
     cwd: REPO_ROOT,
     stdio: "inherit",
   });

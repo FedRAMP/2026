@@ -57,7 +57,7 @@ bun install
 uv venv && uv pip install zensical mkdocs-ultralytics-plugin
 ```
 
-(replace `bun install` with node/etc. as desired; `bun run build` and `bun run dev` invoke zensical via `uv run --project tools`, so it must live in a `uv`-managed venv at `tools/.venv` rather than a global `pip install`)
+(replace `bun install` with node/etc. as desired; `bun run build` and `bun run dev` invoke zensical directly from `tools/.venv/bin/zensical`, so it must live in a `uv`-managed venv there rather than a global `pip install`)
 
 3. If needed, sync the rules submodule
 
@@ -73,7 +73,7 @@ bun run sync
 ```
 cd tools
 bun run build
-uv run --project . python scripts/postprocess.py
+.venv/bin/python scripts/postprocess.py
 ```
 
 You should now have a full HTML site rendered in `html/`. Copy those files to `static/2026` in fedramp.gov.

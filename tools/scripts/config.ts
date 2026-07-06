@@ -264,12 +264,11 @@ export function relativeToTools(absolutePath: string): string {
 }
 
 // zensical is installed into the project's uv-managed venv (see tools/README.md),
-// not onto the ambient PATH, so subprocesses need to invoke it through `uv run`.
-export function zensicalCommand(...args: string[]): { command: string; args: string[] } {
-  return {
-    command: "uv",
-    args: ["run", "--project", TOOLS_DIR, "zensical", ...args],
-  };
+// not onto the ambient PATH. `uv run --project` depends on undocumented
+// fallback behavior when no pyproject.toml is present (it varies across uv
+// versions and broke in CI), so call the venv binary directly instead.
+export function zensicalBinary(): string {
+  return path.join(TOOLS_DIR, ".venv", "bin", "zensical");
 }
 
 export function toPosixPath(filePath: string): string {
