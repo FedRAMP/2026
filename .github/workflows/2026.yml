@@ -32,7 +32,12 @@ jobs:
       # oven-sh/setup-bun@v2.2.0
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
 
-      - run: pip install zensical mkdocs-ultralytics-plugin
+      # astral-sh/setup-uv@v8.3.0
+      - uses: astral-sh/setup-uv@d31148d669074a8d0a63714ba94f3201e7020bc3
+
+      - name: Install zensical
+        working-directory: tools
+        run: uv venv && uv pip install zensical mkdocs-ultralytics-plugin
 
       - name: Install tool dependencies
         working-directory: tools
@@ -44,7 +49,7 @@ jobs:
 
       - name: Build
         working-directory: tools
-        run: bun run build && python scripts/postprocess.py
+        run: bun run build && uv run --project . python scripts/postprocess.py
 
       # actions/upload-pages-artifact@v5.0.0
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9

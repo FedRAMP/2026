@@ -54,10 +54,10 @@ git clone --recurse-submodules https://github.com/FedRAMP/2026.git
 ```
 cd tools
 bun install
-pip install zensical mkdocs-ultralytics-plugin
+uv venv && uv pip install zensical mkdocs-ultralytics-plugin
 ```
 
-(replace `bun install` or `pip install` with node or pipx/uv/etc. as desired)
+(replace `bun install` with node/etc. as desired; `bun run build` and `bun run dev` invoke zensical via `uv run --project tools`, so it must live in a `uv`-managed venv at `tools/.venv` rather than a global `pip install`)
 
 3. If needed, sync the rules submodule
 
@@ -73,7 +73,7 @@ bun run sync
 ```
 cd tools
 bun run build
-python scripts/postprocess.py
+uv run --project . python scripts/postprocess.py
 ```
 
 You should now have a full HTML site rendered in `html/`. Copy those files to `static/2026` in fedramp.gov.
