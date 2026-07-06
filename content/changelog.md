@@ -18,6 +18,11 @@ picto:
 
 This update applies some changes described in the 2026.06.25.01 release that were not previously reflected in the consolidated rules.
 
+### Content Updates
+
+- [Choosing a Certification Path](https://fedramp.gov/2026/providers/start/path/): Combined the separate Lost Sponsor and Ready Conversion sections
+  into a single Lost Sponsor/Ready Conversion pipeline description and clarified the eligibility criteria for applicants.
+
 ## 2026.07.02.01 (July 2, 2026)
 
 This update fixes several typos in the FedRAMP consolidated rules. No significant changes to requirements are included.

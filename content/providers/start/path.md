@@ -68,49 +68,33 @@ will close on June 11, 2027, when FedRAMP stops accepting FedRAMP Rev5 Certifica
     on that date to any **Ready Conversion** or **Lost Sponsor** applicant that did not apply
     prior to that date.
 
-### Ready Conversion
+### Lost Sponsor/Ready Conversion
 
-The **Ready Conversion** application pipeline is open to cloud service providers that were
-FedRAMP Ready prior to July 28, 2026.
+As indicated by NTC-0008 there is a limited window for Program Certifications due to **Lost planned or in process sponsorship** during the heavy contract reduction period. This application pipeline is intended for cloud service providers that had begun the legacy FedRAMP authorization process with an agency sponsor (formally or informally) but were unable to complete the process for reasons that were out of their control.
 
 - **Opens:** August 10, 2026
 - **CR26 Grace Period Ends:** February 19, 2027
 - Available for **Class B** or **Class C**
 
-Applicants may submit an fresh version of their legacy FedRAMP Ready submission to qualify for
-a Class B or Class C Certification (pilot) with an agreement to follow all updated rules for FedRAMP
-Rev5 by February 19, 2027.
+To qualify for this pipeline, a cloud service provider must have met **one** of the following criteria between **January 2025 and March 2026**:
 
-!!! info "FedRAMP must confirm eligibility prior to submission."
+- Was In Process on the FedRAMP Marketplace but lost sponsorship. [Lost Sponsor]
+
+- Completed a full FedRAMP assessment with a Security Assessment Plan and Security Assessment Report (SAP/SAR) under an informal agreement with an agency to initiate In Process once it was complete. [Lost Sponsor]
+
+- Completed a FedRAMP Ready assessment with a Readiness Assessment (RAR) during the above timeframe [Conversion]
+
+- Achieved FedRAMP Ready on the FR Marketplace during the above timeframe [Conversion]
+
+Applicants may submit a fresh version of their legacy FedRAMP Rev5 materials, including a completed assessment (if it was not completed), to qualify for a Class B or Class C Certification (pilot) with an agreement to follow all updated rules for FedRAMP Rev5 by February 19, 2027.
+
+!!! info "FedRAMP must confirm eligibility prior to submission. Please provide qualification evidence along with the required form. FedRAMP will reach out to you directly."
 
     To confirm eligibility, fill out the "[[For CSPs] Ready Conversion Form](https://help.fedramp.gov/hc/en-us/requests/new?ticket_form_id=52069750514459)".
 
-### Lost Sponsor
-
-The **Lost Sponsor** application pipeline is intended for cloud service providers that had
-begun the legacy FedRAMP authorization process with an agency sponsor but were unable to complete
-the process for reasons that were out of their control (typically because the agency canceled
-the sponsorship due to budget cuts).
-
-- **Opens:** August 10, 2026
-- **CR26 Grace Period Ends:** February 19, 2027
-- Available for **Class B** or **Class C**
-
-To qualify for this pipeline, a cloud service provider must have met **one** of the following
-criteria between January 2025 and March 2026:
-
-- Was In Process on the FedRAMP Marketplace but lost sponsorship.
-- Completed a full FedRAMP assessment with a Security Assessment Plan and Security Assessment
-  Report (SAP/SAR) under an informal agreement with an agency to initiate In Process once it
-  was complete.
-
-Applicants may submit a fresh version of their legacy FedRAMP Rev5 materials, including a
-completed assessment (if it was not completed), to qualify for a Class B or Class C Certification
-(pilot) with an agreement to follow all updated rules for FedRAMP Rev5 by February 19, 2027.
-
-!!! info "FedRAMP must confirm eligibility prior to submission."
-
     To confirm eligibility, fill out the "[[For CSPs] Lost Sponsor Form](https://help.fedramp.gov/hc/en-us/requests/new?ticket_form_id=52061181133979)".
+
+    
 
 
 
