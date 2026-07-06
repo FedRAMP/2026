@@ -263,6 +263,15 @@ export function relativeToTools(absolutePath: string): string {
   return path.relative(TOOLS_DIR, absolutePath);
 }
 
+// zensical is installed into the project's uv-managed venv (see tools/README.md),
+// not onto the ambient PATH, so subprocesses need to invoke it through `uv run`.
+export function zensicalCommand(...args: string[]): { command: string; args: string[] } {
+  return {
+    command: "uv",
+    args: ["run", "--project", TOOLS_DIR, "zensical", ...args],
+  };
+}
+
 export function toPosixPath(filePath: string): string {
   return filePath.split(path.sep).join("/");
 }

@@ -2,7 +2,12 @@ import { spawn } from "node:child_process";
 import { rm } from "node:fs/promises";
 import path from "node:path";
 import { buildMarkdown } from "./build-markdown";
-import { REPO_ROOT, loadToolConfig, resolveToolPath } from "./config";
+import {
+  REPO_ROOT,
+  loadToolConfig,
+  resolveToolPath,
+  zensicalCommand,
+} from "./config";
 import { deploy } from "./deploy";
 
 function runCommand(command: string, args: string[]): Promise<void> {
@@ -42,11 +47,12 @@ async function main(): Promise<void> {
   }
 
   await rm(path.join(REPO_ROOT, ".cache"), { recursive: true, force: true });
-  await runCommand("zensical", [
+  const zensical = zensicalCommand(
     "build",
     "-f",
     resolveToolPath(config.paths.zensicalConfig),
-  ]);
+  );
+  await runCommand(zensical.command, zensical.args);
 }
 
 main().catch((error) => {
