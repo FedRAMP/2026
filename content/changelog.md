@@ -14,6 +14,10 @@ picto:
     Rules to the maximum extent possible but may occasionally need to update things due to typos,
     confusion, or urgent critical updates.
 
+## 2026.07.06.01 (July 6, 2026)
+
+This update applies some changes described in the 2026.06.25.01 release that were not previously reflected in the consolidated rules.
+
 ## 2026.07.02.01 (July 2, 2026)
 
 This update fixes several typos in the FedRAMP consolidated rules. No significant changes to requirements are included.
