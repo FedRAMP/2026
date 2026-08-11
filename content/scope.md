@@ -175,13 +175,9 @@ some are no, then it's complicated and the guidance below will help.
 
 #### Key Tests
 
-- Used in accordance with agency social media policies or related communications
-  policies
-- Primary purpose is external communication
-- All federal information in the communication platform is intended for public
-  use
-- Individual accounts are tied to specific users with no centralized
-  agency-based administrative control for access
+- Used primarily for public communication and engagement
+- Information shared by the agency is intended for public release
+- Does not collect, process, store, transmit, disseminate, or maintain sensitive information on behalf of the agency
 
 #### General Examples
 
@@ -209,13 +205,13 @@ some are no, then it's complicated and the guidance below will help.
 
 !!! warning  "Out of Scope: Non-sensitive Messaging and Communication"
 
-    Agency teams use
-    messaging and communication platforms (Slack, Discord, Teams, Signal,
-    LinkedIn, Telegram, X, Bluesky, GroupMe, WhatsApp, GitHub, Zoom, Sharepoint,
-    Smartsheets, etc.) for public collaboration, communication, or non-sensitive
-    messaging and coordination with the public or even with government-only
-    collaborators where the collaboration is not sensitive and the use has been
-    approved by the agency.
+    Agency teams use messaging and communication platforms (Slack, Discord, Teams,
+    Signal, LinkedIn, Telegram, X, Bluesky, GroupMe, WhatsApp, GitHub, Zoom, Sharepoint,
+    Smartsheets, Constant Contact, Mailchimp, etc.) to create, manage, and distribute
+    communication such as newsletters, press releases, public notices, emergency alerts,
+    and other information intended for public release or non-sensitive messaging and
+    coordination with the public or even with government-only collaborators where the
+    collaboration is not sensitive and the use has been approved by the agency.
 
     **Analysis:** These use cases do not involve handling of sensitive federal
     information or strict access control and a breach would not be expected to
