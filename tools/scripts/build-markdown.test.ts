@@ -1733,6 +1733,168 @@ describe("build-markdown", () => {
     }
   });
 
+  test("links the five force terms in FRR statements across page mappings and variants", async () => {
+    const config = await loadToolConfig();
+    const rules = structuredClone(await loadRules(config));
+    const statement =
+      "Providers MUST comply, MUST NOT disclose, SHOULD review, SHOULD NOT skip, and MAY proceed. Providers MUST document decisions.";
+    const terms = ["MUST", "MUST NOT", "SHOULD", "SHOULD NOT", "MAY"];
+    const expectedStatement = (href: string) =>
+      `Providers [MUST](${href}#must){ data-preview } comply, [MUST NOT](${href}#must-not){ data-preview } disclose, [SHOULD](${href}#should){ data-preview } review, [SHOULD NOT](${href}#should-not){ data-preview } skip, and [MAY](${href}#may){ data-preview } proceed. Providers [MUST](${href}#must){ data-preview } document decisions.`;
+    const syntheticDocument = testRequirementDocument({
+      name: "Synthetic Ruleset",
+      shortName: "SYN",
+      webName: "synthetic-ruleset",
+      affects: ["Providers"],
+    });
+    syntheticDocument.data.all = {
+      GEN: {
+        "SYN-GEN-ONE": {
+          name: "Synthetic Requirement",
+          statement: `${statement}\n\nSee REL-GEN-ONE (Related Requirement).`,
+          related: ["REL-GEN-ONE"],
+          affects: ["Providers"],
+          terms: [...terms, "Certification Package"],
+          note: "Providers MAY consult this note.",
+          following_information: ["Providers MUST supply this information."],
+          varies_by_class: {
+            b: {
+              statement,
+              notes: ["Providers SHOULD review this note."],
+            },
+          },
+          varies_by_level: {
+            low: {
+              statement,
+              following_information_bullets: ["Providers MUST NOT omit this."],
+            },
+          },
+        },
+      },
+    };
+    const relatedDocument = testRequirementDocument({
+      name: "Related Ruleset",
+      shortName: "REL",
+      webName: "related-ruleset",
+      affects: ["Providers"],
+    });
+    relatedDocument.data.all = {
+      GEN: {
+        "REL-GEN-ONE": {
+          name: "Related Requirement",
+          statement,
+          affects: ["Providers"],
+        },
+      },
+    };
+    rules.FRR = { SYN: syntheticDocument, REL: relatedDocument };
+    const originalRules = structuredClone(rules);
+    const source = {
+      collection: "FRR" as const,
+      documents: ["SYN"],
+      types: ["all" as const],
+      includeAll: true,
+    };
+    const artifacts = collectArtifacts(rules, {
+      ...config,
+      generated: {
+        ...config.generated,
+        definitionDocuments: [],
+        ksiDocuments: [],
+        controlDocuments: [],
+        fullControlReferenceDocuments: [],
+        deadlineDocuments: [],
+        taggedDocumentSummaries: [],
+        referenceIndexDocuments: [],
+        ruleDocuments: [
+          {
+            id: "force-documents",
+            output: "reference/{FRR}.md",
+            outputMode: "documents",
+            definitionsHref: "../definitions/",
+            relatedRulesOutput: "reference/related.md",
+            source,
+          },
+          {
+            id: "force-single",
+            output: "rules.md",
+            source,
+          },
+          {
+            id: "force-grouped",
+            output: "providers/20x/rules/all.md",
+            definitionsHref: "../../../reference/custom-definitions/",
+            source: {
+              ...source,
+              documents: ["SYN", "REL"],
+              groupBy: "document",
+            },
+          },
+        ],
+        frrCollectionDocuments: [
+          {
+            id: "force-collection",
+            title: "Responsibilities",
+            output: "responsibilities/rules.md",
+            definitionsHref: "../definitions/",
+            source,
+          },
+        ],
+      },
+    });
+
+    for (const [relativePath, href] of [
+      ["reference/synthetic-ruleset.md", "../definitions/"],
+      ["rules.md", "definitions/"],
+      ["providers/20x/rules/all.md", "../../../reference/custom-definitions/"],
+      ["responsibilities/rules.md", "../definitions/"],
+    ] as const) {
+      const artifact = findArtifact(artifacts, relativePath);
+      const requirement = artifact.context.sections
+        .flatMap((section) => section.requirements)
+        .find((entry) => entry.id === "SYN-GEN-ONE")!;
+
+      expect(requirement.statementParagraphs[0]).toBe(expectedStatement(href));
+      expect(requirement.variantSections.map((variant) => variant.title)).toEqual([
+        "Class B",
+        "Low",
+      ]);
+      for (const variant of requirement.variantSections) {
+        expect(variant.statementParagraphs).toEqual([expectedStatement(href)]);
+      }
+      expect(requirement.noteParagraphs).toEqual([
+        "Providers MAY consult this note.",
+      ]);
+      expect(requirement.numberedItems).toEqual([
+        "Providers MUST supply this information.",
+      ]);
+      expect(requirement.variantSections[0]?.notes).toEqual([
+        "Providers SHOULD review this note.",
+      ]);
+      expect(requirement.variantSections[1]?.bulletItems).toEqual([
+        "Providers MUST NOT omit this.",
+      ]);
+      expect(requirement.terms).toEqual([
+        { label: "Certification Package", href: `${href}#certification-package` },
+      ]);
+    }
+
+    const documentArtifact = findArtifact(
+      artifacts,
+      "reference/synthetic-ruleset.md",
+    );
+    expect(
+      documentArtifact.context.sections[0]?.requirements[0]?.statementParagraphs[1],
+    ).toBe(
+      "See [REL-GEN-ONE (Related Requirement)](related.md#related-requirement){ data-preview }.",
+    );
+    const relatedArtifact = findArtifact(artifacts, "reference/related.md");
+    expect(
+      relatedArtifact.context.sections[0]?.requirements[0]?.statementParagraphs,
+    ).toEqual([expectedStatement("../definitions/")]);
+    expect(rules).toEqual(originalRules);
+  });
+
   test("ignores configured rule documents after resolving the source selection", async () => {
     const config = await loadToolConfig();
     const rules = structuredClone(await loadRules(config));
@@ -2294,9 +2456,10 @@ describe("build-markdown", () => {
         indicators: {
           "KSI-SYN-VAR": {
             name: "Class Variant Indicator",
+            statement: "Indicators MUST remain unchanged and MAY use force terms.",
             varies_by_class: {
               b: {
-                statement: "Class B indicator should render.",
+                statement: "Class B indicator SHOULD render and MUST NOT change.",
               },
               c: {
                 statement: "Class C indicator should not render.",
@@ -2342,10 +2505,13 @@ describe("build-markdown", () => {
     const indicator = artifact.context.sections[0]?.requirements[0];
 
     expect(indicator?.variantSections).toHaveLength(1);
+    expect(indicator?.statementParagraphs).toEqual([
+      "Indicators MUST remain unchanged and MAY use force terms.",
+    ]);
     expect(indicator?.variantSections[0]?.title).toBe("Class B");
     expect(
       indicator?.variantSections[0]?.statementParagraphs.join("\n"),
-    ).toContain("Class B indicator should render.");
+    ).toBe("Class B indicator SHOULD render and MUST NOT change.");
     expect(
       indicator?.variantSections[0]?.statementParagraphs.join("\n"),
     ).not.toContain("Class C indicator should not render.");

@@ -16,8 +16,8 @@ flowchart LR
   class B current;
 ```
 
-The [FedRAMP Marketplace](https://fedramp.gov/marketplace) the authoritative repository that lists all
-cloud service offerings have an active FedRAMP Certification and those who are close to doing so. The
+The [FedRAMP Marketplace](https://fedramp.gov/marketplace) is the authoritative repository that lists all
+cloud service offerings that have an active FedRAMP Certification and those that are close to doing so. The
 Consolidated Rules for 2026 now allow cloud service providers who are early in the implementation phase
 for obtaining a FedRAMP Certification to be listed as well.
 

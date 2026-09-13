@@ -66,7 +66,7 @@ GRC engineering teams:
 
 5. Finally, you'll need to work your way through the Assurance rulesets and
    ensure you have everything in place to meet those requirements. The foundation for those
-   requirements will be addressed in final updates to your Certification Package Overivew
+   requirements will be addressed in final updates to your Certification Package Overview
    and your Security Decision Record. You will need to prove you are ready to meet all
    Ongoing FedRAMP Certification requirements in order to obtain your initial FedRAMP
    Certification.

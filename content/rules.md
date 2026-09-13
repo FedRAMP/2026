@@ -104,13 +104,49 @@ Even apparently simple and straightforward rules often require application withi
 
 FedRAMP uses capitalized key words for the force of each rule based on [IETF RFC-2119 Key words for use in RFCs to Indicate Requirement Levels](https://datatracker.ietf.org/doc/html/rfc2119).
 
-| Key Word | Force |
-| -- | -- |
-| MUST | The rule is an absolute requirement.<br><br>Parties MUST meet such rules and address them in their security documentation. Failure to follow the rule is a vulnerability that may lead to corrective action and the denial of initial or ongoing FedRAMP Certification.|
-| MUST NOT | The rule is an absolute prohibition.<br><br>Parties MUST meet such rules and address them in their security documentation. Failure to follow the rule is a vulnerability that may lead to corrective action and the denial of initial or ongoing FedRAMP Certification.|
-| SHOULD | There may exist valid reasons in particular circumstances to ignore this rule, but the full implications must be understood and carefully weighed.<br><br>Parties MUST address such rules in their security documentation by explaining their decisions about how they handle such rules.|
-| SHOULD NOT | There may exist valid reasons in particular circumstances when the particular action is acceptable or even useful, but the full implications must be understand and carefully weighed.<br><br>Parties MUST address such rules in their security documentation by explaining their decisions about how they handle such rules. |
-| MAY | The rule is truly optional.<br><br>Parties SHOULD address such rules in their security documentation by explaining their decisions about how they handle such rules.|
+!!! abstract ""
+
+    #### MUST
+
+    The rule is an absolute requirement.
+
+    Parties MUST meet such rules and address them in their security documentation. Failure to follow the rule is a vulnerability likely requiring corrective action and/or the denial of initial or ongoing FedRAMP Certification.
+
+
+
+!!! danger ""
+
+    #### MUST NOT
+
+    The rule is an absolute prohibition.
+
+    Parties MUST meet such rules and address them in their security documentation. Failure to follow the rule is a vulnerability likely requiring corrective action and/or the denial of initial or ongoing FedRAMP Certification.
+
+
+!!! tip ""
+
+    #### SHOULD
+
+    There may exist valid reasons in particular circumstances to ignore this rule, but the full implications must be understood and carefully weighed.
+
+    Parties MUST address such rules in their security documentation by explaining their decisions about how they handle such rules.
+
+
+!!! warning ""
+
+    #### SHOULD NOT
+
+    There may exist valid reasons in particular circumstances when the particular action is acceptable or even useful, but the full implications must be understand and carefully weighed.
+
+    Parties MUST address such rules in their security documentation by explaining their decisions about how they handle such rules.
+
+!!! question ""
+
+    #### MAY
+
+    The rule is truly optional.
+
+    Parties SHOULD address such rules in their security documentation by explaining their decisions about how they handle such rules.
 
 ### Identifiers
 

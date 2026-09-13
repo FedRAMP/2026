@@ -20,7 +20,7 @@ In general, the responsibilities to obtain and maintain a FedRAMP Certification 
 
 1. Creating and maintaining certification materials following the FedRAMP process.
 2. Storing and sharing certification materials with independent assessors, FedRAMP, CISA, and federal agencies as expected.
-3. Operating ongoing certification activities on a persistent cadence and sharing much more information with the government that companies typically share with private-sector customers.
+3. Operating ongoing certification activities on a persistent cadence and sharing much more information with the government than companies typically share with private-sector customers.
 4. Partnering with an independent assessment service for initial and ongoing assessment to ensure adequate quality of the cloud service provider’s certification program.
 5. Following and responding to changes to FedRAMP rules in alignment with published deadlines and expectations.
 6. Engaging with FedRAMP and responding to data calls, emergency notifications, and other such activities as needed.

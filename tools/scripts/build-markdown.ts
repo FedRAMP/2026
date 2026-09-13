@@ -1843,13 +1843,41 @@ function linkRelatedRuleReferencesInList(
   );
 }
 
+const FORCE_TERM_ANCHORS = new Map(
+  ["MUST NOT", "SHOULD NOT", "MUST", "SHOULD", "MAY"].map((term) => [
+    term,
+    slugifyTerm(term),
+  ]),
+);
+const FORCE_TERM_PATTERN = new RegExp(
+  `\\b(?:${Array.from(FORCE_TERM_ANCHORS.keys()).join("|")})\\b`,
+  "g",
+);
+
+function linkForceTerms(value: string, definitionsHref: string): string {
+  return value.replace(
+    FORCE_TERM_PATTERN,
+    (term) =>
+      `[${term}](${definitionsHref}#${FORCE_TERM_ANCHORS.get(term)}){ data-preview }`,
+  );
+}
+
 function linkRelatedRuleReferenceParagraphs(
   value: string | undefined,
   relatedRuleIds: string[] | undefined,
   context: RuleLinkContext | undefined,
+  forceTermsDefinitionsHref?: string,
 ): string[] {
+  const linkedValue = linkRelatedRuleReferences(
+    value ?? "",
+    relatedRuleIds,
+    context,
+  );
+
   return splitParagraphs(
-    linkRelatedRuleReferences(value ?? "", relatedRuleIds, context),
+    forceTermsDefinitionsHref === undefined
+      ? linkedValue
+      : linkForceTerms(linkedValue, forceTermsDefinitionsHref),
   );
 }
 
@@ -2337,6 +2365,7 @@ function buildVariantViewModel(
   ruleLinkContext: RuleLinkContext | undefined,
   controlLinkContext: ControlLinkContext | undefined,
   requirementId: string,
+  forceTermsDefinitionsHref?: string,
 ): VariantViewModel {
   const painTimeframes = normalizePainTimeframes(entry.pain_timeframes);
 
@@ -2346,6 +2375,7 @@ function buildVariantViewModel(
       entry.statement,
       relatedRuleIds,
       ruleLinkContext,
+      forceTermsDefinitionsHref,
     ),
     numberedItems: linkRelatedRuleReferencesInList(
       entry.following_information,
@@ -2385,6 +2415,7 @@ function buildVariantSections(
   ruleLinkContext?: RuleLinkContext,
   controlLinkContext?: ControlLinkContext,
   selectedClasses: string[] = [],
+  forceTermsDefinitionsHref?: string,
 ): VariantViewModel[] {
   const sections: VariantViewModel[] = [];
   const relatedRuleIds = entry.related;
@@ -2407,6 +2438,7 @@ function buildVariantSections(
         ruleLinkContext,
         controlLinkContext,
         requirementId,
+        forceTermsDefinitionsHref,
       ),
     );
   }
@@ -2422,6 +2454,7 @@ function buildVariantSections(
         ruleLinkContext,
         controlLinkContext,
         requirementId,
+        forceTermsDefinitionsHref,
       ),
     );
   }
@@ -2529,9 +2562,13 @@ function buildRequirementViewModel(
   ruleLinkContext?: RuleLinkContext,
   selectedClasses: string[] = [],
   controlLinkContext?: ControlLinkContext,
+  linkStatementForceTerms = true,
 ): RequirementViewModel {
   const title = entry.name ?? id;
   const relatedRuleIds = entry.related;
+  const forceTermsDefinitionsHref = linkStatementForceTerms
+    ? definitionsRelativePath
+    : undefined;
   const resolvedControlLinkContext =
     controlLinkContext ??
     (ruleLinkContext
@@ -2551,6 +2588,7 @@ function buildRequirementViewModel(
       entry.statement,
       relatedRuleIds,
       ruleLinkContext,
+      forceTermsDefinitionsHref,
     ),
     variantSections: buildVariantSections(
       id,
@@ -2558,6 +2596,7 @@ function buildRequirementViewModel(
       ruleLinkContext,
       resolvedControlLinkContext,
       selectedClasses,
+      forceTermsDefinitionsHref,
     ),
     effectiveDateLines: toDateLines(entry.effective_date),
     timeframe: formatDuration(entry.timeframe_type, entry.timeframe_num),
@@ -4669,6 +4708,7 @@ function buildKsiIndicatorViewModels(
         undefined,
         mappingClasses(mapping),
         controlLinkContext,
+        false,
       ),
     );
 }

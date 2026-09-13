@@ -39,7 +39,7 @@ just follow the rules and apply for FedRAMP Certification.
 
 On the outside it might look like FedRAMP is a big scary government program, but the
 reality is that we're a small tight-knit team of gentle humans operating without a lot
-of the modern tools available in private sector. We try to make the application
+of the modern tools available in the private sector. We try to make the application
 process as clean and rewarding as possible within our operating constraints.
 
 !!! abstract "Our goal is to process all applications within 30 days!"

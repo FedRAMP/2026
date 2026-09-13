@@ -19,7 +19,7 @@ all of the content and materials produced for cloud service providers:
 
 The [original FedRAMP memorandum from 2011](../../authority/rescinded-2011-fedramp-memo.md) directed
 FedRAMP to establish a _"conformity assessment program capable of producing consistent independent,
-third-party assessments of security controls implemented by CSPs.."_ and named the organizations
+third-party assessments of security controls implemented by CSPs."_ and named the organizations
 that would perform such assessments as third-party assessment organizations (3PAOs).
 
 This approach was changed significantly when FedRAMP was rescinded and replaced by
