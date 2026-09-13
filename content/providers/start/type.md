@@ -45,7 +45,7 @@ infrastructure or require a FedRAMP Class D Certification. FedRAMP Rev5 Certific
 | Intended for cloud-native services built on FedRAMP Certified infrastructure or platforms. | Intended for standalone services entirely owned and operated by the cloud service provider. |
 | Designed for use over the next decade with continuous improvement. | Will be retired by FedRAMP as a new Certification Type by mid-2027 and may be retired as an ongoing Certification Type in the future. |
 | Encourages government adoption of commercial cloud service offerings and discourages separate government-only versions. | Typically implemented with a separate government-only version of the cloud service. |
-| Program Certification available for Class A, Class B, and Class C. | Program Certification only available for Class A; all others typically require an agency sponsor. |
+| Program Certification available for Class A, Class B, and Class C. | Agency Certification typically required with [limited exceptions](path.md#temporary-rev5-program-certification-availability-for-class-b-and-c). |
 
 !!! danger "FedRAMP Rev5 will be retired."
 
