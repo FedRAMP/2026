@@ -20,8 +20,6 @@ The FedRAMP Marketplace shows how to access each package in the upper-right corn
 
 ## Using FedRAMP-Compatible trust centers
 
-![ trust center Example](../../../assets/accessing-packages-trust-center.png)
-
 Cloud service providers will manage package access under the FedRAMP Certification Data Sharing rules. FedRAMP will no longer act as an intermediary or dictate how providers protect and distribute commercial data that does not affect federal information. Agencies will receive needed data faster, while providers retain control over sensitive commercial information.
 
 Commercial security information belongs to the company that produces it. The cloud service provider decides how to maintain and distribute that information. A provider may deny an access request if it does not want to do business with an agency. The provider must notify FedRAMP, but the decision remains a business matter.
@@ -29,8 +27,6 @@ Commercial security information belongs to the company that produces it. The clo
 Most trust centers that follow the Certification Data Sharing rules can integrate with common Governance, Risk, and Compliance (GRC) tools. These integrations can give agencies a near-real-time view of enterprise risk across multiple cloud services. FedRAMP does not endorse a specific tool or fund agency GRC tooling.
 
 ## Using USDA Connect
-
-![Legacy Example](../../../assets/accessing-packages-legacy.png)
 
 For legacy Rev5 Low and Moderate packages, FedRAMP has traditionally hosted the FedRAMP Repository in connect.gov and managed access on behalf of cloud service providers. This gave the federal government a consistent package structure and access process.
 
