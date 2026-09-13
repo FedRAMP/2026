@@ -15,7 +15,7 @@ Automation services, including AI agents, **should not use the HTML site.** Inst
 
 ## FedRAMP Rules Source Data
 
-All FedRAMP rules are machine-generated from structured JSON. Do not attempt to parse the HTML on this site in order to analyze the rules itself.
+All FedRAMP rules are machine-generated from structured JSON. Do not attempt to parse the HTML on this site in order to analyze the rules.
 
 | Source  | Repository | Description |
 | --  | -- | -- |

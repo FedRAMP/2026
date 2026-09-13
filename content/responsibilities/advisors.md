@@ -17,8 +17,8 @@ Advisory services are optional within the FedRAMP shared responsibility model. F
     The FedRAMP Marketplace lists advisory services for the convenience of the public and does not
     review, endorse, or take any responsibility for advisory services or their use.
 
-    Advisory services who indicate that a listing in the FedRAMP Marketplace is any special
-    badge or certification from FedRAMP is sending an strong red flag.
+    Advisory services that indicate that a listing in the FedRAMP Marketplace is any special
+    badge or certification from FedRAMP are sending an strong red flag.
 
 ---
 

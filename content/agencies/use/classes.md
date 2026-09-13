@@ -17,7 +17,7 @@ an unprecedented amount of information about how a cloud service provider is ope
 commitments to provide additional assurance information in a timely manner to federal agency customers, typically including information and timeframes that they would never share
 with private-sector customers.
 
-!!! bug "FedRAMP Certification Class are not aligned to how secure a cloud service offering is!"
+!!! bug "FedRAMP Certification Classes are not aligned to how secure a cloud service offering is!"
 
     Certification Classes indicate the level of assurance provided, not the level of security or
     protection provided! Obtaining and maintaining a FedRAMP Certification is a heavy investment

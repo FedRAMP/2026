@@ -28,7 +28,7 @@ You can browse the list of FedRAMP Recognized assessors in alphabetical order, o
 
 !!! warning "FedRAMP Marketplace independent assessment services Listings"
 
-    FedRAMP provides information about independent assessment services for the convenience of the public based on a formal FedRAMP Recognition process; listing in the FedRAMP Marketplace does represent an endorsement by FedRAMP for any business.
+    FedRAMP provides information about independent assessment services for the convenience of the public based on a formal FedRAMP Recognition process; listing in the FedRAMP Marketplace does NOT represent an endorsement by FedRAMP for any business.
 
 ## Consider the Vibes
 

@@ -57,7 +57,7 @@ This update contains minor enhancements and fixes to make the content more accur
 
 ## General Updates
 
-- Rename assessor and advisor schema files from versioned format to date format. 
+- Rename assessor and advisor schema files from versioned format to date format.
 - Rename certification overview package schema file to certification package overview, and update corresponding $id and title references.
 - Fix typos in field names: correct "frrAssesment" to "frrAssessment" and "ksiAssesment" to "ksiAssessment" in `fedramp-security-decision-record-schema-2026-06-24.json`.
 
@@ -84,10 +84,10 @@ inaccurate content in places.
 ### Rules Changes
 
 - `CPO-CSO-OSA` was added to require Class B, Class C, and Class D providers to include the assessor-supplied overall summary of assessment in the Certification Package Overview, while allowing Class A providers to include it optionally.
-- `FRC.info.subsets.CLA` was narrowed from both 20x/Rev5 and Program/Agency applicability to 20x Program applicability only (this was already defacto but the schema was not updated previously).
+- `FRC.info.subsets.CLA` was narrowed from both 20x/Rev5 and Program/Agency applicability to 20x Program applicability only (this was already de facto but the schema was not updated previously).
 - `FRC-CLA-MFR` fixed a wording typo from “Class Arules” to “Class A rules.”
 - `FRC-CSO-PKG` was clarified to apply to all provider classes by removing the dangling “Class B” qualifier from the certification package requirement.
-- `IEC-CSO-FIR`, `IEC-CSO-IIR`, and `IEC-CSO-OIR` renamed the FedRAMP notification contact display name from “FedRAMP Security Team” to `fedramp_security@fedramp.gov`; this ensures the email address is displayed in human-readable versions of the Consolidated Rules..
+- `IEC-CSO-FIR`, `IEC-CSO-IIR`, and `IEC-CSO-OIR` renamed the FedRAMP notification contact display name from “FedRAMP Security Team” to `fedramp_security@fedramp.gov`; this ensures the email address is displayed in human-readable versions of the Consolidated Rules.
 - The following duplicative agency rules were removed because they are addressed by `AGU-AGC-NAI` and `AGU-AGC-NAR` already: `CCM-AGM-NAR`, `CCM-AGM-NFA`, `VER-AGM-DRE`, `VER-AGM-NFR`
 
 ### Content Updates

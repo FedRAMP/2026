@@ -86,7 +86,7 @@ When the FedRAMP PMO becomes aware of significant vulnerabilities in a CSO with
 a FedRAMP authorization, the FedRAMP PMO will provide that information to the
 CSP and impacted agencies for remediation and establish escalation pathways for
 vulnerabilities not sufficiently addressed in a timely manner. Unresolved
-concerns that are not addressed in a timely-manner may be noted to potential
+concerns that are not addressed in a timely manner may be noted to potential
 agency customers on the FedRAMP Marketplace. The FedRAMP PMO will develop and
 maintain procedures for responding to CISA Binding Operational and Emergency
 Directives (BODs),[^30] in collaboration with CISA, OMB, and the FedRAMP Board.
