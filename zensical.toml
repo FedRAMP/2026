@@ -460,7 +460,7 @@ social_image_alt = "FedRAMP Consolidated Rules for 2026"
 
 [project.extra.analytics]
 provider = "google"
-property = "G-HBYXWFP794"
+property = "G-395251184"
 
 [project.extra.analytics.feedback]
 title = "Was this page helpful?"
