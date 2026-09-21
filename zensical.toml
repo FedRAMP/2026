@@ -445,6 +445,7 @@ site_url = "https://fedramp.gov/2026/"
 repo_url = "https://github.com/fedramp/2026"
 repo_name = "FedRAMP/2026"
 extra_css = ["stylesheets/extra.css"]
+extra_javascript = ["https://www.fedramp.gov/javascripts/dap.js"]  # Shim for Digital Analytics Program (DAP)
 copyright = "fedramp.gov"
 
 extra_javascript = [
@@ -460,7 +461,7 @@ social_image_alt = "FedRAMP Consolidated Rules for 2026"
 
 [project.extra.analytics]
 provider = "google"
-property = "G-395251184"
+property = "G-E1PPDRDY5R"
 
 [project.extra.analytics.feedback]
 title = "Was this page helpful?"
