@@ -1,3 +1,4 @@
+import Handlebars from "handlebars";
 import { afterAll, describe, expect, test } from "bun:test";
 import { execFile, spawn } from "node:child_process";
 import {
@@ -1179,7 +1180,7 @@ describe("build-markdown", () => {
       referenceIndexContents,
       [
         `# ${referenceIndexArtifact.title}`,
-        referenceIndexArtifact.context.purposeParagraphs[0] ?? "",
+        referenceIndexArtifact.context.introduction ?? "",
         "| Acronym | Ruleset | Status | Counts | Most Recently Updated |",
       ],
       "Generated reference index should place configured introduction before the table",
@@ -1346,7 +1347,7 @@ describe("build-markdown", () => {
       const deadlineContents = await readGeneratedArtifact(deadlineArtifact);
       expect(deadlineContents).toContain(`# ${deadlineArtifact.title}`);
       expect(deadlineContents).toContain(
-        "| Ruleset | Optional Adoption | Obtain | Maintain | Grace Ends |",
+        "| Ruleset | Optional Adoption Allowed | Obtaining Initial Certification | Maintaining Ongoing Certification | Grace Period Ends |",
       );
       expectDeadlineRowsFromArtifact(
         deadlineContents,
@@ -2637,6 +2638,54 @@ describe("build-markdown", () => {
     expect(deadlineArtifact).toBeDefined();
     expect(shortNames).toContain("INC");
     expect(shortNames).not.toContain("FLT");
+  });
+
+  test("renders optional introductions across generated mappings", async () => {
+    const config = await loadToolConfig();
+    const rules = await loadRules(config);
+    const introduction = "Introduction **Markdown** & [link](https://example.com)\n- first\n- second\n\nAnother paragraph.";
+    const engine = Handlebars.create();
+    for (const file of await readdir(resolveToolPath(config.paths.partials))) {
+      if (file.endsWith(".hbs")) {
+        engine.registerPartial(path.basename(file, ".hbs"), await readFile(
+          path.join(resolveToolPath(config.paths.partials), file), "utf8",
+        ));
+      }
+    }
+    const templates = new Map<string, Handlebars.TemplateDelegate>();
+    const configure = (value?: string): ToolConfig => {
+      const copy = structuredClone(config);
+      for (const mappings of Object.values(copy.generated)) {
+        if (Array.isArray(mappings)) {
+          for (const mapping of mappings) mapping.introduction = value;
+        }
+      }
+      if (copy.generated.definitions) copy.generated.definitions.introduction = value;
+      return copy;
+    };
+    const baseline = collectArtifacts(rules, configure());
+    const introduced = collectArtifacts(rules, configure(introduction));
+    expect(introduced.length).toBe(baseline.length);
+    for (const [index, artifact] of introduced.entries()) {
+      expect(artifact.context.introduction).toBe(introduction);
+      let render = templates.get(artifact.templatePath);
+      if (!render) {
+        render = engine.compile(await readFile(artifact.templatePath, "utf8"), { noEscape: true });
+        templates.set(artifact.templatePath, render);
+      }
+      const output = render(artifact.context);
+      expect(output).toContain(`# ${artifact.title}\n\n${introduction}\n\n`);
+      expect(output.split(introduction).length).toBe(2);
+      expect(output.replace(`${introduction}\n\n`, "")).toBe(render(baseline[index]!.context));
+      expect(render({ ...artifact.context, introduction: "" })).toBe(render(baseline[index]!.context));
+    }
+    for (const artifact of collectArtifacts(rules, configure(" \n\t "))) {
+      expect(artifact.context.introduction).toBeUndefined();
+    }
+    const legacy = configure(introduction);
+    legacy.generated.definitionDocuments = [];
+    legacy.generated.definitions = { enabled: true, output: "legacy-definitions.md", introduction };
+    expect(collectArtifacts(rules, legacy).find((artifact) => artifact.relativePath === "legacy-definitions.md")?.context.introduction).toBe(introduction);
   });
 
   test("builds configured FRD definition document mappings", async () => {

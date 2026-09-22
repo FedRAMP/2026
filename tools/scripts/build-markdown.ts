@@ -598,6 +598,7 @@ interface ControlLinkContext {
 }
 
 interface DocumentViewModel {
+  introduction?: string;
   title: string;
   description?: string;
   purpose?: string;
@@ -1935,10 +1936,16 @@ function toDateLines(
     }
   };
 
-  addLine("Optional Adoption", effectiveDateValue(date?.optional_adoption));
-  addLine("Obtain", effectiveDateValue(date?.obtain));
-  addLine("Maintain", effectiveDateValue(date?.maintain));
-  addLine("Grace Ends", effectiveGraceEnds(date));
+  addLine(
+    "Optional Adoption Allowed",
+    effectiveDateValue(date?.optional_adoption),
+  );
+  addLine("Obtaining Initial Certification", effectiveDateValue(date?.obtain));
+  addLine(
+    "Maintaining Ongoing Certification",
+    effectiveDateValue(date?.maintain),
+  );
+  addLine("Grace Period Ends", effectiveGraceEnds(date));
 
   return lines;
 }
@@ -4067,6 +4074,7 @@ function buildDocumentContext(
 ): DocumentViewModel {
   return {
     title,
+    introduction: options.introduction?.trim() || undefined,
     description: options.description,
     purpose: options.purpose,
     pictoSource: options.pictoSource,
@@ -4566,6 +4574,7 @@ function collectDefinitionDocumentArtifact(
     title,
     documentType: "FRD",
     context: buildDocumentContext(title, {
+      introduction: mapping.introduction,
       pictoSpan: pictographSpan(config),
       tags: versionTags(definitionDocumentTypes(mapping)),
       purposeParagraphs: splitParagraphs(rules.FRD.info.purpose),
@@ -4588,6 +4597,7 @@ function collectLegacyDefinitionsArtifact(
 
   return collectDefinitionDocumentArtifact(rules, config, {
     id: "definitions",
+    introduction: mapping.introduction,
     title: mapping.title,
     output: mapping.output,
     template: mapping.template,
@@ -4805,6 +4815,7 @@ function collectSingleKsiDocumentArtifact(
     title,
     documentType: "KSI",
     context: buildDocumentContext(title, {
+      introduction: mapping.introduction,
       pictoSpan: pictographSpan(config),
       tags: versionTags(["20x"]),
       isKsiDocument: true,
@@ -4869,6 +4880,7 @@ function collectThemeKsiDocumentArtifacts(
         title,
         documentType: "KSI",
         context: buildDocumentContext(title, {
+          introduction: mapping.introduction,
           pictoSpan: pictographSpan(config),
           tags: versionTags(["20x"]),
           isKsiDocument: true,
@@ -5369,6 +5381,7 @@ function collectFullControlReferenceArtifacts(
         title: mapping.title,
         documentType: "CTL_REFERENCE",
         context: buildDocumentContext(mapping.title, {
+          introduction: mapping.introduction,
           pictoSpan: pictographSpan(config),
           tags: versionTags(["rev5"]),
           isControlDocument: true,
@@ -5399,6 +5412,7 @@ function collectFullControlReferenceArtifacts(
           title,
           documentType: "CTL_REFERENCE",
           context: buildDocumentContext(title, {
+            introduction: mapping.introduction,
             pictoSpan: pictographSpan(config),
             tags: versionTags(["rev5"]),
             isControlDocument: true,
@@ -5440,6 +5454,7 @@ function collectSingleControlDocumentArtifact(
     title,
     documentType: "CTL",
     context: buildDocumentContext(title, {
+      introduction: mapping.introduction,
       pictoSpan: pictographSpan(config),
       tags: versionTags(["rev5"]),
       isControlDocument: true,
@@ -5472,6 +5487,7 @@ function collectFamilyControlDocumentArtifacts(
       title,
       documentType: "CTL",
       context: buildDocumentContext(title, {
+        introduction: mapping.introduction,
         pictoSpan: pictographSpan(config),
         tags: versionTags(["rev5"]),
         isControlDocument: true,
@@ -5563,6 +5579,7 @@ function collectDeadlineDocumentArtifactsForMapping(
         title,
         documentType: "DEADLINES",
         context: buildDocumentContext(title, {
+          introduction: mapping.introduction,
           pictoSpan: pictographSpan(config),
           tags: versionTags([version]),
           isDeadlineDocument: true,
@@ -5618,6 +5635,7 @@ function collectTaggedDocumentSummaryArtifact(
     title: mapping.title,
     documentType: "FRR_TAGGED_SUMMARY",
     context: buildDocumentContext(mapping.title, {
+      introduction: mapping.introduction,
       pictoSpan: pictographSpan(config),
       tags: versionTags(taggedDocumentSummaryTypes(mapping)),
       taggedDocumentSummaryRows: rows,
@@ -5669,11 +5687,11 @@ function collectReferenceIndexDocumentArtifact(
     title: mapping.title,
     documentType: "FRR_REFERENCE_INDEX",
     context: buildDocumentContext(mapping.title, {
+      introduction: mapping.introduction,
       description: mapping.description,
       purpose: mapping.purpose,
       pictoSource: "machine",
       pictoSpan: pictographSpan(config),
-      purposeParagraphs: splitParagraphs(mapping.introduction),
       referenceIndexRows,
     }),
   };
@@ -5833,6 +5851,7 @@ function collectFrrCollectionDocumentArtifact(
     title: mapping.title,
     documentType: "FRR",
     context: buildDocumentContext(mapping.title, {
+      introduction: mapping.introduction,
       pictoSpan: pictographSpan(config),
       tags: versionTags(mappingVersions(mapping)),
       isRequirementsDocument: true,
@@ -5941,6 +5960,7 @@ function collectSingleRuleDocumentArtifact(
     title,
     documentType: "FRR",
     context: buildDocumentContext(title, {
+      introduction: mapping.introduction,
       pictoSpan: pictographSpan(config),
       tags: versionTags(versions),
       purposeParagraphs,
@@ -6009,6 +6029,7 @@ function collectDocumentRuleDocumentArtifacts(
         title,
         documentType: "FRR",
         context: buildDocumentContext(title, {
+          introduction: mapping.introduction,
           pictoSpan: pictographSpan(config),
           tags: versionTags(versions),
           purposeParagraphs: splitParagraphs(document.info.purpose),
@@ -6167,6 +6188,7 @@ function collectRelatedRuleDocumentArtifact(
     title,
     documentType: "FRR",
     context: buildDocumentContext(title, {
+      introduction: mapping.introduction,
       pictoSpan: pictographSpan(config),
       tags: versionTags(mappingVersions(mapping)),
       purposeParagraphs: [

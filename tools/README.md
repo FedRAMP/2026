@@ -138,6 +138,22 @@ machine
 Tooltips and rendered icon definitions are configured in `pictographs` in `config.json`.
 Generated pages always render the machine source pictograph. Status values from the rules JSON remain content metadata and do not render a page pictograph.
 
+## Generated Page Introductions
+
+Every generated page mapping accepts an optional `introduction` string containing
+Markdown. It appears immediately below the title, before existing purpose text or
+other page content. For example, the `provider-important-deadlines` mapping can use:
+
+```json
+"introduction": "hello this is a test\n- a list\n- more lists\n- even more to a list"
+```
+
+Use `\n` for line breaks and `\n\n` for paragraph breaks. Omitted, empty, or
+whitespace-only introductions render nothing. When a mapping generates multiple
+pages, its introduction appears on each page, including companion and family pages.
+Custom templates receive `introduction` in their context and can render it with
+`{{> introduction}}`.
+
 ## Generated Definitions
 
 Add an entry to `generated.definitionDocuments` in `config.json`:

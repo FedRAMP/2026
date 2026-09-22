@@ -34,6 +34,7 @@ export interface ToolPathsConfig {
 }
 
 export interface DefinitionsMappingConfig {
+  introduction?: string;
   enabled: boolean;
   title?: string;
   output: string;
@@ -48,6 +49,7 @@ export interface DefinitionDocumentSourceConfig {
 }
 
 export interface DefinitionDocumentMappingConfig {
+  introduction?: string;
   id: string;
   title?: string;
   output: string;
@@ -77,6 +79,7 @@ export interface RelatedRulesGroupConfig {
 }
 
 export interface RuleDocumentMappingConfig {
+  introduction?: string;
   id: string;
   title?: string;
   output: string;
@@ -95,6 +98,7 @@ export interface RuleDocumentMappingConfig {
 }
 
 export interface FrrCollectionDocumentMappingConfig {
+  introduction?: string;
   id: string;
   title: string;
   output: string;
@@ -114,6 +118,7 @@ export interface KsiDocumentSourceConfig {
 }
 
 export interface KsiDocumentMappingConfig {
+  introduction?: string;
   id: string;
   title?: string;
   output: string;
@@ -131,6 +136,7 @@ export interface ControlDocumentSourceConfig {
 }
 
 export interface ControlDocumentMappingConfig {
+  introduction?: string;
   id: string;
   title?: string;
   output: string;
@@ -146,6 +152,7 @@ export interface FullControlReferenceDocumentSourceConfig {
 }
 
 export interface FullControlReferenceDocumentMappingConfig {
+  introduction?: string;
   id: string;
   title: string;
   output: string;
@@ -163,6 +170,7 @@ export interface DeadlineDocumentSourceConfig {
 }
 
 export interface DeadlineDocumentMappingConfig {
+  introduction?: string;
   id: string;
   title?: string;
   output: string;
@@ -185,6 +193,7 @@ export interface TaggedDocumentSummarySourceConfig {
 }
 
 export interface TaggedDocumentSummaryMappingConfig {
+  introduction?: string;
   id: string;
   title: string;
   output: string;
