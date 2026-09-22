@@ -445,12 +445,12 @@ site_url = "https://fedramp.gov/2026/"
 repo_url = "https://github.com/fedramp/2026"
 repo_name = "FedRAMP/2026"
 extra_css = ["stylesheets/extra.css"]
-extra_javascript = ["https://www.fedramp.gov/javascripts/dap.js"]  # Shim for Digital Analytics Program (DAP)
 copyright = "fedramp.gov"
 
 extra_javascript = [
   "https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js",
   "javascripts/tablesort.js",
+  "https://www.fedramp.gov/javascripts/dap.js"
 ]
 
 [project.extra]
