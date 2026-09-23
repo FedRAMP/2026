@@ -19,7 +19,7 @@ if __name__ == "__main__":
     postprocess_site(
         site_dir="../html",  # Your build output directory
         docs_dir="../src",  # Your source docs directory
-        site_url="https://fedramp.gov/2026",
+        site_url="https://www.fedramp.gov/2026",
         default_image="https://preview.fedramp.gov/2026/assets/thumbnail.png",
         default_author="pete@fedramp.gov",
         add_desc=True,
