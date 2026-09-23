@@ -133,6 +133,7 @@
       {
         "id": "provider-important-deadlines",
         "title": "Important Deadlines",
+        "introduction": "This is a top level overview of deadlines that apply within each specific ruleset for providers.\n\n**_Optional Adoption Allowed_** - Providers may adopt this ruleset in its entirety after this date for both initial and ongoing FedRAMP Certification.\n\n**_Obtaining Initial Certification_** - If a provider applies for initial FedRAMP Certification after this date, the ruleset MUST be adopted or FedRAMP Certification will be denied.\n\n**_Maintaining Ongoing Certification_** - Providers with an existing FedRAMP Certification SHOULD adopt the ruleset by this date; if it is not adopted by this data, a corrective action plan to adopt the ruleset by the end of the grace period will be required to maintain FedRAMP Certification.\n\n**_Grace Period Ends_** - Providers with an existing FedRAMP Certification MUST adopt the ruleset by this date or FedRAMP Certification will be revoked.",
         "output": "providers/updating/deadlines/{type}.md",
         "template": "templates/deadlines.hbs",
         "source": {

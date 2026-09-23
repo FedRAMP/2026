@@ -13,9 +13,10 @@ tags:
 {{/if}}
 # {{title}}
 
+{{> introduction}}
 {{#each deadlineTables}}
 
-| Ruleset | Optional Adoption | Obtain | Maintain | Grace Ends |
+| Ruleset | Optional Adoption Allowed | Obtaining Initial Certification | Maintaining Ongoing Certification | Grace Period Ends |
 | --- | --- | --- | --- | --- |
 {{#each rows}}
 | [{{displayName}}]({{href}}) | {{optionalAdoption}} | {{obtain}} | {{maintain}} | {{graceEnds}} |
