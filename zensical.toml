@@ -455,8 +455,6 @@ extra_javascript = [
 
 [project.extra]
 homepage = "/2026"
-social_image = "/2026/assets/thumbnail.png"
-social_image_alt = "FedRAMP Consolidated Rules for 2026"
 
 
 [project.extra.analytics]
@@ -597,3 +595,15 @@ alternate_style = true
 [project.markdown_extensions.pymdownx.emoji]
 emoji_index = "zensical.extensions.emoji.twemoji"
 emoji_generator = "zensical.extensions.emoji.to_svg"
+
+[project.plugins.tags]
+
+[project.plugins.social]
+enabled = true
+cards_layout = "fedramp"
+cards_layout_dir = "tools/social-layouts"
+
+[project.plugins.social.cards_layout_options]
+background_color = "#f4f6f8"
+color = "#162e51"
+logo = "overrides/assets/fr-only-logo-black.png"

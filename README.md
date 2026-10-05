@@ -54,7 +54,7 @@ git clone --recurse-submodules https://github.com/FedRAMP/2026.git
 ```
 cd tools
 bun install
-uv venv && uv pip install zensical mkdocs-ultralytics-plugin
+uv venv && uv pip install "zensical>=0.0.67"
 ```
 
 (replace `bun install` with node/etc. as desired; `bun run build` and `bun run dev` invoke zensical directly from `tools/.venv/bin/zensical`, so it must live in a `uv`-managed venv there rather than a global `pip install`)
@@ -73,7 +73,10 @@ bun run sync
 ```
 cd tools
 bun run build
-.venv/bin/python scripts/postprocess.py
 ```
 
 You should now have a full HTML site rendered in `html/`. Copy those files to `static/2026` in fedramp.gov.
+
+Zensical 0.0.67 or newer generates social cards and sharing metadata during the
+build. Card styling is configured under `project.plugins.social` in
+`zensical.toml`; no separate plugin or postprocessing step is needed.
