@@ -14,6 +14,22 @@ picto:
     Rules to the maximum extent possible but may occasionally need to update things due to typos,
     confusion, or urgent critical updates.
 
+## 2026.10.05.01 (October 5, 2026)
+
+Updated several rules with clarifications and adopted the new Zensical social cards from 0.0.67.
+
+### Rules Changes
+
+We've started to [track improvements as issues in the rules GitHub repository](https://github.com/FedRAMP/rules/issues). You can watch issues in that repo to track these as they are created and implemented.
+
+- [VER-EVA-EPA (Estimate Potential Agency Impact)](reference/vulnerability-evaluation-and-reporting/#estimate-potential-agency-impact): Added PAIN0 for situations where it's extremely unlikely that agencies will notice an adverse effect.
+- [FRC-CSO-JSN (FedRAMP JSON Schemas)](reference/fedramp-certification/#fedramp-json-schemas): Updated to clarify that public JSON data must be available with proper CORS & Content-Type settings for web app use.
+- [CDS-CSO-PUB (Public Information)](reference/certification-data-sharing/#public-information): Expanded the required link to a logo to include a requirement that it be a properly named image file.
+- [CMU-CSO-UVM (Using Validated Cryptographic Modules)](reference/cryptographic-module-use/#using-validated-cryptographic-modules): Note added explaining upstream use is limited to updates of previously validated algorithms.
+- [MKT-CAS-LRQ (Listing Requests for Advisors)](reference/marketplace-listing/#listing-requests-for-advisors): Updated form name and URL to match website.
+- [MKT-IAS-LRQ (Listing Requests for Assessors)](reference/marketplace-listing/#listing-requests-for-assessors): Updated form name and URL to match website.
+- [FRC-CSF-RDY (FedRAMP Ready Conversion)](reference/fedramp-certification/#fedramp-ready-conversion): Adding a missing 'ing' after 'follow'
+
 ## 2026.09.22.01 (September 22, 2026)
 
 This is purely a content (and build pipeline) update that clarifies the "obtain", "maintain", "optional_adoption", and "grace" attributes for each Ruleset.
