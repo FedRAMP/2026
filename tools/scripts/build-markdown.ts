@@ -597,6 +597,13 @@ interface ControlLinkContext {
   controlReferenceIndex: ControlReferenceIndex;
 }
 
+interface TrigramRowViewModel {
+  trigram: string;
+  name: string;
+  type: "Collection" | "Ruleset" | "Ruleset subset" | "KSI theme";
+  href?: string;
+}
+
 interface DocumentViewModel {
   introduction?: string;
   title: string;
@@ -627,6 +634,7 @@ interface DocumentViewModel {
   controlCount: number;
   deadlineTables: DeadlineTableViewModel[];
   referenceIndexRows: ReferenceIndexRowViewModel[];
+  trigramRows: TrigramRowViewModel[];
   taggedDocumentSummaryRows: TaggedDocumentSummaryRowViewModel[];
   taggedDocumentSummaryStats?: TaggedDocumentSummaryStatsViewModel;
 }
@@ -644,6 +652,7 @@ export interface BuildArtifact {
     | "KSI"
     | "CTL"
     | "CTL_REFERENCE"
+    | "TRIGRAMS"
     | "DEADLINES"
     | "FRR_REFERENCE_INDEX"
     | "FRR_TAGGED_SUMMARY";
@@ -4104,6 +4113,7 @@ function buildDocumentContext(
     controlCount: options.controlCount ?? 0,
     deadlineTables: options.deadlineTables ?? [],
     referenceIndexRows: options.referenceIndexRows ?? [],
+    trigramRows: options.trigramRows ?? [],
     taggedDocumentSummaryRows: options.taggedDocumentSummaryRows ?? [],
     taggedDocumentSummaryStats: options.taggedDocumentSummaryStats,
   };
@@ -6274,6 +6284,138 @@ function collectRuleDocumentArtifacts(
   return artifact ? [artifact] : [];
 }
 
+function collectTrigramDocumentArtifacts(
+  rules: RulesDocument,
+  config: ToolConfig,
+  targets: BuildArtifact[],
+): BuildArtifact[] {
+  return (config.generated.trigramDocuments ?? []).map((mapping) => {
+    const relativePath = normalizeGeneratedPath(mapping.output);
+    const rows: TrigramRowViewModel[] = [];
+    const identifiers = new Set<string>();
+    const targetFor = (
+      mappingId: string,
+      sourceDocument?: string,
+    ): BuildArtifact => {
+      const matches = targets.filter(
+        (artifact) =>
+          artifact.mappingId === mappingId &&
+          (sourceDocument === undefined ||
+            artifact.sourceDocument === sourceDocument),
+      );
+      if (matches.length !== 1) {
+        throw new Error(
+          `Trigram mapping "${mapping.id}" requires one target from "${mappingId}"${sourceDocument ? ` for ${sourceDocument}` : ""}; found ${matches.length}.`,
+        );
+      }
+      return matches[0]!;
+    };
+    const addRow = (
+      trigram: string,
+      name: string,
+      type: TrigramRowViewModel["type"],
+      target: BuildArtifact | undefined,
+      anchor?: string,
+    ) => {
+      if (identifiers.has(trigram)) {
+        throw new Error(
+          `Duplicate trigram "${trigram}" in mapping "${mapping.id}".`,
+        );
+      }
+      if (
+        target && anchor &&
+        !target.context.sections.some((section) => section.anchorId === anchor)
+      ) {
+        throw new Error(
+          `Trigram "${trigram}" targets missing section "${anchor}" in ${target.relativePath}.`,
+        );
+      }
+      identifiers.add(trigram);
+      rows.push({
+        trigram: markdownTableCell(trigram),
+        name: markdownTableCell(name),
+        type,
+        href: target
+          ? relativeGeneratedHref(relativePath, target.relativePath) +
+            (anchor ? `#${anchor}` : "")
+          : undefined,
+      });
+    };
+
+    addRow(
+      rules.FRD.info.short_name ?? "FRD",
+      rules.FRD.info.name,
+      "Collection",
+      targetFor(mapping.definitionDocumentMappingId),
+    );
+    for (const collection of mapping.collections) {
+      addRow(
+        collection.trigram,
+        collection.name,
+        "Collection",
+        targetFor(collection.mappingId),
+      );
+    }
+    const subsetTrigrams = new Set<string>();
+    const subsetOccurrences = new Map<string, number>();
+    for (const document of Object.values(rules.FRR)) {
+      for (const key of Object.keys(document.info.subsets ?? {})) {
+        subsetOccurrences.set(key, (subsetOccurrences.get(key) ?? 0) + 1);
+      }
+    }
+    const ruleDocuments = Object.entries(rules.FRR).sort(([keyA, a], [keyB, b]) =>
+      (a.info.short_name ?? keyA).localeCompare(b.info.short_name ?? keyB, "en"),
+    );
+    for (const [key, document] of ruleDocuments) {
+      const trigram = document.info.short_name ?? key;
+      const target = targetFor(mapping.ruleDocumentMappingId, key);
+      addRow(trigram, document.info.name, "Ruleset", target);
+      for (const [subsetKey, subset] of Object.entries(
+        document.info.subsets ?? {},
+      )) {
+        // Shared subset trigrams keep the first alphabetical name, without a link.
+        if (subsetTrigrams.has(subsetKey)) continue;
+        subsetTrigrams.add(subsetKey);
+        addRow(
+          subsetKey,
+          subset.name ?? subsetKey,
+          "Ruleset subset",
+          subsetOccurrences.get(subsetKey) === 1 ? target : undefined,
+          sectionAnchorId(subsetKey, subset.name ?? subsetKey),
+        );
+      }
+    }
+    const ksiTarget = targetFor(mapping.ksiDocumentMappingId);
+    for (const [key, theme] of Object.entries(rules.KSI)) {
+      addRow(
+        theme.short_name ?? key,
+        theme.name,
+        "KSI theme",
+        ksiTarget,
+        sectionAnchorId(theme.short_name ?? theme.id ?? key, theme.name),
+      );
+    }
+    rows.sort((a, b) => a.trigram.localeCompare(b.trigram, "en"));
+    return {
+      relativePath,
+      outputPath: resolveGeneratedOutputPath(config, relativePath),
+      templatePath: resolveToolPath(
+        mapping.template ?? "templates/trigrams.hbs",
+      ),
+      mappingId: mapping.id,
+      title: mapping.title,
+      documentType: "TRIGRAMS",
+      context: buildDocumentContext(mapping.title, {
+        description: mapping.description,
+        pictoSource: "machine",
+        pictoSpan: pictographSpan(config),
+        trigramRows: rows,
+        introduction: mapping.introduction,
+      }),
+    };
+  });
+}
+
 export function collectArtifacts(
   rules: RulesDocument,
   config: ToolConfig = DEFAULT_CONFIG,
@@ -6363,6 +6505,8 @@ export function collectArtifacts(
       controlReferenceIndex,
     ),
   );
+
+  artifacts.push(...collectTrigramDocumentArtifacts(rules, config, artifacts));
 
   return artifacts.map((artifact) => ({
     ...artifact,

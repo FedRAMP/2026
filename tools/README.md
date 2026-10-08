@@ -154,6 +154,31 @@ pages, its introduction appears on each page, including companion and family pag
 Custom templates receive `introduction` in their context and can render it with
 `{{> introduction}}`.
 
+## Generated Trigram Lookup
+
+`generated.trigramDocuments` configures the `trigrams.md` lookup page. Each mapping
+sets `id`, `title`, `description`, `output`, and an optional `template` (default:
+`templates/trigrams.hbs`). Edit that template to change the introduction or other
+surrounding text. The plain Markdown table uses the site's existing Tablesort script.
+
+`definitionDocumentMappingId`, `ruleDocumentMappingId`, and `ksiDocumentMappingId`
+select the complete definitions, per-ruleset, and single-page KSI reference mappings.
+The `collections` array supplies `trigram`, `name`, and `mappingId` for collection
+entries without source metadata (FRR, KSI, and CTL). Links resolve from generated
+artifacts, so changing a destination mapping's output also updates the lookup.
+
+Rows come from FRD metadata, every FRR ruleset and its `info.subsets`, and every KSI
+theme. KSI themes appear without the `KSI-` prefix (for example, `CED`).
+Subset trigrams appear once without a ruleset prefix (for example, `CSO`).
+When multiple rulesets share a subset trigram, its name comes from the first
+ruleset alphabetically by trigram and it appears as plain text without a link.
+Subsets used by only one ruleset retain their section links. Individual definitions, rules,
+indicators, and controls are excluded. Rows
+sort alphabetically by trigram. Missing or ambiguous target pages, missing section
+anchors, and duplicate trigrams fail generation instead of producing broken links.
+The page uses the same generated manifest and manual-content collision protection
+as other generated pages.
+
 ## Generated Definitions
 
 Add an entry to `generated.definitionDocuments` in `config.json`:

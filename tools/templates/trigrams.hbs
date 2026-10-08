@@ -1,0 +1,29 @@
+---
+title: "{{title}}"
+description: "{{description}}"
+{{#if tags.length}}
+tags:
+{{#each tags}}
+  - {{this}}
+{{/each}}
+{{/if}}
+picto:
+  source: {{pictoSource}}
+---
+
+{{#if pictoSpan}}
+{{pictoSpan}}
+
+{{/if}}
+# {{title}}
+
+{{> introduction}}
+FedRAMP uses trigrams (three-letter acronyms, initialisms, or abbreviations) to uniquely identify collections, rulesets, ruleset subsets, and Key Security Indicator themes.
+
+This table allows folks to quickly find the corresponding collection, ruleset, ruleset subset, or Key Security Indicator theme for each trigram.
+
+| Trigram | Name | Type |
+| --- | --- | --- |
+{{#each trigramRows}}
+| {{#if href}}[{{trigram}}]({{href}}){{else}}{{trigram}}{{/if}} | {{name}} | {{type}} |
+{{/each}}

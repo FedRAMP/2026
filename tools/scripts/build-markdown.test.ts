@@ -1115,6 +1115,7 @@ describe("build-markdown", () => {
       ["FRD", "Definitions"],
       ["FRR", "Rules"],
       ["FRR_REFERENCE_INDEX", "Rules"],
+      ["TRIGRAMS", "Rules"],
       ["FRR_TAGGED_SUMMARY", "Rules"],
       ["KSI", "Key Security Indicators"],
     ]);
@@ -1800,6 +1801,7 @@ describe("build-markdown", () => {
       ...config,
       generated: {
         ...config.generated,
+        trigramDocuments: [],
         definitionDocuments: [],
         ksiDocuments: [],
         controlDocuments: [],
@@ -1917,6 +1919,7 @@ describe("build-markdown", () => {
       ...config,
       generated: {
         ...config.generated,
+        trigramDocuments: [],
         definitionDocuments: [],
         ksiDocuments: [],
         controlDocuments: [],
@@ -2008,6 +2011,7 @@ describe("build-markdown", () => {
       ...config,
       generated: {
         ...config.generated,
+        trigramDocuments: [],
         definitionDocuments: [],
         ksiDocuments: [],
         controlDocuments: [],
@@ -2173,6 +2177,7 @@ describe("build-markdown", () => {
       ...config,
       generated: {
         ...config.generated,
+        trigramDocuments: [],
         definitionDocuments: [],
         ksiDocuments: [
           {
@@ -2475,6 +2480,7 @@ describe("build-markdown", () => {
       ...config,
       generated: {
         ...config.generated,
+        trigramDocuments: [],
         definitionDocuments: [],
         ksiDocuments: [
           {
@@ -2539,6 +2545,7 @@ describe("build-markdown", () => {
       ...config,
       generated: {
         ...config.generated,
+        trigramDocuments: [],
         definitionDocuments: [],
         ksiDocuments: [],
         controlDocuments: [],
@@ -2600,6 +2607,7 @@ describe("build-markdown", () => {
       ...config,
       generated: {
         ...config.generated,
+        trigramDocuments: [],
         definitionDocuments: [],
         ksiDocuments: [],
         controlDocuments: [],
@@ -2683,6 +2691,7 @@ describe("build-markdown", () => {
       expect(artifact.context.introduction).toBeUndefined();
     }
     const legacy = configure(introduction);
+    legacy.generated.trigramDocuments = [];
     legacy.generated.definitionDocuments = [];
     legacy.generated.definitions = { enabled: true, output: "legacy-definitions.md", introduction };
     expect(collectArtifacts(rules, legacy).find((artifact) => artifact.relativePath === "legacy-definitions.md")?.context.introduction).toBe(introduction);
@@ -2708,6 +2717,7 @@ describe("build-markdown", () => {
         },
         generated: {
           ...config.generated,
+          trigramDocuments: [],
           definitions: undefined,
           definitionDocuments: [
             {
@@ -2824,6 +2834,7 @@ describe("build-markdown", () => {
           },
           generated: {
             ...config.generated,
+            trigramDocuments: [],
             definitions: undefined,
             definitionDocuments: [
               {
@@ -3112,6 +3123,23 @@ describe("build pipeline", () => {
       path.join(srcPath, config.generated.manifest),
     );
     expect(manifest.files).toEqual(expectedGeneratedFiles);
+
+    const trigramHtml = await readFile(path.join(htmlPath, "trigrams/index.html"), "utf8");
+    const tables = trigramHtml.match(/<table[ >][\s\S]*?<\/table>/g) ?? [];
+    expect(tables).toHaveLength(1);
+    expect(tables[0]).toStartWith("<table>");
+    expect(trigramHtml).toContain("javascripts/tablesort.js");
+    expect(trigramHtml).toContain('name="description"');
+    const lookup = expectedArtifacts.find((artifact) => artifact.documentType === "TRIGRAMS")!;
+    const renderedLinks = [...tables[0]!.matchAll(/href="([^"]+)"/g)].map((match) => match[1]!);
+    expect(renderedLinks).toHaveLength(lookup.context.trigramRows.filter((row) => row.href).length);
+    expect(tables[0]).toContain("<td>CSO</td>");
+    for (const href of renderedLinks) {
+      const url = new URL(href, "https://example.test/trigrams/");
+      const targetHtml = await readFile(path.join(htmlPath, url.pathname, "index.html"), "utf8");
+      if (url.hash) expect(targetHtml, href).toContain(`id="${decodeURIComponent(url.hash.slice(1))}"`);
+    }
+
 
     const contentFiles = await listRelativeFiles(contentPath);
     for (const relativePath of contentFiles) {
