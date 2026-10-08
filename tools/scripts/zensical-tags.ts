@@ -26,6 +26,7 @@ const CONTENT_TYPE_TAG_BY_DOCUMENT_TYPE = new Map([
   ["FRD", "Definitions"],
   ["FRR", "Rules"],
   ["FRR_REFERENCE_INDEX", "Rules"],
+  ["TRIGRAMS", "Rules"],
   ["FRR_TAGGED_SUMMARY", "Rules"],
   ["KSI", "Key Security Indicators"],
 ]);

@@ -21,6 +21,23 @@
   },
   "generated": {
     "manifest": ".generated-markdown.json",
+    "trigramDocuments": [
+      {
+        "id": "fedramp-trigrams",
+        "title": "FedRAMP Trigrams",
+        "description": "Look up FedRAMP trigrams, ruleset and subset names, and Key Security Indicator themes, with links to the complete rules reference.",
+        "output": "trigrams.md",
+        "template": "templates/trigrams.hbs",
+        "definitionDocumentMappingId": "fedramp-definitions",
+        "ruleDocumentMappingId": "complete-ruleset-reference",
+        "ksiDocumentMappingId": "complete-ksi-reference",
+        "collections": [
+          { "trigram": "FRR", "name": "FedRAMP Rules", "mappingId": "complete-ruleset-reference-index" },
+          { "trigram": "KSI", "name": "Key Security Indicators", "mappingId": "complete-ksi-reference" },
+          { "trigram": "CTL", "name": "Rev5 Control Guidance", "mappingId": "complete-rev5-controls-reference" }
+        ]
+      }
+    ],
     "definitionDocuments": [
       {
         "id": "fedramp-definitions",

@@ -228,8 +228,26 @@ export interface ReferenceIndexDocumentMappingConfig {
   source: ReferenceIndexDocumentSourceConfig;
 }
 
+export interface TrigramDocumentMappingConfig {
+  id: string;
+  introduction?: string;
+  title: string;
+  description: string;
+  output: string;
+  template?: string;
+  definitionDocumentMappingId: string;
+  ruleDocumentMappingId: string;
+  ksiDocumentMappingId: string;
+  collections: Array<{
+    trigram: string;
+    name: string;
+    mappingId: string;
+  }>;
+}
+
 export interface GeneratedConfig {
   manifest: string;
+  trigramDocuments?: TrigramDocumentMappingConfig[];
   definitions?: DefinitionsMappingConfig;
   definitionDocuments?: DefinitionDocumentMappingConfig[];
   ksiDocuments?: KsiDocumentMappingConfig[];
