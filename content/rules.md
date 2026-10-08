@@ -136,7 +136,7 @@ FedRAMP uses capitalized key words for the force of each rule based on [IETF RFC
 
     #### SHOULD NOT
 
-    There may exist valid reasons in particular circumstances when the particular action is acceptable or even useful, but the full implications must be understand and carefully weighed.
+    There may exist valid reasons in particular circumstances when the particular action is acceptable or even useful, but the full implications must be understood and carefully weighed.
 
     Parties MUST address such rules in their security documentation by explaining their decisions about how they handle such rules.
 
