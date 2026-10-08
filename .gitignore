@@ -1,11 +1,14 @@
-.DS_Store
-docs/
-.cache
-node_modules/
-html/
-src/
-output/
-
+# only ignore in root directory
+/docs/
+/node_modules/
+/html/
+/src/
+/output/
 /CLAUDE.md
 /tools/.venv
 /.idea
+
+# unbounded
+
+.cache
+.DS_Store
