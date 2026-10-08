@@ -14,6 +14,12 @@ picto:
     Rules to the maximum extent possible but may occasionally need to update things due to typos,
     confusion, or urgent critical updates.
 
+## 2026.10.08.01 (October 8, 2026)
+
+This update does not make any significant changes; typos and convenience only.
+
+- Added [FedRAMP Trigrams](trigrams.md) to explain the acronym, initialism, or abbreviation for various trigrams used in the FedRAMP Rules (does not include the final trigram which is always the name of a rule, definition, or Key Security Indicator).
+
 ## 2026.10.05.01 (October 5, 2026)
 
 Updated several rules with clarifications and adopted the new Zensical social cards from 0.0.67.
