@@ -2,6 +2,8 @@ import { access, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promise
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import Handlebars from "handlebars";
+import { parse as parseToml } from "smol-toml";
+import { searchableNavigationPages } from "./search-exclusions";
 import {
   DEFAULT_CONFIG,
   assertPathInside,
@@ -605,6 +607,7 @@ interface TrigramRowViewModel {
 }
 
 interface DocumentViewModel {
+  searchExclude?: boolean;
   introduction?: string;
   title: string;
   description?: string;
@@ -6508,10 +6511,22 @@ export function collectArtifacts(
 
   artifacts.push(...collectTrigramDocumentArtifacts(rules, config, artifacts));
 
+  const searchConfig = config.generated.search;
+  const searchablePages = searchConfig
+    ? searchableNavigationPages(
+        parseToml(readFileSync(resolveToolPath(config.paths.zensicalConfig), "utf8")),
+        searchConfig.includedNavigationSections,
+      )
+    : undefined;
+  const searchContentTypes = new Set(["FRR", "KSI", "CTL", "CTL_REFERENCE"]);
+
   return artifacts.map((artifact) => ({
     ...artifact,
     context: {
       ...artifact.context,
+      searchExclude: searchablePages !== undefined &&
+        searchContentTypes.has(artifact.documentType) &&
+        !searchablePages.has(artifact.relativePath),
       tags: mergeGeneratedZensicalTags(
         artifact.context.tags,
         artifact.relativePath,

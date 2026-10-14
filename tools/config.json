@@ -20,6 +20,12 @@
     }
   },
   "generated": {
+    "search": {
+      "includedNavigationSections": [
+        ["Ruleset Reference", "Complete Rulesets"],
+        ["Ruleset Reference", "Other References"]
+      ]
+    },
     "manifest": ".generated-markdown.json",
     "trigramDocuments": [
       {

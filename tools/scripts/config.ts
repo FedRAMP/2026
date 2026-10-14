@@ -245,7 +245,12 @@ export interface TrigramDocumentMappingConfig {
   }>;
 }
 
+export interface GeneratedSearchConfig {
+  includedNavigationSections: string[][];
+}
+
 export interface GeneratedConfig {
+  search?: GeneratedSearchConfig;
   manifest: string;
   trigramDocuments?: TrigramDocumentMappingConfig[];
   definitions?: DefinitionsMappingConfig;
