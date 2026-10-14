@@ -1,5 +1,9 @@
 {{#if tags.length}}
 ---
+{{#if searchExclude}}
+search:
+  exclude: true
+{{/if}}
 tags:
 {{#each tags}}
   - {{this}}

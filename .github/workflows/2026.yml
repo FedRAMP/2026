@@ -38,7 +38,7 @@ jobs:
 
       - name: Install zensical
         working-directory: tools
-        run: uv venv && uv pip install "zensical>=0.0.67"
+        run: uv venv && uv pip install "zensical>=0.0.70"
 
       - name: Install tool dependencies
         working-directory: tools

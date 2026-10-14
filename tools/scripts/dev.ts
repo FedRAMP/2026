@@ -507,6 +507,10 @@ async function main(): Promise<void> {
     schedulePipeline("config change", "full");
   });
 
+  const navigationWatcher = watch(zensicalConfig, () => {
+    schedulePipeline("navigation change");
+  });
+
   const rulesWatcher = watch(rulesFile, () => {
     schedulePipeline("rules source change");
   });
@@ -521,6 +525,7 @@ async function main(): Promise<void> {
     contentWatcher.close();
     buildWatcher.close();
     configWatcher.close();
+    navigationWatcher.close();
     rulesWatcher.close();
     oscalCatalogWatcher.close();
 

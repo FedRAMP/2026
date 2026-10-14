@@ -1043,6 +1043,21 @@ describe("build-markdown", () => {
     const summary = await buildMarkdown();
     expect(summary.artifactCount).toBe(expectedArtifacts.length);
 
+    const searchableReferences = new Set([
+      "complete-ruleset-reference", "complete-ksi-reference",
+      "complete-rev5-controls-reference", "full-rev5-control-reference",
+    ]);
+    const searchContentTypes = new Set(["FRR", "KSI", "CTL", "CTL_REFERENCE"]);
+    for (const artifact of summary.artifacts) {
+      const excluded = searchContentTypes.has(artifact.documentType) &&
+        !searchableReferences.has(artifact.mappingId);
+      expect(artifact.context.searchExclude, artifact.relativePath).toBe(excluded);
+      const markdown = await readFile(artifact.outputPath, "utf8");
+      const frontmatter = markdown.split("---")[1] ?? "";
+      expect(/search:\s*\n  exclude: true/.test(frontmatter), artifact.relativePath).toBe(excluded);
+    }
+
+
     const relativePaths = summary.artifacts
       .map((artifact) => artifact.relativePath)
       .sort();
@@ -1301,7 +1316,7 @@ describe("build-markdown", () => {
       );
     }
     expect(ksiThemeContents).toStartWith(
-      `---\ntags:\n${ksiThemeArtifact.context.tags.map((tag) => `  - ${tag}`).join("\n")}\n---\n\n${ksiThemeArtifact.context.pictoSpan}\n\n# ${ksiThemeArtifact.title}`,
+      `---\nsearch:\n  exclude: true\ntags:\n${ksiThemeArtifact.context.tags.map((tag) => `  - ${tag}`).join("\n")}\n---\n\n${ksiThemeArtifact.context.pictoSpan}\n\n# ${ksiThemeArtifact.title}`,
     );
     expect(ksiThemeContents).not.toContain("**Subsets**");
     expect(ksiThemeContents).toContain(ksiThemeIndicator.id);

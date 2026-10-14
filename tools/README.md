@@ -517,3 +517,17 @@ Add an entry to `generated.frrCollectionDocuments` in `config.json` when selecte
 FRR collection mappings output a single Markdown page. Each matched FRR ruleset renders as a `##` section with the FRR purpose, then the matching subset description, then the rules selected by `source.affects` and `source.sections`. These collection pages intentionally omit effective-date blocks and activity workflow diagrams.
 
 Mapping fields are the same as generated rule pages except `title` is required, and `outputMode`, `includeEffectiveDates`, and `source.groupBy` are not used.
+
+## Generated Search Exclusions
+
+`generated.search.includedNavigationSections` lists navigation section paths from
+`zensical.toml` whose rule, KSI, and control pages remain searchable. The current
+sections are **Ruleset Reference → Complete Rulesets** and **Ruleset Reference →
+Other References**. Nested entries are included using exact Markdown path matches;
+a missing or ambiguous section fails generation.
+
+Other generated FRR, KSI, CTL, and full control reference pages receive
+`search.exclude: true` in YAML front matter. Pages remain built and accessible.
+Definitions, ruleset indexes, summaries, deadlines, and manual pages are unaffected.
+Navigation changes update this selection on the next generation, including during
+`bun run dev`. Omitting `generated.search` disables this policy.

@@ -1,19 +1,26 @@
 ## {{term}}
 
 {{#if changelog.length}}
-??? abstract "**ID:** {{id}}"
+??? abstract "{{id}}"
 {{#if formerId}}
     **Former ID:** {{formerId}}
 
 {{/if}}
     **Changelog:**
-{{#each changelog}}
-    - **{{date}}:** {{comment}}{{#if previousValue}}
+    { data-search-exclude }
 
-        **Was:** {{previousValue}}{{/if}}
+{{#each changelog}}
+    - **{{date}}:** {{comment}}
+        { data-search-exclude }
+{{#if previousValue}}
+
+        **Was:** {{previousValue}}
+        { data-search-exclude }
+{{/if}}
+
 {{/each}}
 {{else}}
-!!! abstract "**ID:** {{id}}"
+!!! abstract "{{id}}"
 {{/if}}
 
 !!! quote ""
