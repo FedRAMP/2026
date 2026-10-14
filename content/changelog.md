@@ -14,6 +14,13 @@ picto:
     Rules to the maximum extent possible but may occasionally need to update things due to typos,
     confusion, or urgent critical updates.
 
+## 2026.10.14.01 (October 14, 2026)
+
+No rules were harmed in the marking of this update. This update improves the search experience when
+searching for a specific rule ID in zensical by excluding all machine-generated rulesets from search
+except for the Ruleset Reference page. It also hides the per-rule changelog from search so that the
+search result snippet shows a bit about the rule itself.
+
 ## 2026.10.08.01 (October 8, 2026)
 
 This update does not make any significant changes; typos and convenience only.
