@@ -104,3 +104,7 @@ Generated definitions must remain one alphabetical list of `##` term headings. D
 When the user asks for a changelog, branch changelog, public change summary, or summary of all changes on the current branch, use `$public-branch-changelog` from `.agents/skills/public-branch-changelog/SKILL.md`.
 
 This workflow is mandatory for those requests. Agents without skill support should read that file and follow it directly.
+
+## Source-derived tests
+
+Tests comparing generated output with rules or manual content must read the current local source files and derive expected content from them. Do not freeze production wording, identifiers, counts, dates, or destinations in assertions. Keep source expectations independent of generator view models; use small synthetic fixtures with explicit expected results for behavior and edge cases. NIST expectations come from the vendored OSCAL catalog, not copied control facts.
