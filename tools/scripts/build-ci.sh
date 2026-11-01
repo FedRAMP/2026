@@ -9,24 +9,21 @@ bun install --frozen-lockfile
 echo "::endgroup::"
 
 echo "::group::Sync rules"
+# CI deliberately builds the latest upstream main, not the recorded gitlink.
 bun run sync
 echo "::endgroup::"
 
-echo "::group::Run tests and checks"
-bun run check
-echo "::endgroup::"
-
-echo "::group::Build enriched site"
-
-# Preserve the existing CI deployment URL.
-sed -i \
-  's|^site_url = .*|site_url = "https://preview.fedramp.gov/2026/"|' \
-  ../zensical.toml
+echo "::group::Clear previous build output"
 
 # Start without old HTML that could mask missing build output.
 rm -rf ../html
 
-bun run build
+echo "::endgroup::"
+
+echo "::group::Build site and run tests and checks"
+# The integration test in bun run check runs the full build and verifies its
+# output. Keep that tested artifact for upload instead of rebuilding afterward.
+bun run check
 echo "::endgroup::"
 
 echo "::group::Verify generated output"

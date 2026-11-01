@@ -73,6 +73,7 @@ bunx tsc -p tsconfig.json --noEmit
 - `bun run check`: run tests, TypeScript checks, and non-failing content style warnings.
 - `bun run build`: regenerate `src/` and build `html/`.
 - `bun run sync`: update the `tools/rules` submodule.
+- CI intentionally runs `bun run sync` to build the latest `FedRAMP/rules` `main`, rather than the submodule revision recorded in this repository. Preserve this behavior; repeat builds of a site commit may consume newer rules.
 - `bunx tsc -p tsconfig.json --noEmit`: type-check the Bun and Node scripts.
 
 Generic read-only commands such as `git`, `rg`, and `sed` may run from the repository root.

@@ -3,6 +3,8 @@ name: Deploy CR26 to GitHub Pages
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -14,6 +16,8 @@ jobs:
   site:
     uses: FedRAMP/shared-workflows/.github/workflows/build-fr-zensical.yml@v1
     with:
+      # Requires the shared workflow's deploy input before this caller is merged.
+      deploy: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
       use-bun: true
       submodules: true
       venv-path: tools/.venv
