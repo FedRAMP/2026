@@ -1,0 +1,20 @@
+name: Deploy CR26 to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  site:
+    uses: FedRAMP/shared-workflows/.github/workflows/build-fr-zensical.yml@v1
+    with:
+      use-bun: true
+      submodules: true
+      venv-path: tools/.venv
+      build-script: tools/scripts/build-ci.sh

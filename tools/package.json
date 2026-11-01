@@ -11,6 +11,7 @@
     "sync": "./scripts/sync-rules-submodule.sh",
     "check": "bun run ./scripts/check.ts",
     "check:style": "bun run ./scripts/style-warnings.ts",
+    "check:site": "bun run ./scripts/verify-site.ts",
     "test": "bun test"
   },
   "devDependencies": {

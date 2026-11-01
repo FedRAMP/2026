@@ -49,6 +49,8 @@ async function main(): Promise<void> {
   await rm(path.join(REPO_ROOT, ".cache"), { recursive: true, force: true });
   await runCommand(zensicalBinary(), [
     "build",
+    "--clean",
+    "--strict",
     "-f",
     resolveToolPath(config.paths.zensicalConfig),
   ]);
