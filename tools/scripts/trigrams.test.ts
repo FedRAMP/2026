@@ -2,8 +2,9 @@ import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { buildMarkdown, collectArtifacts, loadRules } from "./build-markdown";
-import { loadToolConfig } from "./config";
+import { buildMarkdown, collectArtifacts } from "./build-markdown";
+import { loadToolConfig, loadRules, type Rules } from "./test-support/sources";
+import { expectedTrigrams } from "./test-support/source-contract";
 
 test("trigram lookup covers collections, rulesets, subsets, and themes with valid targets", async () => {
   const config = await loadToolConfig();
@@ -13,42 +14,11 @@ test("trigram lookup covers collections, rulesets, subsets, and themes with vali
     (artifact) => artifact.documentType === "TRIGRAMS",
   )!;
   const rows = lookup.context.trigramRows;
-  const expected = [rules.FRD.info.short_name!, "FRR", "KSI", "CTL"];
-  for (const [key, document] of Object.entries(rules.FRR)) {
-    const trigram = document.info.short_name ?? key;
-    expected.push(
-      trigram,
-      ...Object.keys(document.info.subsets ?? {}),
-    );
-  }
-  expected.push(
-    ...Object.entries(rules.KSI).map(
-      ([key, theme]) => theme.short_name ?? key,
-    ),
-  );
-  expect(rows.map((row) => row.trigram)).toEqual(
-    [...new Set(expected)].sort((a, b) => a.localeCompare(b, "en")),
-  );
-  expect(new Set(rows.map((row) => row.trigram)).size).toBe(rows.length);
-  expect(new Set(rows.map((row) => row.type))).toEqual(
-    new Set(["Collection", "Ruleset", "Ruleset subset", "KSI theme"]),
-  );
-  for (const excluded of ["FRD-SNT", "AFC-CSO", "CDS-CSO", "AFC-CSO-ABC", "KSI-CED", "KSI-CED-RAT"]) {
-    expect(rows.some((row) => row.trigram === excluded)).toBe(false);
-  }
-  const href = (trigram: string) =>
-    rows.find((row) => row.trigram === trigram)?.href;
-  expect(href("FRD")).toBe("definitions.md");
-  expect(href("MKT")).toBe("reference/marketplace-listing.md");
-  expect(href("CSO")).toBeUndefined();
-  expect(href("TRC")).toBe("reference/certification-data-sharing.md#fedramp-compatible-trust-centers");
-  expect(href("CED")).toBe(
-    "reference/key-security-indicators.md#cybersecurity-education",
-  );
+  expect(rows).toEqual(expectedTrigrams(rules, config));
   for (const row of rows) {
     if (row.type === "Ruleset subset") {
-      const occurrences = Object.values(rules.FRR).filter(
-        (document) => Object.hasOwn(document.info.subsets ?? {}, row.trigram),
+      const occurrences = Object.values(rules.FRR).filter((document) =>
+        Object.hasOwn(document.info.subsets ?? {}, row.trigram),
       ).length;
       expect(Boolean(row.href), row.trigram).toBe(occurrences === 1);
     }
@@ -71,20 +41,12 @@ test("shared subset trigrams use a stable representative regardless of source or
   const rows = collectArtifacts(rules, config).find(
     (artifact) => artifact.documentType === "TRIGRAMS",
   )!.context.trigramRows;
-  expect(rows.filter((row) => row.trigram === "CSO")).toEqual([{
-    trigram: "CSO",
-    name: "General Provider Responsibilities",
-    type: "Ruleset subset",
-    href: undefined,
-  }]);
-  expect(rows.filter((row) => row.trigram === "FRP")).toHaveLength(1);
-  expect(rows.filter((row) => row.trigram === "IAS")).toHaveLength(1);
+  expect(rows).toEqual(expectedTrigrams(rules, config));
 });
 
 test("trigrams follow moved mappings and fall back to the KSI theme key", async () => {
-  const config = structuredClone(await loadToolConfig());
-  const rules = structuredClone(await loadRules(config));
-  delete rules.KSI.CED!.short_name;
+  const { config, rules } = await trigramFixture();
+  delete rules.KSI.XYZ!.short_name;
   config.generated.trigramDocuments![0]!.output = "lookup/trigrams.md";
   config.generated.definitionDocuments![0]!.output = "glossary.md";
   const rows = collectArtifacts(rules, config).find(
@@ -93,14 +55,13 @@ test("trigrams follow moved mappings and fall back to the KSI theme key", async 
   expect(rows.find((row) => row.trigram === "FRD")!.href).toBe(
     "../glossary.md",
   );
-  expect(rows.find((row) => row.trigram === "CED")!.href).toBe(
-    "../reference/key-security-indicators.md#cybersecurity-education",
+  expect(rows.find((row) => row.trigram === "XYZ")!.href).toBe(
+    "../reference/key-security-indicators.md#sample-theme",
   );
 });
 
 test("trigrams reject missing targets and duplicate identifiers", async () => {
-  const config = structuredClone(await loadToolConfig());
-  const rules = await loadRules(config);
+  const { config, rules } = await trigramFixture();
   config.generated.trigramDocuments![0]!.collections.push({
     trigram: "FRD",
     name: "Duplicate",
@@ -118,8 +79,7 @@ test("trigrams reject missing targets and duplicate identifiers", async () => {
 });
 
 test("trigram rendering escapes table cells, tracks its manifest, and protects manual content", async () => {
-  const config = structuredClone(await loadToolConfig());
-  const rules = structuredClone(await loadRules(config));
+  const { config, rules } = await trigramFixture();
   const temp = await mkdtemp(path.join(tmpdir(), "fedramp-trigrams-"));
   try {
     config.paths.src = path.join(temp, "src");
@@ -137,8 +97,8 @@ test("trigram rendering escapes table cells, tracks its manifest, and protects m
       "| [FRD](definitions.md) | Definitions \\| Terms Lookup | Collection |",
     );
     expect(markdown.match(/\| Trigram \| Name \| Type \|/g)?.length).toBe(1);
-    expect(markdown).toContain("| CSO | General Provider Responsibilities | Ruleset subset |");
-    expect(markdown).not.toContain("[CSO]");
+    expect(markdown).toContain("| SHR | Shared subset | Ruleset subset |");
+    expect(markdown).not.toContain("[SHR]");
     expect(markdown).toContain('title: "FedRAMP Trigrams"');
     expect(markdown).toContain("source: machine");
     const manifest = JSON.parse(
@@ -162,3 +122,88 @@ test("trigram rendering escapes table cells, tracks its manifest, and protects m
     await rm(temp, { recursive: true, force: true });
   }
 });
+
+async function trigramFixture() {
+  const config = await loadToolConfig();
+  for (const key of Object.keys(config.generated)) {
+    if (Array.isArray(config.generated[key as keyof typeof config.generated]))
+      (config.generated as unknown as Record<string, unknown>)[key] = [];
+  }
+  delete config.generated.search;
+  const doc = (key: string) => ({
+    info: {
+      name: `${key} rules`,
+      short_name: key,
+      web_name: key.toLowerCase(),
+      subsets: { SHR: { name: "Shared subset" } },
+    },
+    data: {
+      all: {
+        SHR: {
+          [`${key}-SHR-ONE`]: {
+            name: "Sample rule",
+            statement: "Follow this synthetic rule.",
+          },
+        },
+      },
+    },
+  });
+  const rules: Rules = {
+    FRD: {
+      info: { name: "Definitions", short_name: "FRD", web_name: "definitions" },
+      data: {
+        all: {
+          "FRD-ONE": { term: "Example", definition: "Synthetic definition." },
+        },
+      },
+    },
+    FRR: { AAA: doc("AAA"), BBB: doc("BBB") },
+    KSI: {
+      XYZ: {
+        name: "Sample Theme",
+        web_name: "sample-theme",
+        short_name: "XYZ",
+        indicators: {
+          "KSI-XYZ-ONE": { name: "Indicator", statement: "Measure this." },
+        },
+      },
+    },
+    CTL: {},
+  };
+  config.generated.definitionDocuments = [
+    {
+      id: "fedramp-definitions",
+      output: "definitions.md",
+      source: { collection: "FRD", types: ["all"] },
+    },
+  ];
+  config.generated.ruleDocuments = [
+    {
+      id: "rules",
+      output: "reference/{FRR}.md",
+      outputMode: "documents",
+      source: { collection: "FRR", documents: "ALL", types: ["all"] },
+    },
+  ];
+  config.generated.ksiDocuments = [
+    {
+      id: "ksi",
+      output: "reference/key-security-indicators.md",
+      outputMode: "single",
+      source: { collection: "KSI", themes: "ALL" },
+    },
+  ];
+  config.generated.trigramDocuments = [
+    {
+      id: "trigrams",
+      title: "FedRAMP Trigrams",
+      description: "Fixture",
+      output: "trigrams.md",
+      definitionDocumentMappingId: "fedramp-definitions",
+      ruleDocumentMappingId: "rules",
+      ksiDocumentMappingId: "ksi",
+      collections: [],
+    },
+  ];
+  return { config, rules };
+}

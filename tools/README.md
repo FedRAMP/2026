@@ -531,3 +531,27 @@ Other generated FRR, KSI, CTL, and full control reference pages receive
 Definitions, ruleset indexes, summaries, deadlines, and manual pages are unaffected.
 Navigation changes update this selection on the next generation, including during
 `bun run dev`. Omitting `generated.search` disables this policy.
+
+## Testing source fidelity
+
+`test-support/sources.ts` (under `scripts/`) takes one in-memory snapshot per test
+process of the local rules JSON, configuration, navigation, vendored OSCAL catalog,
+and manual content. Fixture loaders return clones; tests never sync or modify the
+source files. Restart the test process after changing sources.
+
+Source-contract checks derive record membership and text from those inputs and
+mapping filters, independently of `collectArtifacts` view models. They compare
+Markdown and rendered HTML, including definitions, rules, indicators, controls,
+baselines, deadlines, summary tables, and trigrams. The expected output inventory
+comes from source and configuration. Manual copy checks enumerate `content/` first
+so missing copies fail, and compare assets byte-for-byte. HTML checks account for
+rendering syntax while retaining source wording and punctuation.
+
+Synthetic fixtures remain appropriate for formatting, filtering, escaping and
+failure behavior. Do not add fixed production examples or snapshots to these
+checks. `source-contract.test.ts` deliberately corrupts outputs to test that the
+comparison helpers detect drift. The build integration test explicitly invokes
+the full build before inspecting output; fixture builds use temporary directories.
+Run `bun run check` for the full gate. The configured Zensical build may need
+network access for fonts; a font-download failure is a build-environment failure,
+not a reason to weaken content assertions.

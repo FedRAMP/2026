@@ -1,3 +1,15 @@
+import {
+  sources,
+  loadRules,
+  loadToolConfig,
+  readTree,
+} from "./test-support/sources";
+import {
+  assertArtifactSource,
+  expectedOutputPaths,
+  assertManualCopy,
+  assertManualHtml,
+} from "./test-support/source-contract";
 import Handlebars from "handlebars";
 import { afterAll, describe, expect, test } from "bun:test";
 import { execFile, spawn } from "node:child_process";
@@ -16,19 +28,8 @@ import { promisify } from "node:util";
 import Ajv2020 from "ajv/dist/2020";
 import addFormats from "ajv-formats";
 import type { AnySchema } from "ajv";
-import {
-  buildMarkdown,
-  collectArtifacts,
-  loadRules,
-  OUTPUT_DIR,
-  RULES_FILE,
-} from "./build-markdown";
-import {
-  loadToolConfig,
-  REPO_ROOT,
-  resolveToolPath,
-  type ToolConfig,
-} from "./config";
+import { buildMarkdown, collectArtifacts, RULES_FILE } from "./build-markdown";
+import { REPO_ROOT, resolveToolPath, type ToolConfig } from "./config";
 import { deploy } from "./deploy";
 import {
   findZensicalTagWarnings,
@@ -42,11 +43,8 @@ const DEFAULT_RULES_REMOTE_BRANCH = "main";
 const RULES_SCHEMA_FILE = resolveToolPath(
   "rules/schemas/fedramp-consolidated-rules.schema.json",
 );
-const MACHINE_PICTOGRAPH =
-  ':lucide-computer:{ .machine title="This content is machine-generated from FedRAMP Machine-Readable Rules." }';
 const PERSON_PICTOGRAPH =
   ':lucide-person-standing:{ .person title="This content was written by a human just for this page." }';
-const MACHINE_PICTO_SPAN = `<span class="picto">${MACHINE_PICTOGRAPH}</span>`;
 const PERSON_PICTO_SPAN = `<span class="picto">${PERSON_PICTOGRAPH}</span>`;
 const WARNING_ORANGE = "\x1b[38;5;208m";
 const WARNING_RESET = "\x1b[0m";
@@ -118,7 +116,8 @@ function printContentPictographWarnings(): void {
       `${WARNING_ORANGE}${WARNING_MARK} Content markdown files should declare picto.source in frontmatter:${WARNING_RESET}`,
       "",
       ...contentPictographWarnings.map(
-        (warning) => `    ${WARNING_ORANGE}${WARNING_MARK} ${warning}${WARNING_RESET}`,
+        (warning) =>
+          `    ${WARNING_ORANGE}${WARNING_MARK} ${warning}${WARNING_RESET}`,
       ),
       "",
     ].join("\n"),
@@ -136,7 +135,8 @@ function printRulesSubmoduleSyncWarnings(): void {
       `${WARNING_ORANGE}Rules submodule sync warnings:${WARNING_RESET}`,
       "",
       ...rulesSubmoduleSyncWarnings.map(
-        (warning) => `    ${WARNING_ORANGE}${WARNING_MARK} ${warning}${WARNING_RESET}`,
+        (warning) =>
+          `    ${WARNING_ORANGE}${WARNING_MARK} ${warning}${WARNING_RESET}`,
       ),
       "",
     ].join("\n"),
@@ -176,84 +176,17 @@ function expectWithFailureSummary(
   }
 }
 
-function expectTextOrder(
-  contents: string,
-  expectedTexts: string[],
-  description: string,
-): void {
-  expectWithFailureSummary(description, () => {
-    let previousIndex = -1;
-    for (const expectedText of expectedTexts) {
-      const index = contents.indexOf(expectedText, previousIndex + 1);
-      expect(
-        index,
-        `${description}: missing or out-of-order text: ${expectedText}`,
-      ).toBeGreaterThan(previousIndex);
-      previousIndex = index;
-    }
-  });
-}
-
 type RulesForTest = Awaited<ReturnType<typeof loadRules>>;
 type RequirementDocumentForTest = RulesForTest["FRR"][string];
 type ArtifactForTest = ReturnType<typeof collectArtifacts>[number];
-
-function slugifyTerm(term: string): string {
-  return term
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "");
-}
-
-function relatedTermsGroupAnchorId(tag: string): string {
-  return `related-terms-group-${slugifyTerm(tag)}`;
-}
-
-function referenceIndexRowMarkdown(artifact: ArtifactForTest): string[] {
-  return artifact.context.referenceIndexRows.map((row) => {
-    const rulesetCell = row.multipleLinks
-      ? `${row.name}<br>${row.links
-          .map((link) => `[${link.label}](${link.href})`)
-          .join("<br>")}`
-      : `[${row.name}](${row.href})`;
-
-    return `| ${row.acronym} | ${rulesetCell} | ${row.status} | ${row.counts} | ${row.updated} |`;
-  });
-}
-
-function expectedImportantRelatedTermRows(rules: RulesForTest): string[] {
-  const taggedTerms = new Map<string, string[]>();
-
-  for (const entry of Object.values(rules.FRD.data.all ?? {})) {
-    const tag = entry.tag?.trim();
-    if (!tag) {
-      continue;
-    }
-
-    const terms = taggedTerms.get(tag) ?? [];
-    terms.push(entry.term);
-    taggedTerms.set(tag, terms);
-  }
-
-  return Array.from(taggedTerms.entries())
-    .sort(([left], [right]) => left.localeCompare(right))
-    .map(([tag, terms]) => {
-      const linkedTerms = terms
-        .sort((left, right) => left.localeCompare(right))
-        .map((term) => `[${term}](#${slugifyTerm(term)}){ data-preview }`)
-        .join("<br>");
-
-      return `| <span id="${relatedTermsGroupAnchorId(
-        tag,
-      )}"></span>${tag} | ${linkedTerms} |`;
-    });
-}
 
 function findArtifact(
   artifacts: ArtifactForTest[],
   relativePath: string,
 ): ArtifactForTest {
-  const artifact = artifacts.find((entry) => entry.relativePath === relativePath);
+  const artifact = artifacts.find(
+    (entry) => entry.relativePath === relativePath,
+  );
   if (!artifact) {
     throw new Error(`Expected generated artifact: ${relativePath}`);
   }
@@ -261,53 +194,12 @@ function findArtifact(
   return artifact;
 }
 
-function firstArtifactMatching(
-  artifacts: ArtifactForTest[],
-  predicate: (artifact: ArtifactForTest) => boolean,
-  description: string,
-): ArtifactForTest {
-  const artifact = artifacts.find(predicate);
-  if (!artifact) {
-    throw new Error(`Expected generated artifact matching: ${description}`);
-  }
-
-  return artifact;
-}
-
-function artifactWithMappingId(
-  artifacts: ArtifactForTest[],
-  mappingId: string,
-): ArtifactForTest {
-  return firstArtifactMatching(
-    artifacts,
-    (artifact) => artifact.mappingId === mappingId,
-    `mapping id ${mappingId}`,
+function expectedPictograph(config: ToolConfig) {
+  const icon = config.pictographs.source.machine.replace(
+    /\s*}$/,
+    ` title="${config.pictographs.tooltips.machine}" }`,
   );
-}
-
-function artifactsWithMappingId(
-  artifacts: ArtifactForTest[],
-  mappingId: string,
-): ArtifactForTest[] {
-  return artifacts.filter((artifact) => artifact.mappingId === mappingId);
-}
-
-function artifactOfType(
-  artifacts: ArtifactForTest[],
-  documentType: ArtifactForTest["documentType"],
-): ArtifactForTest {
-  return firstArtifactMatching(
-    artifacts,
-    (artifact) => artifact.documentType === documentType,
-    `document type ${documentType}`,
-  );
-}
-
-function artifactsOfType(
-  artifacts: ArtifactForTest[],
-  documentType: ArtifactForTest["documentType"],
-): ArtifactForTest[] {
-  return artifacts.filter((artifact) => artifact.documentType === documentType);
+  return `<span class="picto">${icon}</span>`;
 }
 
 function setRulesSourceStatuses(
@@ -323,92 +215,6 @@ function setRulesSourceStatuses(
   for (const theme of Object.values(rules.KSI)) {
     theme.status = status;
   }
-}
-
-function firstRequirementInArtifact(artifact: ArtifactForTest): {
-  id: string;
-  title: string;
-} {
-  for (const section of artifact.context.sections) {
-    const requirement = section.requirements[0];
-    if (requirement) {
-      return requirement;
-    }
-  }
-
-  throw new Error(`Expected ${artifact.relativePath} to include a requirement.`);
-}
-
-async function readGeneratedArtifact(artifact: ArtifactForTest): Promise<string> {
-  return readFile(artifact.outputPath, "utf8");
-}
-
-function deadlineRowMarkdown(row: {
-  shortName: string;
-  displayName: string;
-  href: string;
-  optionalAdoption: string;
-  obtain: string;
-  maintain: string;
-  graceEnds: string;
-}): string {
-  return `| [${row.displayName}](${row.href}) | ${row.optionalAdoption} | ${row.obtain} | ${row.maintain} | ${row.graceEnds} |`;
-}
-
-function taggedDocumentSummaryRowMarkdown(row: {
-  label: string;
-  href: string;
-  summary: string;
-  applicableRuleCount: number;
-}): string {
-  return `| [**${row.label}**](${row.href}) | ${row.summary} |`;
-}
-
-function taggedDocumentSummaryStatsMarkdown(artifact: ArtifactForTest): string {
-  const stats = artifact.context.taggedDocumentSummaryStats;
-  if (!stats) {
-    throw new Error(
-      `Expected ${artifact.relativePath} to include tagged summary stats.`,
-    );
-  }
-
-  return `!!! tip "There are ${stats.rulesetCount} applicable rulesets with ${stats.ruleCount} total applicable rules."`;
-}
-
-function expectDeadlineRowsFromArtifact(
-  contents: string,
-  artifact: ArtifactForTest,
-  description: string,
-): void {
-  const expectedRows = artifact.context.deadlineTables.flatMap((table) =>
-    table.rows.map(deadlineRowMarkdown),
-  );
-  expect(expectedRows.length).toBeGreaterThan(0);
-
-  expectTextOrder(contents, expectedRows, description);
-}
-
-function expectTaggedDocumentSummaryRowsFromArtifact(
-  contents: string,
-  artifact: ArtifactForTest,
-  description: string,
-): void {
-  const expectedRows = artifact.context.taggedDocumentSummaryRows.map(
-    taggedDocumentSummaryRowMarkdown,
-  );
-  expect(expectedRows.length).toBeGreaterThan(0);
-
-  expectTextOrder(contents, expectedRows, description);
-}
-
-function expectTaggedDocumentSummaryStatsFromArtifact(
-  contents: string,
-  artifact: ArtifactForTest,
-  description: string,
-): void {
-  expectWithFailureSummary(description, () => {
-    expect(contents).toContain(taggedDocumentSummaryStatsMarkdown(artifact));
-  });
 }
 
 function testRequirementDocument(options: {
@@ -589,9 +395,7 @@ async function listRelativeFiles(root: string): Promise<string[]> {
 
       if (entry.isDirectory()) {
         const childFiles = await listRelativeFiles(entryPath);
-        return childFiles.map((childFile) =>
-          path.join(entry.name, childFile),
-        );
+        return childFiles.map((childFile) => path.join(entry.name, childFile));
       }
 
       if (entry.isFile()) {
@@ -630,7 +434,6 @@ function stripGeneratedManualPageAdornments(contents: string): string {
       continue;
     }
 
-
     outputLines.push(line);
   }
 
@@ -649,7 +452,7 @@ async function findManualSrcContentDrift(
   srcRoot: string,
   contentRoot: string,
 ): Promise<ManualSrcContentDrift[]> {
-  const srcMarkdownPaths = (await listRelativeFiles(srcRoot))
+  const srcMarkdownPaths = (await listRelativeFiles(contentRoot))
     .filter((relativePath) => relativePath.endsWith(".md"))
     .sort();
   const drift: ManualSrcContentDrift[] = [];
@@ -657,7 +460,8 @@ async function findManualSrcContentDrift(
   for (const relativePath of srcMarkdownPaths) {
     const srcPath = path.join(srcRoot, relativePath);
     const contentPath = path.join(contentRoot, relativePath);
-    if (!(await fileExists(contentPath))) {
+    if (!(await fileExists(srcPath))) {
+      drift.push({ relativePath });
       continue;
     }
 
@@ -702,48 +506,9 @@ interface ZensicalNavLocation {
   sectionLabel: string;
 }
 
-function navLocationsInZensicalConfig(
-  source: string,
-): Map<string, ZensicalNavLocation> {
-  const locationByPath = new Map<string, ZensicalNavLocation>();
-  const sectionHrefByLabel = new Map<string, string>();
-  let currentSectionLabel: string | null = null;
-  const topLevelSectionPattern =
-    /^  \{\s*(?:"([^"]+)"|([A-Za-z][A-Za-z0-9 _'-]*))\s*=/;
-
-  for (const line of source.split(/\r?\n/)) {
-    const sectionMatch = line.match(topLevelSectionPattern);
-    if (sectionMatch) {
-      currentSectionLabel = (sectionMatch[1] ?? sectionMatch[2] ?? "").trim();
-    }
-
-    if (!currentSectionLabel) {
-      continue;
-    }
-
-    for (const pathMatch of line.matchAll(/"([^"]+\.md)"/g)) {
-      const relativePath = pathMatch[1];
-      if (!relativePath) {
-        continue;
-      }
-
-      if (!sectionHrefByLabel.has(currentSectionLabel)) {
-        sectionHrefByLabel.set(currentSectionLabel, relativePath);
-      }
-
-      if (!locationByPath.has(relativePath)) {
-        locationByPath.set(relativePath, {
-          sectionHref: sectionHrefByLabel.get(currentSectionLabel),
-          sectionLabel: currentSectionLabel,
-        });
-      }
-    }
-  }
-
-  return locationByPath;
-}
-
-async function findBoldMarkdownHeadingWarnings(root: string): Promise<string[]> {
+async function findBoldMarkdownHeadingWarnings(
+  root: string,
+): Promise<string[]> {
   const markdownPaths = (await listRelativeFiles(root))
     .filter((relativePath) => relativePath.endsWith(".md"))
     .sort();
@@ -788,9 +553,7 @@ function pictoFrontmatterValue(
     return null;
   }
 
-  const pictoIndex = frontmatter.findIndex(
-    (line) => line.trim() === "picto:",
-  );
+  const pictoIndex = frontmatter.findIndex((line) => line.trim() === "picto:");
   if (pictoIndex === -1) {
     return null;
   }
@@ -884,9 +647,18 @@ function generatedMappingPictoStatusFailures(config: ToolConfig): string[] {
       asRecords(config.generated.fullControlReferenceDocuments),
     ],
     ["deadlineDocuments", asRecords(config.generated.deadlineDocuments)],
-    ["taggedDocumentSummaries", asRecords(config.generated.taggedDocumentSummaries)],
-    ["referenceIndexDocuments", asRecords(config.generated.referenceIndexDocuments)],
-    ["frrCollectionDocuments", asRecords(config.generated.frrCollectionDocuments)],
+    [
+      "taggedDocumentSummaries",
+      asRecords(config.generated.taggedDocumentSummaries),
+    ],
+    [
+      "referenceIndexDocuments",
+      asRecords(config.generated.referenceIndexDocuments),
+    ],
+    [
+      "frrCollectionDocuments",
+      asRecords(config.generated.frrCollectionDocuments),
+    ],
     ["ruleDocuments", asRecords(config.generated.ruleDocuments)],
   ];
   const failures: string[] = [];
@@ -920,6 +692,19 @@ function pictographTooltipFailures(config: ToolConfig): string[] {
   }
 
   return failures;
+}
+
+let markdownBuildPromise: ReturnType<typeof buildMarkdown> | undefined;
+function markdownBuild() {
+  return (markdownBuildPromise ??= (async () => {
+    await sources();
+    await deploy();
+    const summary = await buildMarkdown();
+    expect(summary.artifacts.map((a) => a.relativePath).sort()).toEqual(
+      await expectedOutputPaths(),
+    );
+    return summary;
+  })());
 }
 
 describe("build-markdown", () => {
@@ -1006,7 +791,10 @@ describe("build-markdown", () => {
       });
     }
 
-    const expectedHead = await expectedRulesHead(rulesPath, expectedRulesBranch);
+    const expectedHead = await expectedRulesHead(
+      rulesPath,
+      expectedRulesBranch,
+    );
 
     const syncFailureSummary = [
       `tools/rules is not synced to ${expectedHead.source}.`,
@@ -1034,705 +822,29 @@ describe("build-markdown", () => {
     });
   });
 
-  test("builds configured markdown files from the JSON source", async () => {
-    const config = await loadToolConfig();
-    const rules = await loadRules(config);
-    const expectedArtifacts = collectArtifacts(rules, config);
-
-    await deploy();
-    const summary = await buildMarkdown();
-    expect(summary.artifactCount).toBe(expectedArtifacts.length);
-
-    const searchableReferences = new Set([
-      "complete-ruleset-reference", "complete-ksi-reference",
-      "complete-rev5-controls-reference", "full-rev5-control-reference",
-    ]);
-    const searchContentTypes = new Set(["FRR", "KSI", "CTL", "CTL_REFERENCE"]);
-    for (const artifact of summary.artifacts) {
-      const excluded = searchContentTypes.has(artifact.documentType) &&
-        !searchableReferences.has(artifact.mappingId);
-      expect(artifact.context.searchExclude, artifact.relativePath).toBe(excluded);
-      const markdown = await readFile(artifact.outputPath, "utf8");
-      const frontmatter = markdown.split("---")[1] ?? "";
-      expect(/search:\s*\n  exclude: true/.test(frontmatter), artifact.relativePath).toBe(excluded);
-    }
-
-
-    const relativePaths = summary.artifacts
-      .map((artifact) => artifact.relativePath)
-      .sort();
-    expect(relativePaths).toEqual(
-      expectedArtifacts.map((artifact) => artifact.relativePath).sort(),
-    );
-    for (const mapping of config.generated.definitionDocuments ?? []) {
-      expect(relativePaths).toContain(mapping.output);
-    }
-    for (const mapping of config.generated.referenceIndexDocuments ?? []) {
-      expect(relativePaths).toContain(mapping.output);
-    }
-    for (const mapping of config.generated.frrCollectionDocuments ?? []) {
-      expect(relativePaths).toContain(mapping.output);
-    }
-    for (const mapping of config.generated.taggedDocumentSummaries ?? []) {
-      expect(relativePaths).toContain(mapping.output);
-    }
-
-    for (const mapping of config.generated.deadlineDocuments ?? []) {
-      for (const artifact of artifactsWithMappingId(expectedArtifacts, mapping.id)) {
-        expect(relativePaths).toContain(artifact.relativePath);
-      }
-    }
-
-    for (const mapping of config.generated.ksiDocuments ?? []) {
-      const artifacts = artifactsWithMappingId(expectedArtifacts, mapping.id);
-      expect(artifacts.length).toBeGreaterThan(0);
-      for (const artifact of artifacts) {
-        expect(relativePaths).toContain(artifact.relativePath);
-      }
-    }
-    for (const mapping of config.generated.controlDocuments ?? []) {
-      const artifacts = artifactsWithMappingId(expectedArtifacts, mapping.id);
-      expect(artifacts.length).toBeGreaterThan(0);
-      for (const artifact of artifacts) {
-        expect(relativePaths).toContain(artifact.relativePath);
-      }
-    }
-    for (const mapping of config.generated.fullControlReferenceDocuments ??
-      []) {
-      const artifacts = artifactsWithMappingId(expectedArtifacts, mapping.id);
-      expect(artifacts.length).toBe(21);
-      for (const artifact of artifacts) {
-        expect(relativePaths).toContain(artifact.relativePath);
-      }
-    }
-
-    for (const mapping of config.generated.ruleDocuments) {
-      const artifacts = artifactsWithMappingId(expectedArtifacts, mapping.id);
-      expect(artifacts.length).toBeGreaterThan(0);
-      for (const artifact of artifacts) {
-        expect(relativePaths).toContain(artifact.relativePath);
-      }
-    }
-
-    const referenceArtifactPaths = relativePaths.filter((relativePath) =>
-      relativePath.startsWith("reference/"),
-    );
-    expect(referenceArtifactPaths).toHaveLength(
-      expectedArtifacts.filter((artifact) =>
-        artifact.relativePath.startsWith("reference/"),
-      ).length,
-    );
-
-    const contentTypeTagByDocumentType = new Map([
-      ["CTL", "Controls"],
-      ["CTL_REFERENCE", "Controls"],
-      ["DEADLINES", "Deadlines"],
-      ["FRD", "Definitions"],
-      ["FRR", "Rules"],
-      ["FRR_REFERENCE_INDEX", "Rules"],
-      ["TRIGRAMS", "Rules"],
-      ["FRR_TAGGED_SUMMARY", "Rules"],
-      ["KSI", "Key Security Indicators"],
-    ]);
-    const audienceTagByPathPrefix = new Map([
-      ["advisors/", "Advisors"],
-      ["agencies/", "Federal Agencies"],
-      ["assessors/", "Independent Assessors"],
-      ["providers/", "Cloud Service Providers"],
-    ]);
-
-    for (const artifact of expectedArtifacts) {
-      await access(artifact.outputPath);
-      const contents = await readFile(artifact.outputPath, "utf8");
-      const expectedContentTypeTag = contentTypeTagByDocumentType.get(
-        artifact.documentType,
-      );
-      if (!expectedContentTypeTag) {
-        throw new Error(
-          `Missing expected content-type tag for ${artifact.documentType}`,
+  for (const documentType of [
+    "FRR",
+    "FRD",
+    "KSI",
+    "CTL",
+    "CTL_REFERENCE",
+    "DEADLINES",
+    "FRR_TAGGED_SUMMARY",
+    "FRR_REFERENCE_INDEX",
+    "TRIGRAMS",
+  ] as const) {
+    test(`${documentType} Markdown matches current authoritative source records`, async () => {
+      const summary = await markdownBuild();
+      for (const artifact of summary.artifacts.filter(
+        (a) => a.documentType === documentType,
+      )) {
+        await assertArtifactSource(
+          artifact,
+          await readFile(artifact.outputPath, "utf8"),
         );
       }
-      expect(artifact.context.tags).toContain(expectedContentTypeTag);
-
-      for (const [pathPrefix, audienceTag] of audienceTagByPathPrefix) {
-        if (artifact.relativePath.startsWith(pathPrefix)) {
-          expect(artifact.context.tags).toContain(audienceTag);
-        }
-      }
-
-      expect(contents).toContain(`# ${artifact.title}`);
-      expect(contents.trim().length).toBeGreaterThan(0);
-    }
-
-    const referenceIndexArtifact = artifactOfType(
-      expectedArtifacts,
-      "FRR_REFERENCE_INDEX",
-    );
-    const referenceIndexContents = await readGeneratedArtifact(
-      referenceIndexArtifact,
-    );
-    expect(referenceIndexContents).toStartWith(
-      [
-        "---",
-        `title: ${JSON.stringify(referenceIndexArtifact.title)}`,
-        `description: ${JSON.stringify(referenceIndexArtifact.context.description ?? "")}`,
-        `purpose: ${JSON.stringify(referenceIndexArtifact.context.purpose ?? "")}`,
-        'google_doc: ""',
-        "tags:",
-        ...referenceIndexArtifact.context.tags.map((tag) => `  - ${tag}`),
-        "picto:",
-        "  source: machine",
-        "---",
-        "",
-        referenceIndexArtifact.context.pictoSpan ?? "",
-        "",
-        `# ${referenceIndexArtifact.title}`,
-      ].join("\n"),
-    );
-    for (const paragraph of referenceIndexArtifact.context.purposeParagraphs) {
-      expect(referenceIndexContents).toContain(paragraph);
-    }
-    expectTextOrder(
-      referenceIndexContents,
-      [
-        `# ${referenceIndexArtifact.title}`,
-        referenceIndexArtifact.context.introduction ?? "",
-        "| Acronym | Ruleset | Status | Counts | Most Recently Updated |",
-      ],
-      "Generated reference index should place configured introduction before the table",
-    );
-    expect(referenceIndexContents).toContain(
-      "| Acronym | Ruleset | Status | Counts | Most Recently Updated |",
-    );
-    expectTextOrder(
-      referenceIndexContents,
-      referenceIndexRowMarkdown(referenceIndexArtifact),
-      "Generated reference index should render source-derived rows in acronym order",
-    );
-
-    for (const [relativePath, expectedTag] of [
-      ["reference/20x/index.md", "20x"],
-      ["reference/rev5/index.md", "Rev5"],
-    ] as const) {
-      const pathTaggedArtifact = findArtifact(expectedArtifacts, relativePath);
-      const pathTaggedContents =
-        await readGeneratedArtifact(pathTaggedArtifact);
-
-      expect(pathTaggedArtifact.context.tags).toContain(expectedTag);
-      expect(pathTaggedContents).toContain("tags:");
-      expect(pathTaggedContents).toContain(`  - ${expectedTag}`);
-    }
-
-    const effectiveDateArtifact = firstArtifactMatching(
-      expectedArtifacts,
-      (artifact) => artifact.context.effectiveEntries.length > 0,
-      "an artifact with effective-date entries",
-    );
-    const effectiveDateContents = await readGeneratedArtifact(effectiveDateArtifact);
-    const effectiveDateTexts = effectiveDateArtifact.context.effectiveEntries.flatMap(
-      (entry) => [
-        `!!! info "Effective Date(s) & Overall Applicability for ${entry.audienceLabel}"`,
-        `- **${entry.statusLabel}**`,
-        ...entry.dateLines.map((line) => `- **${line.label}:** ${line.value}`),
-        ...entry.classLines.map((line) => `- **${line.label}:** ${line.value}`),
-      ],
-    );
-    expectTextOrder(
-      effectiveDateContents,
-      effectiveDateTexts,
-      "Generated effective-date metadata should render source-derived dates",
-    );
-    expect(effectiveDateContents).not.toContain("[object Object]");
-
-    const definitionsArtifact = artifactOfType(expectedArtifacts, "FRD");
-    const definitionsContents = await readGeneratedArtifact(definitionsArtifact);
-    const definitionsPurpose = rules.FRD.info.purpose;
-    const definitionHeaders = Array.from(
-      definitionsContents.matchAll(/^## (.+)$/gm),
-      (match) => match[1],
-    ).filter((heading) => heading !== "Important Related Terms");
-    const definitionTerms = Object.values(rules.FRD.data.all ?? {})
-      .map((entry) => entry.term)
-      .sort((left, right) => left.localeCompare(right));
-    const relatedTermRows = expectedImportantRelatedTermRows(rules);
-    const definitionIntroOrder = [
-      "# FedRAMP Definitions",
-      definitionsPurpose ?? "",
-    ];
-    if (relatedTermRows.length) {
-      definitionIntroOrder.push(
-        "## Important Related Terms",
-        "| Related Terms Group | Terms |",
-      );
-    }
-    if (definitionTerms[0]) {
-      definitionIntroOrder.push(`## ${definitionTerms[0]}`);
-    }
-
-    expect(definitionsPurpose).toBeTruthy();
-    expect(definitionsContents).toStartWith(
-      `---\ntags:\n${definitionsArtifact.context.tags.map((tag) => `  - ${tag}`).join("\n")}\n---\n\n${definitionsArtifact.context.pictoSpan}\n\n# ${definitionsArtifact.title}`,
-    );
-    expectTextOrder(
-      definitionsContents,
-      definitionIntroOrder,
-      "Generated FRD markdown should place info.purpose and related terms table before the definitions",
-    );
-    expect(definitionsContents).not.toContain("**Subsets**");
-    expect(definitionsContents).not.toContain(
-      '??? abstract "Background & Authority"',
-    );
-    expect(definitionsContents).not.toContain("Effective Date(s)");
-    expect(definitionsContents).not.toContain("Overall Applicability");
-    expect(definitionsContents).toContain('!!! quote ""');
-    expect(definitionsContents).not.toContain("## General Terms");
-    expect(definitionsContents).not.toContain("## Related Terms:");
-    for (const row of relatedTermRows) {
-      expect(definitionsContents).toContain(row);
-    }
-    const firstTaggedDefinition = Object.values(rules.FRD.data.all ?? {}).find(
-      (entry) => entry.tag?.trim(),
-    );
-    if (firstTaggedDefinition?.tag) {
-      expect(definitionsContents).toContain(
-        `**Related Terms Group:** [${firstTaggedDefinition.tag}](#${relatedTermsGroupAnchorId(
-          firstTaggedDefinition.tag,
-        )})`,
-      );
-    }
-    expect(definitionHeaders).toEqual(definitionTerms);
-
-    const ksiThemeArtifact = firstArtifactMatching(
-      expectedArtifacts,
-      (artifact) =>
-        artifact.documentType === "KSI" && artifact.context.indicators.length > 0,
-      "a theme-based KSI artifact",
-    );
-    const ksiThemeContents = await readGeneratedArtifact(ksiThemeArtifact);
-    const ksiThemeIndicator = ksiThemeArtifact.context.indicators[0];
-    if (!ksiThemeIndicator) {
-      throw new Error(
-        `Expected ${ksiThemeArtifact.relativePath} to include a KSI indicator.`,
-      );
-    }
-    expect(ksiThemeContents).toStartWith(
-      `---\nsearch:\n  exclude: true\ntags:\n${ksiThemeArtifact.context.tags.map((tag) => `  - ${tag}`).join("\n")}\n---\n\n${ksiThemeArtifact.context.pictoSpan}\n\n# ${ksiThemeArtifact.title}`,
-    );
-    expect(ksiThemeContents).not.toContain("**Subsets**");
-    expect(ksiThemeContents).toContain(ksiThemeIndicator.id);
-    expect(ksiThemeContents).toContain(`### ${ksiThemeIndicator.title}`);
-    if (ksiThemeIndicator.controlLinks[0]) {
-      const control = ksiThemeIndicator.controlLinks[0];
-      expect(ksiThemeContents).toContain("**Related SP 800-53 Controls:**");
-      expect(ksiThemeContents).toContain(
-        `[${control.label}](${control.url}){ data-preview }`,
-      );
-      expect(control.url).toContain("reference/controls/");
-    }
-
-    const ksiReferenceArtifact = firstArtifactMatching(
-      expectedArtifacts,
-      (artifact) =>
-        artifact.documentType === "KSI" && artifact.context.sections.length > 0,
-      "a grouped KSI reference artifact",
-    );
-    const ksiReferenceContents = await readGeneratedArtifact(ksiReferenceArtifact);
-    const firstKsiSection = ksiReferenceArtifact.context.sections[0];
-    const firstKsiSectionRequirement = firstKsiSection?.requirements[0];
-    if (!firstKsiSection || !firstKsiSectionRequirement) {
-      throw new Error(
-        `Expected ${ksiReferenceArtifact.relativePath} to include grouped KSI indicators.`,
-      );
-    }
-    expect(ksiReferenceContents).toStartWith(
-      `---\ntags:\n${ksiReferenceArtifact.context.tags.map((tag) => `  - ${tag}`).join("\n")}\n---\n\n${ksiReferenceArtifact.context.pictoSpan}\n\n# ${ksiReferenceArtifact.title}`,
-    );
-    expect(ksiReferenceContents).not.toContain("**Subsets**");
-    expectTextOrder(
-      ksiReferenceContents,
-      [
-        `# ${ksiReferenceArtifact.title}`,
-        `## ${firstKsiSection.title}`,
-        `### ${firstKsiSectionRequirement.title}`,
-        firstKsiSectionRequirement.id,
-      ],
-      "Generated KSI reference markdown should group indicators by source theme",
-    );
-
-    for (const deadlineArtifact of artifactsOfType(expectedArtifacts, "DEADLINES")) {
-      const deadlineContents = await readGeneratedArtifact(deadlineArtifact);
-      expect(deadlineContents).toContain(`# ${deadlineArtifact.title}`);
-      expect(deadlineContents).toContain(
-        "| Ruleset | Optional Adoption Allowed | Obtaining Initial Certification | Maintaining Ongoing Certification | Grace Period Ends |",
-      );
-      expectDeadlineRowsFromArtifact(
-        deadlineContents,
-        deadlineArtifact,
-        `Generated deadline markdown should render source-derived rows for ${deadlineArtifact.relativePath}`,
-      );
-    }
-
-    for (const summaryArtifact of artifactsOfType(
-      expectedArtifacts,
-      "FRR_TAGGED_SUMMARY",
-    )) {
-      const summaryContents = await readGeneratedArtifact(summaryArtifact);
-      expect(summaryContents).toContain(`# ${summaryArtifact.title}`);
-      expectTaggedDocumentSummaryStatsFromArtifact(
-        summaryContents,
-        summaryArtifact,
-        `Generated tagged summary should render aggregate stats for ${summaryArtifact.relativePath}`,
-      );
-
-      if (summaryArtifact.context.taggedDocumentSummaryRows.length) {
-        expect(summaryContents).toContain("| Ruleset | Summary |");
-        expect(summaryContents).toContain("<br><br>**Applicable Rules:**");
-        expectTaggedDocumentSummaryRowsFromArtifact(
-          summaryContents,
-          summaryArtifact,
-          `Generated tagged summary should render source-derived rows for ${summaryArtifact.relativePath}`,
-        );
-      } else {
-        expect(summaryContents).toContain("No matching rules are currently available.");
-      }
-    }
-
-    for (const artifact of artifactsOfType(expectedArtifacts, "FRR")) {
-      const contents = await readGeneratedArtifact(artifact);
-      for (const section of artifact.context.sections) {
-        expect(contents).toContain(`## ${section.title}`);
-        for (const group of section.applicabilityGroups) {
-          const expectedGroup = [
-            `<span class="subset-applicability__group subset-applicability__group--${group.key}">`,
-            `<span class="subset-applicability__label">${group.label}:</span>`,
-            '<span class="subset-applicability__values">',
-            ...group.values.map(
-              (value) =>
-                `<span class="subset-applicability__tag">${value}</span>`,
-            ),
-          ];
-          expectTextOrder(
-            contents,
-            expectedGroup,
-            `Generated FRR markdown should render ${group.label.toLowerCase()} applicability labels for ${section.title}`,
-          );
-        }
-
-        const requirement = section.requirements[0];
-        if (requirement) {
-          expect(contents).toContain(requirement.id);
-          expect(contents).toContain(`### ${requirement.title}`);
-        }
-
-        if (section.applicabilityGroups.length && requirement) {
-          expectTextOrder(
-            contents,
-            [
-              `## ${section.title}`,
-              section.descriptionParagraphs.at(-1) ?? "",
-              '<div class="subset-applicability" role="group" aria-label="Applicability">',
-              `### ${requirement.title}`,
-            ],
-            `Generated FRR markdown should place applicability labels after the subset description and before its requirements for ${section.title}`,
-          );
-        }
-      }
-    }
-
-    const controlGuidanceArtifact = findArtifact(
-      expectedArtifacts,
-      "reference/rev5-control-guidance.md",
-    );
-    const controlGuidanceContents = await readGeneratedArtifact(
-      controlGuidanceArtifact,
-    );
-    const accessControlFamily =
-      controlGuidanceArtifact.context.controlFamilies.find(
-        (family) => family.id === "AC",
-      );
-    const externalSystemsControl = accessControlFamily?.controls.find(
-      (control) => control.id === "AC-20",
-    );
-    expect(controlGuidanceArtifact.title).toBe("Rev5 Control Guidance");
-    expect(relativePaths).not.toContain("reference/rev5-controls.md");
-    expect(controlGuidanceContents).toContain("# Rev5 Control Guidance");
-    expect(externalSystemsControl?.commonGuidance?.guidance).toContain(
-      "The interrelated controls of AC-20, CA-3, and SA-9 should be differentiated as follows:",
-    );
-
-    const fullControlIndexArtifact = findArtifact(
-      expectedArtifacts,
-      "reference/controls/index.md",
-    );
-    const fullControlIndexContents = await readGeneratedArtifact(
-      fullControlIndexArtifact,
-    );
-    expect(fullControlIndexArtifact.context.controlCount).toBe(1014);
-    expect(fullControlIndexArtifact.context.controlFamilies).toHaveLength(20);
-    expect(fullControlIndexContents).toContain(
-      "| [Access Control](access-control.md){ data-preview } | `AC` | 131 |",
-    );
-    expect(fullControlIndexContents).toContain(
-      "Withdrawn controls are not included.",
-    );
-
-    const fullAccessControlArtifact = findArtifact(
-      expectedArtifacts,
-      "reference/controls/access-control.md",
-    );
-    const fullAccessControlContents = await readGeneratedArtifact(
-      fullAccessControlArtifact,
-    );
-    const fullAccessControls =
-      fullAccessControlArtifact.context.controlFamilies[0]?.controls ?? [];
-    const ac01 = fullAccessControls.find((control) => control.id === "AC-01");
-    const ac0201 = fullAccessControls.find(
-      (control) => control.id === "AC-02-01",
-    );
-    const ac20 = fullAccessControls.find((control) => control.id === "AC-20");
-    expect(fullAccessControls).toHaveLength(131);
-    expect(ac01?.baselineClasses).toEqual(["Class B", "Class C", "Class D"]);
-    expect(ac0201?.baselineClasses).toEqual(["Class C", "Class D"]);
-    expect(ac0201?.externalUrl).toBe(
-      "https://myctrl.tools/frameworks/nist-800-53-r5/ac-2-1",
-    );
-    expect(ac20?.hasFedrampContent).toBe(true);
-    expectTextOrder(
-      fullAccessControlContents,
-      [
-        "## AC-01 (Policy and Procedures) { #ac-01 }",
-        "FedRAMP Rev5 Baselines:",
-        "!!! quote",
-        "_This control does not have additional FedRAMP guidance or FedRAMP-assigned parameter values._",
-        "**External Link for Additional Information:**",
-        "## AC-02 (01) (Automated System Account Management) { #ac-02-01 }",
-        "https://myctrl.tools/frameworks/nist-800-53-r5/ac-2-1",
-      ],
-      "Full Rev5 control family pages should render active catalog statements, baseline tags, external links, and FedRAMP information",
-    );
-    expect(fullAccessControlContents).not.toContain(
-      "## AC-02 (10) (Shared and Group Account Credential Change)",
-    );
-    expect(fullAccessControlContents).not.toContain(
-      '??? abstract "Control information"',
-    );
-    const ac01Section =
-      fullAccessControlContents.split("## AC-02 (Account Management)")[0] ?? "";
-    expect(ac01Section).not.toContain('!!! info ""');
-
-    const certificationArtifact = findArtifact(
-      expectedArtifacts,
-      "providers/rev5/rules/fedramp-certification.md",
-    );
-    const certificationContents = await readGeneratedArtifact(
-      certificationArtifact,
-    );
-    const baselineRequirement = certificationArtifact.context.sections
-      .flatMap((section) => section.requirements)
-      .find((requirement) => requirement.id === "FRC-CSF-BSL");
-    if (!baselineRequirement) {
-      throw new Error(
-        "Expected the Rev5 FedRAMP Certification page to include FRC-CSF-BSL.",
-      );
-    }
-    const baselineCounts = Object.fromEntries(
-      baselineRequirement.variantSections.map((variant) => [
-        variant.title,
-        variant.rev5ControlFamilies.reduce(
-          (count, family) => count + family.controls.length,
-          0,
-        ),
-      ]),
-    );
-    expect(baselineCounts).toEqual({
-      "Class B": 155,
-      "Class C": 322,
-      "Class D": 409,
     });
-    expectTextOrder(
-      certificationContents,
-      [
-        '???+ info "Rev5 Control List"',
-        "- **Access Control (AC)**",
-        "- `AC-01` ([Policy and Procedures](../../../reference/controls/access-control.md#ac-01){ data-preview })",
-        "- `AT-02 (02)` ([Insider Threat](../../../reference/controls/awareness-and-training.md#at-02-02){ data-preview })",
-      ],
-      "Generated Rev5 baseline rules should render grouped, OSCAL-enriched control lists",
-    );
-
-    const assessmentArtifact = findArtifact(
-      expectedArtifacts,
-      "providers/rev5/rules/independent-verification-and-validation.md",
-    );
-    const assessmentContents = await readGeneratedArtifact(assessmentArtifact);
-    expect(assessmentContents).toContain(
-      "- `CA-08` ([Penetration Testing](../../../reference/controls/assessment-authorization-and-monitoring.md#ca-08){ data-preview })",
-    );
-    expect(assessmentContents).toContain(
-      "- `CA-08 (01)` ([Independent Penetration Testing Agent or Team](../../../reference/controls/assessment-authorization-and-monitoring.md#ca-08-01){ data-preview })",
-    );
-
-    const workflowArtifact = firstArtifactMatching(
-      expectedArtifacts,
-      (artifact) => artifact.context.flows.length > 0,
-      "an FRR artifact with an activity workflow",
-    );
-    const workflowContents = await readGeneratedArtifact(workflowArtifact);
-    const workflow = workflowArtifact.context.flows[0];
-    if (!workflow) {
-      throw new Error(`Expected ${workflowArtifact.relativePath} to include a workflow.`);
-    }
-    expect(workflowContents).toContain(`## Activity Workflow: ${workflow.title}`);
-    expect(workflowContents).toContain("``` mermaid");
-    for (const line of workflow.mermaidLines) {
-      expect(workflowContents).toContain(line);
-    }
-
-    const schemaArtifact = firstArtifactMatching(
-      expectedArtifacts,
-      (artifact) =>
-        artifact.context.sections.some((section) =>
-          section.requirements.some((requirement) => requirement.schema),
-        ),
-      "an FRR artifact with related JSON schema metadata",
-    );
-    const schemaContents = await readGeneratedArtifact(schemaArtifact);
-    const schemaRequirement = schemaArtifact.context.sections
-      .flatMap((section) => section.requirements)
-      .find((requirement) => requirement.schema);
-    if (!schemaRequirement?.schema) {
-      throw new Error(`Expected ${schemaArtifact.relativePath} to include schema metadata.`);
-    }
-    expectTextOrder(
-      schemaContents,
-      [
-        `### ${schemaRequirement.title}`,
-        `!!! schema "Related JSON Schema: [${schemaRequirement.schema.name}](${schemaRequirement.schema.url})"`,
-        '!!! quote ""',
-      ],
-      "Generated requirement markdown should place related JSON schema metadata before the statement",
-    );
-
-    const notificationArtifact = firstArtifactMatching(
-      expectedArtifacts,
-      (artifact) =>
-        artifact.context.sections.some((section) =>
-          section.requirements.some(
-            (requirement) => requirement.notifications.length > 0,
-          ),
-        ),
-      "an FRR artifact with notification metadata",
-    );
-    const notificationContents = await readGeneratedArtifact(notificationArtifact);
-    const notificationRequirement = notificationArtifact.context.sections
-      .flatMap((section) => section.requirements)
-      .find((requirement) => requirement.notifications.length > 0);
-    const notification = notificationRequirement?.notifications[0];
-    if (!notification) {
-      throw new Error(
-        `Expected ${notificationArtifact.relativePath} to include notification metadata.`,
-      );
-    }
-    const notificationDestination = notification.href
-      ? `[${notification.linkLabel}](${notification.href})`
-      : `${notification.name}${notification.targetDetail ?? ""}`;
-    expect(notificationContents).toContain(
-      `Notify ${notification.party} via ${notification.methodLabel}: ${notificationDestination}.`,
-    );
-
-    const bracketedNotificationArtifact = firstArtifactMatching(
-      expectedArtifacts,
-      (artifact) =>
-        artifact.context.sections.some((section) =>
-          section.requirements.some((requirement) =>
-            requirement.notifications.some(
-              (entry) => entry.href && entry.linkLabel.includes("\\["),
-            ),
-          ),
-        ),
-      "an FRR artifact with bracketed notification link text",
-    );
-    const bracketedNotificationContents = await readGeneratedArtifact(
-      bracketedNotificationArtifact,
-    );
-    const bracketedNotification = bracketedNotificationArtifact.context.sections
-      .flatMap((section) => section.requirements)
-      .flatMap((requirement) => requirement.notifications)
-      .find((entry) => entry.href && entry.linkLabel.includes("\\["));
-    if (!bracketedNotification?.href) {
-      throw new Error(
-        `Expected ${bracketedNotificationArtifact.relativePath} to include bracketed notification link text.`,
-      );
-    }
-    expect(bracketedNotificationContents).toContain(
-      `[${bracketedNotification.linkLabel}](${bracketedNotification.href})`,
-    );
-
-    const classARelatedArtifact = findArtifact(
-      expectedArtifacts,
-      "reference/20x/a/related.md",
-    );
-    const classARelatedSectionTitles = classARelatedArtifact.context.sections.map(
-      (section) => section.title,
-    );
-    expect(classARelatedSectionTitles).toContain(
-      "Mandatory Class A Rules: Certification Data Sharing (CDS)",
-    );
-    expect(classARelatedSectionTitles).toContain(
-      "Recommended Class A Rules: Certification Package Overview (CPO)",
-    );
-    expect(classARelatedSectionTitles).toContain(
-      "Optional Class A Rules: Collaborative Continuous Monitoring (CCM)",
-    );
-    expect(
-      classARelatedArtifact.context.sections
-        .flatMap((section) => section.requirements)
-        .filter((requirement) => requirement.id === "CDS-CSO-AVR"),
-    ).toHaveLength(1);
-
-    const referenceArtifact = firstArtifactMatching(
-      expectedArtifacts,
-      (artifact) =>
-        artifact.context.sections.some((section) =>
-          section.requirements.some((requirement) => requirement.reference),
-        ),
-      "an FRR artifact with a requirement reference link",
-    );
-    const referenceContents = await readGeneratedArtifact(referenceArtifact);
-    const referenceRequirement = referenceArtifact.context.sections
-      .flatMap((section) => section.requirements)
-      .find((requirement) => requirement.reference);
-    if (!referenceRequirement?.reference) {
-      throw new Error(
-        `Expected ${referenceArtifact.relativePath} to include reference metadata.`,
-      );
-    }
-    expect(referenceContents).toContain(
-      `**Reference:** [${referenceRequirement.reference.label}](${referenceRequirement.reference.url})`,
-    );
-
-    const frrCollectionMapping = config.generated.frrCollectionDocuments?.[0];
-    if (frrCollectionMapping) {
-      const frrCollectionArtifact = artifactWithMappingId(
-        expectedArtifacts,
-        frrCollectionMapping.id,
-      );
-      const frrCollectionContents =
-        await readGeneratedArtifact(frrCollectionArtifact);
-      const frrCollectionRequirement =
-        firstRequirementInArtifact(frrCollectionArtifact);
-      expect(frrCollectionContents).not.toContain("Effective Date(s)");
-      expect(frrCollectionContents).not.toContain("Activity Workflow");
-      expect(frrCollectionContents).not.toContain("``` mermaid");
-      expect(frrCollectionContents).toContain(frrCollectionRequirement.id);
-    }
-
-    const contentDefinitionsPath = path.join(
-      resolveToolPath(config.paths.content),
-      "definitions.md",
-    );
-    await expect(access(contentDefinitionsPath)).rejects.toThrow();
-  });
+  }
 
   test("renders source-only pictographs for generated pages", async () => {
     const config = await loadToolConfig();
@@ -1746,7 +858,7 @@ describe("build-markdown", () => {
       expect(
         artifact.context.pictoSpan,
         `${artifact.relativePath} should render only the machine source pictograph`,
-      ).toBe(MACHINE_PICTO_SPAN);
+      ).toBe(expectedPictograph(config));
     }
   });
 
@@ -1756,6 +868,18 @@ describe("build-markdown", () => {
     const statement =
       "Providers MUST comply, MUST NOT disclose, SHOULD review, SHOULD NOT skip, and MAY proceed. Providers MUST document decisions.";
     const terms = ["MUST", "MUST NOT", "SHOULD", "SHOULD NOT", "MAY"];
+    rules.FRD.data = {
+      all: Object.fromEntries(
+        [...terms, "Certification Package"].map((term, i) => [
+          `FRD-T${i}`,
+          {
+            term,
+            definition: `Synthetic definition of ${term}.`,
+            do_not_link: terms.includes(term),
+          },
+        ]),
+      ),
+    };
     const expectedStatement = (href: string) =>
       `Providers [MUST](${href}#must){ data-preview } comply, [MUST NOT](${href}#must-not){ data-preview } disclose, [SHOULD](${href}#should){ data-preview } review, [SHOULD NOT](${href}#should-not){ data-preview } skip, and [MAY](${href}#may){ data-preview } proceed. Providers [MUST](${href}#must){ data-preview } document decisions.`;
     const syntheticDocument = testRequirementDocument({
@@ -1873,10 +997,9 @@ describe("build-markdown", () => {
         .find((entry) => entry.id === "SYN-GEN-ONE")!;
 
       expect(requirement.statementParagraphs[0]).toBe(expectedStatement(href));
-      expect(requirement.variantSections.map((variant) => variant.title)).toEqual([
-        "Class B",
-        "Low",
-      ]);
+      expect(
+        requirement.variantSections.map((variant) => variant.title),
+      ).toEqual(["Class B", "Low"]);
       for (const variant of requirement.variantSections) {
         expect(variant.statementParagraphs).toEqual([expectedStatement(href)]);
       }
@@ -1893,7 +1016,10 @@ describe("build-markdown", () => {
         "Providers MUST NOT omit this.",
       ]);
       expect(requirement.terms).toEqual([
-        { label: "Certification Package", href: `${href}#certification-package` },
+        {
+          label: "Certification Package",
+          href: `${href}#certification-package`,
+        },
       ]);
     }
 
@@ -1902,7 +1028,8 @@ describe("build-markdown", () => {
       "reference/synthetic-ruleset.md",
     );
     expect(
-      documentArtifact.context.sections[0]?.requirements[0]?.statementParagraphs[1],
+      documentArtifact.context.sections[0]?.requirements[0]
+        ?.statementParagraphs[1],
     ).toBe(
       "See [REL-GEN-ONE (Related Requirement)](related.md#related-requirement){ data-preview }.",
     );
@@ -1975,7 +1102,7 @@ describe("build-markdown", () => {
     ).toBe(false);
   });
 
-  test("expands source.types \"all\" to common, 20x, and Rev5 rule content", async () => {
+  test('expands source.types "all" to common, 20x, and Rev5 rule content', async () => {
     const config = await loadToolConfig();
     const rules = structuredClone(await loadRules(config));
     const syntheticDocument = testRequirementDocument({
@@ -2159,7 +1286,8 @@ describe("build-markdown", () => {
       BON: {
         "OMT-BON-ONE": {
           name: "Omitted Class B Requirement",
-          statement: "This document is not included in the linked rule mapping.",
+          statement:
+            "This document is not included in the linked rule mapping.",
           affects: ["Providers"],
         },
       },
@@ -2477,10 +1605,12 @@ describe("build-markdown", () => {
         indicators: {
           "KSI-SYN-VAR": {
             name: "Class Variant Indicator",
-            statement: "Indicators MUST remain unchanged and MAY use force terms.",
+            statement:
+              "Indicators MUST remain unchanged and MAY use force terms.",
             varies_by_class: {
               b: {
-                statement: "Class B indicator SHOULD render and MUST NOT change.",
+                statement:
+                  "Class B indicator SHOULD render and MUST NOT change.",
               },
               c: {
                 statement: "Class C indicator should not render.",
@@ -2531,9 +1661,9 @@ describe("build-markdown", () => {
       "Indicators MUST remain unchanged and MAY use force terms.",
     ]);
     expect(indicator?.variantSections[0]?.title).toBe("Class B");
-    expect(
-      indicator?.variantSections[0]?.statementParagraphs.join("\n"),
-    ).toBe("Class B indicator SHOULD render and MUST NOT change.");
+    expect(indicator?.variantSections[0]?.statementParagraphs.join("\n")).toBe(
+      "Class B indicator SHOULD render and MUST NOT change.",
+    );
     expect(
       indicator?.variantSections[0]?.statementParagraphs.join("\n"),
     ).not.toContain("Class C indicator should not render.");
@@ -2666,13 +1796,18 @@ describe("build-markdown", () => {
   test("renders optional introductions across generated mappings", async () => {
     const config = await loadToolConfig();
     const rules = await loadRules(config);
-    const introduction = "Introduction **Markdown** & [link](https://example.com)\n- first\n- second\n\nAnother paragraph.";
+    const introduction =
+      "Introduction **Markdown** & [link](https://example.com)\n- first\n- second\n\nAnother paragraph.";
     const engine = Handlebars.create();
     for (const file of await readdir(resolveToolPath(config.paths.partials))) {
       if (file.endsWith(".hbs")) {
-        engine.registerPartial(path.basename(file, ".hbs"), await readFile(
-          path.join(resolveToolPath(config.paths.partials), file), "utf8",
-        ));
+        engine.registerPartial(
+          path.basename(file, ".hbs"),
+          await readFile(
+            path.join(resolveToolPath(config.paths.partials), file),
+            "utf8",
+          ),
+        );
       }
     }
     const templates = new Map<string, Handlebars.TemplateDelegate>();
@@ -2683,7 +1818,8 @@ describe("build-markdown", () => {
           for (const mapping of mappings) mapping.introduction = value;
         }
       }
-      if (copy.generated.definitions) copy.generated.definitions.introduction = value;
+      if (copy.generated.definitions)
+        copy.generated.definitions.introduction = value;
       return copy;
     };
     const baseline = collectArtifacts(rules, configure());
@@ -2693,14 +1829,20 @@ describe("build-markdown", () => {
       expect(artifact.context.introduction).toBe(introduction);
       let render = templates.get(artifact.templatePath);
       if (!render) {
-        render = engine.compile(await readFile(artifact.templatePath, "utf8"), { noEscape: true });
+        render = engine.compile(await readFile(artifact.templatePath, "utf8"), {
+          noEscape: true,
+        });
         templates.set(artifact.templatePath, render);
       }
       const output = render(artifact.context);
       expect(output).toContain(`# ${artifact.title}\n\n${introduction}\n\n`);
       expect(output.split(introduction).length).toBe(2);
-      expect(output.replace(`${introduction}\n\n`, "")).toBe(render(baseline[index]!.context));
-      expect(render({ ...artifact.context, introduction: "" })).toBe(render(baseline[index]!.context));
+      expect(output.replace(`${introduction}\n\n`, "")).toBe(
+        render(baseline[index]!.context),
+      );
+      expect(render({ ...artifact.context, introduction: "" })).toBe(
+        render(baseline[index]!.context),
+      );
     }
     for (const artifact of collectArtifacts(rules, configure(" \n\t "))) {
       expect(artifact.context.introduction).toBeUndefined();
@@ -2708,8 +1850,16 @@ describe("build-markdown", () => {
     const legacy = configure(introduction);
     legacy.generated.trigramDocuments = [];
     legacy.generated.definitionDocuments = [];
-    legacy.generated.definitions = { enabled: true, output: "legacy-definitions.md", introduction };
-    expect(collectArtifacts(rules, legacy).find((artifact) => artifact.relativePath === "legacy-definitions.md")?.context.introduction).toBe(introduction);
+    legacy.generated.definitions = {
+      enabled: true,
+      output: "legacy-definitions.md",
+      introduction,
+    };
+    expect(
+      collectArtifacts(rules, legacy).find(
+        (artifact) => artifact.relativePath === "legacy-definitions.md",
+      )?.context.introduction,
+    ).toBe(introduction);
   });
 
   test("builds configured FRD definition document mappings", async () => {
@@ -2784,12 +1934,16 @@ describe("build-markdown", () => {
           "  - Definitions",
           "---",
           "",
-          MACHINE_PICTO_SPAN,
+          expectedPictograph(config),
           "",
           "# Custom FedRAMP Definitions",
         ].join("\n"),
       );
-      expect(contents).toContain("## Important Related Terms");
+      expect(contents.includes("## Important Related Terms")).toBe(
+        Object.values((await loadRules()).FRD.data)
+          .flatMap((bucket) => Object.values(bucket))
+          .some((entry) => Boolean(entry.tag?.trim())),
+      );
       expect(contents).not.toContain("## General Terms");
       expect(contents).not.toContain("Effective Date(s)");
     } finally {
@@ -2927,7 +2081,10 @@ describe("content quality", () => {
         continue;
       }
 
-      const contents = await readFile(path.join(contentPath, relativePath), "utf8");
+      const contents = await readFile(
+        path.join(contentPath, relativePath),
+        "utf8",
+      );
       const tags = zensicalTagsFromFrontmatter(contents);
       expect(
         tags.some((tag) => contentTypeTags.has(tag)),
@@ -3091,6 +2248,7 @@ describe("manual content source drift", () => {
     const config = await loadToolConfig();
     const srcPath = resolveToolPath(config.paths.src);
     const contentPath = resolveToolPath(config.paths.content);
+    await markdownBuild();
     const drift = await findManualSrcContentDrift(srcPath, contentPath);
 
     expectWithFailureSummary(
@@ -3116,9 +2274,7 @@ describe("build pipeline", () => {
     const config = await loadToolConfig();
     const rules = await loadRules(config);
     const expectedArtifacts = collectArtifacts(rules, config);
-    const expectedGeneratedFiles = expectedArtifacts
-      .map((artifact) => artifact.relativePath)
-      .sort();
+    const expectedGeneratedFiles = await expectedOutputPaths();
     const srcPath = resolveToolPath(config.paths.src);
     const contentPath = resolveToolPath(config.paths.content);
     const htmlPath = resolveToolPath(config.paths.html);
@@ -3139,40 +2295,21 @@ describe("build pipeline", () => {
     );
     expect(manifest.files).toEqual(expectedGeneratedFiles);
 
-    const trigramHtml = await readFile(path.join(htmlPath, "trigrams/index.html"), "utf8");
-    const tables = trigramHtml.match(/<table[ >][\s\S]*?<\/table>/g) ?? [];
-    expect(tables).toHaveLength(1);
-    expect(tables[0]).toStartWith("<table>");
-    expect(trigramHtml).toContain("javascripts/tablesort.js");
-    expect(trigramHtml).toContain('name="description"');
-    const lookup = expectedArtifacts.find((artifact) => artifact.documentType === "TRIGRAMS")!;
-    const renderedLinks = [...tables[0]!.matchAll(/href="([^"]+)"/g)].map((match) => match[1]!);
-    expect(renderedLinks).toHaveLength(lookup.context.trigramRows.filter((row) => row.href).length);
-    expect(tables[0]).toContain("<td>CSO</td>");
-    for (const href of renderedLinks) {
-      const url = new URL(href, "https://example.test/trigrams/");
-      const targetHtml = await readFile(path.join(htmlPath, url.pathname, "index.html"), "utf8");
-      if (url.hash) expect(targetHtml, href).toContain(`id="${decodeURIComponent(url.hash.slice(1))}"`);
+    const { content } = await sources();
+    const copies = await readTree(srcPath);
+    for (const [filename, source] of content) {
+      assertManualCopy(source, copies.get(filename), filename);
+      if (filename.endsWith(".md")) {
+        assertManualHtml(
+          source.toString(),
+          await readFile(markdownToHtmlPath(htmlPath, filename), "utf8"),
+          filename,
+        );
+      } else {
+        const output = await readFile(path.join(htmlPath, filename));
+        assertManualCopy(source, output, filename);
+      }
     }
-
-
-    const contentFiles = await listRelativeFiles(contentPath);
-    for (const relativePath of contentFiles) {
-      await access(path.join(srcPath, relativePath));
-    }
-
-    const copiedIndexMarkdown = await readFile(
-      path.join(srcPath, "index.md"),
-      "utf8",
-    );
-    const contentIndexMarkdown = await readFile(
-      path.join(contentPath, "index.md"),
-      "utf8",
-    );
-    expect(copiedIndexMarkdown).toContain('<span class="picto">');
-    expect(normalizeManualMarkdownForComparison(copiedIndexMarkdown)).toBe(
-      normalizeManualMarkdownForComparison(contentIndexMarkdown),
-    );
 
     const zensicalConfig = await readFile(
       resolveToolPath(config.paths.zensicalConfig),
@@ -3208,156 +2345,19 @@ describe("build pipeline", () => {
       expect(generatedMarkdown).not.toContain("[object Object]");
     }
 
-
-
-    for (const relativePath of [
-      "index.html",
-      "search.json",
-      "sitemap.xml",
-      "assets/fr-only-logo-black.png",
-      "stylesheets/extra.css",
-      "authority/m-24-15/m-24-15-official.png",
-    ]) {
-      await access(path.join(htmlPath, relativePath));
-    }
-
-    const renderedDefinitionArtifact = artifactOfType(expectedArtifacts, "FRD");
-    const renderedKsiThemeArtifact = firstArtifactMatching(
-      expectedArtifacts,
-      (artifact) =>
-        artifact.documentType === "KSI" && artifact.context.indicators.length > 0,
-      "a rendered KSI theme artifact",
-    );
-    const renderedKsiThemeIndicator =
-      renderedKsiThemeArtifact.context.indicators[0];
-    const renderedKsiReferenceArtifact = firstArtifactMatching(
-      expectedArtifacts,
-      (artifact) =>
-        artifact.documentType === "KSI" && artifact.context.sections.length > 0,
-      "a rendered KSI reference artifact",
-    );
-    const renderedDeadlineArtifact = artifactOfType(expectedArtifacts, "DEADLINES");
-    const renderedResponsibilitiesArtifact = firstArtifactMatching(
-      expectedArtifacts,
-      (artifact) =>
-        (config.generated.frrCollectionDocuments ?? []).some(
-          (mapping) => mapping.id === artifact.mappingId,
+    for (const artifact of expectedArtifacts) {
+      await assertArtifactSource(
+        artifact,
+        await readFile(artifact.outputPath, "utf8"),
+      );
+      await assertArtifactSource(
+        artifact,
+        await readFile(
+          markdownToHtmlPath(htmlPath, artifact.relativePath),
+          "utf8",
         ),
-      "a rendered FRR collection artifact",
-    );
-    const renderedAgencyArtifact = firstArtifactMatching(
-      expectedArtifacts,
-      (artifact) =>
-        artifact.documentType === "FRR" &&
-        artifact.relativePath.startsWith("agencies/rules/"),
-      "a rendered agency rules artifact",
-    );
-    const renderedApplicabilityArtifact = firstArtifactMatching(
-      expectedArtifacts,
-      (artifact) =>
-        artifact.documentType === "FRR" &&
-        artifact.context.sections.some(
-          (section) => section.applicabilityGroups.length > 0,
-        ),
-      "a rendered FRR artifact with subset applicability",
-    );
-    if (!renderedKsiThemeIndicator) {
-      throw new Error(
-        `Expected ${renderedKsiThemeArtifact.relativePath} to include an indicator.`,
+        true,
       );
     }
-    const renderedDefinitionTerm =
-      Object.values(rules.FRD.data.all ?? {})
-        .map((entry) => entry.term)
-        .sort((left, right) => left.localeCompare(right))[0] ??
-      rules.FRD.info.name;
-    const renderedKsiThemeHtmlPath = path.relative(
-      htmlPath,
-      markdownToHtmlPath(htmlPath, renderedKsiThemeArtifact.relativePath),
-    );
-    const renderedKsiReferenceHtmlPath = path.relative(
-      htmlPath,
-      markdownToHtmlPath(htmlPath, renderedKsiReferenceArtifact.relativePath),
-    );
-    const renderedDeadlineHtmlPath = path.relative(
-      htmlPath,
-      markdownToHtmlPath(htmlPath, renderedDeadlineArtifact.relativePath),
-    );
-    const renderedResponsibilitiesHtmlPath = path.relative(
-      htmlPath,
-      markdownToHtmlPath(htmlPath, renderedResponsibilitiesArtifact.relativePath),
-    );
-    const renderedAgencyHtmlPath = path.relative(
-      htmlPath,
-      markdownToHtmlPath(htmlPath, renderedAgencyArtifact.relativePath),
-    );
-    const renderedApplicabilityHtmlPath = path.relative(
-      htmlPath,
-      markdownToHtmlPath(htmlPath, renderedApplicabilityArtifact.relativePath),
-    );
-
-    const renderedPages = [
-      {
-        path: path.relative(
-          htmlPath,
-          markdownToHtmlPath(htmlPath, renderedDefinitionArtifact.relativePath),
-        ),
-        expectedText: [renderedDefinitionArtifact.title, renderedDefinitionTerm],
-      },
-      {
-        path: renderedKsiThemeHtmlPath,
-        expectedText: [
-          renderedKsiThemeArtifact.title,
-          renderedKsiThemeIndicator.id,
-        ],
-      },
-      {
-        path: renderedKsiReferenceHtmlPath,
-        expectedText: [
-          renderedKsiReferenceArtifact.title,
-          renderedKsiReferenceArtifact.context.sections[0]?.title ?? "",
-          renderedKsiReferenceArtifact.context.sections[0]?.requirements[0]?.id ??
-            "",
-        ],
-      },
-      {
-        path: renderedDeadlineHtmlPath,
-        expectedText: [renderedDeadlineArtifact.title],
-      },
-      {
-        path: renderedResponsibilitiesHtmlPath,
-        expectedText: [renderedResponsibilitiesArtifact.title],
-      },
-      {
-        path: renderedAgencyHtmlPath,
-        expectedText: [renderedAgencyArtifact.title],
-      },
-    ];
-
-    for (const page of renderedPages) {
-      const contents = await readFile(path.join(htmlPath, page.path), "utf8");
-
-      for (const expectedText of page.expectedText) {
-        expect(contents).toContain(expectedText);
-      }
-      expect(contents).not.toContain("{{");
-      expect(contents).not.toContain("[object Object]");
-    }
-
-    const renderedApplicabilityHtml = await readFile(
-      path.join(htmlPath, renderedApplicabilityHtmlPath),
-      "utf8",
-    );
-    const firstApplicabilityValue = renderedApplicabilityArtifact.context.sections
-      .flatMap((section) => section.applicabilityGroups)
-      .flatMap((group) => group.values)[0];
-    expect(renderedApplicabilityHtml).toContain(
-      '<div class="subset-applicability" role="group" aria-label="Applicability">',
-    );
-    if (firstApplicabilityValue) {
-      expect(renderedApplicabilityHtml).toContain(
-        `<span class="subset-applicability__tag">${firstApplicabilityValue}</span>`,
-      );
-    }
-  }, 20_000);
+  }, 120_000);
 });
