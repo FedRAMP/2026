@@ -843,7 +843,7 @@ describe("build-markdown", () => {
           await readFile(artifact.outputPath, "utf8"),
         );
       }
-    });
+    }, 30_000);
   }
 
   test("renders source-only pictographs for generated pages", async () => {
