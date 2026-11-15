@@ -35,13 +35,17 @@ test("trigram lookup covers collections, rulesets, subsets, and themes with vali
 });
 
 test("shared subset trigrams use a stable representative regardless of source order", async () => {
-  const config = await loadToolConfig();
-  const rules = structuredClone(await loadRules(config));
+  const { config, rules } = await trigramFixture();
+  rules.FRR.AAA!.info.subsets!.SHR!.name = "First alphabetical name";
+  rules.FRR.BBB!.info.subsets!.SHR!.name = "Other subset name";
   rules.FRR = Object.fromEntries(Object.entries(rules.FRR).reverse());
   const rows = collectArtifacts(rules, config).find(
     (artifact) => artifact.documentType === "TRIGRAMS",
   )!.context.trigramRows;
   expect(rows).toEqual(expectedTrigrams(rules, config));
+  expect(rows.find((row) => row.trigram === "SHR")).toMatchObject({
+    name: "First alphabetical name",
+  });
 });
 
 test("trigrams follow moved mappings and fall back to the KSI theme key", async () => {
@@ -164,7 +168,7 @@ async function trigramFixture() {
         web_name: "sample-theme",
         short_name: "XYZ",
         indicators: {
-          "KSI-XYZ-ONE": { name: "Indicator", statement: "Measure this." },
+          "KSI-XYZ-ONE": { name: "Indicator", statement: "Measure this.", force_by_class: { a: "MAY", b: "MUST", c: "MUST", d: "MUST" } },
         },
       },
     },

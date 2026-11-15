@@ -171,6 +171,17 @@ test("real-source clones rebuild after definition, date and baseline changes wit
   const { assertArtifactSource } =
     await import("./test-support/source-contract");
   const snapshot = structuredClone(await sources());
+  // Exercise source evolution only for the document types verified below.
+  // The full-site tests separately validate every production mapping.
+  Object.assign(snapshot.config.generated, {
+    ruleDocuments: [],
+    ksiDocuments: [],
+    controlDocuments: [],
+    taggedDocumentSummaries: [],
+    referenceIndexDocuments: [],
+    frrCollectionDocuments: [],
+    trigramDocuments: [],
+  });
   const temp = await mkdtemp(path.join(tmpdir(), "source-evolution-"));
   try {
     Object.assign(snapshot.config.paths, {
@@ -190,6 +201,11 @@ test("real-source clones rebuild after definition, date and baseline changes wit
         JSON.stringify(snapshot.rules),
       );
       const summary = await buildMarkdown(snapshot.config);
+      for (const type of ["FRD", "DEADLINES", "CTL_REFERENCE"]) {
+        expect(summary.artifacts.some((a) => a.documentType === type)).toBe(
+          true,
+        );
+      }
       for (const artifact of summary.artifacts.filter((a) =>
         ["FRD", "DEADLINES", "CTL_REFERENCE"].includes(a.documentType),
       )) {

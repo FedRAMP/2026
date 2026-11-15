@@ -106,15 +106,19 @@ tags:
 {{/if}}
 
 {{#if isKsiDocument}}
-{{#if themeParagraphs.length}}
-!!! info ""
-{{#each themeParagraphs}}
-    {{this}}
+{{#each ksiGroups}}
+## {{title}}
+
+{{#each sections}}
+### {{title}} {{anchorAttribute}}
+
+{{#each descriptionParagraphs}}
+{{this}}
 
 {{/each}}
-
-{{/if}}
-{{#each indicators}}
-{{> requirement}}
+{{#each requirements}}
+{{> requirement heading="####"}}
+{{/each}}
+{{/each}}
 {{/each}}
 {{/if}}

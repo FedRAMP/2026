@@ -192,6 +192,8 @@ interface RequirementSchemaSource {
 
 interface RequirementEntrySource {
   name?: string;
+  applicability?: { add?: SubsetApplicabilitySource; exclude?: SubsetApplicabilitySource };
+  force_by_class?: Record<string, string>;
   statement?: string;
   following_information?: string[];
   following_information_bullets?: string[];
@@ -336,6 +338,8 @@ interface RequirementSchemaViewModel {
 }
 
 interface RequirementViewModel {
+  ksiRequired?: boolean;
+  classForces?: Array<{ className: string; force: string }>;
   id: string;
   anchorId: string;
   title: string;
@@ -606,7 +610,13 @@ interface TrigramRowViewModel {
   href?: string;
 }
 
+interface KsiGroupViewModel {
+  title: string;
+  sections: SectionViewModel[];
+}
+
 interface DocumentViewModel {
+  ksiGroups: KsiGroupViewModel[];
   searchExclude?: boolean;
   introduction?: string;
   title: string;
@@ -823,34 +833,6 @@ function normalizeApplicabilityType(value: string): Version | undefined {
   return undefined;
 }
 
-function applicabilityTypesOverlapSelectedVersions(
-  applicability: SubsetApplicabilitySource | undefined,
-  versions: Version[],
-): boolean {
-  const applicabilityTypes = (applicability?.types ?? [])
-    .map(normalizeApplicabilityType)
-    .filter((value): value is Version => value !== undefined);
-
-  return (
-    applicabilityTypes.length > 0 &&
-    applicabilityTypes.some((value) => versions.includes(value))
-  );
-}
-
-function applicabilityClassesOverlapSelectedClasses(
-  applicability: SubsetApplicabilitySource | undefined,
-  classes: string[],
-): boolean {
-  const applicabilityClasses = (applicability?.classes ?? [])
-    .map(normalizeCertificationClass)
-    .filter(Boolean);
-
-  return (
-    applicabilityClasses.length > 0 &&
-    applicabilityClasses.some((value) => classes.includes(value))
-  );
-}
-
 function uniqueApplicabilityValues(values: string[]): string[] {
   const seen = new Set<string>();
   const uniqueValues: string[] = [];
@@ -944,7 +926,26 @@ function mergeApplicabilityGroups(
   }
 }
 
-function subsetMatchesSourceApplicability(
+function effectiveRuleApplicability(
+  subset: SubsetSource | undefined,
+  requirement: RequirementEntrySource,
+): SubsetApplicabilitySource {
+  const result: SubsetApplicabilitySource = {};
+  for (const key of ["types", "classes", "paths", "affects"] as const) {
+    const base = subset?.applicability?.[key];
+    const add = requirement.applicability?.add?.[key];
+    const exclude = requirement.applicability?.exclude?.[key];
+    if (!base?.length && add === undefined && exclude === undefined) continue;
+    result[key] = uniqueApplicabilityValues([
+      ...(base ?? []),
+      ...(add ?? []),
+    ]).filter((value) => !matchesAny(value, exclude ?? []));
+  }
+  return result;
+}
+
+function ruleMatchesApplicability(
+  requirement: RequirementEntrySource,
   subset: SubsetSource | undefined,
   mapping: {
     id: string;
@@ -955,52 +956,24 @@ function subsetMatchesSourceApplicability(
     };
   },
 ): boolean {
-  const applicability = subset?.applicability;
-  if (!applicability) {
-    return true;
-  }
-
-  const applicabilityTypes = (applicability.types ?? [])
-    .map(normalizeApplicabilityType)
-    .filter((value): value is Version => value !== undefined);
-  if (
-    applicabilityTypes.length &&
-    !applicabilityTypesOverlapSelectedVersions(
-      applicability,
-      sourceVersions(mapping),
-    )
-  ) {
-    return false;
-  }
-
-  const classes = mappingClasses(mapping);
-  const applicabilityClasses = (applicability.classes ?? [])
-    .map(normalizeCertificationClass)
-    .filter(Boolean);
-  if (
-    classes.length &&
-    applicabilityClasses.length &&
-    !applicabilityClassesOverlapSelectedClasses(applicability, classes)
-  ) {
-    return false;
-  }
-
-  const affectedParties = mapping.source.affects ?? [];
-  const applicabilityAffectedParties = uniqueApplicabilityValues(
-    applicability.affects ?? [],
+  const effective = effectiveRuleApplicability(subset, requirement);
+  const dimensions = [
+    [effective.types, sourceVersions(mapping)],
+    [effective.classes, mappingClasses(mapping)],
+    [effective.affects, mapping.source.affects ?? []],
+  ] as const;
+  return (
+    dimensions.every(
+      ([values, selected]) =>
+        values === undefined ||
+        !selected.length ||
+        values.some((value) => matchesAny(value, [...selected])),
+    ) &&
+    requirementMatchesSelectedClasses(requirement, mappingClasses(mapping)) &&
+    requirementMatchesAffectedParties(requirement, [
+      ...(mapping.source.affects ?? []),
+    ])
   );
-  if (
-    affectedParties.length &&
-    applicabilityAffectedParties.length &&
-    !affectsFiltersOverlap(
-      applicabilityAffectedParties,
-      [...affectedParties],
-    )
-  ) {
-    return false;
-  }
-
-  return true;
 }
 
 function humanizeStatus(value?: string): string {
@@ -1282,13 +1255,7 @@ function buildRulePageIndex(
           continue;
         }
 
-        if (
-          !subsetMatchesSourceApplicability(subsets[rule.subsetKey], mapping)
-        ) {
-          continue;
-        }
-
-        if (!requirementMatchesMapping(rule.requirement, mapping)) {
+        if (!ruleMatchesApplicability(rule.requirement, subsets[rule.subsetKey], mapping)) {
           continue;
         }
 
@@ -1340,11 +1307,7 @@ function ruleMatchesRuleDocumentMapping(
   }
 
   const subsets = subsetsForVersions(document.info, mappingVersions(mapping));
-  if (!subsetMatchesSourceApplicability(subsets[rule.subsetKey], mapping)) {
-    return false;
-  }
-
-  return requirementMatchesMapping(rule.requirement, mapping);
+  return ruleMatchesApplicability(rule.requirement, subsets[rule.subsetKey], mapping);
 }
 
 function ruleDocumentMappingRuleIds(
@@ -2881,20 +2844,6 @@ function affectsFiltersOverlap(left: string[], right: string[]): boolean {
   return left.some((value) => matchesAny(value, right));
 }
 
-function requirementMatchesMapping(
-  requirement: RequirementEntrySource,
-  mapping: FrrRuleSourceMappingConfig,
-): boolean {
-  if (!requirementMatchesSelectedClasses(requirement, mappingClasses(mapping))) {
-    return false;
-  }
-
-  return requirementMatchesAffectedParties(
-    requirement,
-    mapping.source.affects ?? [],
-  );
-}
-
 function requirementMatchesSelectedClasses(
   requirement: RequirementEntrySource,
   classes: string[],
@@ -2945,10 +2894,6 @@ function buildConfiguredSectionViewModels(
       }
 
       const subset = subsets[subsetKey];
-      if (!subsetMatchesSourceApplicability(subset, mapping)) {
-        continue;
-      }
-
       const section = sections.get(subsetKey) ?? {
         title: subset?.name ?? subsetKey,
         anchorId: sectionAnchorId(subsetKey, subset?.name ?? subsetKey),
@@ -2958,15 +2903,17 @@ function buildConfiguredSectionViewModels(
         ),
         isSubsetSection: true,
         descriptionParagraphs: splitParagraphs(subset?.description),
-        applicabilityGroups: subsetApplicabilityGroups(subset, mapping),
+        applicabilityGroups: [],
         requirements: [],
       };
 
       for (const [id, requirement] of Object.entries(requirements)) {
-        if (!requirementMatchesMapping(requirement, mapping)) {
+        if (!ruleMatchesApplicability(requirement, subsets[subsetKey], mapping)) {
           continue;
         }
 
+        mergeApplicabilityGroups(section.applicabilityGroups,
+          subsetApplicabilityGroups({ applicability: effectiveRuleApplicability(subset, requirement) }, mapping));
         section.requirements.push(
           buildRequirementViewModel(
             id,
@@ -2995,9 +2942,8 @@ function documentHasRequirementAffecting(
   affects: string[],
   allowedSections?: string[],
 ): boolean {
-  if (!affects.length) {
-    return true;
-  }
+  const subsets = subsetsForVersions(document.info, versions);
+  const mapping = { id: "audience-selection", source: { types: versions, affects } };
 
   for (const bucketName of configuredTypeBuckets(versions, true, "first")) {
     const bucket = document.data[bucketName];
@@ -3011,7 +2957,7 @@ function documentHasRequirementAffecting(
       }
 
       for (const requirement of Object.values(sectionRequirements)) {
-        if (requirementMatchesAffectedParties(requirement, affects)) {
+        if (ruleMatchesApplicability(requirement, subsets[subsetKey], mapping)) {
           return true;
         }
       }
@@ -3046,12 +2992,8 @@ function buildDocumentGroupedSectionViewModel(
       }
 
       const subset = subsets[subsetKey];
-      if (!subsetMatchesSourceApplicability(subset, mapping)) {
-        continue;
-      }
-
       const matchingRequirements = Object.entries(sectionRequirements).filter(
-        ([, requirement]) => requirementMatchesMapping(requirement, mapping),
+        ([, requirement]) => ruleMatchesApplicability(requirement, subsets[subsetKey], mapping),
       );
       if (!matchingRequirements.length) {
         continue;
@@ -3059,7 +3001,8 @@ function buildDocumentGroupedSectionViewModel(
 
       mergeApplicabilityGroups(
         applicabilityGroups,
-        subsetApplicabilityGroups(subset, mapping),
+        matchingRequirements.flatMap(([, requirement]) =>
+          subsetApplicabilityGroups({ applicability: effectiveRuleApplicability(subset, requirement) }, mapping)),
       );
 
       for (const [id, requirement] of matchingRequirements) {
@@ -3430,20 +3373,6 @@ function referenceIndexBuckets(
   );
 }
 
-function requirementMatchesReferenceIndexMapping(
-  requirement: RequirementEntrySource,
-  mapping: ReferenceIndexDocumentMappingConfig,
-): boolean {
-  if (!requirementMatchesSelectedClasses(requirement, mappingClasses(mapping))) {
-    return false;
-  }
-
-  return requirementMatchesAffectedParties(
-    requirement,
-    mapping.source.affects ?? [],
-  );
-}
-
 function referenceIndexMatchingEntries(
   document: RequirementDocumentSource,
   mapping: ReferenceIndexDocumentMappingConfig,
@@ -3471,12 +3400,8 @@ function referenceIndexMatchingEntries(
         continue;
       }
 
-      if (!subsetMatchesSourceApplicability(subsets[subsetKey], mapping)) {
-        continue;
-      }
-
       for (const [ruleId, requirement] of Object.entries(requirements)) {
-        if (!requirementMatchesReferenceIndexMapping(requirement, mapping)) {
+        if (!ruleMatchesApplicability(requirement, subsets[subsetKey], mapping)) {
           continue;
         }
 
@@ -3581,12 +3506,8 @@ function documentHasRequirementsForRuleMapping(
         continue;
       }
 
-      if (!subsetMatchesSourceApplicability(subsets[subsetKey], mapping)) {
-        continue;
-      }
-
       for (const requirement of Object.values(requirements)) {
-        if (requirementMatchesMapping(requirement, mapping)) {
+        if (ruleMatchesApplicability(requirement, subsets[subsetKey], mapping)) {
           return true;
         }
       }
@@ -3846,7 +3767,7 @@ function taggedSummaryApplicableRuleCount(
 ): number {
   const matchingRuleIds = new Set<string>();
   const allowedSections = mapping.source.sections;
-  const affects = mapping.source.affects ?? [];
+  const subsets = subsetsForVersions(document.info, taggedDocumentSummaryTypes(mapping));
 
   for (const bucketName of taggedDocumentSummaryBuckets(mapping)) {
     const bucket = document.data[bucketName];
@@ -3860,7 +3781,7 @@ function taggedSummaryApplicableRuleCount(
       }
 
       for (const [ruleId, requirement] of Object.entries(sectionRequirements)) {
-        if (requirementMatchesAffectedParties(requirement, affects)) {
+        if (ruleMatchesApplicability(requirement, subsets[subsetKey], mapping)) {
           matchingRuleIds.add(ruleId);
         }
       }
@@ -4111,6 +4032,7 @@ function buildDocumentContext(
     sections: options.sections ?? [],
     themeParagraphs: options.themeParagraphs ?? [],
     indicators: options.indicators ?? [],
+    ksiGroups: options.ksiGroups ?? [],
     controlCatalog: options.controlCatalog,
     controlFamilies: options.controlFamilies ?? [],
     controlCount: options.controlCount ?? 0,
@@ -4707,7 +4629,7 @@ function indicatorMatchesKsiMapping(
     return false;
   }
 
-  return requirementMatchesSelectedClasses(indicator, mappingClasses(mapping));
+  return true;
 }
 
 function buildKsiIndicatorViewModels(
@@ -4717,23 +4639,68 @@ function buildKsiIndicatorViewModels(
   relatedIndicatorIds: ReadonlySet<string> | undefined,
   controlLinkContext: ControlLinkContext,
 ): RequirementViewModel[] {
+  const classes = mappingClasses(mapping);
+  const displayedClasses = classes.length ? classes : ["A", "B", "C"];
   return Object.entries(theme.indicators ?? {})
     .filter(([id, indicator]) =>
       indicatorMatchesKsiMapping(id, indicator, mapping, relatedIndicatorIds),
     )
-    .map(([id, indicator]) =>
-      buildRequirementViewModel(
-        id,
-        indicator,
-        mapping.definitionsHref ?? "definitions/",
-        "",
-        doNotLinkTerms,
-        undefined,
-        mappingClasses(mapping),
-        controlLinkContext,
-        false,
-      ),
-    );
+    .map(([id, indicator]) => {
+      const classForces = displayedClasses.map((className) => {
+        const force = indicator.force_by_class?.[className.toLowerCase()];
+        if (force !== "MUST" && force !== "MAY") {
+          throw new Error(
+            `${id}: unsupported or missing force_by_class for Class ${className}: ${force}`,
+          );
+        }
+        return { className, force };
+      });
+      return {
+        ...buildRequirementViewModel(
+          id,
+          indicator,
+          mapping.definitionsHref ?? "definitions/",
+          "",
+          doNotLinkTerms,
+          undefined,
+          [],
+          controlLinkContext,
+          false,
+        ),
+        classForces,
+        ksiRequired: classForces.some(({ force }) => force === "MUST"),
+      };
+    });
+}
+
+function buildKsiGroups(sections: SectionViewModel[]): KsiGroupViewModel[] {
+  const seenAnchors = new Set<string>();
+  return [true, false]
+    .map((required) => ({
+      title: required
+        ? "Required Key Security Indicators"
+        : "Optional Key Security Indicators",
+      sections: sections.flatMap((section) => {
+        const requirements = section.requirements.filter(
+          (entry) => entry.ksiRequired === required,
+        );
+        if (!requirements.length) return [];
+        // Keep the original theme anchor on its first appearance for incoming links.
+        const anchorId = seenAnchors.has(section.anchorId)
+          ? `${section.anchorId}-optional`
+          : section.anchorId;
+        seenAnchors.add(section.anchorId);
+        return [
+          {
+            ...section,
+            anchorId,
+            anchorAttribute: `{ #${anchorId} }`,
+            requirements,
+          },
+        ];
+      }),
+    }))
+    .filter((group) => group.sections.length);
 }
 
 function buildKsiThemeSectionViewModel(
@@ -4832,8 +4799,8 @@ function collectSingleKsiDocumentArtifact(
       pictoSpan: pictographSpan(config),
       tags: versionTags(["20x"]),
       isKsiDocument: true,
-      isRequirementsDocument: true,
       sections,
+      ksiGroups: buildKsiGroups(sections),
     }),
   };
 }
@@ -4897,8 +4864,16 @@ function collectThemeKsiDocumentArtifacts(
           pictoSpan: pictographSpan(config),
           tags: versionTags(["20x"]),
           isKsiDocument: true,
-          themeParagraphs: splitParagraphs(theme.theme),
           indicators,
+          ksiGroups: buildKsiGroups([{
+            title: theme.name,
+            anchorId: sectionAnchorId(theme.short_name ?? theme.id ?? key, theme.name),
+            anchorAttribute: sectionAnchorAttribute(theme.short_name ?? theme.id ?? key, theme.name),
+            isSubsetSection: false,
+            descriptionParagraphs: splitParagraphs(theme.theme),
+            applicabilityGroups: [],
+            requirements: indicators,
+          }]),
         }),
       };
     })
@@ -5758,13 +5733,9 @@ function buildFrrCollectionSectionViewModel(
       }
 
       const matchingRequirements = Object.entries(sectionRequirements).filter(
-        ([, requirement]) => requirementMatchesMapping(requirement, mapping),
+        ([, requirement]) => ruleMatchesApplicability(requirement, subsets[subsetKey], mapping),
       );
       if (!matchingRequirements.length) {
-        continue;
-      }
-
-      if (!subsetMatchesSourceApplicability(subsets[subsetKey], mapping)) {
         continue;
       }
 
@@ -5774,7 +5745,8 @@ function buildFrrCollectionSectionViewModel(
       );
       mergeApplicabilityGroups(
         applicabilityGroups,
-        subsetApplicabilityGroups(subsets[subsetKey], mapping),
+        matchingRequirements.flatMap(([, requirement]) =>
+          subsetApplicabilityGroups({ applicability: effectiveRuleApplicability(subsets[subsetKey], requirement) }, mapping)),
       );
 
       for (const [id, requirement] of matchingRequirements) {

@@ -1306,10 +1306,12 @@ describe("build-markdown", () => {
         indicators: {
           "KSI-SYN-INCLUDED": {
             name: "Synthetic Indicator",
+            force_by_class: { a: "MUST", b: "MUST", c: "MUST", d: "MUST" },
             statement: "Related indicator should render.",
           },
           "KSI-SYN-OTHER": {
             name: "Other Indicator",
+            force_by_class: { a: "MAY", b: "MAY", c: "MAY", d: "MUST" },
             statement: "Unrelated indicator should not render.",
           },
         },
@@ -1592,7 +1594,7 @@ describe("build-markdown", () => {
     ]);
   });
 
-  test("trims KSI class variants when a KSI mapping selects a class", async () => {
+  test("groups KSI indicators by the selected class force", async () => {
     const config = await loadToolConfig();
     const rules = structuredClone(await loadRules(config));
     rules.KSI = {
@@ -1607,15 +1609,7 @@ describe("build-markdown", () => {
             name: "Class Variant Indicator",
             statement:
               "Indicators MUST remain unchanged and MAY use force terms.",
-            varies_by_class: {
-              b: {
-                statement:
-                  "Class B indicator SHOULD render and MUST NOT change.",
-              },
-              c: {
-                statement: "Class C indicator should not render.",
-              },
-            },
+            force_by_class: { a: "MAY", b: "MUST", c: "MAY", d: "MUST" },
           },
         },
       },
@@ -1656,17 +1650,14 @@ describe("build-markdown", () => {
     );
     const indicator = artifact.context.sections[0]?.requirements[0];
 
-    expect(indicator?.variantSections).toHaveLength(1);
+    expect(indicator?.variantSections).toHaveLength(0);
     expect(indicator?.statementParagraphs).toEqual([
       "Indicators MUST remain unchanged and MAY use force terms.",
     ]);
-    expect(indicator?.variantSections[0]?.title).toBe("Class B");
-    expect(indicator?.variantSections[0]?.statementParagraphs.join("\n")).toBe(
-      "Class B indicator SHOULD render and MUST NOT change.",
-    );
-    expect(
-      indicator?.variantSections[0]?.statementParagraphs.join("\n"),
-    ).not.toContain("Class C indicator should not render.");
+    expect(indicator?.classForces).toEqual([{ className: "B", force: "MUST" }]);
+    expect(artifact.context.ksiGroups.map((group) => group.title)).toEqual([
+      "Required Key Security Indicators",
+    ]);
   });
 
   test("ignores configured deadline documents after resolving the source selection", async () => {
@@ -1953,6 +1944,26 @@ describe("build-markdown", () => {
 
   test("rejects generated outputs that already exist in content", async () => {
     const config = await loadToolConfig();
+    // A definition mapping is sufficient to exercise the collision guard.
+    Object.assign(config.generated, {
+      definitions: undefined,
+      definitionDocuments: [
+        {
+          id: "collision-definitions",
+          output: "definitions.md",
+          source: { collection: "FRD", types: ["all"] },
+        },
+      ],
+      ruleDocuments: [],
+      ksiDocuments: [],
+      controlDocuments: [],
+      fullControlReferenceDocuments: [],
+      deadlineDocuments: [],
+      taggedDocumentSummaries: [],
+      referenceIndexDocuments: [],
+      frrCollectionDocuments: [],
+      trigramDocuments: [],
+    });
     const tempDir = await mkdtemp(path.join(tmpdir(), "cr26-site-tools-"));
     const tempContentDir = path.join(tempDir, "content");
     const tempSrcDir = path.join(tempDir, "src");

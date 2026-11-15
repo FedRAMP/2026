@@ -215,7 +215,7 @@ Generated definition pages render the FRD purpose first, then an **Important Rel
 
 ## Generated Subset Applicability
 
-Generated FRR subset sections render the source `subsets.*.applicability` metadata as compact labels immediately after the subset description. Certification types, classes, and affected parties are narrowed to the current generated mapping. For example, a 20x Class B reference page shows `20x` and `Class B`, while the complete ruleset reference keeps every applicable type and class. Certification paths are shown as supplied by the rules source because generated mappings do not currently filter by path.
+Generated FRR subset sections render the combined effective applicability of their included rules as compact labels immediately after the subset description. Each rule inherits subset applicability, adds `applicability.add` values, then removes `applicability.exclude` values. Exclusions win, including when they remove the last value in a dimension. Empty subset dimensions without overrides retain the existing unrestricted behavior. A rule can add a class or type outside its subset defaults, so selection happens per rule before empty subsets are omitted. Rule pages, reference counts, summaries, and link targets use the same selection logic. Class A uses this shared pipeline without a companion page. Certification types, classes, and affected parties are narrowed to the current generated mapping. For example, a 20x Class B reference page shows `20x` and `Class B`, while the complete ruleset reference keeps every applicable type and class. Certification paths are shown as supplied by the rules source because generated mappings do not currently filter by path.
 
 ## Generated KSI Pages
 
@@ -263,7 +263,9 @@ KSI mapping fields:
 - `source.collection`: must be `KSI`.
 - `source.theme`: one KSI theme key from the rules JSON, such as `CMT`.
 - `source.themes`: an array of KSI theme keys, such as `["CMT", "IAM"]`, or `"ALL"` to process every KSI theme.
-- `source.classes`: optional certification classes, such as `["B"]`. When present, indicators with `varies_by_class` render only the selected class variant.
+- `source.classes`: optional certification classes, such as `["B"]`. KSI pages display the selected classes' `force_by_class` values; mappings without a class filter display A, B, and C. Class D is not displayed.
+
+KSI pages render **Required Key Security Indicators** before **Optional Key Security Indicators**, retaining theme and individual indicator headings. An indicator is required if any displayed class has `MUST`; otherwise it is optional (`MAY`). Each indicator appears once with its shared statement and labeled class forces. Empty groups are omitted. Missing or unsupported forces fail generation rather than silently classifying the indicator.
 
 ## Generated Rev5 Control Guidance Pages
 
@@ -423,7 +425,7 @@ Add an entry to `generated.referenceIndexDocuments` in `config.json`:
 
 Reference index mappings generate a table of FRR rulesets with links, status, subset and rule counts, and the most recent rule update date. Use `introduction` for the visible narrative text above the table. Use `source.documents: "ALL"` to include every FRR ruleset from the rules JSON; use `source.ignoreDocuments` to remove specific FRR keys after selection.
 
-Use `ruleDocumentMappingId` when the index should link to a generated ruleset mapping that does not live beside the index page. Use `ruleDocumentMappingIds` when one index row should link to multiple generated mappings, such as separate class-specific reference pages. Reference index mappings also support `source.types`, `source.classes`, `source.sections`, `source.affects`, `source.includeAll`, and `source.allPosition` so the table counts and links can match a filtered ruleset reference. When `source.classes` is present, only subsets whose `info.subsets.<key>.applicability.types` and `.classes` overlap the selected type and class are included.
+Use `ruleDocumentMappingId` when the index should link to a generated ruleset mapping that does not live beside the index page. Use `ruleDocumentMappingIds` when one index row should link to multiple generated mappings, such as separate class-specific reference pages. Reference index mappings also support `source.types`, `source.classes`, `source.sections`, `source.affects`, `source.includeAll`, and `source.allPosition` so the table counts and links can match a filtered ruleset reference. Counts and links use effective per-rule applicability, including additions and exclusions, and omit subsets with no matching rules.
 
 The complete ruleset reference is usually paired with rule document mappings that use `outputMode: "documents"` and `output: "reference/{FRR}.md"` so each FRR ruleset has a standalone generated page. Class-specific reference sections use the same pattern with outputs such as `reference/20x/a/{FRR}.md`.
 
@@ -470,7 +472,7 @@ Mapping fields:
 - `source.documents`: an array of FRR keys, such as `["FSI", "ICP"]`, or `"ALL"` to process every FRR.
 - `source.ignoreDocuments`: optional array of FRR keys to remove after `source.document` or `source.documents` is resolved.
 - `source.types`: one or more certification types, such as `["20x"]` or `["rev5"]`.
-- `source.classes`: optional certification classes, such as `["A"]`. When present, generated ruleset pages include only subsets whose applicability includes the selected type and class, and `varies_by_class` output is trimmed to the selected class.
+- `source.classes`: optional certification classes, such as `["A"]`. When present, generated ruleset pages select rules by effective applicability after rule-level additions and exclusions, omit empty subsets, and trim `varies_by_class` output to the selected class.
 - `source.affects`: optional filter matched against each rule's `affects` list.
 - `source.sections`: optional list of subset keys to include, such as `["CSO", "CSX", "CSF"]`.
 - `source.includeAll`: include `data.all` rules with each selected type.

@@ -244,10 +244,22 @@ nav = [
         "reference/20x/a/index.md",
         { "Marketplace Listing" = "reference/20x/a/marketplace-listing.md" },
         { "FedRAMP Certification" = "reference/20x/a/fedramp-certification.md" },
+        { "Boundary Rulesets" = [
+          { "Minimum Assessment Scope" = "reference/20x/a/minimum-assessment-scope.md" },
+          { "Certification Data Sharing" = "reference/20x/a/certification-data-sharing.md" },
+          { "Cryptographic Module Use" = "reference/20x/a/cryptographic-module-use.md" },
+          { "Vulnerability Detection and Response" = "reference/20x/a/vulnerability-detection-and-response.md" },
+        ] },
+        { "Assurance Rulesets" = [
+          { "Collaborative Continuous Monitoring" = "reference/20x/a/collaborative-continuous-monitoring.md" },
+          { "Addressing FedRAMP Communication" = "reference/20x/a/addressing-fedramp-communication.md" },
+          { "Incident Evaluation and Communication" = "reference/20x/a/incident-evaluation-and-communication.md" },
+          { "Independent Verification and Validation" = "reference/20x/a/independent-verification-and-validation.md" },
+        ] },
         { "Package Rulesets" = [
           { "Certification Package Overview" = "reference/20x/a/certification-package-overview.md" },
+          { "Security Decision Record" = "reference/20x/a/security-decision-record.md" },
         ] },
-        { "Related Rules" = "reference/20x/a/related.md" },
         { "Key Security Indicators" = "reference/20x/a/key-security-indicators.md" },
       ] },
       { "20x Class B" = [

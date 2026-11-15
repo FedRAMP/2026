@@ -110,31 +110,59 @@ export function selectedRules(
         doc.data[bucket as "all"] ?? {},
       )) {
         if (source.sections && !source.sections.includes(section)) continue;
-        const applicability = subsets[section]?.applicability;
-        if (
-          applicability?.types?.length &&
-          !applicability.types.some((t: string) =>
-            types.includes(t.toLowerCase()),
-          )
-        )
-          continue;
-        if (
-          classes?.length &&
-          applicability?.classes?.length &&
-          !applicability.classes.some((c: string) =>
-            classes.includes(c.toLowerCase()),
-          )
-        )
-          continue;
-        if (
-          source.affects?.length &&
-          applicability?.affects?.length &&
-          !applicability.affects.some((a: string) =>
-            source.affects!.some((b) => a.toLowerCase() === b.toLowerCase()),
-          )
-        )
-          continue;
         for (const [id, entry] of Object.entries(entries)) {
+          const applicability: Record<string, string[] | undefined> = {};
+          for (const dimension of [
+            "types",
+            "classes",
+            "affects",
+            "paths",
+          ] as const) {
+            const defaults = subsets[section]?.applicability?.[dimension];
+            const additions = entry.applicability?.add?.[dimension];
+            const exclusions = entry.applicability?.exclude?.[dimension];
+            if (
+              !defaults?.length &&
+              additions === undefined &&
+              exclusions === undefined
+            )
+              continue;
+            applicability[dimension] = [
+              ...new Set(
+                [...(defaults ?? []), ...(additions ?? [])].map(
+                  (value: string) => value.toLowerCase(),
+                ),
+              ),
+            ].filter(
+              (value) =>
+                !exclusions?.some(
+                  (excluded) => excluded.toLowerCase() === value,
+                ),
+            );
+          }
+          if (
+            applicability.types !== undefined &&
+            !applicability.types.some((t: string) =>
+              types.includes(t.toLowerCase()),
+            )
+          )
+            continue;
+          if (
+            classes?.length &&
+            applicability.classes !== undefined &&
+            !applicability.classes.some((c: string) =>
+              classes.includes(c.toLowerCase()),
+            )
+          )
+            continue;
+          if (
+            source.affects?.length &&
+            applicability.affects !== undefined &&
+            !applicability.affects.some((a: string) =>
+              source.affects!.some((b) => a.toLowerCase() === b.toLowerCase()),
+            )
+          )
+            continue;
           if (
             source.affects?.length &&
             !entry.affects?.some((a) =>
@@ -159,8 +187,8 @@ export function selectedRules(
 }
 export function recordBlocks(text: string, html = false): Map<string, string> {
   const chunks = html
-    ? text.split(/(?=<h[23]\b)/)
-    : text.split(/(?=^#{2,3} )/m);
+    ? text.split(/(?=<h[234]\b)/)
+    : text.split(/(?=^#{2,4} )/m);
   const result = new Map<string, string>();
   for (const chunk of chunks) {
     const id = html
@@ -414,18 +442,45 @@ export async function assertArtifactSource(
       : undefined;
     const entries = keys
       .flatMap((key) => Object.entries(rules.KSI[key]!.indicators))
-      .filter(
-        ([id, entry]) =>
-          (!related || related.has(id)) &&
-          (!mapping.source.classes?.length ||
-            !entry.varies_by_class ||
-            Object.keys(entry.varies_by_class).some((c) =>
-              mapping.source.classes!.some(
-                (v) => v.toLowerCase() === c.toLowerCase(),
-              ),
-            )),
-      );
+      .filter(([id]) => !related || related.has(id));
     assertRecords(text, entries, where, html, mapping.source.classes);
+    const displayedClasses = mapping.source.classes?.length
+      ? mapping.source.classes
+      : ["A", "B", "C"];
+    const blocks = recordBlocks(text, html);
+    for (const [id, entry] of entries) {
+      for (const className of displayedClasses) {
+        assertText(
+          blocks.get(id)!,
+          `Class ${className}: ${entry.force_by_class![className.toLowerCase()]}`,
+          `${where}: ${id} force`,
+          html,
+        );
+      }
+    }
+    const groups = html ? text.split(/(?=<h2\b)/) : text.split(/(?=^## )/m);
+    for (const force of ["MUST", "MAY"]) {
+      const title =
+        force === "MUST"
+          ? "Required Key Security Indicators"
+          : "Optional Key Security Indicators";
+      const expected = entries.filter(
+        ([, entry]) =>
+          displayedClasses.some(
+            (c) => entry.force_by_class![c.toLowerCase()] === "MUST",
+          ) ===
+          (force === "MUST"),
+      );
+      const group = groups.find((part) =>
+        (html ? htmlText(part) : markdownText(part)).startsWith(title),
+      );
+      if (expected.length) {
+        expect(group, `${where}: ${title}`).toBeDefined();
+        assertRecords(group!, expected, `${where}: ${title}`, html);
+      } else {
+        expect(group, `${where}: empty ${title}`).toBeUndefined();
+      }
+    }
     for (const key of keys)
       if (
         entries.some(([id]) => Object.hasOwn(rules.KSI[key]!.indicators, id))
@@ -457,7 +512,9 @@ export async function assertArtifactSource(
       rules.FRR.FRC?.data.rev5?.CSF?.["FRC-CSF-BSL"]?.varies_by_class ?? {};
     const controlSections = new Map<string, string>();
     if (!isIndex)
-      for (const chunk of text.split(html ? /(?=<h[23]\b)/ : /(?=^#{2,3} )/m)) {
+      for (const chunk of text.split(
+        html ? /(?=<h[23]\b)/ : /(?=^#{2,3} )/m,
+      )) {
         const rawId = full
           ? html
             ? chunk.match(/^<h2[^>]*id="([^"]+)"/)?.[1]
@@ -872,15 +929,7 @@ export async function expectedOutputPaths() {
       : undefined;
     const count = (key: string) =>
       Object.entries(rules.KSI[key]!.indicators).filter(
-        ([id, e]) =>
-          (!related || related.has(id)) &&
-          (!mapping.source.classes?.length ||
-            !e.varies_by_class ||
-            Object.keys(e.varies_by_class).some((c) =>
-              mapping.source.classes!.some(
-                (x) => x.toLowerCase() === c.toLowerCase(),
-              ),
-            )),
+        ([id]) => !related || related.has(id),
       ).length;
     if (mapping.outputMode === "single")
       add(

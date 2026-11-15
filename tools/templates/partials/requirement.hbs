@@ -1,4 +1,4 @@
-### {{title}}
+{{#if heading}}{{heading}}{{else}}###{{/if}} {{title}}
 
 {{#if changelog.length}}
 ??? abstract "{{id}}"
@@ -32,6 +32,12 @@
 
 {{/if}}
 
+{{#if classForces.length}}
+{{#each classForces}}
+**Class {{className}}:** {{force}}{{#unless @last}} · {{/unless}}
+{{/each}}
+
+{{/if}}
 !!! quote ""
 {{#each statementParagraphs}}
     {{this}}
