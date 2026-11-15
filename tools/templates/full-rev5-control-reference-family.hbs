@@ -18,7 +18,11 @@ tags:
 # {{title}}
 
 {{> introduction}}
+{{#if controlReferenceClasses.length}}
+This page contains the **{{controlCount}}** required controls and control enhancements in the {{title}} family for {{#each controlReferenceClasses}}Class {{this}}{{#unless @last}}, {{/unless}}{{/each}}.
+{{else}}
 This page contains all **{{controlCount}}** controls and control enhancements in the {{title}} family from the vendored NIST SP 800-53 Revision 5 OSCAL catalog.
+{{/if}}
 
 !!! info "Official NIST OSCAL source"
     - **Catalog version:** {{controlCatalog.version}}
@@ -29,12 +33,7 @@ This page contains all **{{controlCount}}** controls and control enhancements in
 {{#each controls}}
 ## {{displayId}} ({{title}}) { #{{anchorId}} }
 
-{{#if baselineClasses.length}}
-<div class="subset-applicability full-control-baselines" role="group" aria-label="FedRAMP Rev5 baseline applicability">
-<span class="subset-applicability__group subset-applicability__group--classes"><span class="subset-applicability__label">FedRAMP Rev5 Baselines:</span> <span class="subset-applicability__values">{{#each baselineClasses}}<span class="subset-applicability__tag">{{this}}</span>{{/each}}</span></span>
-</div>
-
-{{/if}}
+{{> control-class-metadata}}
 !!! quote ""
 {{#each statementLines}}
     {{this}}

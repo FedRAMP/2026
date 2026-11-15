@@ -215,7 +215,19 @@ Generated definition pages render the FRD purpose first, then an **Important Rel
 
 ## Generated Subset Applicability
 
-Generated FRR subset sections render the combined effective applicability of their included rules as compact labels immediately after the subset description. Each rule inherits subset applicability, adds `applicability.add` values, then removes `applicability.exclude` values. Exclusions win, including when they remove the last value in a dimension. Empty subset dimensions without overrides retain the existing unrestricted behavior. A rule can add a class or type outside its subset defaults, so selection happens per rule before empty subsets are omitted. Rule pages, reference counts, summaries, and link targets use the same selection logic. Class A uses this shared pipeline without a companion page. Certification types, classes, and affected parties are narrowed to the current generated mapping. For example, a 20x Class B reference page shows `20x` and `Class B`, while the complete ruleset reference keeps every applicable type and class. Certification paths are shown as supplied by the rules source because generated mappings do not currently filter by path.
+Generated FRR subset sections show the effective applicability of their included rules. Frameworks, paths, and actors come from subset metadata. Class membership comes from the subset unless `varies_by_class.<class>.applicable` explicitly sets it to `true` or `false`. A missing class variant inherits subset membership, and `MAY` is still applicable. The flag changes only class membership. Rule pages, reference counts, summaries, and link targets use the same selection logic; empty subsets are omitted. Class A uses this shared pipeline without a companion page.
+
+Certification types, classes, and audiences in the labels are narrowed to the current mapping. Empty subset class lists retain class-independent behavior when no membership flags are supplied. Certification paths are displayed but are not mapping filters.
+
+## FRR and KSI class content
+
+Resolve each class independently before rendering: start with top-level content, then replace each field supplied by that class's variant. Missing variants inherit all top-level content. Arrays and objects replace the entire field, without concatenation or recursive merging. Fields absent at both levels remain absent.
+
+The supported fields are `statement`, `following_information`, `following_information_bullets`, `force`, `notes`, `schema`, `note`, `artifacts`, `timeframe_type`, `timeframe_num`, `timeframe_num_min`, `timeframe_num_max`, `rev5_controls_list`, `pain_timeframes`, and `effective_date`. The resolver is in `scripts/class-content.ts`; a test checks its fields against the local schema.
+
+FRR entries label their applicable classes separately from force. Single-class pages render resolved content directly. Shared pages render common effective content once, with class-specific forces when needed; differing effective content appears in class tabs. Each tab includes inherited fields. FRD does not use class resolution. CTL guidance and parameters retain their separate common/class rendering contract.
+
+Provider certification landing pages in `content/providers/20x/index.md` and `content/providers/rev5/index.md` link to the Provider-filtered class references. Individual provider rulesets, KSI themes, control families, and category summaries are not generated beneath those paths. All-class deadline pages link to the complete rulesets when no audience-specific all-class destination exists.
 
 ## Generated KSI Pages
 
@@ -223,8 +235,8 @@ Add an entry to `generated.ksiDocuments` in `config.json`:
 
 ```json
 {
-  "id": "provider-20x-key-security-indicators",
-  "output": "providers/20x/key-security-indicators/{KSI}.md",
+  "id": "ksi-themes",
+  "output": "reference/ksi-themes/{KSI}.md",
   "outputMode": "themes",
   "definitionsHref": "../../../definitions/",
   "source": {
@@ -263,9 +275,9 @@ KSI mapping fields:
 - `source.collection`: must be `KSI`.
 - `source.theme`: one KSI theme key from the rules JSON, such as `CMT`.
 - `source.themes`: an array of KSI theme keys, such as `["CMT", "IAM"]`, or `"ALL"` to process every KSI theme.
-- `source.classes`: optional certification classes, such as `["B"]`. KSI pages display the selected classes' `force_by_class` values; mappings without a class filter display A, B, and C. Class D is not displayed.
+- `source.classes`: optional certification classes, such as `["B"]`. KSI pages display the selected classes' resolved `force` values; mappings without a class filter display A, B, and C. Class D is not displayed.
 
-KSI pages render **Required Key Security Indicators** before **Optional Key Security Indicators**, retaining theme and individual indicator headings. An indicator is required if any displayed class has `MUST`; otherwise it is optional (`MAY`). Each indicator appears once with its shared statement and labeled class forces. Empty groups are omitted. Missing or unsupported forces fail generation rather than silently classifying the indicator.
+KSI pages render **Required Key Security Indicators** before **Optional Key Security Indicators**, retaining theme and individual indicator headings. An indicator is required if any displayed class has `MUST`; otherwise it is optional (`MAY`). Each indicator appears once with labeled class forces and resolved content; differing class content uses class tabs. Empty groups are omitted. Missing or unsupported forces fail generation rather than silently classifying the indicator.
 
 ## Generated Rev5 Control Guidance Pages
 
@@ -290,8 +302,8 @@ Use `outputMode: "families"` to generate one page per selected control family:
 
 ```json
 {
-  "id": "provider-rev5-controls",
-  "output": "providers/rev5/controls/{family}.md",
+  "id": "control-families",
+  "output": "reference/control-guidance/{family}.md",
   "outputMode": "families",
   "template": "templates/rev5-controls.hbs",
   "source": {
@@ -311,6 +323,8 @@ Mapping fields:
 - `emptyBehavior`: `write` keeps an empty page and `skip` omits it.
 - `source.collection`: must be `CTL`.
 - `source.families`: an array of CTL family keys or `"ALL"`.
+
+CTL entries can contain only class metadata. Each control shows **FedRAMP Rev5 Baselines** labels only for classes whose CTL force is `MUST`. Classes with `MAY` are omitted. **Must Be Assessed Annually** labels appear only for classes whose `assess_yearly_by_class` value is true; false values produce no label. Empty label groups are omitted. The full reference and provider guidance pages share this presentation. Tests compare forces with the `FRC-CSF-BSL` control lists and annual flags with `IVV-CSF-AIA`, normalizing base controls and enhancements separately. CTL common and class-specific guidance and parameters remain separate; they do not use FRR/KSI field replacement.
 
 The generated page groups controls under the human-readable NIST family title. Each control includes the NIST statement, catalog and OSCAL versions, FedRAMP guidance, class-specific tabs when `varies_by_class` is present, and FedRAMP parameter IDs, NIST assignment labels, and values.
 
@@ -339,11 +353,18 @@ Add one mapping to `generated.fullControlReferenceDocuments`:
 ```
 
 This mapping generates `index.md` plus one page for each selected OSCAL family.
-Unlike `generated.controlDocuments`, it includes every active catalog control
-and enhancement. Withdrawn entries are omitted. Each control shows:
+Without a class filter, this mapping includes every active catalog control
+and enhancement. Withdrawn entries are omitted. Add `source.classes: ["B"]`,
+`["C"]`, or `["D"]` to generate a class-specific reference containing only controls
+with `MUST` for that class. These mappings retain common guidance and parameters,
+show only the selected class variants and labels, and omit empty families.
+The configured class references live under `reference/rev5/{class}/controls/`.
+
+One unfiltered mapping supplies the canonical destinations for rule and KSI
+control links. Additional class-filtered mappings do not change those destinations. Each control shows:
 
 - The original NIST statement.
-- Class B, C, and D tags derived from `FRC-CSF-BSL`.
+- Class B, C, and D baseline labels derived from CTL `varies_by_class.<class>.force: MUST`, with separate labels for true annual-assessment flags.
 - Any root-level or class-specific FedRAMP guidance and parameters from `CTL`.
 - A stable control anchor and a corresponding myctrl.tools link.
 - An italic statement inside the control quote when no FedRAMP-specific guidance or parameters exist.
@@ -425,7 +446,7 @@ Add an entry to `generated.referenceIndexDocuments` in `config.json`:
 
 Reference index mappings generate a table of FRR rulesets with links, status, subset and rule counts, and the most recent rule update date. Use `introduction` for the visible narrative text above the table. Use `source.documents: "ALL"` to include every FRR ruleset from the rules JSON; use `source.ignoreDocuments` to remove specific FRR keys after selection.
 
-Use `ruleDocumentMappingId` when the index should link to a generated ruleset mapping that does not live beside the index page. Use `ruleDocumentMappingIds` when one index row should link to multiple generated mappings, such as separate class-specific reference pages. Reference index mappings also support `source.types`, `source.classes`, `source.sections`, `source.affects`, `source.includeAll`, and `source.allPosition` so the table counts and links can match a filtered ruleset reference. Counts and links use effective per-rule applicability, including additions and exclusions, and omit subsets with no matching rules.
+Use `ruleDocumentMappingId` when the index should link to a generated ruleset mapping that does not live beside the index page. Use `ruleDocumentMappingIds` when one index row should link to multiple generated mappings, such as separate class-specific reference pages. Reference index mappings also support `source.types`, `source.classes`, `source.sections`, `source.affects`, `source.includeAll`, and `source.allPosition` so the table counts and links can match a filtered ruleset reference. Counts and links use subset applicability with explicit per-class membership flags, and omit subsets with no matching rules.
 
 The complete ruleset reference is usually paired with rule document mappings that use `outputMode: "documents"` and `output: "reference/{FRR}.md"` so each FRR ruleset has a standalone generated page. Class-specific reference sections use the same pattern with outputs such as `reference/20x/a/{FRR}.md`.
 
@@ -472,7 +493,7 @@ Mapping fields:
 - `source.documents`: an array of FRR keys, such as `["FSI", "ICP"]`, or `"ALL"` to process every FRR.
 - `source.ignoreDocuments`: optional array of FRR keys to remove after `source.document` or `source.documents` is resolved.
 - `source.types`: one or more certification types, such as `["20x"]` or `["rev5"]`.
-- `source.classes`: optional certification classes, such as `["A"]`. When present, generated ruleset pages select rules by effective applicability after rule-level additions and exclusions, omit empty subsets, and trim `varies_by_class` output to the selected class.
+- `source.classes`: optional certification classes, such as `["A"]`. When present, generated ruleset pages select rules by subset applicability and explicit class membership flags, omit empty subsets, and resolve effective content for the selected class.
 - `source.affects`: optional filter matched against each rule's `affects` list.
 - `source.sections`: optional list of subset keys to include, such as `["CSO", "CSX", "CSF"]`.
 - `source.includeAll`: include `data.all` rules with each selected type.

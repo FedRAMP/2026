@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolveToolPath } from "../config";
 import { expect } from "bun:test";
 import path from "node:path";
 import type { BuildArtifact } from "../build-markdown";
@@ -87,7 +89,7 @@ export function documentKeys(
 }
 export type RuleEntry = NonNullable<
   Rules["FRR"][string]["data"]["all"]
->[string][string];
+>[string][string] & { expectedClasses?: string[] };
 export function selectedRules(
   rules: Rules,
   source: Omit<RuleDocumentSourceConfig, "collection" | "types"> & {
@@ -111,35 +113,23 @@ export function selectedRules(
       )) {
         if (source.sections && !source.sections.includes(section)) continue;
         for (const [id, entry] of Object.entries(entries)) {
-          const applicability: Record<string, string[] | undefined> = {};
-          for (const dimension of [
-            "types",
-            "classes",
-            "affects",
-            "paths",
-          ] as const) {
-            const defaults = subsets[section]?.applicability?.[dimension];
-            const additions = entry.applicability?.add?.[dimension];
-            const exclusions = entry.applicability?.exclude?.[dimension];
-            if (
-              !defaults?.length &&
-              additions === undefined &&
-              exclusions === undefined
-            )
-              continue;
-            applicability[dimension] = [
-              ...new Set(
-                [...(defaults ?? []), ...(additions ?? [])].map(
-                  (value: string) => value.toLowerCase(),
-                ),
-              ),
-            ].filter(
-              (value) =>
-                !exclusions?.some(
-                  (excluded) => excluded.toLowerCase() === value,
-                ),
-            );
+          const applicability = { ...subsets[section]?.applicability };
+          const inherited = applicability.classes;
+          const hasFlags = Object.values(entry.varies_by_class ?? {}).some(
+            (v) => typeof v.applicable === "boolean",
+          );
+          if (inherited?.length || hasFlags) {
+            applicability.classes = ["a", "b", "c", "d"].filter((key) => {
+              const value = entry.varies_by_class?.[key]?.applicable;
+              return typeof value === "boolean"
+                ? value
+                : inherited?.some((c: string) => c.toLowerCase() === key);
+            });
           }
+          if (applicability.classes?.length === 0 && hasFlags) continue;
+          if (!applicability.types?.length) delete applicability.types;
+          if (!applicability.affects?.length) delete applicability.affects;
+          if (!inherited?.length && !hasFlags) delete applicability.classes;
           if (
             applicability.types !== undefined &&
             !applicability.types.some((t: string) =>
@@ -170,15 +160,18 @@ export function selectedRules(
             )
           )
             continue;
-          if (
-            classes?.length &&
-            entry.varies_by_class &&
-            !Object.keys(entry.varies_by_class).some((c) =>
-              classes.includes(c.toLowerCase()),
-            )
-          )
-            continue;
-          result.push([id, entry]);
+          const expectedClasses = (
+            classes?.length
+              ? classes
+              : (applicability.classes ?? ["a", "b", "c", "d"])
+          ).filter(
+            (c: string) =>
+              !applicability.classes ||
+              applicability.classes.some(
+                (a: string) => a.toLowerCase() === c.toLowerCase(),
+              ),
+          );
+          result.push([id, { ...entry, expectedClasses }]);
         }
       }
     }
@@ -206,6 +199,29 @@ export function recordBlocks(text: string, html = false): Map<string, string> {
   }
   return result;
 }
+const contentFields: string[] = Object.keys(
+  JSON.parse(
+    readFileSync(
+      resolveToolPath("rules/schemas/fedramp-consolidated-rules.schema.json"),
+      "utf8",
+    ),
+  ).$defs.class_content.properties,
+);
+export function expectedClassContent(
+  entry: RuleEntry,
+  className: string,
+): RuleEntry {
+  const result = { ...entry };
+  delete result.varies_by_class;
+  const variant = entry.varies_by_class?.[className.toLowerCase()] as
+    Record<string, unknown> | undefined;
+  for (const field of contentFields)
+    if (variant && Object.hasOwn(variant, field)) {
+      (result as Record<string, unknown>)[field] = variant[field];
+    }
+  return result;
+}
+
 function entryText(entry: RuleEntry, classes?: string[]): string[] {
   const values = [
     entry.name,
@@ -214,6 +230,8 @@ function entryText(entry: RuleEntry, classes?: string[]): string[] {
     entry.danger,
     entry.reference,
     entry.schema?.name,
+    entry.force,
+    ...Object.values(entry.artifacts ?? {}).flat(),
     // Notification names may lose terminal punctuation before appended destination details.
     ...(entry.notification ?? []).map((n) => n.name.replace(/[.!?]+$/, "")),
     ...Object.values(entry.rev5_controls_list ?? {}).flat(),
@@ -273,6 +291,7 @@ export function assertRecords(
   where: string,
   html = false,
   classes?: string[],
+  renderForce = true,
 ) {
   const blocks = recordBlocks(text, html);
   expect(
@@ -280,9 +299,33 @@ export function assertRecords(
     `${where}: exact record membership`,
   ).toEqual(entries.map(([id]) => id).sort());
   for (const [id, entry] of entries) {
-    assertStatement(blocks.get(id)!, entry.statement, `${where}: ${id}`, html);
-    for (const value of entryText(entry, classes))
-      assertText(blocks.get(id)!, value, `${where}: ${id}: ${value}`, html);
+    const selected =
+      entry.expectedClasses ??
+      (classes?.length ? classes : ["A", "B", "C", "D"]);
+    const resolved = selected.map((c) => expectedClassContent(entry, c));
+    const sameContent = resolved.every((e) =>
+      contentFields
+        .filter((k) => k !== "force")
+        .every(
+          (k) =>
+            JSON.stringify((e as Record<string, unknown>)[k]) ===
+            JSON.stringify(
+              (resolved[0] as unknown as Record<string, unknown>)[k],
+            ),
+        ),
+    );
+    if (sameContent)
+      assertStatement(
+        blocks.get(id)!,
+        resolved[0]?.statement,
+        `${where}: ${id}`,
+        html,
+      );
+    for (const effective of resolved)
+      for (const value of entryText(
+        renderForce ? effective : { ...effective, force: undefined },
+      ))
+        assertText(blocks.get(id)!, value, `${where}: ${id}: ${value}`, html);
   }
 }
 export async function assertArtifactSource(
@@ -355,6 +398,7 @@ export async function assertArtifactSource(
         where,
         html,
         mapping.source.classes,
+        false,
       );
     } else {
       const entries = selectedRules(
@@ -362,7 +406,29 @@ export async function assertArtifactSource(
         mapping.source,
         artifact.sourceDocument,
       );
-      assertRecords(text, entries, where, html, mapping.source.classes);
+      assertRecords(text, entries, where, html, mapping.source.classes, false);
+      const visibleText = html ? htmlText(text) : markdownText(text);
+      expect(visibleText, `${where}: redundant rule metadata`).not.toMatch(
+        /(?:Applicable Classes:|Force:)\s*(?:Class|MUST|MAY|SHOULD|SHALL)/,
+      );
+      for (const [, entry] of entries) {
+        for (const [className, variant] of Object.entries(
+          entry.varies_by_class ?? {},
+        )) {
+          if (
+            mapping.source.classes?.length === 1 &&
+            mapping.source.classes[0] !== className.toUpperCase()
+          )
+            continue;
+          if (typeof variant.applicable !== "boolean") continue;
+          assertText(
+            text,
+            `This rule ${variant.applicable ? "also applies" : "does not apply"} for Class ${className.toUpperCase()}.`,
+            where,
+            html,
+          );
+        }
+      }
       if (artifact.sourceDocument) {
         const doc = rules.FRR[artifact.sourceDocument]!;
         assertText(text, doc.info.name, `${where}: ruleset title`, html);
@@ -443,16 +509,32 @@ export async function assertArtifactSource(
     const entries = keys
       .flatMap((key) => Object.entries(rules.KSI[key]!.indicators))
       .filter(([id]) => !related || related.has(id));
-    assertRecords(text, entries, where, html, mapping.source.classes);
+    assertRecords(
+      text,
+      entries,
+      where,
+      html,
+      mapping.source.classes,
+      mapping.source.classes?.length !== 1,
+    );
     const displayedClasses = mapping.source.classes?.length
       ? mapping.source.classes
       : ["A", "B", "C"];
     const blocks = recordBlocks(text, html);
     for (const [id, entry] of entries) {
+      if (displayedClasses.length === 1) {
+        const block = blocks.get(id)!;
+        const visibleText = html ? htmlText(block) : markdownText(block);
+        expect(
+          visibleText,
+          `${where}: ${id} redundant force metadata`,
+        ).not.toMatch(/(?:Class [ABC]:|Force:)\s*(?:MUST|MAY)/);
+        continue;
+      }
       for (const className of displayedClasses) {
         assertText(
           blocks.get(id)!,
-          `Class ${className}: ${entry.force_by_class![className.toLowerCase()]}`,
+          `Class ${className}: ${expectedClassContent(entry, className).force}`,
           `${where}: ${id} force`,
           html,
         );
@@ -467,7 +549,7 @@ export async function assertArtifactSource(
       const expected = entries.filter(
         ([, entry]) =>
           displayedClasses.some(
-            (c) => entry.force_by_class![c.toLowerCase()] === "MUST",
+            (c) => expectedClassContent(entry, c).force === "MUST",
           ) ===
           (force === "MUST"),
       );
@@ -476,7 +558,14 @@ export async function assertArtifactSource(
       );
       if (expected.length) {
         expect(group, `${where}: ${title}`).toBeDefined();
-        assertRecords(group!, expected, `${where}: ${title}`, html);
+        assertRecords(
+          group!,
+          expected,
+          `${where}: ${title}`,
+          html,
+          displayedClasses,
+          displayedClasses.length !== 1,
+        );
       } else {
         expect(group, `${where}: empty ${title}`).toBeUndefined();
       }
@@ -508,13 +597,13 @@ export async function assertArtifactSource(
         ? [...catalog.families.keys()]
         : mapping.source.families;
     const isIndex = full && !artifact.sourceDocument;
-    const baseline =
-      rules.FRR.FRC?.data.rev5?.CSF?.["FRC-CSF-BSL"]?.varies_by_class ?? {};
+    const selectedClasses =
+      (mapping.source as { classes?: string[] }).classes?.map((c) =>
+        c.toLowerCase(),
+      ) ?? [];
     const controlSections = new Map<string, string>();
     if (!isIndex)
-      for (const chunk of text.split(
-        html ? /(?=<h[23]\b)/ : /(?=^#{2,3} )/m,
-      )) {
+      for (const chunk of text.split(html ? /(?=<h[23]\b)/ : /(?=^#{2,3} )/m)) {
         const rawId = full
           ? html
             ? chunk.match(/^<h2[^>]*id="([^"]+)"/)?.[1]
@@ -535,7 +624,15 @@ export async function assertArtifactSource(
     for (const key of familyKeys) {
       const family = catalog.families.get(key)!;
       const controls = [...family.controls.values()].filter((c) =>
-        full ? c.status !== "withdrawn" : Boolean(rules.CTL[key]?.[c.id]),
+        full
+          ? c.status !== "withdrawn" &&
+            (!selectedClasses.length ||
+              selectedClasses.some(
+                (className) =>
+                  rules.CTL[key]?.[c.id]?.varies_by_class?.[className]
+                    ?.force === "MUST",
+              ))
+          : Boolean(rules.CTL[key]?.[c.id]),
       );
       if (!controls.length) continue;
       assertText(text, family.title, where, html);
@@ -564,7 +661,11 @@ export async function assertArtifactSource(
         const source = rules.CTL[key]?.[control.id];
         for (const data of [
           source,
-          ...Object.values(source?.varies_by_class ?? {}),
+          ...Object.entries(source?.varies_by_class ?? {})
+            .filter(
+              ([c]) => !selectedClasses.length || selectedClasses.includes(c),
+            )
+            .map(([, data]) => data),
         ]) {
           for (const line of data?.guidance ?? [])
             assertText(
@@ -581,29 +682,38 @@ export async function assertArtifactSource(
               html,
             );
         }
-        if (full) {
-          const expected = Object.entries(baseline)
-            .filter(([, v]) =>
-              Object.values(v.rev5_controls_list ?? {})
-                .flat()
-                .some((id) => normalizeOscalControlId(id) === control.id),
-            )
-            .map(([c]) => `Class ${c.toUpperCase()}`);
-          const actual = artifact.context.controlFamilies
-            .flatMap((f) => f.controls)
-            .find((c) => c.id === control.id)!;
-          expect(
-            actual.baselineClasses,
-            `${where}: ${control.id}: baseline`,
-          ).toEqual(expected);
-          const renderedClasses = [
-            ...section!.matchAll(/class="subset-applicability__tag">([^<]+)</g),
+        const classes = selectedClasses.length
+          ? selectedClasses
+          : ["b", "c", "d"];
+        const expectedBaseline = classes
+          .filter((c) => source?.varies_by_class?.[c]?.force === "MUST")
+          .map((c) => `Class ${c.toUpperCase()}`);
+        const expectedAnnual = classes
+          .filter((c) => source?.assess_yearly_by_class?.[c] === true)
+          .map((c) => `Class ${c.toUpperCase()}`);
+        for (const [kind, expected] of [
+          ["baselines", expectedBaseline],
+          ["annual-assessment", expectedAnnual],
+        ] as const) {
+          const group = section!.match(
+            new RegExp(
+              `<div class="subset-applicability full-control-${kind}"[^>]*>([\\s\\S]*?)</div>`,
+            ),
+          )?.[1];
+          const rendered = [
+            ...(group ?? "").matchAll(
+              /class="subset-applicability__tag">([^<]+)</g,
+            ),
           ].map((m) => m[1]!);
-          expect(
-            renderedClasses,
-            `${where}: ${control.id}: rendered baseline`,
-          ).toEqual(expected);
+          expect(rendered, `${where}: ${control.id}: ${kind}`).toEqual(
+            expected,
+          );
+          expect(Boolean(group), `${where}: omit empty ${kind}`).toBe(
+            expected.length > 0,
+          );
         }
+        expect(section!).not.toContain("Not in annual-assessment list");
+        expect(section!).not.toContain("| Class | Force | Annual assessment |");
       }
     }
     if (!isIndex)
@@ -975,12 +1085,25 @@ export async function expectedOutputPaths() {
     for (const key of mapping.source.families === "ALL"
       ? [...catalog.families.keys()]
       : mapping.source.families)
-      paths.push(
-        path.posix.join(
-          mapping.output,
-          `${slug(catalog.families.get(key)!.title)}.md`,
-        ),
-      );
+      if (
+        !mapping.source.classes?.length ||
+        [...catalog.families.get(key)!.controls.values()].some(
+          (control) =>
+            control.status !== "withdrawn" &&
+            mapping.source.classes!.some(
+              (c) =>
+                rules.CTL[key]?.[control.id]?.varies_by_class?.[c.toLowerCase()]
+                  ?.force === "MUST",
+            ),
+        )
+      ) {
+        paths.push(
+          path.posix.join(
+            mapping.output,
+            `${slug(catalog.families.get(key)!.title)}.md`,
+          ),
+        );
+      }
   }
   for (const mapping of config.generated.deadlineDocuments ?? []) {
     const types = buckets({ types: mapping.source.types, includeAll: false });

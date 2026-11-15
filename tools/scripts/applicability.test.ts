@@ -1,7 +1,80 @@
 import { expect, test } from "bun:test";
 import { collectArtifacts } from "./build-markdown";
-import { loadToolConfig, type Rules } from "./test-support/sources";
+import { loadToolConfig, loadRules, type Rules } from "./test-support/sources";
 import { selectedRules } from "./test-support/source-contract";
+import { readFile } from "node:fs/promises";
+import Handlebars from "handlebars";
+
+test("all-class summaries and deadlines keep broad destinations when class references affect Providers", async () => {
+  const config = await loadToolConfig();
+  const rules = await loadRules();
+  const select = (artifacts: ReturnType<typeof collectArtifacts>) =>
+    artifacts
+      .filter(
+        (a) =>
+          a.documentType === "DEADLINES" ||
+          a.documentType === "FRR_TAGGED_SUMMARY",
+      )
+      .map((a) => ({ path: a.relativePath, context: a.context }));
+  const actual = select(collectArtifacts(rules, config));
+  const withoutClassReferences = structuredClone(config);
+  withoutClassReferences.generated.ruleDocuments =
+    config.generated.ruleDocuments.filter((m) => !m.source.classes?.length);
+  withoutClassReferences.generated.referenceIndexDocuments =
+    config.generated.referenceIndexDocuments?.filter(
+      (m) => !m.source.classes?.length,
+    );
+  expect(actual).toEqual(
+    select(collectArtifacts(rules, withoutClassReferences)),
+  );
+});
+
+test("rule quotes render resolved artifacts and explicit applicability notes", async () => {
+  const { config, rules } = await fixture();
+  const entry = rules.FRR.SYN!.data.all!.ONE!["SYN-ONE-ADD"]!;
+  entry.force = "MUST";
+  entry.artifacts = { all: ["Common evidence."] };
+  entry.varies_by_class = {
+    a: { applicable: true, artifacts: { all: ["Class A evidence."] } },
+    c: { applicable: false },
+  };
+  const shared = structuredClone(config.generated.ruleDocuments[0]!);
+  shared.id = "shared";
+  shared.output = "reference/shared/{FRR}.md";
+  delete shared.source.classes;
+  config.generated.ruleDocuments.push(shared);
+  const artifacts = collectArtifacts(rules, config);
+  const hb = Handlebars.create();
+  hb.registerPartial("rev5-control-list", "");
+  const render = hb.compile(
+    await readFile(
+      new URL("../templates/partials/requirement.hbs", import.meta.url),
+      "utf8",
+    ),
+  );
+  const rule = (id: string) =>
+    artifacts
+      .find((a) => a.mappingId === id)!
+      .context.sections.flatMap((s) => s.requirements)
+      .find((r) => r.id === "SYN-ONE-ADD")!;
+  const a = render(rule("rules-A"));
+  expect(a).toContain("    **Artifacts:**\n\n    - Class A evidence.");
+  expect(a).not.toContain("Common evidence.");
+  expect(a).toContain("    **This rule also applies for Class A.**");
+  expect(a).not.toContain("Class C.");
+  expect(a).not.toMatch(/\*\*(?:Force|Applicable Classes|Class A):/);
+  expect(a).not.toContain("Artifacts (all)");
+  const common = render(rule("shared"));
+  expect(common).toContain('=== "Class A"');
+  expect(common).toContain(
+    "        **Artifacts:**\n\n        - Class A evidence.",
+  );
+  expect(common).toContain(
+    "        **Artifacts:**\n\n        - Common evidence.",
+  );
+  expect(common).toContain("    **This rule does not apply for Class C.**");
+  expect(common).not.toContain("**Force:**");
+});
 
 async function fixture() {
   const config = await loadToolConfig();
@@ -38,22 +111,24 @@ async function fixture() {
                 name: "Added",
                 statement: "Added text.",
                 affects: ["Providers"],
-                applicability: { add: { classes: ["A"] } },
+                varies_by_class: { a: { applicable: true } },
               },
               "SYN-ONE-REMOVE": {
                 name: "Removed",
                 statement: "Removed text.",
                 affects: ["Providers"],
-                applicability: {
-                  add: { classes: ["A"] },
-                  exclude: { classes: ["A", "B"] },
+                varies_by_class: {
+                  a: { applicable: false },
+                  b: { applicable: false },
                 },
               },
               "SYN-ONE-SPARSE": {
                 name: "Sparse",
                 affects: ["Providers"],
-                applicability: { add: { classes: ["A"] } },
-                varies_by_class: { a: { statement: "Only A." } },
+                statement: "Inherited text.",
+                varies_by_class: {
+                  a: { applicable: true, statement: "Only A." },
+                },
               },
             },
           },
@@ -96,7 +171,7 @@ async function fixture() {
   return { config, rules };
 }
 
-test("all class mappings apply additions before exclusions, including sparse variants", async () => {
+test("all class mappings honor explicit class membership and missing variants", async () => {
   const { config, rules } = await fixture();
   const artifacts = collectArtifacts(rules, config);
   const byClass = (c: string) =>
@@ -106,7 +181,7 @@ test("all class mappings apply additions before exclusions, including sparse var
       s.requirements.map((r) => r.id),
     );
   expect(ids("A")).toEqual(["SYN-ONE-ADD", "SYN-ONE-SPARSE"]);
-  expect(ids("B")).toEqual(["SYN-ONE-BASE", "SYN-ONE-ADD"]);
+  expect(ids("B")).toEqual(["SYN-ONE-BASE", "SYN-ONE-ADD", "SYN-ONE-SPARSE"]);
   expect(byClass("C")).toBeUndefined();
   expect(byClass("A")!.context.sections[0]!.applicabilityGroups).toContainEqual(
     { key: "classes", label: "Class", values: ["Class A"] },
@@ -128,35 +203,39 @@ test("all class mappings apply additions before exclusions, including sparse var
   }
 });
 
-test("type and audience overrides affect selection, and an emptied dimension stays excluded", async () => {
+test("a rule excluded from every inherited class is absent from unfiltered references", async () => {
   const { config, rules } = await fixture();
-  rules.FRR.SYN!.info.subsets!.ONE!.applicability = {
-    types: ["Rev5"],
-    classes: ["A"],
-    affects: ["Agencies"],
-  };
-  const entries = rules.FRR.SYN!.data.all!.ONE!;
-  entries["SYN-ONE-ADD"]!.applicability = {
-    add: { types: ["20x"], affects: ["Providers"] },
-  };
-  entries["SYN-ONE-REMOVE"]!.applicability = {
-    add: { types: ["20x"], affects: ["Providers"] },
-    exclude: { types: ["20x", "Rev5"] },
-  };
-  config.generated.ruleDocuments.forEach((m) => {
-    m.source.affects = ["Providers"];
-  });
-  const artifacts = collectArtifacts(rules, config);
+  for (const mapping of config.generated.ruleDocuments)
+    delete mapping.source.classes;
+  const page = collectArtifacts(rules, config).find(
+    (a) => a.mappingId === "rules-A",
+  )!;
   expect(
-    artifacts
-      .find((a) => a.mappingId === "rules-A")!
-      .context.sections.flatMap((s) => s.requirements.map((r) => r.id)),
-  ).toEqual(["SYN-ONE-ADD"]);
+    page.context.sections.flatMap((s) => s.requirements.map((r) => r.id)),
+  ).not.toContain("SYN-ONE-REMOVE");
   expect(
     selectedRules(rules, config.generated.ruleDocuments[0]!.source).map(
       ([id]) => id,
     ),
-  ).toEqual(["SYN-ONE-ADD"]);
+  ).not.toContain("SYN-ONE-REMOVE");
+});
+
+test("class inclusion does not override framework or audience", async () => {
+  const { config, rules } = await fixture();
+  rules.FRR.SYN!.info.subsets!.ONE!.applicability = {
+    types: ["Rev5"],
+    classes: ["B"],
+    affects: ["Agencies"],
+  };
+  config.generated.ruleDocuments.forEach((m) => {
+    m.source.affects = ["Providers"];
+  });
+  expect(
+    collectArtifacts(rules, config).filter((a) => a.documentType === "FRR"),
+  ).toEqual([]);
+  expect(
+    selectedRules(rules, config.generated.ruleDocuments[0]!.source),
+  ).toEqual([]);
 });
 
 test("KSI groups use displayed forces, retain theme anchors, and omit Class D on shared pages", async () => {
@@ -172,17 +251,32 @@ test("KSI groups use displayed forces, retain theme anchors, and omit Class D on
         "KSI-SYN-OPT": {
           name: "Optional",
           statement: "Optional text.",
-          force_by_class: { a: "MAY", b: "MAY", c: "MAY", d: "MUST" },
+          varies_by_class: {
+            a: { force: "MAY" },
+            b: { force: "MAY" },
+            c: { force: "MAY" },
+            d: { force: "MUST" },
+          },
         },
         "KSI-SYN-MIX": {
           name: "Mixed",
           statement: "Mixed text.",
-          force_by_class: { a: "MAY", b: "MUST", c: "MUST", d: "MUST" },
+          varies_by_class: {
+            a: { force: "MAY" },
+            b: { force: "MUST" },
+            c: { force: "MUST" },
+            d: { force: "MUST" },
+          },
         },
         "KSI-SYN-REQ": {
           name: "Required",
           statement: "Required text.",
-          force_by_class: { a: "MUST", b: "MUST", c: "MUST", d: "MUST" },
+          varies_by_class: {
+            a: { force: "MUST" },
+            b: { force: "MUST" },
+            c: { force: "MUST" },
+            d: { force: "MUST" },
+          },
         },
       },
     },

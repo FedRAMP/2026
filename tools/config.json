@@ -22,8 +22,14 @@
   "generated": {
     "search": {
       "includedNavigationSections": [
-        ["Ruleset Reference", "Complete Rulesets"],
-        ["Ruleset Reference", "Other References"]
+        [
+          "Ruleset Reference",
+          "Complete Rulesets"
+        ],
+        [
+          "Ruleset Reference",
+          "Other References"
+        ]
       ]
     },
     "manifest": ".generated-markdown.json",
@@ -38,9 +44,21 @@
         "ruleDocumentMappingId": "complete-ruleset-reference",
         "ksiDocumentMappingId": "complete-ksi-reference",
         "collections": [
-          { "trigram": "FRR", "name": "FedRAMP Rules", "mappingId": "complete-ruleset-reference-index" },
-          { "trigram": "KSI", "name": "Key Security Indicators", "mappingId": "complete-ksi-reference" },
-          { "trigram": "CTL", "name": "Rev5 Control Guidance", "mappingId": "complete-rev5-controls-reference" }
+          {
+            "trigram": "FRR",
+            "name": "FedRAMP Rules",
+            "mappingId": "complete-ruleset-reference-index"
+          },
+          {
+            "trigram": "KSI",
+            "name": "Key Security Indicators",
+            "mappingId": "complete-ksi-reference"
+          },
+          {
+            "trigram": "CTL",
+            "name": "Rev5 Control Guidance",
+            "mappingId": "complete-rev5-controls-reference"
+          }
         ]
       }
     ],
@@ -52,7 +70,9 @@
         "includeEffectiveDates": false,
         "source": {
           "collection": "FRD",
-          "types": ["all"],
+          "types": [
+            "all"
+          ],
           "includeAll": true,
           "allPosition": "first"
         }
@@ -71,15 +91,6 @@
         }
       },
       {
-        "id": "provider-20x-key-security-indicators",
-        "output": "providers/20x/key-security-indicators/{KSI}.md",
-        "definitionsHref": "../../../definitions/",
-        "source": {
-          "collection": "KSI",
-          "themes": "ALL"
-        }
-      },
-      {
         "id": "20x-a-key-security-indicators-reference",
         "title": "Key Security Indicators",
         "output": "reference/20x/a/key-security-indicators.md",
@@ -88,7 +99,9 @@
         "source": {
           "collection": "KSI",
           "themes": "ALL",
-          "classes": ["A"]
+          "classes": [
+            "A"
+          ]
         }
       },
       {
@@ -100,7 +113,9 @@
         "source": {
           "collection": "KSI",
           "themes": "ALL",
-          "classes": ["B"]
+          "classes": [
+            "B"
+          ]
         }
       },
       {
@@ -112,7 +127,9 @@
         "source": {
           "collection": "KSI",
           "themes": "ALL",
-          "classes": ["C"]
+          "classes": [
+            "C"
+          ]
         }
       }
     ],
@@ -121,16 +138,6 @@
         "id": "complete-rev5-controls-reference",
         "title": "Rev5 Control Guidance",
         "output": "reference/rev5-control-guidance.md",
-        "template": "templates/rev5-controls.hbs",
-        "source": {
-          "collection": "CTL",
-          "families": "ALL"
-        }
-      },
-      {
-        "id": "provider-rev5-controls",
-        "output": "providers/rev5/controls/{family}.md",
-        "outputMode": "families",
         "template": "templates/rev5-controls.hbs",
         "source": {
           "collection": "CTL",
@@ -149,6 +156,48 @@
           "collection": "OSCAL",
           "families": "ALL"
         }
+      },
+      {
+        "id": "rev5-b-control-reference",
+        "title": "Rev5 Class B Control Reference",
+        "output": "reference/rev5/b/controls",
+        "indexTemplate": "templates/full-rev5-control-reference-index.hbs",
+        "familyTemplate": "templates/full-rev5-control-reference-family.hbs",
+        "source": {
+          "collection": "OSCAL",
+          "families": "ALL",
+          "classes": [
+            "B"
+          ]
+        }
+      },
+      {
+        "id": "rev5-c-control-reference",
+        "title": "Rev5 Class C Control Reference",
+        "output": "reference/rev5/c/controls",
+        "indexTemplate": "templates/full-rev5-control-reference-index.hbs",
+        "familyTemplate": "templates/full-rev5-control-reference-family.hbs",
+        "source": {
+          "collection": "OSCAL",
+          "families": "ALL",
+          "classes": [
+            "C"
+          ]
+        }
+      },
+      {
+        "id": "rev5-d-control-reference",
+        "title": "Rev5 Class D Control Reference",
+        "output": "reference/rev5/d/controls",
+        "indexTemplate": "templates/full-rev5-control-reference-index.hbs",
+        "familyTemplate": "templates/full-rev5-control-reference-family.hbs",
+        "source": {
+          "collection": "OSCAL",
+          "families": "ALL",
+          "classes": [
+            "D"
+          ]
+        }
       }
     ],
     "deadlineDocuments": [
@@ -161,104 +210,20 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "ignoreDocuments": ["AGU", "REC"],
-          "types": ["all"],
-          "affects": ["Providers"]
+          "ignoreDocuments": [
+            "AGU",
+            "REC"
+          ],
+          "types": [
+            "all"
+          ],
+          "affects": [
+            "Providers"
+          ]
         }
       }
     ],
-    "taggedDocumentSummaries": [
-      {
-        "id": "provider-20x-boundary-rules-summary",
-        "title": "The 20x FedRAMP Boundary",
-        "output": "providers/20x/boundary/index.md",
-        "template": "templates/tagged-document-summary.hbs",
-        "source": {
-          "collection": "FRR",
-          "documents": "ALL",
-          "types": ["20x"],
-          "affects": ["Providers"],
-          "tag": "boundary",
-          "includeAll": true,
-          "allPosition": "first"
-        }
-      },
-      {
-        "id": "provider-rev5-boundary-rules-summary",
-        "title": "The Rev5 FedRAMP Boundary",
-        "output": "providers/rev5/boundary/index.md",
-        "template": "templates/tagged-document-summary.hbs",
-        "source": {
-          "collection": "FRR",
-          "documents": "ALL",
-          "types": ["rev5"],
-          "affects": ["Providers"],
-          "tag": "boundary",
-          "includeAll": true,
-          "allPosition": "first"
-        }
-      },
-      {
-        "id": "provider-20x-assurance-rules-summary",
-        "title": "Assurance",
-        "output": "providers/20x/assurance/index.md",
-        "template": "templates/tagged-document-summary.hbs",
-        "source": {
-          "collection": "FRR",
-          "documents": "ALL",
-          "types": ["20x"],
-          "affects": ["Providers"],
-          "tag": "assurance",
-          "includeAll": true,
-          "allPosition": "first"
-        }
-      },
-      {
-        "id": "provider-rev5-assurance-rules-summary",
-        "title": "Assurance",
-        "output": "providers/rev5/assurance/index.md",
-        "template": "templates/tagged-document-summary.hbs",
-        "source": {
-          "collection": "FRR",
-          "documents": "ALL",
-          "types": ["rev5"],
-          "affects": ["Providers"],
-          "tag": "assurance",
-          "includeAll": true,
-          "allPosition": "first"
-        }
-      },
-      {
-        "id": "provider-20x-materials-rules-summary",
-        "title": "Package Materials",
-        "output": "providers/20x/package/index.md",
-        "template": "templates/tagged-document-summary.hbs",
-        "source": {
-          "collection": "FRR",
-          "documents": "ALL",
-          "types": ["20x"],
-          "affects": ["Providers"],
-          "tag": "materials",
-          "includeAll": true,
-          "allPosition": "first"
-        }
-      },
-      {
-        "id": "provider-rev5-materials-rules-summary",
-        "title": "Package Materials",
-        "output": "providers/rev5/package/index.md",
-        "template": "templates/tagged-document-summary.hbs",
-        "source": {
-          "collection": "FRR",
-          "documents": "ALL",
-          "types": ["rev5"],
-          "affects": ["Providers"],
-          "tag": "materials",
-          "includeAll": true,
-          "allPosition": "first"
-        }
-      }
-    ],
+    "taggedDocumentSummaries": [],
     "referenceIndexDocuments": [
       {
         "id": "complete-ruleset-reference-index",
@@ -276,10 +241,10 @@
       },
       {
         "id": "20x-ruleset-reference-index",
-        "title": "20x Ruleset Reference",
-        "description": "This section contains the FedRAMP 20x rulesets as standalone references.",
-        "purpose": "This content allows folks to see the 20x rules together without them broken apart by stakeholder.",
-        "introduction": "This section contains the FedRAMP 20x rulesets with content that applies to one or more 20x classes.",
+        "title": "20x (Providers)",
+        "description": "This section contains the 20x rules that affect Providers.",
+        "purpose": "Use this reference to review Provider requirements for 20x.",
+        "introduction": "This section includes only rules that affect Providers and apply to 20x. The Complete Rulesets section contains the full rulesets for all stakeholders.",
         "output": "reference/20x/index.md",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingIds": [
@@ -290,76 +255,118 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "ignoreDocuments": ["AGU", "REC"],
-          "types": ["20x"],
-          "classes": ["A", "B", "C"],
+          "ignoreDocuments": [
+            "AGU",
+            "REC"
+          ],
+          "types": [
+            "20x"
+          ],
+          "classes": [
+            "A",
+            "B",
+            "C"
+          ],
           "includeAll": true,
-          "allPosition": "first"
+          "allPosition": "first",
+          "affects": [
+            "Providers"
+          ]
         }
       },
       {
         "id": "20x-a-ruleset-reference-index",
-        "title": "20x Class A Ruleset Reference",
-        "description": "This section contains the entire Consolidated Rules for 2026 as a standalone reference for each ruleset.",
-        "purpose": "This content allows folks to see the full rules together without them broken apart by stakeholder.",
-        "introduction": "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset with all related content in a single rule as an overall reference. The individual stakeholder sections of this site contain only the specific rules that apply in different circumstances for different stakeholders, while the reference rulesets are entirely unabridged.",
+        "title": "20x Class A Ruleset Reference (Providers)",
+        "description": "This section contains the 20x Class A rules that affect Providers.",
+        "purpose": "Use this reference to review Provider requirements for 20x Class A.",
+        "introduction": "This section includes only rules that affect Providers and apply to 20x Class A. The Complete Rulesets section contains the full rulesets for all stakeholders.",
         "output": "reference/20x/a/index.md",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingId": "20x-a-ruleset-reference",
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "ignoreDocuments": ["AGU", "REC"],
-          "types": ["20x"],
-          "classes": ["A"],
+          "ignoreDocuments": [
+            "AGU",
+            "REC"
+          ],
+          "types": [
+            "20x"
+          ],
+          "classes": [
+            "A"
+          ],
           "includeAll": true,
-          "allPosition": "first"
+          "allPosition": "first",
+          "affects": [
+            "Providers"
+          ]
         }
       },
       {
         "id": "20x-b-ruleset-reference-index",
-        "title": "20x Class B Ruleset Reference",
-        "description": "This section contains the entire Consolidated Rules for 2026 as a standalone reference for each ruleset.",
-        "purpose": "This content allows folks to see the full rules together without them broken apart by stakeholder.",
-        "introduction": "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset with all related content in a single rule as an overall reference. The individual stakeholder sections of this site contain only the specific rules that apply in different circumstances for different stakeholders, while the reference rulesets are entirely unabridged.",
+        "title": "20x Class B Ruleset Reference (Providers)",
+        "description": "This section contains the 20x Class B rules that affect Providers.",
+        "purpose": "Use this reference to review Provider requirements for 20x Class B.",
+        "introduction": "This section includes only rules that affect Providers and apply to 20x Class B. The Complete Rulesets section contains the full rulesets for all stakeholders.",
         "output": "reference/20x/b/index.md",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingId": "20x-b-ruleset-reference",
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "ignoreDocuments": ["AGU", "REC"],
-          "types": ["20x"],
-          "classes": ["B"],
+          "ignoreDocuments": [
+            "AGU",
+            "REC"
+          ],
+          "types": [
+            "20x"
+          ],
+          "classes": [
+            "B"
+          ],
           "includeAll": true,
-          "allPosition": "first"
+          "allPosition": "first",
+          "affects": [
+            "Providers"
+          ]
         }
       },
       {
         "id": "20x-c-ruleset-reference-index",
-        "title": "20x Class C Ruleset Reference",
-        "description": "This section contains the entire Consolidated Rules for 2026 as a standalone reference for each ruleset.",
-        "purpose": "This content allows folks to see the full rules together without them broken apart by stakeholder.",
-        "introduction": "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset with all related content in a single rule as an overall reference. The individual stakeholder sections of this site contain only the specific rules that apply in different circumstances for different stakeholders, while the reference rulesets are entirely unabridged.",
+        "title": "20x Class C Ruleset Reference (Providers)",
+        "description": "This section contains the 20x Class C rules that affect Providers.",
+        "purpose": "Use this reference to review Provider requirements for 20x Class C.",
+        "introduction": "This section includes only rules that affect Providers and apply to 20x Class C. The Complete Rulesets section contains the full rulesets for all stakeholders.",
         "output": "reference/20x/c/index.md",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingId": "20x-c-ruleset-reference",
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "ignoreDocuments": ["AGU", "REC"],
-          "types": ["20x"],
-          "classes": ["C"],
+          "ignoreDocuments": [
+            "AGU",
+            "REC"
+          ],
+          "types": [
+            "20x"
+          ],
+          "classes": [
+            "C"
+          ],
           "includeAll": true,
-          "allPosition": "first"
+          "allPosition": "first",
+          "affects": [
+            "Providers"
+          ]
         }
       },
       {
         "id": "rev5-ruleset-reference-index",
-        "title": "Rev5 Ruleset Reference",
-        "description": "This section contains the FedRAMP Rev5 rulesets as standalone references.",
-        "purpose": "This content allows folks to see the Rev5 rules together without them broken apart by stakeholder.",
-        "introduction": "This section contains the FedRAMP Rev5 rulesets with content that applies to one or more Rev5 classes.",
+        "title": "Rev5 (Providers)",
+        "description": "This section contains the Rev5 rules that affect Providers.",
+        "purpose": "Use this reference to review Provider requirements for Rev5.",
+        "introduction": "This section includes only rules that affect Providers and apply to Rev5. The Complete Rulesets section contains the full rulesets for all stakeholders.",
         "output": "reference/rev5/index.md",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingIds": [
@@ -370,68 +377,110 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "ignoreDocuments": ["AGU", "REC"],
-          "types": ["rev5"],
-          "classes": ["B", "C", "D"],
+          "ignoreDocuments": [
+            "AGU",
+            "REC"
+          ],
+          "types": [
+            "rev5"
+          ],
+          "classes": [
+            "B",
+            "C",
+            "D"
+          ],
           "includeAll": true,
-          "allPosition": "first"
+          "allPosition": "first",
+          "affects": [
+            "Providers"
+          ]
         }
       },
       {
         "id": "rev5-b-ruleset-reference-index",
-        "title": "Rev5 Class B Ruleset Reference",
-        "description": "This section contains the FedRAMP Rev5 Class B rulesets as standalone references.",
-        "purpose": "This content allows folks to see Rev5 Class B rules together without them broken apart by stakeholder.",
-        "introduction": "This section contains the FedRAMP Rev5 rulesets with content that applies to Rev5 Class B.",
+        "title": "Rev5 Class B Ruleset Reference (Providers)",
+        "description": "This section contains the Rev5 Class B rules that affect Providers.",
+        "purpose": "Use this reference to review Provider requirements for Rev5 Class B.",
+        "introduction": "This section includes only rules that affect Providers and apply to Rev5 Class B. The Complete Rulesets section contains the full rulesets for all stakeholders.",
         "output": "reference/rev5/b/index.md",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingId": "rev5-b-ruleset-reference",
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "ignoreDocuments": ["AGU", "REC"],
-          "types": ["rev5"],
-          "classes": ["B"],
+          "ignoreDocuments": [
+            "AGU",
+            "REC"
+          ],
+          "types": [
+            "rev5"
+          ],
+          "classes": [
+            "B"
+          ],
           "includeAll": true,
-          "allPosition": "first"
+          "allPosition": "first",
+          "affects": [
+            "Providers"
+          ]
         }
       },
       {
         "id": "rev5-c-ruleset-reference-index",
-        "title": "Rev5 Class C Ruleset Reference",
-        "description": "This section contains the FedRAMP Rev5 Class C rulesets as standalone references.",
-        "purpose": "This content allows folks to see Rev5 Class C rules together without them broken apart by stakeholder.",
-        "introduction": "This section contains the FedRAMP Rev5 rulesets with content that applies to Rev5 Class C.",
+        "title": "Rev5 Class C Ruleset Reference (Providers)",
+        "description": "This section contains the Rev5 Class C rules that affect Providers.",
+        "purpose": "Use this reference to review Provider requirements for Rev5 Class C.",
+        "introduction": "This section includes only rules that affect Providers and apply to Rev5 Class C. The Complete Rulesets section contains the full rulesets for all stakeholders.",
         "output": "reference/rev5/c/index.md",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingId": "rev5-c-ruleset-reference",
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "ignoreDocuments": ["AGU", "REC"],
-          "types": ["rev5"],
-          "classes": ["C"],
+          "ignoreDocuments": [
+            "AGU",
+            "REC"
+          ],
+          "types": [
+            "rev5"
+          ],
+          "classes": [
+            "C"
+          ],
           "includeAll": true,
-          "allPosition": "first"
+          "allPosition": "first",
+          "affects": [
+            "Providers"
+          ]
         }
       },
       {
         "id": "rev5-d-ruleset-reference-index",
-        "title": "Rev5 Class D Ruleset Reference",
-        "description": "This section contains the FedRAMP Rev5 Class D rulesets as standalone references.",
-        "purpose": "This content allows folks to see Rev5 Class D rules together without them broken apart by stakeholder.",
-        "introduction": "This section contains the FedRAMP Rev5 rulesets with content that applies to Rev5 Class D.",
+        "title": "Rev5 Class D Ruleset Reference (Providers)",
+        "description": "This section contains the Rev5 Class D rules that affect Providers.",
+        "purpose": "Use this reference to review Provider requirements for Rev5 Class D.",
+        "introduction": "This section includes only rules that affect Providers and apply to Rev5 Class D. The Complete Rulesets section contains the full rulesets for all stakeholders.",
         "output": "reference/rev5/d/index.md",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingId": "rev5-d-ruleset-reference",
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "ignoreDocuments": ["AGU", "REC"],
-          "types": ["rev5"],
-          "classes": ["D"],
+          "ignoreDocuments": [
+            "AGU",
+            "REC"
+          ],
+          "types": [
+            "rev5"
+          ],
+          "classes": [
+            "D"
+          ],
           "includeAll": true,
-          "allPosition": "first"
+          "allPosition": "first",
+          "affects": [
+            "Providers"
+          ]
         }
       }
     ],
@@ -446,9 +495,15 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "types": ["all"],
-          "affects": ["FedRAMP"],
-          "sections": ["FRP"],
+          "types": [
+            "all"
+          ],
+          "affects": [
+            "FedRAMP"
+          ],
+          "sections": [
+            "FRP"
+          ],
           "includeAll": true,
           "allPosition": "first"
         }
@@ -466,7 +521,9 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "types": ["all"],
+          "types": [
+            "all"
+          ],
           "includeAll": true,
           "allPosition": "first"
         }
@@ -482,11 +539,21 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "ignoreDocuments": ["AGU", "REC"],
-          "types": ["20x"],
-          "classes": ["A"],
+          "ignoreDocuments": [
+            "AGU",
+            "REC"
+          ],
+          "types": [
+            "20x"
+          ],
+          "classes": [
+            "A"
+          ],
           "includeAll": true,
-          "allPosition": "first"
+          "allPosition": "first",
+          "affects": [
+            "Providers"
+          ]
         }
       },
       {
@@ -500,11 +567,21 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "ignoreDocuments": ["AGU", "REC"],
-          "types": ["20x"],
-          "classes": ["B"],
+          "ignoreDocuments": [
+            "AGU",
+            "REC"
+          ],
+          "types": [
+            "20x"
+          ],
+          "classes": [
+            "B"
+          ],
           "includeAll": true,
-          "allPosition": "first"
+          "allPosition": "first",
+          "affects": [
+            "Providers"
+          ]
         }
       },
       {
@@ -518,11 +595,21 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "ignoreDocuments": ["AGU", "REC"],
-          "types": ["20x"],
-          "classes": ["C"],
+          "ignoreDocuments": [
+            "AGU",
+            "REC"
+          ],
+          "types": [
+            "20x"
+          ],
+          "classes": [
+            "C"
+          ],
           "includeAll": true,
-          "allPosition": "first"
+          "allPosition": "first",
+          "affects": [
+            "Providers"
+          ]
         }
       },
       {
@@ -536,11 +623,21 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "ignoreDocuments": ["AGU", "REC"],
-          "types": ["rev5"],
-          "classes": ["B"],
+          "ignoreDocuments": [
+            "AGU",
+            "REC"
+          ],
+          "types": [
+            "rev5"
+          ],
+          "classes": [
+            "B"
+          ],
           "includeAll": true,
-          "allPosition": "first"
+          "allPosition": "first",
+          "affects": [
+            "Providers"
+          ]
         }
       },
       {
@@ -554,11 +651,21 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "ignoreDocuments": ["AGU", "REC"],
-          "types": ["rev5"],
-          "classes": ["C"],
+          "ignoreDocuments": [
+            "AGU",
+            "REC"
+          ],
+          "types": [
+            "rev5"
+          ],
+          "classes": [
+            "C"
+          ],
           "includeAll": true,
-          "allPosition": "first"
+          "allPosition": "first",
+          "affects": [
+            "Providers"
+          ]
         }
       },
       {
@@ -572,11 +679,21 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "ignoreDocuments": ["AGU", "REC"],
-          "types": ["rev5"],
-          "classes": ["D"],
+          "ignoreDocuments": [
+            "AGU",
+            "REC"
+          ],
+          "types": [
+            "rev5"
+          ],
+          "classes": [
+            "D"
+          ],
           "includeAll": true,
-          "allPosition": "first"
+          "allPosition": "first",
+          "affects": [
+            "Providers"
+          ]
         }
       },
       {
@@ -590,42 +707,12 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "types": ["all"],
-          "affects": ["Agencies"],
-          "includeAll": true,
-          "allPosition": "first"
-        }
-      },
-      {
-        "id": "provider-specific-rules-20x",
-        "output": "providers/20x/rules/{FRR}.md",
-        "outputMode": "documents",
-        "definitionsHref": "../../../definitions/",
-        "rulesHref": "../../../",
-        "emptyBehavior": "skip",
-        "includeEffectiveDates": true,
-        "source": {
-          "collection": "FRR",
-          "documents": "ALL",
-          "types": ["20x"],
-          "affects": ["Providers"],
-          "includeAll": true,
-          "allPosition": "first"
-        }
-      },
-      {
-        "id": "provider-specific-rules-rev5",
-        "output": "providers/rev5/rules/{FRR}.md",
-        "outputMode": "documents",
-        "definitionsHref": "../../../definitions/",
-        "rulesHref": "../../../",
-        "emptyBehavior": "skip",
-        "includeEffectiveDates": true,
-        "source": {
-          "collection": "FRR",
-          "documents": "ALL",
-          "types": ["rev5"],
-          "affects": ["Providers"],
+          "types": [
+            "all"
+          ],
+          "affects": [
+            "Agencies"
+          ],
           "includeAll": true,
           "allPosition": "first"
         }
@@ -640,10 +727,19 @@
         "includeEffectiveDates": true,
         "source": {
           "collection": "FRR",
-          "documents": ["MKT"],
-          "types": ["all"],
-          "affects": ["Providers"],
-          "sections": ["CSO", "IIP"],
+          "documents": [
+            "MKT"
+          ],
+          "types": [
+            "all"
+          ],
+          "affects": [
+            "Providers"
+          ],
+          "sections": [
+            "CSO",
+            "IIP"
+          ],
           "allPosition": "first"
         }
       },
@@ -658,8 +754,12 @@
         "source": {
           "collection": "FRR",
           "documents": "ALL",
-          "types": ["all"],
-          "affects": ["Assessors"],
+          "types": [
+            "all"
+          ],
+          "affects": [
+            "Assessors"
+          ],
           "includeAll": true,
           "allPosition": "first"
         }
@@ -668,16 +768,21 @@
         "id": "advisors-marketplace",
         "output": "advisors/rules/{FRR}.md",
         "outputMode": "documents",
-
         "definitionsHref": "../../definitions/",
         "rulesHref": "../",
         "emptyBehavior": "skip",
         "includeEffectiveDates": true,
         "source": {
           "collection": "FRR",
-          "documents": ["MKT"],
-          "types": ["all"],
-          "affects": ["Advisors"],
+          "documents": [
+            "MKT"
+          ],
+          "types": [
+            "all"
+          ],
+          "affects": [
+            "Advisors"
+          ],
           "includeAll": true,
           "allPosition": "first"
         }

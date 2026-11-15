@@ -168,7 +168,7 @@ async function trigramFixture() {
         web_name: "sample-theme",
         short_name: "XYZ",
         indicators: {
-          "KSI-XYZ-ONE": { name: "Indicator", statement: "Measure this.", force_by_class: { a: "MAY", b: "MUST", c: "MUST", d: "MUST" } },
+          "KSI-XYZ-ONE": { name: "Indicator", statement: "Measure this.", varies_by_class: { a: { force: "MAY" }, b: { force: "MUST" }, c: { force: "MUST" }, d: { force: "MUST" } } },
         },
       },
     },

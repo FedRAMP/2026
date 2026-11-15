@@ -13,28 +13,86 @@ FedRAMP 20x Certification Rules replace long traditional narrative descriptions 
 declarative statements that are intended to be easy to follow and address one by one. All applicable
 rules must be followed to obtain and maintain a FedRAMP Certification.
 
-In general, most cloud service providers will approach the FedRAMP 20x Certification Rules as follows:
+## Rules by Certification Class
 
-1. [Marketplace Listing](rules/marketplace-listing) helps you get listed on the FedRAMP Marketplace.
+Choose your certification class to see the rules that affect Providers.
 
-2. [FedRAMP Certification](rules/fedramp-certification) explains the high level requirements for FedRAMP Certification.
+| Class | Ruleset Reference | Key Security Indicators |
+| --- | --- | --- |
+| Class A | [20x Class A Rules](../../reference/20x/a/index.md) | [Key Security Indicators](../../reference/20x/a/key-security-indicators.md) |
+| Class B | [20x Class B Rules](../../reference/20x/b/index.md) | [Key Security Indicators](../../reference/20x/b/key-security-indicators.md) |
+| Class C | [20x Class C Rules](../../reference/20x/c/index.md) | [Key Security Indicators](../../reference/20x/c/key-security-indicators.md) |
 
-3. [Boundary Rulesets](boundary) tell you how to establish, maintain, and protect the information resources that will be within the scope of your FedRAMP Certification.
+The class references include the applicable Marketplace Listing, FedRAMP Certification, Boundary, Assurance, and Package rules. The [Complete Rulesets](../../reference/complete-rulesets/index.md) contain the full rules for all stakeholders.
 
-4. [Assurance Rulesets](assurance) list of all of the special expectations that are necessary for assuring government customers that you are protecting their information.
 
-    !!! tip "Assurance Rulesets will require new engineering and product work!"
 
-        Government customers expect a significant amount of additional ongoing assurance
-        about the confidentiality, integrity, and availability of federal information
-        than private sector companies do. You will almost certainly need to design and
-        build new capabilities to provide this assurance.
+## Key Security Indicators
 
-        FedRAMP has established a minimum set of assurance that should be adequate for
-        federal agencies, but specific customers may require additional assurance due to
-        risk and complexity of their use case.
+FedRAMP 20x works differently than a traditional compliance approach by asking cloud service providers to demonstrate
+desired security capabilities instead of telling them to meet specific security requirements. Key Security Indicators
+are designed to be helpful to cloud service providers by ensuring their business has access to meaningful metrics
+about the real outcomes of their security decisions. Every Key Security Indicator should be measuring things your business
+cares about.
 
-5. [Package Rulesets](package) outline how all of this information should be supplied for FedRAMP.
+Security controls define required protections, but Key Security Indicators provide measurable validation that those
+protections are functioning properly within operational environments. Therefore, you should focus on mapping the Key
+Security Indicators directly to the desired security outcomes. This way, you can demonstrate that you've adhered to
+the underlying security controls by showing the effectiveness of your implementation through active protection.
 
-6. [Key Security Indicators](key-security-indicators/) summarize the security capabilities that a high quality cloud service offering
-    will prove and measure to maintain its own security and assure their government customers they are doing so.
+### Encouraging Improvement
+
+Cloud environments evolve continuously through infrastructure updates, deployments, configuration changes, and scaling activities — so too should your security! Key Security Indicators aren’t one-time requirements. You should design and build your processes that fulfill Key Security Indicators to:
+
+- Continuously collect evidence
+- Detect configuration drift
+- Monitor control effectiveness over time
+- Alert on deviations from security baselines
+- Provide measurable trends and operational insights
+
+This continuous validation model supports stronger security assurance and aligns closely with modern cloud-native operational practices.
+
+### Getting Started
+
+FedRAMP expects a minimum set of information and artifacts for each Key Security Indicator to be documented in your
+Security Decision Record. We are intentionally vague about the actual activities expected for each Key Security
+Indicator because these vary considerably by cloud service offering depending on many diverse factors.
+
+!!! danger "Do not attempt to approach Key Security Indicators from a traditional compliance standpoint!"
+
+    GRC and Assurance Engineering is critical for approaching Key Security Indicators. You MUST work
+    with hands-on software, infrastructure, and security engineers as well as many other disciplines
+    throughout your organization to get value out of Key Security Indicators.
+
+    In fact, the most successful organizations in the FedRAMP 20x pilots were entirely lead by
+    experienced engineering and product teams that approached FedRAMP Certification like any other
+    product.
+
+The initial approach to each Key Security Indicator is simple:
+
+- How are the activities that produce this outcome performed?
+- Where in the tech or policy stack do they exist?
+- What is currently measured or reported on related to these activities, or what do people want to measure or report on?
+- Why are there gaps if no activities or metrics are relevant to this?
+- When do the activities and measurements occur?
+- Where are the sources of data for monitoring and measuring these activities?
+
+Sometimes this information will be in a silo in the organization far away from security and
+compliance - that's okay! Building that connection will benefit your business. Get to it!
+
+### Expectations for Assurance
+
+In general, FedRAMP expects cloud service providers to supply _as much information as possible_
+related to Key Security Indicators that will assure federal customers that you are protecting
+your data. We do not mandate specific numbers or implementations in most cases, but measurements
+and metrics tied to these Key Security Indicators are how you're proving that your business
+knows what it's doing - and as a bonus this information is often really useful to you internally
+too!
+
+!!! tip "It's about the customer experience, not compliance!"
+
+    Don't think of it as trying to implement the minimum to obtain a FedRAMP Certification because
+    that's not all it is. You're actually competing with every other cloud service provider to
+    demonstrate that your measurements and metrics are better than theirs and that you can share
+    information about them in a better way so federal agencies will choose you over everyone
+    else.

@@ -996,23 +996,29 @@ describe("build-markdown", () => {
         .flatMap((section) => section.requirements)
         .find((entry) => entry.id === "SYN-GEN-ONE")!;
 
-      expect(requirement.statementParagraphs[0]).toBe(expectedStatement(href));
-      expect(
-        requirement.variantSections.map((variant) => variant.title),
-      ).toEqual(["Class B", "Low"]);
+      expect(requirement.statementParagraphs).toEqual([]);
+      expect(requirement.variantSections.map((v) => v.title)).toEqual([
+        "Class A",
+        "Class B",
+        "Class C",
+        "Class D",
+        "Low",
+      ]);
       for (const variant of requirement.variantSections) {
-        expect(variant.statementParagraphs).toEqual([expectedStatement(href)]);
+        expect(variant.statementParagraphs[0]).toBe(expectedStatement(href));
       }
-      expect(requirement.noteParagraphs).toEqual([
-        "Providers MAY consult this note.",
-      ]);
-      expect(requirement.numberedItems).toEqual([
-        "Providers MUST supply this information.",
-      ]);
-      expect(requirement.variantSections[0]?.notes).toEqual([
+      for (const variant of requirement.variantSections.slice(0, 4)) {
+        expect(variant.noteParagraphs).toEqual([
+          "Providers MAY consult this note.",
+        ]);
+        expect(variant.numberedItems).toEqual([
+          "Providers MUST supply this information.",
+        ]);
+      }
+      expect(requirement.variantSections[1]?.notes).toEqual([
         "Providers SHOULD review this note.",
       ]);
-      expect(requirement.variantSections[1]?.bulletItems).toEqual([
+      expect(requirement.variantSections[4]?.bulletItems).toEqual([
         "Providers MUST NOT omit this.",
       ]);
       expect(requirement.terms).toEqual([
@@ -1028,7 +1034,7 @@ describe("build-markdown", () => {
       "reference/synthetic-ruleset.md",
     );
     expect(
-      documentArtifact.context.sections[0]?.requirements[0]
+      documentArtifact.context.sections[0]?.requirements[0]?.variantSections[0]
         ?.statementParagraphs[1],
     ).toBe(
       "See [REL-GEN-ONE (Related Requirement)](related.md#related-requirement){ data-preview }.",
@@ -1306,12 +1312,22 @@ describe("build-markdown", () => {
         indicators: {
           "KSI-SYN-INCLUDED": {
             name: "Synthetic Indicator",
-            force_by_class: { a: "MUST", b: "MUST", c: "MUST", d: "MUST" },
+            varies_by_class: {
+              a: { force: "MUST" },
+              b: { force: "MUST" },
+              c: { force: "MUST" },
+              d: { force: "MUST" },
+            },
             statement: "Related indicator should render.",
           },
           "KSI-SYN-OTHER": {
             name: "Other Indicator",
-            force_by_class: { a: "MAY", b: "MAY", c: "MAY", d: "MUST" },
+            varies_by_class: {
+              a: { force: "MAY" },
+              b: { force: "MAY" },
+              c: { force: "MAY" },
+              d: { force: "MUST" },
+            },
             statement: "Unrelated indicator should not render.",
           },
         },
@@ -1524,14 +1540,13 @@ describe("build-markdown", () => {
         values: ["Providers"],
       },
     ]);
-    expect(requirement?.variantSections).toHaveLength(1);
-    expect(requirement?.variantSections[0]?.title).toBe("Class B");
-    expect(
-      requirement?.variantSections[0]?.statementParagraphs.join("\n"),
-    ).toContain("Class B variant should render.");
-    expect(
-      requirement?.variantSections[0]?.statementParagraphs.join("\n"),
-    ).not.toContain("Class A variant should not render.");
+    expect(requirement?.variantSections).toHaveLength(0);
+    expect(requirement?.statementParagraphs.join("\n")).toContain(
+      "Class B variant should render.",
+    );
+    expect(requirement?.statementParagraphs.join("\n")).not.toContain(
+      "Class A variant should not render.",
+    );
     expect(requirement?.reference).toEqual({
       label: "Companion Ruleset",
       url: "../companion-ruleset/",
@@ -1609,7 +1624,12 @@ describe("build-markdown", () => {
             name: "Class Variant Indicator",
             statement:
               "Indicators MUST remain unchanged and MAY use force terms.",
-            force_by_class: { a: "MAY", b: "MUST", c: "MAY", d: "MUST" },
+            varies_by_class: {
+              a: { force: "MAY" },
+              b: { force: "MUST" },
+              c: { force: "MAY" },
+              d: { force: "MUST" },
+            },
           },
         },
       },
@@ -1703,7 +1723,13 @@ describe("build-markdown", () => {
         taggedDocumentSummaries: [],
         referenceIndexDocuments: [],
         frrCollectionDocuments: [],
-        ruleDocuments: [],
+        ruleDocuments: [
+          {
+            id: "fixture-reference",
+            output: "reference/{FRR}.md",
+            source: { collection: "FRR", documents: "ALL", types: ["all"] },
+          },
+        ],
       },
     });
 
@@ -1765,7 +1791,13 @@ describe("build-markdown", () => {
         taggedDocumentSummaries: [],
         referenceIndexDocuments: [],
         frrCollectionDocuments: [],
-        ruleDocuments: [],
+        ruleDocuments: [
+          {
+            id: "fixture-reference",
+            output: "reference/{FRR}.md",
+            source: { collection: "FRR", documents: "ALL", types: ["all"] },
+          },
+        ],
       },
     });
 

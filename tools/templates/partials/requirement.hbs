@@ -32,12 +32,18 @@
 
 {{/if}}
 
+{{#unless hideForceMetadata}}
 {{#if classForces.length}}
 {{#each classForces}}
 **Class {{className}}:** {{force}}{{#unless @last}} · {{/unless}}
 {{/each}}
 
 {{/if}}
+{{#if force}}
+**Force:** {{force}}
+
+{{/if}}
+{{/unless}}
 !!! quote ""
 {{#each statementParagraphs}}
     {{this}}
@@ -54,8 +60,31 @@
 {{/each}}
 
 {{/if}}
+{{#if painTimeframeRows.length}}
+
+    ---
+
+    **Potential Agency Impact N-rating (PAIN) Timeframes:**
+
+    | <abbr title="Potential Agency Impact N-rating">PAIN</abbr> Rating |{{#each painTimeframeColumns}} {{#if tooltip}}<abbr title="{{tooltip}}">{{label}}</abbr>{{else}}{{label}}{{/if}} |{{/each}}
+    |--------------------------|{{#each painTimeframeColumns}}---|{{/each}}
+{{#each painTimeframeRows}}
+    | PAIN-{{pain}} |{{#each cells}} {{this}} |{{/each}}
+{{/each}}
+
+{{/if}}
 {{#each variantSections}}
     === "{{title}}"
+{{#unless ../hideForceMetadata}}
+{{#if force}}
+        **Force:** {{force}}
+
+{{/if}}
+{{/unless}}
+{{#if schema}}
+        **Related JSON Schema:** [{{schema.name}}]({{schema.url}})
+
+{{/if}}
 {{#each statementParagraphs}}
         {{this}}
 
@@ -112,6 +141,24 @@
         - _{{this}}_
 {{/each}}
 {{/if}}
+{{#if artifacts.length}}
+        **Artifacts:**
+
+{{#each artifacts}}
+{{#if label}}
+        **{{label}}:**
+
+{{/if}}
+{{#each items}}
+        - {{this}}
+{{/each}}
+{{/each}}
+
+{{/if}}
+{{#if ../controlLinks.length}}
+        **Related SP 800-53 Controls:** {{#each ../controlLinks}}[{{label}}]({{url}}){ data-preview }{{#unless @last}}, {{/unless}}{{/each}}
+
+{{/if}}
 {{/each}}
 {{#if numberedItems.length}}
 {{#each numberedItems}}
@@ -154,11 +201,32 @@
     - _{{this}}_
 {{/each}}
 {{/if}}
+{{#if artifacts.length}}
+
+    **Artifacts:**
+
+{{#each artifacts}}
+{{#if label}}
+    **{{label}}:**
+
+{{/if}}
+{{#each items}}
+    - {{this}}
+{{/each}}
+{{/each}}
+
+{{/if}}
+{{#unless variantSections.length}}
 {{#if controlLinks.length}}
 
     **Related SP 800-53 Controls:** {{#each controlLinks}}[{{label}}]({{url}}){ data-preview }{{#unless @last}}, {{/unless}}{{/each}}
 
 {{/if}}
+{{/unless}}
+{{#each applicabilityNotes}}
+    **{{this}}**
+
+{{/each}}
 {{#if reference}}
 
     **Reference:** [{{reference.label}}]({{reference.url}})

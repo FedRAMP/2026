@@ -1,3 +1,4 @@
+import { normalizeOscalControlId } from "./oscal-catalog";
 import { expect, test } from "bun:test";
 import {
   assertManualCopy,
@@ -174,7 +175,11 @@ test("real-source clones rebuild after definition, date and baseline changes wit
   // Exercise source evolution only for the document types verified below.
   // The full-site tests separately validate every production mapping.
   Object.assign(snapshot.config.generated, {
-    ruleDocuments: [],
+    // Deadlines need real all-class reference destinations.
+    ruleDocuments: snapshot.config.generated.ruleDocuments.filter(
+      (mapping) =>
+        !mapping.source.affects?.length && !mapping.source.classes?.length,
+    ),
     ksiDocuments: [],
     controlDocuments: [],
     taggedDocumentSummaries: [],
@@ -233,13 +238,17 @@ test("real-source clones rebuild after definition, date and baseline changes wit
     }
     const baseline =
       snapshot.rules.FRR.FRC!.data.rev5!.CSF!["FRC-CSF-BSL"]!.varies_by_class!;
-    const variant = Object.values(baseline).find((v) =>
+    const [className, variant] = Object.entries(baseline).find(([, v]) =>
       Object.values(v.rev5_controls_list ?? {}).some((ids) => ids.length),
     )!;
     const list = Object.values(variant.rev5_controls_list!).find(
       (ids) => ids.length,
     )!;
-    list.pop();
+    const removedControl = normalizeOscalControlId(list.pop()!);
+    const family = removedControl.split("-")[0]!;
+    snapshot.rules.CTL[family]![removedControl]!.varies_by_class![
+      className
+    ]!.force = "MAY";
     await buildAndVerify();
     delete definitions["FRD-SYNTHETIC"];
     await buildAndVerify();

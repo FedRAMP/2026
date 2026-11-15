@@ -1,0 +1,19 @@
+{{#if baselineClasses.length}}
+<div class="subset-applicability full-control-baselines" role="group" aria-label="FedRAMP Rev5 baseline applicability">
+<span class="subset-applicability__group subset-applicability__group--classes"><span class="subset-applicability__label">FedRAMP Rev5 Baselines:</span> <span class="subset-applicability__values">{{#each baselineClasses}}<span class="subset-applicability__tag">{{this}}</span>{{/each}}</span></span>
+</div>
+
+{{/if}}
+{{#if annualAssessmentClasses.length}}
+<div class="subset-applicability full-control-annual-assessment" role="group" aria-label="Annual assessment">
+<span class="subset-applicability__group subset-applicability__group--classes"><span class="subset-applicability__label">Must Be Assessed Annually:</span> <span class="subset-applicability__values">{{#each annualAssessmentClasses}}<span class="subset-applicability__tag">{{this}}</span>{{/each}}</span></span>
+</div>
+
+{{/if}}
+{{#if changelog.length}}
+??? abstract "FedRAMP metadata history"
+{{#each changelog}}
+    - **{{date}}:** {{comment}}
+{{/each}}
+
+{{/if}}

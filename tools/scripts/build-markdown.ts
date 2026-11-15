@@ -1,4 +1,16 @@
-import { access, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import {
+  CLASS_CONTENT_FIELDS,
+  resolveClassContent,
+  applicableClasses,
+} from "./class-content";
+import {
+  access,
+  mkdir,
+  readFile,
+  readdir,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import Handlebars from "handlebars";
@@ -165,6 +177,12 @@ type PainTimeframesSource =
   | Record<string, Record<string, PainTimeframeEntrySource>>;
 
 interface VariantSource {
+  applicable?: boolean;
+  force?: string;
+  schema?: RequirementSchemaSource;
+  artifacts?: Record<string, string[]>;
+  timeframe_num_min?: number | string;
+  timeframe_num_max?: number | string;
   statement?: string;
   following_information?: string[];
   following_information_bullets?: string[];
@@ -192,8 +210,11 @@ interface RequirementSchemaSource {
 
 interface RequirementEntrySource {
   name?: string;
-  applicability?: { add?: SubsetApplicabilitySource; exclude?: SubsetApplicabilitySource };
-  force_by_class?: Record<string, string>;
+  force?: string;
+  artifacts?: Record<string, string[]>;
+  pain_timeframes?: PainTimeframesSource;
+  timeframe_num_min?: number | string;
+  timeframe_num_max?: number | string;
   statement?: string;
   following_information?: string[];
   following_information_bullets?: string[];
@@ -244,10 +265,7 @@ interface DefinitionEntrySource {
 interface RequirementDocumentSource {
   info: InfoSource;
   data: Partial<
-    Record<
-      DataBucket,
-      Record<string, Record<string, RequirementEntrySource>>
-    >
+    Record<DataBucket, Record<string, Record<string, RequirementEntrySource>>>
   >;
 }
 
@@ -267,11 +285,14 @@ interface ControlParameterSource {
 }
 
 interface ControlClassDataSource {
+  force?: "MUST" | "MAY";
   guidance?: string[];
   parameters?: ControlParameterSource[];
 }
 
 interface ControlEntrySource extends ControlClassDataSource {
+  assess_yearly_by_class?: Record<string, boolean>;
+  updated?: ChangeLogSource[];
   varies_by_class?: Record<string, ControlClassDataSource>;
 }
 
@@ -299,6 +320,9 @@ interface PainTimeframeRowViewModel {
 }
 
 interface VariantViewModel {
+  schema?: RequirementSchemaViewModel;
+  force?: string;
+  artifacts: Array<{ label: string; items: string[] }>;
   title: string;
   statementParagraphs: string[];
   numberedItems: string[];
@@ -338,7 +362,14 @@ interface RequirementSchemaViewModel {
 }
 
 interface RequirementViewModel {
+  applicableClasses?: string[];
+  painTimeframeColumns: PainTimeframeColumnViewModel[];
+  painTimeframeRows: PainTimeframeRowViewModel[];
+  force?: string;
+  artifacts: Array<{ label: string; items: string[] }>;
   ksiRequired?: boolean;
+  hideForceMetadata?: boolean;
+  applicabilityNotes?: string[];
   classForces?: Array<{ className: string; force: string }>;
   id: string;
   anchorId: string;
@@ -482,8 +513,7 @@ interface MissingRelatedRule {
 
 type RuleIndex = ReadonlyMap<string, RuleIndexEntry>;
 type FrrRuleSourceMappingConfig =
-  | RuleDocumentMappingConfig
-  | FrrCollectionDocumentMappingConfig;
+  RuleDocumentMappingConfig | FrrCollectionDocumentMappingConfig;
 type FrrDocumentSelectionMappingConfig = {
   id: string;
   source: {
@@ -538,6 +568,8 @@ interface ControlClassVariantViewModel extends ControlGuidanceViewModel {
 }
 
 interface ControlViewModel {
+  annualAssessmentClasses: string[];
+  changelog: ReturnType<typeof toChangeLog>;
   id: string;
   officialId: string;
   displayId: string;
@@ -616,6 +648,7 @@ interface KsiGroupViewModel {
 }
 
 interface DocumentViewModel {
+  controlReferenceClasses: string[];
   ksiGroups: KsiGroupViewModel[];
   searchExclude?: boolean;
   introduction?: string;
@@ -931,15 +964,19 @@ function effectiveRuleApplicability(
   requirement: RequirementEntrySource,
 ): SubsetApplicabilitySource {
   const result: SubsetApplicabilitySource = {};
-  for (const key of ["types", "classes", "paths", "affects"] as const) {
-    const base = subset?.applicability?.[key];
-    const add = requirement.applicability?.add?.[key];
-    const exclude = requirement.applicability?.exclude?.[key];
-    if (!base?.length && add === undefined && exclude === undefined) continue;
-    result[key] = uniqueApplicabilityValues([
-      ...(base ?? []),
-      ...(add ?? []),
-    ]).filter((value) => !matchesAny(value, exclude ?? []));
+  for (const key of ["types", "paths", "affects"] as const) {
+    if (subset?.applicability?.[key]?.length)
+      result[key] = subset.applicability[key];
+  }
+  const inherited = subset?.applicability?.classes;
+  // Empty subset class lists describe class-independent audiences.
+  if (
+    inherited?.length ||
+    Object.values(requirement.varies_by_class ?? {}).some(
+      (v) => typeof v.applicable === "boolean",
+    )
+  ) {
+    result.classes = applicableClasses(requirement, inherited);
   }
   return result;
 }
@@ -957,6 +994,7 @@ function ruleMatchesApplicability(
   },
 ): boolean {
   const effective = effectiveRuleApplicability(subset, requirement);
+  if (effective.classes?.length === 0) return false;
   const dimensions = [
     [effective.types, sourceVersions(mapping)],
     [effective.classes, mappingClasses(mapping)],
@@ -969,7 +1007,6 @@ function ruleMatchesApplicability(
         !selected.length ||
         values.some((value) => matchesAny(value, [...selected])),
     ) &&
-    requirementMatchesSelectedClasses(requirement, mappingClasses(mapping)) &&
     requirementMatchesAffectedParties(requirement, [
       ...(mapping.source.affects ?? []),
     ])
@@ -988,7 +1025,9 @@ function isApplicable(entry?: EffectiveEntrySource): boolean {
   return Boolean(entry?.is && entry.is.toLowerCase() !== "no");
 }
 
-function commonEffectiveEntry(info: InfoSource): EffectiveEntrySource | undefined {
+function commonEffectiveEntry(
+  info: InfoSource,
+): EffectiveEntrySource | undefined {
   return info.effective;
 }
 
@@ -1152,7 +1191,9 @@ function ruleSubsetMatchesMapping(
   subsetKey: string,
   mapping: FrrRuleSourceMappingConfig,
 ): boolean {
-  return !mapping.source.sections || mapping.source.sections.includes(subsetKey);
+  return (
+    !mapping.source.sections || mapping.source.sections.includes(subsetKey)
+  );
 }
 
 function renderRuleCandidatePath(
@@ -1240,7 +1281,10 @@ function buildRulePageIndex(
 
     for (const { key, document } of sourceDocuments(rules, mapping)) {
       const relativePath = relativePathForDocument(document);
-      const subsets = subsetsForVersions(document.info, mappingVersions(mapping));
+      const subsets = subsetsForVersions(
+        document.info,
+        mappingVersions(mapping),
+      );
 
       for (const [id, rule] of ruleIndex) {
         if (rule.documentKey !== key) {
@@ -1255,7 +1299,13 @@ function buildRulePageIndex(
           continue;
         }
 
-        if (!ruleMatchesApplicability(rule.requirement, subsets[rule.subsetKey], mapping)) {
+        if (
+          !ruleMatchesApplicability(
+            rule.requirement,
+            subsets[rule.subsetKey],
+            mapping,
+          )
+        ) {
           continue;
         }
 
@@ -1273,7 +1323,9 @@ function buildRulePageIndex(
   return index;
 }
 
-function cloneRulePageIndex(rulePageIndex: RulePageIndex): Map<string, RulePageCandidate[]> {
+function cloneRulePageIndex(
+  rulePageIndex: RulePageIndex,
+): Map<string, RulePageCandidate[]> {
   const clonedIndex = new Map<string, RulePageCandidate[]>();
 
   for (const [ruleId, candidates] of rulePageIndex) {
@@ -1307,7 +1359,11 @@ function ruleMatchesRuleDocumentMapping(
   }
 
   const subsets = subsetsForVersions(document.info, mappingVersions(mapping));
-  return ruleMatchesApplicability(rule.requirement, subsets[rule.subsetKey], mapping);
+  return ruleMatchesApplicability(
+    rule.requirement,
+    subsets[rule.subsetKey],
+    mapping,
+  );
 }
 
 function ruleDocumentMappingRuleIds(
@@ -1319,7 +1375,9 @@ function ruleDocumentMappingRuleIds(
   const ruleIds = new Set<string>();
 
   for (const [ruleId, rule] of ruleIndex) {
-    if (ruleMatchesRuleDocumentMapping(rules, mapping, rule, selectedDocumentKeys)) {
+    if (
+      ruleMatchesRuleDocumentMapping(rules, mapping, rule, selectedDocumentKeys)
+    ) {
       ruleIds.add(ruleId);
     }
   }
@@ -1346,8 +1404,11 @@ function compareRelatedRuleIds(
   const leftRule = ruleIndex.get(leftRuleId);
   const rightRule = ruleIndex.get(rightRuleId);
   const leftDocument = leftRule ? rules.FRR[leftRule.documentKey] : undefined;
-  const rightDocument = rightRule ? rules.FRR[rightRule.documentKey] : undefined;
-  const leftDocumentName = leftDocument?.info.name ?? leftRule?.documentKey ?? "";
+  const rightDocument = rightRule
+    ? rules.FRR[rightRule.documentKey]
+    : undefined;
+  const leftDocumentName =
+    leftDocument?.info.name ?? leftRule?.documentKey ?? "";
   const rightDocumentName =
     rightDocument?.info.name ?? rightRule?.documentKey ?? "";
 
@@ -1455,7 +1516,8 @@ function relatedKsiIndicatorIdsForKsiMapping(
   ksiIndex: KsiIndex,
   mapping: KsiDocumentMappingConfig,
 ): Set<string> | undefined {
-  const ruleDocumentMappingId = mapping.relatedIndicatorsFromRuleDocumentMappingId;
+  const ruleDocumentMappingId =
+    mapping.relatedIndicatorsFromRuleDocumentMappingId;
   if (!ruleDocumentMappingId) {
     return undefined;
   }
@@ -1493,7 +1555,11 @@ function buildRelatedRulePageIndex(
     }
 
     const relativePath = normalizeGeneratedPath(mapping.relatedRulesOutput);
-    for (const ruleId of missingRelatedRuleIdsForMapping(rules, ruleIndex, mapping)) {
+    for (const ruleId of missingRelatedRuleIdsForMapping(
+      rules,
+      ruleIndex,
+      mapping,
+    )) {
       addRulePageCandidate(rulePageIndex, ruleId, {
         mappingId: mapping.id,
         relativePath,
@@ -1669,8 +1735,7 @@ function resolveRelatedRuleHref(
     }))
     .sort(
       (left, right) => right.score - left.score || left.index - right.index,
-    )[0]
-    ?.candidate;
+    )[0]?.candidate;
 
   if (!bestCandidate) {
     return undefined;
@@ -1754,8 +1819,7 @@ function resolveRelatedKsiHref(
     }))
     .sort(
       (left, right) => right.score - left.score || left.index - right.index,
-    )[0]
-    ?.candidate;
+    )[0]?.candidate;
 
   if (!bestCandidate) {
     return undefined;
@@ -2079,9 +2143,9 @@ function buildFlowMermaidLines(
   const steps = (flow.steps ?? []).filter((step) => step.from || step.to);
   const nodeLabels = Array.from(
     new Set(
-      steps.flatMap((step) => [step.from, step.to]).filter((value): value is string =>
-        Boolean(value?.trim()),
-      ),
+      steps
+        .flatMap((step) => [step.from, step.to])
+        .filter((value): value is string => Boolean(value?.trim())),
     ),
   );
   const nodeIds = new Map(
@@ -2098,7 +2162,9 @@ function buildFlowMermaidLines(
     const outgoingSteps = steps.filter((step) => step.from === label);
     const incomingSteps = steps.filter((step) => step.to === label);
     const requirement = requirementIndex.get(label);
-    const displayLabel = requirement ? `${label}<br/>${requirement.title}` : label;
+    const displayLabel = requirement
+      ? `${label}<br/>${requirement.title}`
+      : label;
 
     lines.push(
       mermaidNodeShape(
@@ -2177,6 +2243,27 @@ function toChangeLog(updated: ChangeLogSource[] = []) {
     }));
 }
 
+function formatEntryDuration(entry: VariantSource): string | undefined {
+  if (entry.timeframe_num !== undefined)
+    return formatDuration(entry.timeframe_type, entry.timeframe_num);
+  if (
+    entry.timeframe_num_min !== undefined &&
+    entry.timeframe_num_max !== undefined
+  ) {
+    return `${formatDuration(entry.timeframe_type, entry.timeframe_num_min)} to ${formatDuration(entry.timeframe_type, entry.timeframe_num_max)}`;
+  }
+  return undefined;
+}
+
+function artifactGroups(
+  artifacts?: Record<string, string[]>,
+): Array<{ label: string; items: string[] }> {
+  return Object.entries(artifacts ?? {}).map(([label, items]) => ({
+    label: label === "all" ? "" : label,
+    items,
+  }));
+}
+
 function formatDuration(
   timeframeType: string | undefined,
   timeframeNum: number | string | undefined,
@@ -2221,8 +2308,10 @@ function painTimeframeColumnLabel(key: string): string {
 
 function painTimeframeColumnTooltip(key: string): string | undefined {
   const tooltips: Record<string, string> = {
-    irv_lev: "Likely Exploitable Vulnerability (LEV) + Internet-Reachable Vulnerability (IRV)",
-    nirv_lev: "Likely Exploitable Vulnerability (LEV) + Not Internet-Reachable Vulnerability (NIRV)",
+    irv_lev:
+      "Likely Exploitable Vulnerability (LEV) + Internet-Reachable Vulnerability (IRV)",
+    nirv_lev:
+      "Likely Exploitable Vulnerability (LEV) + Not Internet-Reachable Vulnerability (NIRV)",
     nlev: "Not Likely Exploitable Vulnerability (NLEV)",
   };
 
@@ -2240,7 +2329,10 @@ function normalizePainTimeframes(
     return {
       painTimeframeColumns: [
         { label: "LEV + IRV", tooltip: painTimeframeColumnTooltip("irv_lev") },
-        { label: "LEV + NIRV", tooltip: painTimeframeColumnTooltip("nirv_lev") },
+        {
+          label: "LEV + NIRV",
+          tooltip: painTimeframeColumnTooltip("nirv_lev"),
+        },
         { label: "NLEV", tooltip: painTimeframeColumnTooltip("nlev") },
       ],
       painTimeframeRows: painTimeframes.map((timeframe) => ({
@@ -2353,6 +2445,9 @@ function buildVariantViewModel(
 
   return {
     title,
+    force: entry.force,
+    schema: toRequirementSchema(entry.schema),
+    artifacts: artifactGroups(entry.artifacts),
     statementParagraphs: linkRelatedRuleReferenceParagraphs(
       entry.statement,
       relatedRuleIds,
@@ -2376,7 +2471,7 @@ function buildVariantViewModel(
       `${requirementId} ${title}`,
     ),
     effectiveDateLines: toDateLines(entry.effective_date),
-    timeframe: formatDuration(entry.timeframe_type, entry.timeframe_num),
+    timeframe: formatEntryDuration(entry),
     ...painTimeframes,
     noteParagraphs: linkRelatedRuleReferenceParagraphs(
       entry.note,
@@ -2401,29 +2496,6 @@ function buildVariantSections(
 ): VariantViewModel[] {
   const sections: VariantViewModel[] = [];
   const relatedRuleIds = entry.related;
-
-  for (const [className, classEntry] of Object.entries(
-    entry.varies_by_class ?? {},
-  )) {
-    if (
-      selectedClasses.length &&
-      !selectedClasses.includes(normalizeCertificationClass(className))
-    ) {
-      continue;
-    }
-
-    sections.push(
-      buildVariantViewModel(
-        `Class ${className.toUpperCase()}`,
-        classEntry,
-        relatedRuleIds,
-        ruleLinkContext,
-        controlLinkContext,
-        requirementId,
-        forceTermsDefinitionsHref,
-      ),
-    );
-  }
 
   for (const [levelName, levelEntry] of Object.entries(
     entry.varies_by_level ?? {},
@@ -2469,9 +2541,7 @@ function toNotifications(
       !href && target && target.toLowerCase() !== sourceName.toLowerCase()
         ? ` (${target})`
         : undefined;
-    const name = targetDetail
-      ? sourceName.replace(/[.!?]+$/, "")
-      : sourceName;
+    const name = targetDetail ? sourceName.replace(/[.!?]+$/, "") : sourceName;
 
     return {
       party: notification.party,
@@ -2535,7 +2605,109 @@ function buildTermLinks(
     }));
 }
 
+function renderedRuleClasses(
+  entry: RequirementEntrySource,
+  subset: SubsetSource | undefined,
+  selected: string[],
+): string[] {
+  const effective = effectiveRuleApplicability(subset, entry).classes;
+  return (selected.length ? selected : (effective ?? [])).filter(
+    (c) => !effective || effective.includes(c),
+  );
+}
+
 function buildRequirementViewModel(
+  id: string,
+  entry: RequirementEntrySource,
+  definitionsRelativePath: string,
+  rulesRelativePath: string,
+  doNotLinkTerms: DoNotLinkTermIndex,
+  ruleLinkContext?: RuleLinkContext,
+  selectedClasses: string[] = [],
+  controlLinkContext?: ControlLinkContext,
+  linkStatementForceTerms = true,
+): RequirementViewModel {
+  const classes = selectedClasses.length
+    ? selectedClasses
+    : ["A", "B", "C", "D"];
+  const resolved = classes.map((c) => resolveClassContent(entry, c));
+  const content = (value: RequirementEntrySource) =>
+    JSON.stringify(
+      CLASS_CONTENT_FIELDS.filter((key) => key !== "force").map(
+        (key) => value[key],
+      ),
+    );
+  const sameContent = resolved.every(
+    (value) => content(value) === content(resolved[0]!),
+  );
+  const base = sameContent ? resolved[0]! : { ...entry };
+  delete base.varies_by_class;
+  if (!sameContent) for (const key of CLASS_CONTENT_FIELDS) delete base[key];
+  const model = buildResolvedRequirementViewModel(
+    id,
+    base,
+    definitionsRelativePath,
+    rulesRelativePath,
+    doNotLinkTerms,
+    ruleLinkContext,
+    [],
+    controlLinkContext,
+    linkStatementForceTerms,
+  );
+  if (!sameContent) {
+    const links =
+      controlLinkContext ??
+      (ruleLinkContext
+        ? {
+            currentRelativePath: ruleLinkContext.currentRelativePath,
+            controlReferenceIndex: ruleLinkContext.controlReferenceIndex,
+          }
+        : undefined);
+    model.variantSections = [
+      ...resolved.map((value, index) =>
+        buildVariantViewModel(
+          `Class ${classes[index]}`,
+          value,
+          entry.related,
+          ruleLinkContext,
+          links,
+          id,
+          linkStatementForceTerms ? definitionsRelativePath : undefined,
+        ),
+      ),
+      ...model.variantSections,
+    ];
+  } else if (resolved.some((value) => value.force !== resolved[0]!.force)) {
+    model.force = undefined;
+    model.classForces = resolved.flatMap((value, index) =>
+      value.force ? [{ className: classes[index]!, force: value.force }] : [],
+    );
+  }
+  if (ruleLinkContext && selectedClasses.length)
+    model.applicableClasses = [...selectedClasses];
+  if (linkStatementForceTerms) {
+    model.hideForceMetadata = true;
+    const pageClasses = ruleLinkContext
+      ? mappingClasses(ruleLinkContext.currentMapping)
+      : selectedClasses;
+    model.applicabilityNotes = Object.entries(entry.varies_by_class ?? {})
+      .filter(
+        ([className]) =>
+          pageClasses.length !== 1 ||
+          pageClasses[0] === className.toUpperCase(),
+      )
+      .flatMap(([className, variant]) =>
+        variant.applicable === true
+          ? [`This rule also applies for Class ${className.toUpperCase()}.`]
+          : variant.applicable === false
+            ? [`This rule does not apply for Class ${className.toUpperCase()}.`]
+            : [],
+      );
+  }
+  return model;
+}
+
+function buildResolvedRequirementViewModel(
   id: string,
   entry: RequirementEntrySource,
   definitionsRelativePath: string,
@@ -2566,6 +2738,9 @@ function buildRequirementViewModel(
     title,
     formerId: entry.fka,
     changelog: toChangeLog(entry.updated),
+    force: entry.force,
+    artifacts: artifactGroups(entry.artifacts),
+    ...normalizePainTimeframes(entry.pain_timeframes),
     statementParagraphs: linkRelatedRuleReferenceParagraphs(
       entry.statement,
       relatedRuleIds,
@@ -2581,7 +2756,7 @@ function buildRequirementViewModel(
       forceTermsDefinitionsHref,
     ),
     effectiveDateLines: toDateLines(entry.effective_date),
-    timeframe: formatDuration(entry.timeframe_type, entry.timeframe_num),
+    timeframe: formatEntryDuration(entry),
     numberedItems: linkRelatedRuleReferencesInList(
       entry.following_information,
       relatedRuleIds,
@@ -2701,9 +2876,7 @@ function buildImportantRelatedTermViewModelsFromEntries(
     .map(([tag, terms]) => ({
       tag,
       anchorId: relatedTermsGroupAnchorId(tag),
-      terms: terms.sort((left, right) =>
-        left.label.localeCompare(right.label),
-      ),
+      terms: terms.sort((left, right) => left.label.localeCompare(right.label)),
     }));
 }
 
@@ -2812,9 +2985,7 @@ function resolveGeneratedOutputPath(
   return outputPath;
 }
 
-function configuredBuckets(
-  mapping: FrrRuleSourceMappingConfig,
-): DataBucket[] {
+function configuredBuckets(mapping: FrrRuleSourceMappingConfig): DataBucket[] {
   return configuredTypeBuckets(
     mappingVersions(mapping),
     mapping.source.includeAll,
@@ -2842,19 +3013,6 @@ function matchesAny(value: string, allowedValues: string[]): boolean {
 
 function affectsFiltersOverlap(left: string[], right: string[]): boolean {
   return left.some((value) => matchesAny(value, right));
-}
-
-function requirementMatchesSelectedClasses(
-  requirement: RequirementEntrySource,
-  classes: string[],
-): boolean {
-  if (!classes.length || !requirement.varies_by_class) {
-    return true;
-  }
-
-  return Object.keys(requirement.varies_by_class).some((className) =>
-    classes.includes(normalizeCertificationClass(className)),
-  );
 }
 
 function requirementMatchesAffectedParties(
@@ -2908,12 +3066,19 @@ function buildConfiguredSectionViewModels(
       };
 
       for (const [id, requirement] of Object.entries(requirements)) {
-        if (!ruleMatchesApplicability(requirement, subsets[subsetKey], mapping)) {
+        if (
+          !ruleMatchesApplicability(requirement, subsets[subsetKey], mapping)
+        ) {
           continue;
         }
 
-        mergeApplicabilityGroups(section.applicabilityGroups,
-          subsetApplicabilityGroups({ applicability: effectiveRuleApplicability(subset, requirement) }, mapping));
+        mergeApplicabilityGroups(
+          section.applicabilityGroups,
+          subsetApplicabilityGroups(
+            { applicability: effectiveRuleApplicability(subset, requirement) },
+            mapping,
+          ),
+        );
         section.requirements.push(
           buildRequirementViewModel(
             id,
@@ -2922,7 +3087,11 @@ function buildConfiguredSectionViewModels(
             rulesHref,
             doNotLinkTerms,
             ruleLinkContext,
-            mappingClasses(mapping),
+            renderedRuleClasses(
+              requirement,
+              subsets[subsetKey],
+              mappingClasses(mapping),
+            ),
           ),
         );
       }
@@ -2943,7 +3112,10 @@ function documentHasRequirementAffecting(
   allowedSections?: string[],
 ): boolean {
   const subsets = subsetsForVersions(document.info, versions);
-  const mapping = { id: "audience-selection", source: { types: versions, affects } };
+  const mapping = {
+    id: "audience-selection",
+    source: { types: versions, affects },
+  };
 
   for (const bucketName of configuredTypeBuckets(versions, true, "first")) {
     const bucket = document.data[bucketName];
@@ -2957,7 +3129,9 @@ function documentHasRequirementAffecting(
       }
 
       for (const requirement of Object.values(sectionRequirements)) {
-        if (ruleMatchesApplicability(requirement, subsets[subsetKey], mapping)) {
+        if (
+          ruleMatchesApplicability(requirement, subsets[subsetKey], mapping)
+        ) {
           return true;
         }
       }
@@ -2993,7 +3167,8 @@ function buildDocumentGroupedSectionViewModel(
 
       const subset = subsets[subsetKey];
       const matchingRequirements = Object.entries(sectionRequirements).filter(
-        ([, requirement]) => ruleMatchesApplicability(requirement, subsets[subsetKey], mapping),
+        ([, requirement]) =>
+          ruleMatchesApplicability(requirement, subsets[subsetKey], mapping),
       );
       if (!matchingRequirements.length) {
         continue;
@@ -3002,7 +3177,11 @@ function buildDocumentGroupedSectionViewModel(
       mergeApplicabilityGroups(
         applicabilityGroups,
         matchingRequirements.flatMap(([, requirement]) =>
-          subsetApplicabilityGroups({ applicability: effectiveRuleApplicability(subset, requirement) }, mapping)),
+          subsetApplicabilityGroups(
+            { applicability: effectiveRuleApplicability(subset, requirement) },
+            mapping,
+          ),
+        ),
       );
 
       for (const [id, requirement] of matchingRequirements) {
@@ -3014,7 +3193,11 @@ function buildDocumentGroupedSectionViewModel(
             rulesHref,
             doNotLinkTerms,
             ruleLinkContext,
-            mappingClasses(mapping),
+            renderedRuleClasses(
+              requirement,
+              subsets[subsetKey],
+              mappingClasses(mapping),
+            ),
           ),
         );
       }
@@ -3089,7 +3272,10 @@ function filterIgnoredDocumentKeys(
   selectedDocumentKeys: string[],
   mappingLabel: string,
 ): string[] {
-  const ignoredDocumentKeys = normalizeIgnoredDocumentKeys(mapping, mappingLabel);
+  const ignoredDocumentKeys = normalizeIgnoredDocumentKeys(
+    mapping,
+    mappingLabel,
+  );
   if (!ignoredDocumentKeys.length) {
     return selectedDocumentKeys;
   }
@@ -3125,7 +3311,9 @@ function normalizeIgnoredDocumentKeys(
       );
     }
 
-    if (!ignoreDocuments.every((documentKey) => typeof documentKey === "string")) {
+    if (
+      !ignoreDocuments.every((documentKey) => typeof documentKey === "string")
+    ) {
       throw new Error(
         `${mappingLabel} "${mapping.id}" must specify source.ignoreDocuments as an array of FRR document keys.`,
       );
@@ -3278,6 +3466,8 @@ function ruleMappingMatchesDeadlineAudience(
   ruleMapping: RuleDocumentMappingConfig,
   deadlineMapping: DeadlineDocumentMappingConfig,
 ): boolean {
+  // Deadline pages cover all classes and need an equally broad destination.
+  if (mappingClasses(ruleMapping).length) return false;
   const deadlineAffects = deadlineMapping.source.affects ?? [];
   if (!deadlineAffects.length) {
     return true;
@@ -3306,38 +3496,58 @@ function matchingDeadlineRuleDocumentPath(
   config: ToolConfig,
   deadlineMapping: DeadlineDocumentMappingConfig,
 ): string {
-  const matchingRuleMapping = config.generated.ruleDocuments.find((ruleMapping) => {
-    if (ruleMapping.source.collection !== "FRR") {
-      return false;
-    }
+  const matchingRuleMapping = config.generated.ruleDocuments.find(
+    (ruleMapping) => {
+      if (ruleMapping.source.collection !== "FRR") {
+        return false;
+      }
 
-    if (!mappingVersions(ruleMapping).includes(version)) {
-      return false;
-    }
+      if (!mappingVersions(ruleMapping).includes(version)) {
+        return false;
+      }
 
-    if (!ruleMappingMatchesDeadlineAudience(ruleMapping, deadlineMapping)) {
-      return false;
-    }
+      if (!ruleMappingMatchesDeadlineAudience(ruleMapping, deadlineMapping)) {
+        return false;
+      }
 
-    if (!ruleMappingIncludesSourceDocument(rules, ruleMapping, sourceDocument.key)) {
-      return false;
-    }
+      if (
+        !ruleMappingIncludesSourceDocument(
+          rules,
+          ruleMapping,
+          sourceDocument.key,
+        )
+      ) {
+        return false;
+      }
 
-    return documentHasRequirementAffecting(
-      sourceDocument.document,
-      [version],
-      ruleMapping.source.affects ?? [],
-      ruleMapping.source.sections,
+      return documentHasRequirementAffecting(
+        sourceDocument.document,
+        [version],
+        ruleMapping.source.affects ?? [],
+        ruleMapping.source.sections,
+      );
+    },
+  );
+
+  const targetMapping =
+    matchingRuleMapping ??
+    config.generated.ruleDocuments.find(
+      (candidate) =>
+        candidate.source.collection === "FRR" &&
+        !mappingClasses(candidate).length &&
+        !candidate.source.affects?.length &&
+        mappingVersions(candidate).includes(version) &&
+        ruleMappingIncludesSourceDocument(rules, candidate, sourceDocument.key),
     );
-  });
-
-  if (!matchingRuleMapping) {
-    return `providers/${version}/rules/${sourceDocument.document.info.web_name}.md`;
+  if (!targetMapping) {
+    throw new Error(
+      `Deadline mapping "${deadlineMapping.id}" has no all-class ruleset destination for ${sourceDocument.key}.`,
+    );
   }
 
   return normalizeGeneratedPath(
     renderRuleDocumentOutput(
-      matchingRuleMapping,
+      targetMapping,
       sourceDocument.document.info.web_name,
     ),
   );
@@ -3401,7 +3611,9 @@ function referenceIndexMatchingEntries(
       }
 
       for (const [ruleId, requirement] of Object.entries(requirements)) {
-        if (!ruleMatchesApplicability(requirement, subsets[subsetKey], mapping)) {
+        if (
+          !ruleMatchesApplicability(requirement, subsets[subsetKey], mapping)
+        ) {
           continue;
         }
 
@@ -3419,9 +3631,7 @@ function referenceIndexSubsetCount(
   return new Set(entries.map((entry) => entry.subsetKey)).size;
 }
 
-function referenceIndexRuleCount(
-  entries: Array<{ ruleId: string }>,
-): number {
+function referenceIndexRuleCount(entries: Array<{ ruleId: string }>): number {
   return new Set(entries.map((entry) => entry.ruleId)).size;
 }
 
@@ -3507,7 +3717,9 @@ function documentHasRequirementsForRuleMapping(
       }
 
       for (const requirement of Object.values(requirements)) {
-        if (ruleMatchesApplicability(requirement, subsets[subsetKey], mapping)) {
+        if (
+          ruleMatchesApplicability(requirement, subsets[subsetKey], mapping)
+        ) {
           return true;
         }
       }
@@ -3517,7 +3729,9 @@ function documentHasRequirementsForRuleMapping(
   return false;
 }
 
-function ruleDocumentMappingLinkLabel(mapping: RuleDocumentMappingConfig): string {
+function ruleDocumentMappingLinkLabel(
+  mapping: RuleDocumentMappingConfig,
+): string {
   const classes = mappingClasses(mapping);
   if (classes.length === 1) {
     return `Class ${classes[0]}`;
@@ -3655,7 +3869,9 @@ function buildDeadlineRowViewModel(
     shortName: markdownTableCell(document.info.short_name ?? ""),
     displayName: markdownTableCell(deadlineDisplayName(document.info)),
     href: rulesRelativePath,
-    optionalAdoption: markdownTableCell(deadlineDate(entry, "optional_adoption")),
+    optionalAdoption: markdownTableCell(
+      deadlineDate(entry, "optional_adoption"),
+    ),
     obtain: markdownTableCell(deadlineDate(entry, "obtain")),
     maintain: markdownTableCell(deadlineDate(entry, "maintain")),
     graceEnds: markdownTableCell(deadlineGraceEnds(entry)),
@@ -3682,8 +3898,9 @@ function buildDeadlineTables(
         mapping,
       ),
     }))
-    .filter((entry): entry is { index: number; row: DeadlineRowViewModel } =>
-      entry.row !== null
+    .filter(
+      (entry): entry is { index: number; row: DeadlineRowViewModel } =>
+        entry.row !== null,
     )
     .sort((left, right) => {
       if (!left.row.maintain && !right.row.maintain) {
@@ -3767,7 +3984,10 @@ function taggedSummaryApplicableRuleCount(
 ): number {
   const matchingRuleIds = new Set<string>();
   const allowedSections = mapping.source.sections;
-  const subsets = subsetsForVersions(document.info, taggedDocumentSummaryTypes(mapping));
+  const subsets = subsetsForVersions(
+    document.info,
+    taggedDocumentSummaryTypes(mapping),
+  );
 
   for (const bucketName of taggedDocumentSummaryBuckets(mapping)) {
     const bucket = document.data[bucketName];
@@ -3781,7 +4001,9 @@ function taggedSummaryApplicableRuleCount(
       }
 
       for (const [ruleId, requirement] of Object.entries(sectionRequirements)) {
-        if (ruleMatchesApplicability(requirement, subsets[subsetKey], mapping)) {
+        if (
+          ruleMatchesApplicability(requirement, subsets[subsetKey], mapping)
+        ) {
           matchingRuleIds.add(ruleId);
         }
       }
@@ -3815,6 +4037,8 @@ function ruleMappingMatchesTaggedSummaryAudience(
   ruleMapping: RuleDocumentMappingConfig,
   summaryMapping: TaggedDocumentSummaryMappingConfig,
 ): boolean {
+  // Summary pages cover all classes and must not link to a single-class subset.
+  if (mappingClasses(ruleMapping).length) return false;
   const summaryAffects = summaryMapping.source.affects ?? [];
   if (!summaryAffects.length) {
     return true;
@@ -3964,7 +4188,9 @@ function buildConfiguredSections(
   if (documents.length === 1) {
     const [document] = documents;
     if (!document) {
-      throw new Error(`Rule document mapping "${mapping.id}" matched no FRR documents.`);
+      throw new Error(
+        `Rule document mapping "${mapping.id}" matched no FRR documents.`,
+      );
     }
 
     return buildConfiguredSectionViewModels(
@@ -3975,8 +4201,7 @@ function buildConfiguredSections(
     );
   }
 
-  const groupBy =
-    mapping.source.groupBy ?? "document";
+  const groupBy = mapping.source.groupBy ?? "document";
 
   if (groupBy === "document") {
     return documents
@@ -4022,10 +4247,8 @@ function buildDocumentContext(
     isKsiDocument: options.isKsiDocument ?? false,
     isControlDocument: options.isControlDocument ?? false,
     isControlFamilyDocument: options.isControlFamilyDocument ?? false,
-    isFullControlReferenceIndex:
-      options.isFullControlReferenceIndex ?? false,
-    isFullControlReferenceFamily:
-      options.isFullControlReferenceFamily ?? false,
+    isFullControlReferenceIndex: options.isFullControlReferenceIndex ?? false,
+    isFullControlReferenceFamily: options.isFullControlReferenceFamily ?? false,
     isDeadlineDocument: options.isDeadlineDocument ?? false,
     definitions: options.definitions ?? [],
     importantRelatedTerms: options.importantRelatedTerms ?? [],
@@ -4036,6 +4259,7 @@ function buildDocumentContext(
     controlCatalog: options.controlCatalog,
     controlFamilies: options.controlFamilies ?? [],
     controlCount: options.controlCount ?? 0,
+    controlReferenceClasses: options.controlReferenceClasses ?? [],
     deadlineTables: options.deadlineTables ?? [],
     referenceIndexRows: options.referenceIndexRows ?? [],
     trigramRows: options.trigramRows ?? [],
@@ -4110,7 +4334,9 @@ function pictographSpan(
   const sourceTooltip = config.pictographs.tooltips[source];
 
   if (!sourcePictograph) {
-    throw new Error(`Unsupported generated document pictograph source: ${source}`);
+    throw new Error(
+      `Unsupported generated document pictograph source: ${source}`,
+    );
   }
 
   if (!sourceTooltip) {
@@ -4193,7 +4419,8 @@ function frontmatterScalarValue(
     return undefined;
   }
 
-  const value = frontmatterLines[keyIndex]?.match(keyPattern)?.[1]?.trim() ?? "";
+  const value =
+    frontmatterLines[keyIndex]?.match(keyPattern)?.[1]?.trim() ?? "";
   const blockScalarMatch = value.match(/^([>|])[-+]?$/);
   if (blockScalarMatch?.[1]) {
     const blockLines: string[] = [];
@@ -4322,7 +4549,11 @@ async function renderContentPictographs(config: ToolConfig): Promise<void> {
   for (const relativePath of markdownPaths) {
     const markdownPath = path.join(srcPath, relativePath);
     const contents = await readFile(markdownPath, "utf8");
-    const rendered = renderContentPictographSpan(relativePath, contents, config);
+    const rendered = renderContentPictographSpan(
+      relativePath,
+      contents,
+      config,
+    );
 
     if (rendered !== contents) {
       await writeFile(markdownPath, rendered, "utf8");
@@ -4401,9 +4632,7 @@ function buildPreviewIndex(artifacts: BuildArtifact[]): string {
       artifact.documentType === "FRR" &&
       artifact.relativePath.startsWith("rev5/"),
   );
-  const ksi = artifacts.filter((artifact) =>
-    artifact.relativePath.startsWith("providers/20x/key-security-indicators/"),
-  );
+  const ksi = artifacts.filter((artifact) => artifact.documentType === "KSI");
 
   const lines = [
     "# FedRAMP Rules Preview",
@@ -4472,7 +4701,10 @@ async function loadTemplate(
 export async function loadRules(
   config: ToolConfig = DEFAULT_CONFIG,
 ): Promise<RulesDocument> {
-  const source = await readFile(resolveToolPath(config.paths.rulesFile), "utf8");
+  const source = await readFile(
+    resolveToolPath(config.paths.rulesFile),
+    "utf8",
+  );
   return JSON.parse(source) as RulesDocument;
 }
 
@@ -4482,7 +4714,9 @@ function collectDefinitionDocumentArtifact(
   mapping: DefinitionDocumentMappingConfig,
 ): BuildArtifact | null {
   if (mapping.source.collection !== "FRD") {
-    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+    throw new Error(
+      `Unsupported source collection: ${mapping.source.collection}`,
+    );
   }
 
   const definitionEntries = configuredDefinitionEntries(rules.FRD, mapping);
@@ -4647,10 +4881,10 @@ function buildKsiIndicatorViewModels(
     )
     .map(([id, indicator]) => {
       const classForces = displayedClasses.map((className) => {
-        const force = indicator.force_by_class?.[className.toLowerCase()];
+        const force = resolveClassContent(indicator, className).force;
         if (force !== "MUST" && force !== "MAY") {
           throw new Error(
-            `${id}: unsupported or missing force_by_class for Class ${className}: ${force}`,
+            `${id}: unsupported or missing effective force for Class ${className}: ${force}`,
           );
         }
         return { className, force };
@@ -4663,11 +4897,12 @@ function buildKsiIndicatorViewModels(
           "",
           doNotLinkTerms,
           undefined,
-          [],
+          displayedClasses,
           controlLinkContext,
           false,
         ),
         classForces,
+        hideForceMetadata: displayedClasses.length === 1,
         ksiRequired: classForces.some(({ force }) => force === "MUST"),
       };
     });
@@ -4750,7 +4985,9 @@ function collectSingleKsiDocumentArtifact(
   controlReferenceIndex: ControlReferenceIndex,
 ): BuildArtifact | null {
   if (mapping.source.collection !== "KSI") {
-    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+    throw new Error(
+      `Unsupported source collection: ${mapping.source.collection}`,
+    );
   }
 
   const relatedIndicatorIds = relatedKsiIndicatorIdsForKsiMapping(
@@ -4815,7 +5052,9 @@ function collectThemeKsiDocumentArtifacts(
   controlReferenceIndex: ControlReferenceIndex,
 ): BuildArtifact[] {
   if (mapping.source.collection !== "KSI") {
-    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+    throw new Error(
+      `Unsupported source collection: ${mapping.source.collection}`,
+    );
   }
 
   const relatedIndicatorIds = relatedKsiIndicatorIdsForKsiMapping(
@@ -4854,7 +5093,9 @@ function collectThemeKsiDocumentArtifacts(
       return {
         relativePath,
         outputPath: resolveGeneratedOutputPath(config, relativePath),
-        templatePath: resolveToolPath(mapping.template ?? config.paths.template),
+        templatePath: resolveToolPath(
+          mapping.template ?? config.paths.template,
+        ),
         mappingId: mapping.id,
         sourceDocument: key,
         title,
@@ -4865,15 +5106,23 @@ function collectThemeKsiDocumentArtifacts(
           tags: versionTags(["20x"]),
           isKsiDocument: true,
           indicators,
-          ksiGroups: buildKsiGroups([{
-            title: theme.name,
-            anchorId: sectionAnchorId(theme.short_name ?? theme.id ?? key, theme.name),
-            anchorAttribute: sectionAnchorAttribute(theme.short_name ?? theme.id ?? key, theme.name),
-            isSubsetSection: false,
-            descriptionParagraphs: splitParagraphs(theme.theme),
-            applicabilityGroups: [],
-            requirements: indicators,
-          }]),
+          ksiGroups: buildKsiGroups([
+            {
+              title: theme.name,
+              anchorId: sectionAnchorId(
+                theme.short_name ?? theme.id ?? key,
+                theme.name,
+              ),
+              anchorAttribute: sectionAnchorAttribute(
+                theme.short_name ?? theme.id ?? key,
+                theme.name,
+              ),
+              isSubsetSection: false,
+              descriptionParagraphs: splitParagraphs(theme.theme),
+              applicabilityGroups: [],
+              requirements: indicators,
+            },
+          ]),
         }),
       };
     })
@@ -4939,7 +5188,9 @@ function sourceControlFamilyKeys(
   mapping: ControlDocumentMappingConfig,
 ): string[] {
   if (mapping.source.collection !== "CTL") {
-    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+    throw new Error(
+      `Unsupported source collection: ${mapping.source.collection}`,
+    );
   }
 
   const selectedFamilies = mapping.source.families;
@@ -5005,10 +5256,12 @@ function controlCatalogMetadataViewModel(
 function fullControlReferenceMapping(
   config: ToolConfig,
 ): FullControlReferenceDocumentMappingConfig | undefined {
-  const mappings = config.generated.fullControlReferenceDocuments ?? [];
+  const mappings = (
+    config.generated.fullControlReferenceDocuments ?? []
+  ).filter((mapping) => !mapping.source.classes?.length);
   if (mappings.length > 1) {
     throw new Error(
-      `At most one generated.fullControlReferenceDocuments mapping is supported; found ${mappings.length}.`,
+      `At most one unfiltered generated.fullControlReferenceDocuments mapping may supply control links; found ${mappings.length}.`,
     );
   }
 
@@ -5020,7 +5273,9 @@ function selectedFullControlFamilyIds(
   catalog: OscalCatalog,
 ): string[] {
   if (mapping.source.collection !== "OSCAL") {
-    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+    throw new Error(
+      `Unsupported source collection: ${mapping.source.collection}`,
+    );
   }
 
   if (mapping.source.families === "ALL") {
@@ -5135,6 +5390,44 @@ function buildControlGuidanceViewModel(
   };
 }
 
+function controlReferenceClasses(
+  mapping: FullControlReferenceDocumentMappingConfig,
+): string[] {
+  const classes = [
+    ...new Set((mapping.source.classes ?? []).map((c) => c.toUpperCase())),
+  ];
+  if (classes.some((c) => !["B", "C", "D"].includes(c))) {
+    throw new Error(
+      `Control reference mapping "${mapping.id}" must select only Rev5 Classes B, C, or D.`,
+    );
+  }
+  return classes;
+}
+
+function controlClassMetadata(
+  source: ControlEntrySource,
+  selectedClasses: string[] = [],
+): Pick<ControlViewModel, "baselineClasses" | "annualAssessmentClasses"> {
+  const baselineClasses: string[] = [];
+  const annualAssessmentClasses: string[] = [];
+  if (!source.varies_by_class && !source.assess_yearly_by_class)
+    return { baselineClasses, annualAssessmentClasses };
+  for (const key of ["b", "c", "d"]) {
+    const force = source.varies_by_class?.[key]?.force;
+    const annual = source.assess_yearly_by_class?.[key];
+    if ((force !== "MUST" && force !== "MAY") || typeof annual !== "boolean") {
+      throw new Error(
+        `CTL Class ${key.toUpperCase()} requires an explicit force and annual-assessment flag.`,
+      );
+    }
+    if (selectedClasses.length && !selectedClasses.includes(key.toUpperCase()))
+      continue;
+    if (force === "MUST") baselineClasses.push(controlClassTitle(key));
+    if (annual) annualAssessmentClasses.push(controlClassTitle(key));
+  }
+  return { baselineClasses, annualAssessmentClasses };
+}
+
 function buildControlViewModel(
   controlId: string,
   source: ControlEntrySource,
@@ -5171,19 +5464,18 @@ function buildControlViewModel(
   );
 
   return {
+    ...controlClassMetadata(source),
+    changelog: toChangeLog(source.updated),
     id: controlId,
     officialId: control.officialId,
     displayId: displayOscalControlId(control.id),
     title: control.title,
     anchorId: slugifyHeading(`${controlId}-${control.title}`),
     statementLines: control.statementLines,
-    baselineClasses: [],
     externalUrl: myctrlControlUrl(control.id),
-    commonGuidance:
-      !commonGuidance.isEmpty ? commonGuidance : undefined,
+    commonGuidance: !commonGuidance.isEmpty ? commonGuidance : undefined,
     classVariants,
-    hasFedrampContent:
-      !commonGuidance.isEmpty || classVariants.length > 0,
+    hasFedrampContent: !commonGuidance.isEmpty || classVariants.length > 0,
   };
 }
 
@@ -5223,47 +5515,17 @@ function buildControlFamilyViewModels(
   });
 }
 
-function buildRev5BaselineClassIndex(
-  rules: RulesDocument,
-): ReadonlyMap<string, string[]> {
-  const baselineRequirement =
-    rules.FRR.FRC?.data.rev5?.CSF?.["FRC-CSF-BSL"];
-  if (!baselineRequirement?.varies_by_class) {
-    throw new Error(
-      "FRC-CSF-BSL class variants are required to build the full Rev5 control reference.",
-    );
-  }
-
-  const classesByControl = new Map<string, string[]>();
-  for (const className of ["b", "c", "d"]) {
-    const controlsList =
-      baselineRequirement.varies_by_class[className]?.rev5_controls_list;
-    if (!controlsList) {
-      throw new Error(
-        `FRC-CSF-BSL is missing the Class ${className.toUpperCase()} rev5_controls_list.`,
-      );
-    }
-
-    for (const controlIds of Object.values(controlsList)) {
-      for (const controlId of controlIds) {
-        const normalizedControlId = normalizeOscalControlId(controlId);
-        const classes = classesByControl.get(normalizedControlId) ?? [];
-        classes.push(`Class ${className.toUpperCase()}`);
-        classesByControl.set(normalizedControlId, classes);
-      }
-    }
-  }
-
-  return classesByControl;
-}
-
 function buildFullControlViewModel(
   control: OscalControl,
   source: ControlEntrySource,
   catalog: OscalCatalog,
-  baselineClasses: ReadonlyMap<string, string[]>,
+  selectedClasses: string[] = [],
 ): ControlViewModel {
   const classVariants = Object.entries(source.varies_by_class ?? {})
+    .filter(
+      ([key]) =>
+        !selectedClasses.length || selectedClasses.includes(key.toUpperCase()),
+    )
     .sort(
       ([left], [right]) =>
         classSortOrder(left) - classSortOrder(right) ||
@@ -5281,19 +5543,18 @@ function buildFullControlViewModel(
   );
 
   return {
+    ...controlClassMetadata(source, selectedClasses),
+    changelog: toChangeLog(source.updated),
     id: control.id,
     officialId: control.officialId,
     displayId: displayOscalControlId(control.id),
     title: control.title,
     anchorId: controlAnchorId(control.id),
     statementLines: control.statementLines,
-    baselineClasses: baselineClasses.get(control.id) ?? [],
     externalUrl: myctrlControlUrl(control.id),
-    commonGuidance:
-      !commonGuidance.isEmpty ? commonGuidance : undefined,
+    commonGuidance: !commonGuidance.isEmpty ? commonGuidance : undefined,
     classVariants,
-    hasFedrampContent:
-      !commonGuidance.isEmpty || classVariants.length > 0,
+    hasFedrampContent: !commonGuidance.isEmpty || classVariants.length > 0,
   };
 }
 
@@ -5302,38 +5563,52 @@ function buildFullControlFamilyViewModels(
   mapping: FullControlReferenceDocumentMappingConfig,
   catalog: OscalCatalog,
 ): ControlFamilyViewModel[] {
-  const baselineClasses = buildRev5BaselineClassIndex(rules);
+  const classes = controlReferenceClasses(mapping);
 
-  return selectedFullControlFamilyIds(mapping, catalog).map((familyId) => {
-    const family = catalog.families.get(familyId);
-    if (!family) {
-      throw new Error(
-        `Full control reference mapping "${mapping.id}" references unknown OSCAL family "${familyId}".`,
+  return selectedFullControlFamilyIds(mapping, catalog)
+    .map((familyId) => {
+      const family = catalog.families.get(familyId);
+      if (!family) {
+        throw new Error(
+          `Full control reference mapping "${mapping.id}" references unknown OSCAL family "${familyId}".`,
+        );
+      }
+
+      const relativePath = fullControlReferenceFamilyPath(
+        mapping,
+        family.title,
       );
-    }
+      const fedrampControls = rules.CTL[familyId] ?? {};
+      const controls = Array.from(family.controls.values())
+        .filter((control) => control.status !== "withdrawn")
+        .filter(
+          (control) =>
+            !classes.length ||
+            classes.some(
+              (c) =>
+                fedrampControls[control.id]?.varies_by_class?.[c.toLowerCase()]
+                  ?.force === "MUST",
+            ),
+        )
+        .map((control) =>
+          buildFullControlViewModel(
+            control,
+            fedrampControls[control.id] ?? {},
+            catalog,
+            classes,
+          ),
+        );
 
-    const relativePath = fullControlReferenceFamilyPath(mapping, family.title);
-    const fedrampControls = rules.CTL[familyId] ?? {};
-    const controls = Array.from(family.controls.values())
-      .filter((control) => control.status !== "withdrawn")
-      .map((control) =>
-        buildFullControlViewModel(
-          control,
-          fedrampControls[control.id] ?? {},
-          catalog,
-          baselineClasses,
-        ),
-      );
-
-    return {
-      id: family.id,
-      title: family.title,
-      anchorId: slugifyHeading(`${family.title}-${family.id}`),
-      href: relativePath,
-      controlCount: controls.length,
-      controls,
-    };
-  });
+      return {
+        id: family.id,
+        title: family.title,
+        anchorId: slugifyHeading(`${family.title}-${family.id}`),
+        href: relativePath,
+        controlCount: controls.length,
+        controls,
+      };
+    })
+    .filter((family) => !classes.length || family.controls.length > 0);
 }
 
 function collectFullControlReferenceArtifacts(
@@ -5374,6 +5649,7 @@ function collectFullControlReferenceArtifacts(
           tags: versionTags(["rev5"]),
           isControlDocument: true,
           isFullControlReferenceIndex: true,
+          controlReferenceClasses: controlReferenceClasses(mapping),
           controlCatalog: controlCatalogMetadataViewModel(catalog.metadata),
           controlFamilies: indexFamilies,
           controlCount,
@@ -5406,6 +5682,7 @@ function collectFullControlReferenceArtifacts(
             isControlDocument: true,
             isControlFamilyDocument: true,
             isFullControlReferenceFamily: true,
+            controlReferenceClasses: controlReferenceClasses(mapping),
             controlCatalog: controlCatalogMetadataViewModel(catalog.metadata),
             controlFamilies: [family],
             controlCount: family.controlCount,
@@ -5531,7 +5808,9 @@ function collectDeadlineDocumentArtifactsForMapping(
   mapping: DeadlineDocumentMappingConfig,
 ): BuildArtifact[] {
   if (mapping.source.collection !== "FRR") {
-    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+    throw new Error(
+      `Unsupported source collection: ${mapping.source.collection}`,
+    );
   }
 
   const sourceDocumentEntries = sourceDeadlineDocuments(rules, mapping);
@@ -5562,7 +5841,9 @@ function collectDeadlineDocumentArtifactsForMapping(
       return {
         relativePath,
         outputPath: resolveGeneratedOutputPath(config, relativePath),
-        templatePath: resolveToolPath(mapping.template ?? config.paths.template),
+        templatePath: resolveToolPath(
+          mapping.template ?? config.paths.template,
+        ),
         mappingId: mapping.id,
         title,
         documentType: "DEADLINES",
@@ -5593,7 +5874,9 @@ function collectTaggedDocumentSummaryArtifact(
   mapping: TaggedDocumentSummaryMappingConfig,
 ): BuildArtifact | null {
   if (mapping.source.collection !== "FRR") {
-    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+    throw new Error(
+      `Unsupported source collection: ${mapping.source.collection}`,
+    );
   }
 
   const relativePath = normalizeGeneratedPath(mapping.output);
@@ -5637,7 +5920,9 @@ function collectTaggedDocumentSummaryArtifacts(
   config: ToolConfig,
 ): BuildArtifact[] {
   return (config.generated.taggedDocumentSummaries ?? [])
-    .map((mapping) => collectTaggedDocumentSummaryArtifact(rules, config, mapping))
+    .map((mapping) =>
+      collectTaggedDocumentSummaryArtifact(rules, config, mapping),
+    )
     .filter((artifact): artifact is BuildArtifact => artifact !== null);
 }
 
@@ -5647,7 +5932,9 @@ function collectReferenceIndexDocumentArtifact(
   mapping: ReferenceIndexDocumentMappingConfig,
 ): BuildArtifact | null {
   if (mapping.source.collection !== "FRR") {
-    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+    throw new Error(
+      `Unsupported source collection: ${mapping.source.collection}`,
+    );
   }
 
   const sourceDocumentEntries = sourceReferenceIndexDocuments(rules, mapping);
@@ -5690,7 +5977,9 @@ function collectReferenceIndexDocumentArtifacts(
   config: ToolConfig,
 ): BuildArtifact[] {
   return (config.generated.referenceIndexDocuments ?? [])
-    .map((mapping) => collectReferenceIndexDocumentArtifact(rules, config, mapping))
+    .map((mapping) =>
+      collectReferenceIndexDocumentArtifact(rules, config, mapping),
+    )
     .filter((artifact): artifact is BuildArtifact => artifact !== null);
 }
 
@@ -5733,7 +6022,8 @@ function buildFrrCollectionSectionViewModel(
       }
 
       const matchingRequirements = Object.entries(sectionRequirements).filter(
-        ([, requirement]) => ruleMatchesApplicability(requirement, subsets[subsetKey], mapping),
+        ([, requirement]) =>
+          ruleMatchesApplicability(requirement, subsets[subsetKey], mapping),
       );
       if (!matchingRequirements.length) {
         continue;
@@ -5746,7 +6036,16 @@ function buildFrrCollectionSectionViewModel(
       mergeApplicabilityGroups(
         applicabilityGroups,
         matchingRequirements.flatMap(([, requirement]) =>
-          subsetApplicabilityGroups({ applicability: effectiveRuleApplicability(subsets[subsetKey], requirement) }, mapping)),
+          subsetApplicabilityGroups(
+            {
+              applicability: effectiveRuleApplicability(
+                subsets[subsetKey],
+                requirement,
+              ),
+            },
+            mapping,
+          ),
+        ),
       );
 
       for (const [id, requirement] of matchingRequirements) {
@@ -5758,7 +6057,11 @@ function buildFrrCollectionSectionViewModel(
             rulesHref,
             doNotLinkTerms,
             ruleLinkContext,
-            mappingClasses(mapping),
+            renderedRuleClasses(
+              requirement,
+              subsets[subsetKey],
+              mappingClasses(mapping),
+            ),
           ),
         );
       }
@@ -5799,28 +6102,25 @@ function collectFrrCollectionDocumentArtifact(
   controlReferenceIndex: ControlReferenceIndex,
 ): BuildArtifact | null {
   if (mapping.source.collection !== "FRR") {
-    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+    throw new Error(
+      `Unsupported source collection: ${mapping.source.collection}`,
+    );
   }
 
   const relativePath = normalizeGeneratedPath(mapping.output);
   const sourceDocumentEntries = sourceDocuments(rules, mapping);
   const sections = sourceDocumentEntries
     .map(({ document }) =>
-      buildFrrCollectionSectionViewModel(
-        document,
-        mapping,
-        doNotLinkTerms,
-        {
-          currentMapping: mapping,
-          currentRelativePath: relativePath,
-          ruleIndex,
-          rulePageIndex,
-          ksiIndex,
-          ksiPageIndex,
-          oscalCatalog,
-          controlReferenceIndex,
-        },
-      ),
+      buildFrrCollectionSectionViewModel(document, mapping, doNotLinkTerms, {
+        currentMapping: mapping,
+        currentRelativePath: relativePath,
+        ruleIndex,
+        rulePageIndex,
+        ksiIndex,
+        ksiPageIndex,
+        oscalCatalog,
+        controlReferenceIndex,
+      }),
     )
     .filter((section): section is SectionViewModel => section !== null);
 
@@ -5887,33 +6187,34 @@ function collectSingleRuleDocumentArtifact(
   controlReferenceIndex: ControlReferenceIndex,
 ): BuildArtifact | null {
   if (mapping.source.collection !== "FRR") {
-    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+    throw new Error(
+      `Unsupported source collection: ${mapping.source.collection}`,
+    );
   }
 
   const sourceDocumentEntries = sourceDocuments(rules, mapping);
   const firstDocument = sourceDocumentEntries[0]?.document;
   if (!firstDocument) {
-    throw new Error(`Rule document mapping "${mapping.id}" matched no FRR documents.`);
+    throw new Error(
+      `Rule document mapping "${mapping.id}" matched no FRR documents.`,
+    );
   }
 
   const documents = sourceDocumentEntries.map((entry) => entry.document);
   const versions = mappingVersions(mapping);
-  const relativePath = normalizeGeneratedPath(renderRuleDocumentOutput(mapping));
-  const sections = buildConfiguredSections(
-    documents,
-    mapping,
-    doNotLinkTerms,
-    {
-      currentMapping: mapping,
-      currentRelativePath: relativePath,
-      ruleIndex,
-      rulePageIndex,
-      ksiIndex,
-      ksiPageIndex,
-      oscalCatalog,
-      controlReferenceIndex,
-    },
+  const relativePath = normalizeGeneratedPath(
+    renderRuleDocumentOutput(mapping),
   );
+  const sections = buildConfiguredSections(documents, mapping, doNotLinkTerms, {
+    currentMapping: mapping,
+    currentRelativePath: relativePath,
+    ruleIndex,
+    rulePageIndex,
+    ksiIndex,
+    ksiPageIndex,
+    oscalCatalog,
+    controlReferenceIndex,
+  });
   if (!sections.length && mapping.emptyBehavior === "skip") {
     return null;
   }
@@ -5939,9 +6240,10 @@ function collectSingleRuleDocumentArtifact(
     outputPath: resolveGeneratedOutputPath(config, relativePath),
     templatePath: resolveToolPath(mapping.template ?? config.paths.template),
     mappingId: mapping.id,
-    sourceDocument: sourceDocumentEntries.length === 1
-      ? sourceDocumentEntries[0]?.key
-      : undefined,
+    sourceDocument:
+      sourceDocumentEntries.length === 1
+        ? sourceDocumentEntries[0]?.key
+        : undefined,
     title,
     documentType: "FRR",
     context: buildDocumentContext(title, {
@@ -5971,7 +6273,9 @@ function collectDocumentRuleDocumentArtifacts(
   controlReferenceIndex: ControlReferenceIndex,
 ): BuildArtifact[] {
   if (mapping.source.collection !== "FRR") {
-    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+    throw new Error(
+      `Unsupported source collection: ${mapping.source.collection}`,
+    );
   }
 
   return sourceDocuments(rules, mapping)
@@ -6008,7 +6312,9 @@ function collectDocumentRuleDocumentArtifacts(
       return {
         relativePath,
         outputPath: resolveGeneratedOutputPath(config, relativePath),
-        templatePath: resolveToolPath(mapping.template ?? config.paths.template),
+        templatePath: resolveToolPath(
+          mapping.template ?? config.paths.template,
+        ),
         mappingId: mapping.id,
         sourceDocument: key,
         title,
@@ -6053,10 +6359,8 @@ function buildRelatedRuleSections(
 
       return {
         relatedRule,
-        groupIndex:
-          groupIndex >= 0 ? groupIndex : configuredGroups.length,
-        group:
-          groupIndex >= 0 ? configuredGroups[groupIndex] : undefined,
+        groupIndex: groupIndex >= 0 ? groupIndex : configuredGroups.length,
+        group: groupIndex >= 0 ? configuredGroups[groupIndex] : undefined,
       };
     })
     .sort(
@@ -6087,7 +6391,7 @@ function buildRelatedRuleSections(
     const groupTitle =
       group?.title ??
       (configuredGroups.length
-        ? mapping.relatedRulesUngroupedTitle ?? "Other Related Rules"
+        ? (mapping.relatedRulesUngroupedTitle ?? "Other Related Rules")
         : undefined);
     const groupedSectionTitle = groupTitle
       ? `${groupTitle}: ${sectionTitle}`
@@ -6137,7 +6441,9 @@ function collectRelatedRuleDocumentArtifact(
   }
 
   if (mapping.source.collection !== "FRR") {
-    throw new Error(`Unsupported source collection: ${mapping.source.collection}`);
+    throw new Error(
+      `Unsupported source collection: ${mapping.source.collection}`,
+    );
   }
 
   const relatedRules = missingRelatedRulesForMapping(rules, ruleIndex, mapping);
@@ -6298,7 +6604,8 @@ function collectTrigramDocumentArtifacts(
         );
       }
       if (
-        target && anchor &&
+        target &&
+        anchor &&
         !target.context.sections.some((section) => section.anchorId === anchor)
       ) {
         throw new Error(
@@ -6338,8 +6645,12 @@ function collectTrigramDocumentArtifacts(
         subsetOccurrences.set(key, (subsetOccurrences.get(key) ?? 0) + 1);
       }
     }
-    const ruleDocuments = Object.entries(rules.FRR).sort(([keyA, a], [keyB, b]) =>
-      (a.info.short_name ?? keyA).localeCompare(b.info.short_name ?? keyB, "en"),
+    const ruleDocuments = Object.entries(rules.FRR).sort(
+      ([keyA, a], [keyB, b]) =>
+        (a.info.short_name ?? keyA).localeCompare(
+          b.info.short_name ?? keyB,
+          "en",
+        ),
     );
     for (const [key, document] of ruleDocuments) {
       const trigram = document.info.short_name ?? key;
@@ -6428,11 +6739,7 @@ export function collectArtifacts(
     ...collectConfiguredControlDocumentArtifacts(rules, config, oscalCatalog),
   );
   artifacts.push(
-    ...collectFullControlReferenceArtifacts(
-      rules,
-      config,
-      oscalCatalog,
-    ),
+    ...collectFullControlReferenceArtifacts(rules, config, oscalCatalog),
   );
   artifacts.push(...collectDeadlineDocumentArtifacts(rules, config));
   artifacts.push(...collectTaggedDocumentSummaryArtifacts(rules, config));
@@ -6486,7 +6793,9 @@ export function collectArtifacts(
   const searchConfig = config.generated.search;
   const searchablePages = searchConfig
     ? searchableNavigationPages(
-        parseToml(readFileSync(resolveToolPath(config.paths.zensicalConfig), "utf8")),
+        parseToml(
+          readFileSync(resolveToolPath(config.paths.zensicalConfig), "utf8"),
+        ),
         searchConfig.includedNavigationSections,
       )
     : undefined;
@@ -6496,7 +6805,8 @@ export function collectArtifacts(
     ...artifact,
     context: {
       ...artifact.context,
-      searchExclude: searchablePages !== undefined &&
+      searchExclude:
+        searchablePages !== undefined &&
         searchContentTypes.has(artifact.documentType) &&
         !searchablePages.has(artifact.relativePath),
       tags: mergeGeneratedZensicalTags(
@@ -6542,8 +6852,15 @@ async function contentFileExists(
   config: ToolConfig,
   relativePath: string,
 ): Promise<boolean> {
-  const contentPath = path.resolve(resolveToolPath(config.paths.content), relativePath);
-  assertPathInside(resolveToolPath(config.paths.content), contentPath, "Content path");
+  const contentPath = path.resolve(
+    resolveToolPath(config.paths.content),
+    relativePath,
+  );
+  assertPathInside(
+    resolveToolPath(config.paths.content),
+    contentPath,
+    "Content path",
+  );
   return fileExists(contentPath);
 }
 
@@ -6598,10 +6915,16 @@ async function writeGeneratedManifest(
   };
 
   await mkdir(path.dirname(manifestPath), { recursive: true });
-  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+  await writeFile(
+    manifestPath,
+    `${JSON.stringify(manifest, null, 2)}\n`,
+    "utf8",
+  );
 }
 
-export async function buildMarkdown(config?: ToolConfig): Promise<BuildSummary> {
+export async function buildMarkdown(
+  config?: ToolConfig,
+): Promise<BuildSummary> {
   const toolConfig = config ?? (await loadToolConfig());
   const rules = await loadRules(toolConfig);
   const artifacts = collectArtifacts(rules, toolConfig);

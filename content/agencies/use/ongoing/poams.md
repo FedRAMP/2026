@@ -10,7 +10,7 @@ picto:
 
 Agencies should create Plans of Action and Milestones (POA&Ms) only when there are actions the agency needs to take, track, fund, manage, or accept for the agency information system that uses FedRAMP Certified cloud services.
 
-A FedRAMP Certified cloud service provider is responsible for detecting, evaluating, reporting, mitigating, and remediating vulnerabilities in its cloud service offering. Under the [Vulnerability Detection and Response](../../../providers/20x/rules/vulnerability-detection-and-response.md){ data-preview } and [Vulnerability Evaluation and Reporting](../../rules/vulnerability-evaluation-and-reporting.md){ data-preview } rules, the provider should maintain vulnerability information for agency review, including accepted vulnerabilities or other accepted weaknesses when those are relevant to agency risk decisions.
+A FedRAMP Certified cloud service provider is responsible for detecting, evaluating, reporting, mitigating, and remediating vulnerabilities in its cloud service offering. Under the [Vulnerability Detection and Response](../../../reference/vulnerability-detection-and-response.md){ data-preview } and [Vulnerability Evaluation and Reporting](../../rules/vulnerability-evaluation-and-reporting.md){ data-preview } rules, the provider should maintain vulnerability information for agency review, including accepted vulnerabilities or other accepted weaknesses when those are relevant to agency risk decisions.
 
 That provider-maintained vulnerability information is not automatically an agency POA&M.
 

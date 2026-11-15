@@ -148,6 +148,7 @@ export interface ControlDocumentMappingConfig {
 
 export interface FullControlReferenceDocumentSourceConfig {
   collection: "OSCAL";
+  classes?: string[];
   families: ControlFamilySelection;
 }
 
