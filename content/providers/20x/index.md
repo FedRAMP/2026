@@ -19,11 +19,11 @@ Choose your certification class to see the rules that affect Providers.
 
 | Class | Ruleset Reference | Key Security Indicators |
 | --- | --- | --- |
-| Class A | [20x Class A Rules](../../reference/20x/a/index.md) | [Key Security Indicators](../../reference/20x/a/key-security-indicators.md) |
-| Class B | [20x Class B Rules](../../reference/20x/b/index.md) | [Key Security Indicators](../../reference/20x/b/key-security-indicators.md) |
-| Class C | [20x Class C Rules](../../reference/20x/c/index.md) | [Key Security Indicators](../../reference/20x/c/key-security-indicators.md) |
+| Class A | [20x Class A Rules](a/index.md) | [Key Security Indicators](a/key-security-indicators.md) |
+| Class B | [20x Class B Rules](b/index.md) | [Key Security Indicators](b/key-security-indicators.md) |
+| Class C | [20x Class C Rules](c/index.md) | [Key Security Indicators](c/key-security-indicators.md) |
 
-The class references include the applicable Marketplace Listing, FedRAMP Certification, Boundary, Assurance, and Package rules. The [Complete Rulesets](../../reference/complete-rulesets/index.md) contain the full rules for all stakeholders.
+The class references include the applicable Marketplace Listing, FedRAMP Certification, Boundary, Assurance, and Package rules. The [Ruleset Reference](../../reference/index.md) contains the full rules for all stakeholders.
 
 
 

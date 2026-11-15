@@ -39,6 +39,10 @@ Starts the local development pipeline and Zensical development server. It copies
 
 The dev script watches manual content, templates, config, generator code, and the consolidated rules JSON. Watch rebuilds are debounced by `dev.watchDebounceMs` in `config.json`; the current default is 1000 milliseconds.
 
+Navigation edits in `zensical.toml` are handled by Zensical directly. The wrapper only regenerates Markdown when the set of searchable pages changes. It watches the config directory so editor atomic saves remain detectable. Generated files are compared before writing; changed files are replaced atomically, and only obsolete generated files are deleted after successful rendering. A template or navigation error leaves existing generated pages in place.
+
+If the preview process exits, the dev watcher stays running and retries after the next successful source or config change. Fix the error and save again; there is no need to restart the whole command. To run a separate preview, pass Zensical serve options, for example `bun run dev --dev-addr 127.0.0.1:8001`.
+
 ```bash
 bun test
 ```
@@ -227,7 +231,7 @@ The supported fields are `statement`, `following_information`, `following_inform
 
 FRR entries label their applicable classes separately from force. Single-class pages render resolved content directly. Shared pages render common effective content once, with class-specific forces when needed; differing effective content appears in class tabs. Each tab includes inherited fields. FRD does not use class resolution. CTL guidance and parameters retain their separate common/class rendering contract.
 
-Provider certification landing pages in `content/providers/20x/index.md` and `content/providers/rev5/index.md` link to the Provider-filtered class references. Individual provider rulesets, KSI themes, control families, and category summaries are not generated beneath those paths. All-class deadline pages link to the complete rulesets when no audience-specific all-class destination exists.
+Provider certification landing pages in `content/providers/20x/index.md` and `content/providers/rev5/index.md` link to the Provider-filtered class references. Class-specific rulesets, KSI pages, and Rev5 control references are generated beneath those paths in class subdirectories. The framework landing pages remain manual; only the class indexes are generated. The Ruleset Reference retains complete rulesets and the full control reference. All-class deadline pages link to the complete rulesets when no audience-specific all-class destination exists.
 
 ## Generated KSI Pages
 
@@ -426,16 +430,18 @@ Summary mappings use the same `source.documents`, `source.ignoreDocuments`, `sou
 
 ## Generated FRR Reference Index
 
+Production generates class indexes only. Complete rulesets appear directly in the Ruleset Reference navigation; its landing page is maintained in `content/reference/index.md`. Trigram collection links can use `page` for a manual page instead of `mappingId` for generated content.
+
 Add an entry to `generated.referenceIndexDocuments` in `config.json`:
 
 ```json
 {
-  "id": "complete-ruleset-reference-index",
+  "id": "example-ruleset-index",
   "title": "Complete Ruleset Reference",
   "description": "This section contains the entire Consolidated Rules for 2026 as a standalone reference for each ruleset.",
   "purpose": "This content allows folks to see the full rules together without them broken apart by stakeholder.",
   "introduction": "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset with all related content in a single rule as an overall reference. The individual stakeholder sections of this site contain only the specific rules that apply in different circumstances for different stakeholders, while the reference rulesets are entirely unabridged.",
-  "output": "reference/index.md",
+  "output": "example-reference/index.md",
   "template": "templates/reference-index.hbs",
   "source": {
     "collection": "FRR",
@@ -448,7 +454,7 @@ Reference index mappings generate a table of FRR rulesets with links, status, su
 
 Use `ruleDocumentMappingId` when the index should link to a generated ruleset mapping that does not live beside the index page. Use `ruleDocumentMappingIds` when one index row should link to multiple generated mappings, such as separate class-specific reference pages. Reference index mappings also support `source.types`, `source.classes`, `source.sections`, `source.affects`, `source.includeAll`, and `source.allPosition` so the table counts and links can match a filtered ruleset reference. Counts and links use subset applicability with explicit per-class membership flags, and omit subsets with no matching rules.
 
-The complete ruleset reference is usually paired with rule document mappings that use `outputMode: "documents"` and `output: "reference/{FRR}.md"` so each FRR ruleset has a standalone generated page. Class-specific reference sections use the same pattern with outputs such as `reference/20x/a/{FRR}.md`.
+The complete ruleset reference is usually paired with rule document mappings that use `outputMode: "documents"` and `output: "reference/{FRR}.md"` so each FRR ruleset has a standalone generated page. Class-specific reference sections use the same pattern with outputs such as `providers/20x/a/{FRR}.md`.
 
 ## Generated Rule Pages
 
@@ -545,8 +551,7 @@ Mapping fields are the same as generated rule pages except `title` is required, 
 
 `generated.search.includedNavigationSections` lists navigation section paths from
 `zensical.toml` whose rule, KSI, and control pages remain searchable. The current
-sections are **Ruleset Reference → Complete Rulesets** and **Ruleset Reference →
-Other References**. Nested entries are included using exact Markdown path matches;
+section is **Ruleset Reference**, including the **Full Rev5 Control Reference**. Nested entries are included using exact Markdown path matches;
 a missing or ambiguous section fails generation.
 
 Other generated FRR, KSI, CTL, and full control reference pages receive
@@ -578,3 +583,17 @@ the full build before inspecting output; fixture builds use temporary directorie
 Run `bun run check` for the full gate. The configured Zensical build may need
 network access for fonts; a font-download failure is a build-environment failure,
 not a reason to weaken content assertions.
+
+## Collapsible navigation exceptions
+
+`project.extra.collapsible_navigation_indexes` in `zensical.toml` lists section index URLs that remain collapsible despite `navigation.sections`. The `overrides/partials/nav-item.html` override keeps their children available despite `navigation.prune` and opens them automatically only when active. The Full Rev5 Control Reference uses this exception. Compare this partial with the installed Zensical version when upgrading the theme.
+
+## Date-aware table rows
+
+Add `<span data-row-date="2027-01-01" hidden></span>` inside a table cell, alongside its normal visible date. The global `overrides/javascripts/date-rows.js` script colors only marked rows; use one marker per row. Invalid dates are ignored.
+
+Dates use the reader's local calendar day. More than 60 days ago is gray Neutral300; the preceding 60 days use Neutral200. Today through 60 days ahead uses Red300 (Alexandria); later dates use Magenta300 (Rosie). CSS blends these accents with the light/dark theme background. Visible dates remain unchanged and usable without JavaScript. Rows refresh on instant navigation, local midnight, and returning to the tab.
+
+For tables with several date columns, wrap date header text in `<span data-date-column>…</span>` and mark the default header with `data-date-default` as well. Place a date marker in each dated cell. Row colors follow the date column selected by Tablesort, or the default column when sorting another column or before sorting. Missing dates in the selected column remain uncolored. The script supplies ISO sort values to keep long-form dates and assessment-based grace dates in chronological order.
+
+`project.extra.expanded_navigation_children` lists class index URLs whose nested navigation groups start expanded. The class itself remains collapsible, and explicit `collapsible_navigation_indexes` exceptions keep their existing behavior.

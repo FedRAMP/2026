@@ -1,10 +1,34 @@
 import { expect, test } from "bun:test";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+  stat,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { buildMarkdown, collectArtifacts } from "./build-markdown";
 import { loadToolConfig, loadRules, type Rules } from "./test-support/sources";
 import { expectedTrigrams } from "./test-support/source-contract";
+import { resolveToolPath } from "./config";
+
+test("trigram collections can link to a manual reference landing page", async () => {
+  const { config, rules } = await trigramFixture();
+  const mapping = config.generated.trigramDocuments![0]!;
+  mapping.collections.push({
+    trigram: "MAN",
+    name: "Manual reference",
+    page: "reference/index.md",
+  });
+  const rows = collectArtifacts(rules, config).find(
+    (a) => a.documentType === "TRIGRAMS",
+  )!.context.trigramRows;
+  expect(rows.find((r) => r.trigram === "MAN")!.href).toBe(
+    "reference/index.md",
+  );
+});
 
 test("trigram lookup covers collections, rulesets, subsets, and themes with valid targets", async () => {
   const config = await loadToolConfig();
@@ -25,6 +49,17 @@ test("trigram lookup covers collections, rulesets, subsets, and themes with vali
     if (!row.href) continue;
     const [file, anchor] = row.href.split("#");
     const target = artifacts.find((artifact) => artifact.relativePath === file);
+    if (!target) {
+      expect(
+        await readFile(
+          path.join(resolveToolPath(config.paths.content), file!),
+          "utf8",
+        ),
+        row.trigram,
+      ).toBeTruthy();
+      expect(anchor).toBeUndefined();
+      continue;
+    }
     expect(target, row.trigram).toBeDefined();
     if (anchor)
       expect(
@@ -112,6 +147,28 @@ test("trigram rendering escapes table cells, tracks its manifest, and protects m
       ),
     );
     expect(manifest.files).toContain("trigrams.md");
+    const output = path.join(config.paths.src, "trigrams.md");
+    const originalStat = await stat(output);
+    await buildMarkdown(config);
+    expect((await stat(output)).mtimeMs).toBe(originalStat.mtimeMs);
+    expect((await stat(output)).ino).toBe(originalStat.ino);
+    const stale = path.join(config.paths.src, "obsolete.md");
+    await writeFile(stale, "Old generated page");
+    await writeFile(
+      path.join(config.paths.src, config.generated.manifest),
+      JSON.stringify({ files: [...manifest.files, "obsolete.md"] }),
+    );
+    await buildMarkdown(config);
+    expect(await stat(stale).catch(() => null)).toBeNull();
+    expect((await stat(output)).ino).toBe(originalStat.ino);
+    const mapping = config.generated.trigramDocuments![0]!;
+    const originalTemplate = mapping.template;
+    mapping.template = path.join(temp, "broken.hbs");
+    await writeFile(mapping.template, "{{#if}}");
+    await expect(buildMarkdown(config)).rejects.toThrow();
+    expect(await readFile(output, "utf8")).toBe(markdown);
+    expect((await stat(output)).ino).toBe(originalStat.ino);
+    mapping.template = originalTemplate;
     await writeFile(
       path.join(config.paths.content, "trigrams.md"),
       "Manual content",
@@ -168,7 +225,16 @@ async function trigramFixture() {
         web_name: "sample-theme",
         short_name: "XYZ",
         indicators: {
-          "KSI-XYZ-ONE": { name: "Indicator", statement: "Measure this.", varies_by_class: { a: { force: "MAY" }, b: { force: "MUST" }, c: { force: "MUST" }, d: { force: "MUST" } } },
+          "KSI-XYZ-ONE": {
+            name: "Indicator",
+            statement: "Measure this.",
+            varies_by_class: {
+              a: { force: "MAY" },
+              b: { force: "MUST" },
+              c: { force: "MUST" },
+              d: { force: "MUST" },
+            },
+          },
         },
       },
     },

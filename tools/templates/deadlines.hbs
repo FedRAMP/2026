@@ -16,10 +16,10 @@ tags:
 {{> introduction}}
 {{#each deadlineTables}}
 
-| Ruleset | Optional Adoption Allowed | Obtaining Initial Certification | Maintaining Ongoing Certification | Grace Period Ends |
+| Ruleset | <span data-date-column>Optional Adoption Allowed</span> | <span data-date-column>Obtaining Initial Certification</span> | <span data-date-column data-date-default>Maintaining Ongoing Certification</span> | <span data-date-column>Grace Period Ends</span> |
 | --- | --- | --- | --- | --- |
 {{#each rows}}
-| [{{displayName}}]({{href}}) | {{optionalAdoption}} | {{obtain}} | {{maintain}} | {{graceEnds}} |
+| [{{displayName}}]({{href}}) | {{> deadline-date dates.optionalAdoption}} | {{> deadline-date dates.obtain}} | {{> deadline-date dates.maintain}} | {{> deadline-date dates.graceEnds}} |
 {{/each}}
 
 {{/each}}

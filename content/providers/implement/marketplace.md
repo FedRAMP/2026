@@ -54,6 +54,7 @@ be listed in the FedRAMP Marketplace in the Implementation Phase:
     Please be considerate of government resources and help us operate efficiently with our
     limited government funding by ensuring all applications are complete in advance!
 
-!!! tip "Next Steps"
+!!! tip "Review the Marketplace Listing Rules to apply for a Marketplace Listing!"
 
-    Follow the [FedRAMP rules for Marketplace Listing here](marketplace-listing.md)!
+    Follow the [FedRAMP rules for Marketplace Listing here](../../reference/marketplace-listing.md)!
+    Then return to this section and [Do the Work](work.md)

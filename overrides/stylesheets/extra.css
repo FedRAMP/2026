@@ -127,3 +127,51 @@ h3 {
 .md-typeset a[data-preview]::after {
   display: none;
 }
+
+/* Date-row accents: Atlassian Neutral300, Neutral200, Red300 (Alexandria),
+   Magenta300 (Rosie). Mix chromatic accents with the theme's canvas. */
+.md-typeset table tr[data-date-state="past"] {
+    --date-row-color: #DDDEE1;
+    --date-row-strength: 100%;
+}
+.md-typeset table tr[data-date-state="recent"] {
+    --date-row-color: #F0F1F2;
+    --date-row-strength: 100%;
+}
+.md-typeset table tr[data-date-state="upcoming"] {
+    --date-row-color: #FD9891;
+    --date-row-strength: 35%;
+}
+.md-typeset table tr[data-date-state="future"] {
+    --date-row-color: #F797D2;
+    --date-row-strength: 30%;
+}
+[data-md-color-scheme="slate"] .md-typeset table tr[data-date-state="past"] {
+    --date-row-strength: 16%;
+}
+[data-md-color-scheme="slate"] .md-typeset table tr[data-date-state="recent"] {
+    --date-row-strength: 8%;
+}
+[data-md-color-scheme="slate"] .md-typeset table tr[data-date-state="upcoming"],
+[data-md-color-scheme="slate"] .md-typeset table tr[data-date-state="future"] {
+    --date-row-strength: 18%;
+}
+.md-typeset table tr[data-date-state] > td {
+    background-color: color-mix(in srgb, var(--date-row-color) var(--date-row-strength), var(--md-default-bg-color));
+}
+
+/* Follow the active palette, including manual theme changes. */
+.md-logo img.theme-logo--dark {
+    display: none;
+}
+[data-md-color-scheme="slate"] .md-logo:has(img.theme-logo--dark) img.theme-logo--light {
+    display: none;
+}
+[data-md-color-scheme="slate"] .md-logo img.theme-logo--dark {
+    display: inline-block;
+}
+
+/* Give collapsible reference headings the same emphasis as fixed sections. */
+.md-nav__item--collapsible-section > .md-nav__container > .md-nav__link .md-ellipsis {
+    font-weight: 700;
+}

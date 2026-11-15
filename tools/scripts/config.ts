@@ -242,7 +242,8 @@ export interface TrigramDocumentMappingConfig {
   collections: Array<{
     trigram: string;
     name: string;
-    mappingId: string;
+    mappingId?: string;
+    page?: string;
   }>;
 }
 
@@ -321,5 +322,7 @@ export function assertPathInside(
     return;
   }
 
-  throw new Error(`${label} must stay inside ${parentDirectory}: ${targetPath}`);
+  throw new Error(
+    `${label} must stay inside ${parentDirectory}: ${targetPath}`,
+  );
 }

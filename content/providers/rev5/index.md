@@ -24,11 +24,11 @@ Choose your certification class to see the rules that affect Providers.
 
 | Class | Ruleset Reference | Rev5 Control Reference |
 | --- | --- | --- |
-| Class B | [Rev5 Class B Rules](../../reference/rev5/b/index.md) | [Rev5 Control Reference](../../reference/rev5/b/controls/index.md) |
-| Class C | [Rev5 Class C Rules](../../reference/rev5/c/index.md) | [Rev5 Control Reference](../../reference/rev5/c/controls/index.md) |
-| Class D | [Rev5 Class D Rules](../../reference/rev5/d/index.md) | [Rev5 Control Reference](../../reference/rev5/d/controls/index.md) |
+| Class B | [Rev5 Class B Rules](b/index.md) | [Rev5 Control Reference](b/controls/index.md) |
+| Class C | [Rev5 Class C Rules](c/index.md) | [Rev5 Control Reference](c/controls/index.md) |
+| Class D | [Rev5 Class D Rules](d/index.md) | [Rev5 Control Reference](d/controls/index.md) |
 
-The class references include the applicable Marketplace Listing, FedRAMP Certification, Boundary, Assurance, and Package rules. The [Complete Rulesets](../../reference/complete-rulesets/index.md) contain the full rules for all stakeholders.
+The class references include the applicable Marketplace Listing, FedRAMP Certification, Boundary, Assurance, and Package rules. The [Ruleset Reference](../../reference/index.md) contains the full rules for all stakeholders.
 
 ## Legacy Designation and Balance Improvement Releases
 

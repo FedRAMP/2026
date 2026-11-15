@@ -13,15 +13,33 @@ import {
   createContentChangeFilter,
   createContentChangeTracker,
   syncContentChangesToSrc,
+  navigationSearchSignature,
 } from "./dev";
 
 const tempRoots: string[] = [];
 
+test("navigation-only labels and ordering do not require Markdown regeneration", () => {
+  const config = (pages: string) =>
+    `[project]\nnav = [{ Reference = [${pages}] }]`;
+  const signature = (pages: string) =>
+    navigationSearchSignature(config(pages), [["Reference"]]);
+  expect(signature('{ Old = "a.md" }, "b.md"')).toBe(
+    signature('"b.md", { New = "a.md" }'),
+  );
+  expect(signature('"a.md"')).not.toBe(signature('"b.md"'));
+  expect(() =>
+    navigationSearchSignature("[project]\nnav = [", [["Reference"]]),
+  ).toThrow();
+  expect(() =>
+    navigationSearchSignature(config('"a.md"'), [["Missing"]]),
+  ).toThrow();
+});
+
 afterEach(async () => {
   await Promise.all(
-    tempRoots.splice(0).map((tempRoot) =>
-      rm(tempRoot, { force: true, recursive: true }),
-    ),
+    tempRoots
+      .splice(0)
+      .map((tempRoot) => rm(tempRoot, { force: true, recursive: true })),
   );
 });
 

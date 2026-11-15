@@ -23,12 +23,7 @@
     "search": {
       "includedNavigationSections": [
         [
-          "Ruleset Reference",
-          "Complete Rulesets"
-        ],
-        [
-          "Ruleset Reference",
-          "Other References"
+          "Ruleset Reference"
         ]
       ]
     },
@@ -47,7 +42,7 @@
           {
             "trigram": "FRR",
             "name": "FedRAMP Rules",
-            "mappingId": "complete-ruleset-reference-index"
+            "page": "reference/index.md"
           },
           {
             "trigram": "KSI",
@@ -93,7 +88,7 @@
       {
         "id": "20x-a-key-security-indicators-reference",
         "title": "Key Security Indicators",
-        "output": "reference/20x/a/key-security-indicators.md",
+        "output": "providers/20x/a/key-security-indicators.md",
         "outputMode": "single",
         "definitionsHref": "../../../definitions/",
         "source": {
@@ -107,7 +102,7 @@
       {
         "id": "20x-b-key-security-indicators-reference",
         "title": "Key Security Indicators",
-        "output": "reference/20x/b/key-security-indicators.md",
+        "output": "providers/20x/b/key-security-indicators.md",
         "outputMode": "single",
         "definitionsHref": "../../../definitions/",
         "source": {
@@ -121,7 +116,7 @@
       {
         "id": "20x-c-key-security-indicators-reference",
         "title": "Key Security Indicators",
-        "output": "reference/20x/c/key-security-indicators.md",
+        "output": "providers/20x/c/key-security-indicators.md",
         "outputMode": "single",
         "definitionsHref": "../../../definitions/",
         "source": {
@@ -160,7 +155,7 @@
       {
         "id": "rev5-b-control-reference",
         "title": "Rev5 Class B Control Reference",
-        "output": "reference/rev5/b/controls",
+        "output": "providers/rev5/b/controls",
         "indexTemplate": "templates/full-rev5-control-reference-index.hbs",
         "familyTemplate": "templates/full-rev5-control-reference-family.hbs",
         "source": {
@@ -174,7 +169,7 @@
       {
         "id": "rev5-c-control-reference",
         "title": "Rev5 Class C Control Reference",
-        "output": "reference/rev5/c/controls",
+        "output": "providers/rev5/c/controls",
         "indexTemplate": "templates/full-rev5-control-reference-index.hbs",
         "familyTemplate": "templates/full-rev5-control-reference-family.hbs",
         "source": {
@@ -188,7 +183,7 @@
       {
         "id": "rev5-d-control-reference",
         "title": "Rev5 Class D Control Reference",
-        "output": "reference/rev5/d/controls",
+        "output": "providers/rev5/d/controls",
         "indexTemplate": "templates/full-rev5-control-reference-index.hbs",
         "familyTemplate": "templates/full-rev5-control-reference-family.hbs",
         "source": {
@@ -226,61 +221,12 @@
     "taggedDocumentSummaries": [],
     "referenceIndexDocuments": [
       {
-        "id": "complete-ruleset-reference-index",
-        "title": "Complete Ruleset Reference",
-        "description": "This section contains the entire Consolidated Rules for 2026 as a standalone reference for each ruleset.",
-        "purpose": "This content allows folks to see the full rules together without them broken apart by stakeholder.",
-        "introduction": "This section of the Consolidated Rules for 2026 contains each complete FedRAMP Ruleset with all related content in a single rule as an overall reference. The individual stakeholder sections of this site contain only the specific rules that apply in different circumstances for different stakeholders, while the reference rulesets are entirely unabridged.",
-        "output": "reference/complete-rulesets/index.md",
-        "template": "templates/reference-index.hbs",
-        "ruleDocumentMappingId": "complete-ruleset-reference",
-        "source": {
-          "collection": "FRR",
-          "documents": "ALL"
-        }
-      },
-      {
-        "id": "20x-ruleset-reference-index",
-        "title": "20x (Providers)",
-        "description": "This section contains the 20x rules that affect Providers.",
-        "purpose": "Use this reference to review Provider requirements for 20x.",
-        "introduction": "This section includes only rules that affect Providers and apply to 20x. The Complete Rulesets section contains the full rulesets for all stakeholders.",
-        "output": "reference/20x/index.md",
-        "template": "templates/reference-index.hbs",
-        "ruleDocumentMappingIds": [
-          "20x-a-ruleset-reference",
-          "20x-b-ruleset-reference",
-          "20x-c-ruleset-reference"
-        ],
-        "source": {
-          "collection": "FRR",
-          "documents": "ALL",
-          "ignoreDocuments": [
-            "AGU",
-            "REC"
-          ],
-          "types": [
-            "20x"
-          ],
-          "classes": [
-            "A",
-            "B",
-            "C"
-          ],
-          "includeAll": true,
-          "allPosition": "first",
-          "affects": [
-            "Providers"
-          ]
-        }
-      },
-      {
         "id": "20x-a-ruleset-reference-index",
         "title": "20x Class A Ruleset Reference (Providers)",
         "description": "This section contains the 20x Class A rules that affect Providers.",
         "purpose": "Use this reference to review Provider requirements for 20x Class A.",
-        "introduction": "This section includes only rules that affect Providers and apply to 20x Class A. The Complete Rulesets section contains the full rulesets for all stakeholders.",
-        "output": "reference/20x/a/index.md",
+        "introduction": "This section includes only rules that affect Providers and apply to 20x Class A. The Ruleset Reference section contains the full rulesets for all stakeholders.",
+        "output": "providers/20x/a/index.md",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingId": "20x-a-ruleset-reference",
         "source": {
@@ -308,8 +254,8 @@
         "title": "20x Class B Ruleset Reference (Providers)",
         "description": "This section contains the 20x Class B rules that affect Providers.",
         "purpose": "Use this reference to review Provider requirements for 20x Class B.",
-        "introduction": "This section includes only rules that affect Providers and apply to 20x Class B. The Complete Rulesets section contains the full rulesets for all stakeholders.",
-        "output": "reference/20x/b/index.md",
+        "introduction": "This section includes only rules that affect Providers and apply to 20x Class B. The Ruleset Reference section contains the full rulesets for all stakeholders.",
+        "output": "providers/20x/b/index.md",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingId": "20x-b-ruleset-reference",
         "source": {
@@ -337,8 +283,8 @@
         "title": "20x Class C Ruleset Reference (Providers)",
         "description": "This section contains the 20x Class C rules that affect Providers.",
         "purpose": "Use this reference to review Provider requirements for 20x Class C.",
-        "introduction": "This section includes only rules that affect Providers and apply to 20x Class C. The Complete Rulesets section contains the full rulesets for all stakeholders.",
-        "output": "reference/20x/c/index.md",
+        "introduction": "This section includes only rules that affect Providers and apply to 20x Class C. The Ruleset Reference section contains the full rulesets for all stakeholders.",
+        "output": "providers/20x/c/index.md",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingId": "20x-c-ruleset-reference",
         "source": {
@@ -362,47 +308,12 @@
         }
       },
       {
-        "id": "rev5-ruleset-reference-index",
-        "title": "Rev5 (Providers)",
-        "description": "This section contains the Rev5 rules that affect Providers.",
-        "purpose": "Use this reference to review Provider requirements for Rev5.",
-        "introduction": "This section includes only rules that affect Providers and apply to Rev5. The Complete Rulesets section contains the full rulesets for all stakeholders.",
-        "output": "reference/rev5/index.md",
-        "template": "templates/reference-index.hbs",
-        "ruleDocumentMappingIds": [
-          "rev5-b-ruleset-reference",
-          "rev5-c-ruleset-reference",
-          "rev5-d-ruleset-reference"
-        ],
-        "source": {
-          "collection": "FRR",
-          "documents": "ALL",
-          "ignoreDocuments": [
-            "AGU",
-            "REC"
-          ],
-          "types": [
-            "rev5"
-          ],
-          "classes": [
-            "B",
-            "C",
-            "D"
-          ],
-          "includeAll": true,
-          "allPosition": "first",
-          "affects": [
-            "Providers"
-          ]
-        }
-      },
-      {
         "id": "rev5-b-ruleset-reference-index",
         "title": "Rev5 Class B Ruleset Reference (Providers)",
         "description": "This section contains the Rev5 Class B rules that affect Providers.",
         "purpose": "Use this reference to review Provider requirements for Rev5 Class B.",
-        "introduction": "This section includes only rules that affect Providers and apply to Rev5 Class B. The Complete Rulesets section contains the full rulesets for all stakeholders.",
-        "output": "reference/rev5/b/index.md",
+        "introduction": "This section includes only rules that affect Providers and apply to Rev5 Class B. The Ruleset Reference section contains the full rulesets for all stakeholders.",
+        "output": "providers/rev5/b/index.md",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingId": "rev5-b-ruleset-reference",
         "source": {
@@ -430,8 +341,8 @@
         "title": "Rev5 Class C Ruleset Reference (Providers)",
         "description": "This section contains the Rev5 Class C rules that affect Providers.",
         "purpose": "Use this reference to review Provider requirements for Rev5 Class C.",
-        "introduction": "This section includes only rules that affect Providers and apply to Rev5 Class C. The Complete Rulesets section contains the full rulesets for all stakeholders.",
-        "output": "reference/rev5/c/index.md",
+        "introduction": "This section includes only rules that affect Providers and apply to Rev5 Class C. The Ruleset Reference section contains the full rulesets for all stakeholders.",
+        "output": "providers/rev5/c/index.md",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingId": "rev5-c-ruleset-reference",
         "source": {
@@ -459,8 +370,8 @@
         "title": "Rev5 Class D Ruleset Reference (Providers)",
         "description": "This section contains the Rev5 Class D rules that affect Providers.",
         "purpose": "Use this reference to review Provider requirements for Rev5 Class D.",
-        "introduction": "This section includes only rules that affect Providers and apply to Rev5 Class D. The Complete Rulesets section contains the full rulesets for all stakeholders.",
-        "output": "reference/rev5/d/index.md",
+        "introduction": "This section includes only rules that affect Providers and apply to Rev5 Class D. The Ruleset Reference section contains the full rulesets for all stakeholders.",
+        "output": "providers/rev5/d/index.md",
         "template": "templates/reference-index.hbs",
         "ruleDocumentMappingId": "rev5-d-ruleset-reference",
         "source": {
@@ -530,7 +441,7 @@
       },
       {
         "id": "20x-a-ruleset-reference",
-        "output": "reference/20x/a/{FRR}.md",
+        "output": "providers/20x/a/{FRR}.md",
         "outputMode": "documents",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../",
@@ -558,7 +469,7 @@
       },
       {
         "id": "20x-b-ruleset-reference",
-        "output": "reference/20x/b/{FRR}.md",
+        "output": "providers/20x/b/{FRR}.md",
         "outputMode": "documents",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../",
@@ -586,7 +497,7 @@
       },
       {
         "id": "20x-c-ruleset-reference",
-        "output": "reference/20x/c/{FRR}.md",
+        "output": "providers/20x/c/{FRR}.md",
         "outputMode": "documents",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../",
@@ -614,7 +525,7 @@
       },
       {
         "id": "rev5-b-ruleset-reference",
-        "output": "reference/rev5/b/{FRR}.md",
+        "output": "providers/rev5/b/{FRR}.md",
         "outputMode": "documents",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../",
@@ -642,7 +553,7 @@
       },
       {
         "id": "rev5-c-ruleset-reference",
-        "output": "reference/rev5/c/{FRR}.md",
+        "output": "providers/rev5/c/{FRR}.md",
         "outputMode": "documents",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../",
@@ -670,7 +581,7 @@
       },
       {
         "id": "rev5-d-ruleset-reference",
-        "output": "reference/rev5/d/{FRR}.md",
+        "output": "providers/rev5/d/{FRR}.md",
         "outputMode": "documents",
         "definitionsHref": "../../../definitions/",
         "rulesHref": "../",
@@ -714,32 +625,6 @@
             "Agencies"
           ],
           "includeAll": true,
-          "allPosition": "first"
-        }
-      },
-      {
-        "id": "provider-implementation-marketplace",
-        "output": "providers/implement/marketplace/{FRR}.md",
-        "outputMode": "documents",
-        "definitionsHref": "../../../definitions/",
-        "rulesHref": "../",
-        "emptyBehavior": "skip",
-        "includeEffectiveDates": true,
-        "source": {
-          "collection": "FRR",
-          "documents": [
-            "MKT"
-          ],
-          "types": [
-            "all"
-          ],
-          "affects": [
-            "Providers"
-          ],
-          "sections": [
-            "CSO",
-            "IIP"
-          ],
           "allPosition": "first"
         }
       },

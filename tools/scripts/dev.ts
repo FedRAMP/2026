@@ -1,3 +1,5 @@
+import { parse as parseToml } from "smol-toml";
+import { searchableNavigationPages } from "./search-exclusions";
 import { spawn } from "node:child_process";
 import fs, { watch } from "node:fs";
 import path from "node:path";
@@ -31,6 +33,7 @@ let buildTimer: ReturnType<typeof setTimeout> | null = null;
 type DeployMode = "none" | "content" | "full";
 
 interface PipelineRequest {
+  regenerate: boolean;
   contentChanges: ContentChange[];
   deployMode: DeployMode;
 }
@@ -46,6 +49,21 @@ export interface ContentSyncSummary {
   needsFullDeploy: boolean;
   removedFiles: number;
   reloadTargets: string[];
+}
+
+let pendingRegenerate = false;
+let queuedRegenerate = false;
+let lastSearchSignature: string | undefined;
+let onPipelineSuccess: (() => void) | undefined;
+
+export function navigationSearchSignature(
+  source: string,
+  sections: string[][],
+): string {
+  const navigation = parseToml(source);
+  return JSON.stringify(
+    [...searchableNavigationPages(navigation, sections)].sort(),
+  );
 }
 
 let pendingDeployMode: DeployMode = "none";
@@ -84,6 +102,7 @@ async function runPipeline(
 ): Promise<void> {
   if (isBuilding) {
     buildQueued = true;
+    queuedRegenerate ||= request.regenerate;
     queuedDeployMode = mergeDeployMode(queuedDeployMode, request.deployMode);
     addContentChanges(queuedContentChanges, request.contentChanges);
     return;
@@ -93,6 +112,11 @@ async function runPipeline(
   console.log(`[dev] rebuilding site inputs (${reason})`);
 
   try {
+    const config = await loadToolConfig();
+    const searchSignature = navigationSearchSignature(
+      fs.readFileSync(resolveToolPath(config.paths.zensicalConfig), "utf8"),
+      config.generated.search?.includedNavigationSections ?? [],
+    );
     const reloadTargets: string[] = [];
 
     if (request.deployMode === "full") {
@@ -127,9 +151,15 @@ async function runPipeline(
       }
     }
 
-    const summary = await buildMarkdown();
-    console.log(`[dev] generated ${summary.artifactCount} markdown files`);
-    await signalPreviewReload(reloadTargets);
+    if (request.regenerate || searchSignature !== lastSearchSignature) {
+      const summary = await buildMarkdown(config);
+      console.log(`[dev] generated ${summary.artifactCount} markdown files`);
+      await signalPreviewReload(reloadTargets);
+    } else {
+      console.log("[dev] navigation only; skipped Markdown generation");
+    }
+    lastSearchSignature = searchSignature;
+    onPipelineSuccess?.();
   } catch (error) {
     console.error("[dev] site input build failed");
     console.error(error);
@@ -138,11 +168,13 @@ async function runPipeline(
 
     if (buildQueued) {
       const nextRequest: PipelineRequest = {
+        regenerate: queuedRegenerate,
         contentChanges: Array.from(queuedContentChanges.values()),
         deployMode: queuedDeployMode,
       };
       buildQueued = false;
       queuedDeployMode = "none";
+      queuedRegenerate = false;
       queuedContentChanges.clear();
       await runPipeline("queued change", nextRequest);
     }
@@ -153,7 +185,9 @@ function schedulePipeline(
   reason: string,
   deployMode: DeployMode = "none",
   contentChanges: ContentChange[] = [],
+  regenerate = true,
 ): void {
+  pendingRegenerate ||= regenerate;
   pendingDeployMode = mergeDeployMode(pendingDeployMode, deployMode);
   addContentChanges(pendingContentChanges, contentChanges);
 
@@ -163,11 +197,13 @@ function schedulePipeline(
 
   buildTimer = setTimeout(() => {
     const nextRequest: PipelineRequest = {
+      regenerate: pendingRegenerate,
       contentChanges: Array.from(pendingContentChanges.values()),
       deployMode: pendingDeployMode,
     };
     buildTimer = null;
     pendingDeployMode = "none";
+    pendingRegenerate = false;
     pendingContentChanges.clear();
     void runPipeline(reason, nextRequest);
   }, currentWatchDebounceMs);
@@ -189,7 +225,9 @@ function resolveChildPath(
   return targetPath;
 }
 
-async function signalPreviewReload(relativeTargets: string[] = []): Promise<void> {
+async function signalPreviewReload(
+  relativeTargets: string[] = [],
+): Promise<void> {
   const config = await loadToolConfig();
   const srcDir = resolveToolPath(config.paths.src);
   const targetPaths = new Set<string>();
@@ -293,7 +331,9 @@ function snapshotsAreEqual(
   );
 }
 
-function normalizeContentRelativePath(fileName: string | Buffer): string | null {
+function normalizeContentRelativePath(
+  fileName: string | Buffer,
+): string | null {
   const relativeFileName = path.normalize(fileName.toString());
   if (
     relativeFileName === "." ||
@@ -387,7 +427,11 @@ export function syncContentChangesToSrc(
       change.relativePath,
       "Content path",
     );
-    const srcPath = resolveChildPath(srcDir, change.relativePath, "Source path");
+    const srcPath = resolveChildPath(
+      srcDir,
+      change.relativePath,
+      "Source path",
+    );
 
     if (currentSnapshot.exists && currentSnapshot.kind === "file") {
       fs.mkdirSync(path.dirname(srcPath), { recursive: true });
@@ -444,6 +488,7 @@ async function main(): Promise<void> {
   const zensicalConfig = resolveToolPath(config.paths.zensicalConfig);
 
   await runPipeline("initial build", {
+    regenerate: true,
     contentChanges: [],
     deployMode: "full",
   });
@@ -452,10 +497,41 @@ async function main(): Promise<void> {
 
   const trackContentChange = createContentChangeTracker(contentDir);
 
-  const zensical = spawn(zensicalBinary(), ["serve", "-f", zensicalConfig], {
-    cwd: REPO_ROOT,
-    stdio: "inherit",
-  });
+  let zensical: ReturnType<typeof spawn> | undefined;
+  let stopping = false;
+  const startPreview = () => {
+    if (stopping || zensical) return;
+    const child = spawn(
+      zensicalBinary(),
+      [
+        "serve",
+        "-f",
+        zensicalConfig,
+        ...process.argv
+          .slice(2)
+          .filter((arg, index) => !(index === 0 && arg === "--")),
+      ],
+      {
+        cwd: REPO_ROOT,
+        stdio: "inherit",
+      },
+    );
+    zensical = child;
+    const stopped = () => {
+      if (zensical === child) zensical = undefined;
+      if (!stopping)
+        console.error(
+          "[dev] preview stopped; watchers remain active. Save a source or config file to retry.",
+        );
+    };
+    child.on("error", (error) => {
+      console.error(error);
+      stopped();
+    });
+    child.on("exit", stopped);
+  };
+  onPipelineSuccess = startPreview;
+  startPreview();
 
   const templateWatcher = watch(
     templatesDir,
@@ -507,9 +583,15 @@ async function main(): Promise<void> {
     schedulePipeline("config change", "full");
   });
 
-  const navigationWatcher = watch(zensicalConfig, () => {
-    schedulePipeline("navigation change");
-  });
+  // Watch the directory so editor atomic-save replacements do not detach us.
+  const navigationWatcher = watch(
+    path.dirname(zensicalConfig),
+    (_event, name) => {
+      if (name?.toString() === path.basename(zensicalConfig)) {
+        schedulePipeline("navigation change", "none", [], false);
+      }
+    },
+  );
 
   const rulesWatcher = watch(rulesFile, () => {
     schedulePipeline("rules source change");
@@ -520,6 +602,9 @@ async function main(): Promise<void> {
   });
 
   const cleanup = () => {
+    stopping = true;
+    onPipelineSuccess = undefined;
+    if (buildTimer) clearTimeout(buildTimer);
     templateWatcher.close();
     partialsWatcher?.close();
     contentWatcher.close();
@@ -529,7 +614,7 @@ async function main(): Promise<void> {
     rulesWatcher.close();
     oscalCatalogWatcher.close();
 
-    if (!zensical.killed) {
+    if (zensical && !zensical.killed) {
       zensical.kill("SIGTERM");
     }
   };
@@ -542,17 +627,6 @@ async function main(): Promise<void> {
   process.on("SIGTERM", () => {
     cleanup();
     process.exit(0);
-  });
-
-  zensical.on("exit", (code, signal) => {
-    cleanup();
-
-    if (signal) {
-      process.exit(0);
-      return;
-    }
-
-    process.exit(code ?? 0);
   });
 }
 

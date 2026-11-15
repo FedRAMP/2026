@@ -1,16 +1,10 @@
+import { writeIfChanged } from "./write-if-changed";
 import {
   CLASS_CONTENT_FIELDS,
   resolveClassContent,
   applicableClasses,
 } from "./class-content";
-import {
-  access,
-  mkdir,
-  readFile,
-  readdir,
-  rm,
-  writeFile,
-} from "node:fs/promises";
+import { access, mkdir, readFile, readdir, rm } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import Handlebars from "handlebars";
@@ -446,6 +440,10 @@ interface TableOfContentsEntryViewModel {
 }
 
 interface DeadlineRowViewModel {
+  dates: Record<
+    "optionalAdoption" | "obtain" | "maintain" | "graceEnds",
+    { date?: string; label: string }
+  >;
   shortName: string;
   displayName: string;
   href: string;
@@ -3564,6 +3562,33 @@ function deadlineGraceEnds(entry: EffectiveEntrySource): string {
   return effectiveGraceEnds(entry.date);
 }
 
+function deadlineCell(
+  value: string,
+  dateValue = value,
+): { date?: string; label: string } {
+  const format = (iso: string) => {
+    const date = new Date(`${iso}T00:00:00Z`);
+    if (
+      !Number.isFinite(date.getTime()) ||
+      date.toISOString().slice(0, 10) !== iso
+    )
+      return iso;
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      timeZone: "UTC",
+    }).format(date);
+  };
+  return {
+    date:
+      /^\d{4}-\d{2}-\d{2}$/.test(dateValue) && format(dateValue) !== dateValue
+        ? dateValue
+        : undefined,
+    label: markdownTableCell(value.replace(/\b\d{4}-\d{2}-\d{2}\b/g, format)),
+  };
+}
+
 function deadlineDisplayName(info: InfoSource): string {
   const shortName = info.short_name?.trim();
   if (!shortName) {
@@ -3866,6 +3891,15 @@ function buildDeadlineRowViewModel(
   );
 
   return {
+    dates: {
+      optionalAdoption: deadlineCell(deadlineDate(entry, "optional_adoption")),
+      obtain: deadlineCell(deadlineDate(entry, "obtain")),
+      maintain: deadlineCell(deadlineDate(entry, "maintain")),
+      graceEnds: deadlineCell(
+        deadlineGraceEnds(entry),
+        effectiveDateValue(entry.date?.grace?.default),
+      ),
+    },
     shortName: markdownTableCell(document.info.short_name ?? ""),
     displayName: markdownTableCell(deadlineDisplayName(document.info)),
     href: rulesRelativePath,
@@ -4556,7 +4590,7 @@ async function renderContentPictographs(config: ToolConfig): Promise<void> {
     );
 
     if (rendered !== contents) {
-      await writeFile(markdownPath, rendered, "utf8");
+      await writeIfChanged(markdownPath, rendered);
     }
   }
 }
@@ -6597,6 +6631,7 @@ function collectTrigramDocumentArtifacts(
       type: TrigramRowViewModel["type"],
       target: BuildArtifact | undefined,
       anchor?: string,
+      page?: string,
     ) => {
       if (identifiers.has(trigram)) {
         throw new Error(
@@ -6620,7 +6655,9 @@ function collectTrigramDocumentArtifacts(
         href: target
           ? relativeGeneratedHref(relativePath, target.relativePath) +
             (anchor ? `#${anchor}` : "")
-          : undefined,
+          : page
+            ? relativeGeneratedHref(relativePath, page)
+            : undefined,
       });
     };
 
@@ -6631,11 +6668,18 @@ function collectTrigramDocumentArtifacts(
       targetFor(mapping.definitionDocumentMappingId),
     );
     for (const collection of mapping.collections) {
+      if (Boolean(collection.mappingId) === Boolean(collection.page)) {
+        throw new Error(
+          `Trigram ${collection.trigram} requires exactly one mappingId or page.`,
+        );
+      }
       addRow(
         collection.trigram,
         collection.name,
         "Collection",
-        targetFor(collection.mappingId),
+        collection.mappingId ? targetFor(collection.mappingId) : undefined,
+        undefined,
+        collection.page,
       );
     }
     const subsetTrigrams = new Set<string>();
@@ -6892,10 +6936,14 @@ function assertUniqueGeneratedOutputs(artifacts: BuildArtifact[]): void {
   }
 }
 
-async function cleanupGeneratedFiles(config: ToolConfig): Promise<void> {
+async function cleanupGeneratedFiles(
+  config: ToolConfig,
+  retained: Set<string>,
+): Promise<void> {
   const manifest = await readGeneratedManifest(config);
 
   for (const relativePath of manifest.files) {
+    if (retained.has(relativePath)) continue;
     if (await contentFileExists(config, relativePath)) {
       continue;
     }
@@ -6915,11 +6963,7 @@ async function writeGeneratedManifest(
   };
 
   await mkdir(path.dirname(manifestPath), { recursive: true });
-  await writeFile(
-    manifestPath,
-    `${JSON.stringify(manifest, null, 2)}\n`,
-    "utf8",
-  );
+  await writeIfChanged(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 }
 
 export async function buildMarkdown(
@@ -6931,10 +6975,9 @@ export async function buildMarkdown(
   const partialsDir = resolveToolPath(toolConfig.paths.partials);
   const templates = new Map<string, (context: DocumentViewModel) => string>();
 
-  await renderContentPictographs(toolConfig);
   assertUniqueGeneratedOutputs(artifacts);
   await assertNoContentCollisions(toolConfig, artifacts);
-  await cleanupGeneratedFiles(toolConfig);
+  const renderedArtifacts: Array<{ outputPath: string; rendered: string }> = [];
 
   for (const artifact of artifacts) {
     const template =
@@ -6943,10 +6986,17 @@ export async function buildMarkdown(
     templates.set(artifact.templatePath, template);
 
     const rendered = `${template(artifact.context).trim()}\n`;
-    await mkdir(path.dirname(artifact.outputPath), { recursive: true });
-    await writeFile(artifact.outputPath, rendered, "utf8");
+    renderedArtifacts.push({ outputPath: artifact.outputPath, rendered });
   }
 
+  await renderContentPictographs(toolConfig);
+  for (const { outputPath, rendered } of renderedArtifacts) {
+    await writeIfChanged(outputPath, rendered);
+  }
+  await cleanupGeneratedFiles(
+    toolConfig,
+    new Set(artifacts.map((a) => a.relativePath)),
+  );
   await writeGeneratedManifest(toolConfig, artifacts);
 
   return {

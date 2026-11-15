@@ -23,12 +23,10 @@ adjustments to the FedRAMP Rev5 and 20x processes:
 
 | Date | Milestone |
 | -- | -- |
-| July 4, 2026 | The Consolidated Rules for 2026 are in effect for widespread adoption. Providers are expected to begin adjusting to these rules as quickly as possible. |
-| July 4, 2026 | For FedRAMP 20x, all new applications for FedRAMP Certification MUST follow all applicable Consolidated Rules for 2026. |
-| January 1, 2027 | For FedRAMP Rev5, all new applications for FedRAMP Certification MUST follow all applicable Consolidated Rules for 2026. |
-| January 1, 2027 | For FedRAMP 20x, all active FedRAMP Certified cloud service offerings MUST follow all applicable Consolidated Rules for 2026 or corrective action will be requested by FedRAMP. |
-| June 11, 2027 | No new applications for FedRAMP Rev5 Certification will be accepted. |
-| February 1, 2028 | All grace periods for the Consolidated Rules for 2026 expire and all cloud service offerings that are not fully following the Consolidated Rules for 2026 will lose their FedRAMP Certification. |
+| <span data-row-date="2026-07-04" hidden></span>July 4, 2026 | The Consolidated Rules for 2026 are in effect for widespread adoption. Providers are expected to begin adjusting to these rules as quickly as possible. <br><br>For FedRAMP 20x, all new applications for FedRAMP Certification MUST follow all applicable Consolidated Rules for 2026.|
+| <span data-row-date="2027-01-01" hidden></span>January 1, 2027 | For FedRAMP Rev5, all new applications for FedRAMP Certification MUST follow all applicable Consolidated Rules for 2026.<br><br>For FedRAMP 20x, all active FedRAMP Certified cloud service offerings MUST follow all applicable Consolidated Rules for 2026 or corrective action will be requested by FedRAMP.|
+| <span data-row-date="2027-06-11" hidden></span>**June 11, 2027** | **No new applications for FedRAMP Rev5 Certification will be accepted.** |
+| <span data-row-date="2028-02-01" hidden></span>February 1, 2028 | All grace periods for the Consolidated Rules for 2026 expire and all cloud service offerings that are not fully following the Consolidated Rules for 2026 will lose their FedRAMP Certification. |
 
 ## Understanding Ruleset Effective Dates
 

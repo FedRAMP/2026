@@ -789,7 +789,8 @@ export function expectedTrigrams(
       name: collection.name,
       type: "Collection",
       href: relative(
-        mappings.find((m) => m.id === collection.mappingId)!.output,
+        collection.page ??
+          mappings.find((m) => m.id === collection.mappingId)!.output,
       ),
     });
   const subsets = new Map<string, Array<{ key: string; name: string }>>();
@@ -919,7 +920,34 @@ export async function assertTables(
       .sort((a, b) =>
         !a[3] ? (!b[3] ? 0 : 1) : !b[3] ? -1 : a[3].localeCompare(b[3]),
       );
-    expect(rows, where).toEqual(expected.map((row) => row.map(markdownText)));
+    expect(
+      [...text.matchAll(/data-row-date="(\d{4}-\d{2}-\d{2})"/g)].map(
+        (match) => match[1],
+      ),
+      `${where}: date markers`,
+    ).toEqual(
+      expected.flatMap((row) =>
+        row
+          .slice(1)
+          .flatMap((cell) => cell.match(/\b\d{4}-\d{2}-\d{2}\b/g) ?? []),
+      ),
+    );
+    expect(rows, where).toEqual(
+      expected.map((row) =>
+        row.map((cell) =>
+          markdownText(
+            cell.replace(/\b\d{4}-\d{2}-\d{2}\b/g, (iso) =>
+              new Intl.DateTimeFormat("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+                timeZone: "UTC",
+              }).format(new Date(`${iso}T00:00:00Z`)),
+            ),
+          ),
+        ),
+      ),
+    );
   }
   if (artifact.documentType === "FRR_TAGGED_SUMMARY") {
     const mapping = config.generated.taggedDocumentSummaries!.find(
