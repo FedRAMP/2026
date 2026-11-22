@@ -2333,6 +2333,17 @@ describe("build pipeline", () => {
     );
     expect(stdout).toContain("Build finished");
 
+    const downloadsDir = path.join(htmlPath, "sources/latest");
+    const downloadPage = await readFile(path.join(downloadsDir, "index.html"), "utf8");
+    const downloads = (await listRelativeFiles(path.join(srcPath, "sources/latest")))
+      .filter((name) => name.endsWith(".json"));
+    expect(downloads).toHaveLength(18);
+    for (const name of downloads) {
+      expect(downloadPage).toContain(`href="${name}"`);
+      const original = await readFile(path.join(srcPath, "sources/latest", name));
+      expect(await readFile(path.join(downloadsDir, name))).toEqual(original);
+    }
+
     const manifest = await readJson<{ files: string[] }>(
       path.join(srcPath, config.generated.manifest),
     );

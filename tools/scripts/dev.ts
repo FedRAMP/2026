@@ -152,6 +152,7 @@ async function runPipeline(
     }
 
     if (request.regenerate || searchSignature !== lastSearchSignature) {
+      await Bun.$`${process.execPath} ${path.join(import.meta.dir, "build-sources.ts")}`;
       const summary = await buildMarkdown(config);
       console.log(`[dev] generated ${summary.artifactCount} markdown files`);
       await signalPreviewReload(reloadTargets);
@@ -575,8 +576,10 @@ async function main(): Promise<void> {
     },
   );
 
-  const buildWatcher = watch(BUILD_SCRIPT, () => {
-    schedulePipeline("generator change");
+  const buildWatcher = watch(path.dirname(BUILD_SCRIPT), (_event, name) => {
+    if (name && [path.basename(BUILD_SCRIPT), "build-sources.ts", "class-content.ts"].includes(name)) {
+      schedulePipeline("generator change");
+    }
   });
 
   const configWatcher = watch(CONFIG_FILE, () => {
@@ -593,8 +596,10 @@ async function main(): Promise<void> {
     },
   );
 
-  const rulesWatcher = watch(rulesFile, () => {
-    schedulePipeline("rules source change");
+  const rulesWatcher = watch(path.dirname(rulesFile), (_event, name) => {
+    if (name === path.basename(rulesFile) || name === "CHANGELOG.yml") {
+      schedulePipeline("rules source change");
+    }
   });
 
   const oscalCatalogWatcher = watch(oscalCatalogFile, () => {

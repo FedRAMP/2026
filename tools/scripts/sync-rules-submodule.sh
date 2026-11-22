@@ -35,5 +35,6 @@ git -C "${RULES_WORKTREE}" checkout -B "${RULES_BRANCH}" "origin/${RULES_BRANCH}
 # Keep the submodule working tree focused on the upstream artifacts this repo consumes.
 git -C "${RULES_WORKTREE}" sparse-checkout init --no-cone
 git -C "${RULES_WORKTREE}" sparse-checkout set --no-cone \
+  /CHANGELOG.yml \
   /fedramp-consolidated-rules.json \
   /schemas/fedramp-consolidated-rules.schema.json

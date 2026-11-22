@@ -50,12 +50,13 @@ type SharedApplicabilityBucket = "all";
 type DataBucket = Version | SharedApplicabilityBucket;
 const ALL_VERSIONS: Version[] = ["20x", "rev5"];
 
-interface RulesDocument {
+export interface RulesDocument {
   info?: {
     title?: string;
     description?: string;
     version?: string;
     last_updated?: string;
+    default_artifacts?: Record<string, string[]>;
   };
   FRD: DefinitionsSource;
   FRR: Record<string, RequirementDocumentSource>;
@@ -282,7 +283,7 @@ interface ControlParameterSource {
 }
 
 interface ControlClassDataSource {
-  force?: "MUST" | "MAY";
+  force?: string;
   guidance?: string[];
   parameters?: ControlParameterSource[];
 }
@@ -1053,7 +1054,7 @@ function flowsForVersions(info: InfoSource, versions: Version[]): FlowSource[] {
   ];
 }
 
-function slugifyTerm(term: string): string {
+export function slugifyTerm(term: string): string {
   return term
     .toLowerCase()
     .replace(/\s+/g, "-")
@@ -1120,7 +1121,7 @@ function buildDoNotLinkTermIndex(
   return terms;
 }
 
-function buildRuleIndex(rules: RulesDocument): RuleIndex {
+export function buildRuleIndex(rules: RulesDocument): RuleIndex {
   const index = new Map<string, RuleIndexEntry>();
 
   for (const [documentKey, document] of Object.entries(rules.FRR)) {
@@ -1151,7 +1152,7 @@ function buildRuleIndex(rules: RulesDocument): RuleIndex {
   return index;
 }
 
-function buildKsiIndex(rules: RulesDocument): KsiIndex {
+export function buildKsiIndex(rules: RulesDocument): KsiIndex {
   const index = new Map<string, KsiIndexEntry>();
 
   for (const [themeKey, theme] of Object.entries(rules.KSI)) {
@@ -4360,7 +4361,7 @@ function generatedArtifactAffectedParties(
   return [];
 }
 
-function pictographSpan(
+export function pictographSpan(
   config: ToolConfig,
   source: GeneratedDocumentSource = "machine",
 ): string {
@@ -4595,7 +4596,7 @@ async function renderContentPictographs(config: ToolConfig): Promise<void> {
   }
 }
 
-function renderRuleDocumentOutput(
+export function renderRuleDocumentOutput(
   mapping: RuleDocumentMappingConfig,
   documentKey?: string,
 ): string {

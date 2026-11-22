@@ -24,8 +24,9 @@ The build pipeline:
    NIST OSCAL catalog in `data/NIST_SP-800-53_rev5_catalog.xml`. The full Rev5
    control reference is generated directly from every family and control in
    that catalog.
-5. Runs Zensical with `../zensical.toml`.
-6. Writes static output to `../html`.
+5. Generates the versioned JSON downloads and index under `../src/sources/latest/` with `scripts/build-sources.ts`. The script reads the consolidated JSON and the matching version entry from `rules/CHANGELOG.yml`. Run `bun run scripts/build-sources.ts` to regenerate just these files.
+6. Runs Zensical with `../zensical.toml`.
+7. Writes static output to `../html`.
 
 `content/` is manual source content. Scripts should not write to it. Generated Markdown belongs in `src/`, and generated mappings must not shadow copied `content/` files.
 
@@ -37,7 +38,7 @@ bun run dev
 
 Starts the local development pipeline and Zensical development server. It copies `../content` into `../src`, generates configured Markdown, then starts `zensical serve` with `../zensical.toml`.
 
-The dev script watches manual content, templates, config, generator code, and the consolidated rules JSON. Watch rebuilds are debounced by `dev.watchDebounceMs` in `config.json`; the current default is 1000 milliseconds.
+The dev script watches manual content, templates, config, generator code, the consolidated rules JSON, and the rules changelog. Watch rebuilds are debounced by `dev.watchDebounceMs` in `config.json`; the current default is 1000 milliseconds.
 
 Navigation edits in `zensical.toml` are handled by Zensical directly. The wrapper only regenerates Markdown when the set of searchable pages changes. It watches the config directory so editor atomic saves remain detectable. Generated files are compared before writing; changed files are replaced atomically, and only obsolete generated files are deleted after successful rendering. A template or navigation error leaves existing generated pages in place.
 
