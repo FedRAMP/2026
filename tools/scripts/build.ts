@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { rm } from "node:fs/promises";
 import path from "node:path";
+import { buildLlmCorpus } from "./build-llms";
 import { buildSources } from "./build-sources";
 import { buildMarkdown } from "./build-markdown";
 import {
@@ -42,6 +43,7 @@ async function main(): Promise<void> {
   console.log(`Deploy execution time: ${deploySummary.executionTimeMs}ms`);
 
   await buildSources(config);
+  await buildLlmCorpus(config);
   const buildSummary = await buildMarkdown(config);
   console.log(`Generated ${buildSummary.artifactCount} markdown files.`);
   for (const artifact of buildSummary.artifacts) {

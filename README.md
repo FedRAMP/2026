@@ -54,7 +54,7 @@ git clone --recurse-submodules https://github.com/FedRAMP/2026.git
 ```
 cd tools
 bun install
-uv venv && uv pip install "zensical>=0.0.67"
+uv venv && uv pip install -r requirements.in
 ```
 
 (replace `bun install` with node/etc. as desired; `bun run build` and `bun run dev` invoke zensical directly from `tools/.venv/bin/zensical`, so it must live in a `uv`-managed venv there rather than a global `pip install`)

@@ -4,7 +4,8 @@ set -euo pipefail
 # Resolve tools/ regardless of the caller's working directory.
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-echo "::group::Install Bun dependencies"
+echo "::group::Install site build dependencies"
+.venv/bin/python -m pip install --require-hashes -r requirements.txt
 bun install --frozen-lockfile
 echo "::endgroup::"
 

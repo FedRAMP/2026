@@ -604,3 +604,14 @@ cards_layout_dir = "tools/social-layouts"
 background_color = "#f4f6f8"
 color = "#162e51"
 logo = "overrides/assets/fr-only-logo-black.png"
+
+[project.plugins.llmstxt]
+preprocess = "tools/scripts/llms-preprocess.py"
+markdown_description = """
+Read the [full narrative guidance](https://www.fedramp.gov/2026/llms-full.txt) for site context.
+
+The Consolidated Rules themselves are available in a machine-readable JSON format, and that should be used directly instead of any of the HTML pages on this site. Use the [latest minified consolidated JSON](https://www.fedramp.gov/2026/sources/latest/fedramp-consolidated-rules-min.json) and the [agent instructions](https://www.fedramp.gov/2026/sources/#agents).
+"""
+
+[project.plugins.llmstxt.sections]
+Pages = ["*.md", "**/*.md"]

@@ -4363,6 +4363,7 @@ function generatedArtifactAffectedParties(
 
 export function pictographSpan(
   config: ToolConfig,
+  relativePath: string,
   source: GeneratedDocumentSource = "machine",
 ): string {
   const sourcePictograph = config.pictographs.source[source];
@@ -4378,6 +4379,11 @@ export function pictographSpan(
     throw new Error(`Missing generated document pictograph tooltip: ${source}`);
   }
 
+  if (source === "machine") {
+    const label = markdownAttributeValue(sourceTooltip);
+    const sources = path.posix.relative(path.posix.dirname(relativePath), "sources/index.md");
+    return `<span class="picto">[${sourcePictograph}](${sources}#agents){ .machine-source aria-label="${label}" }</span>`;
+  }
   return `<span class="picto">${pictographWithTooltip(
     sourcePictograph,
     sourceTooltip,
@@ -4540,7 +4546,7 @@ function renderContentPictographSpan(
   return [
     ...lines.slice(0, frontmatterEndIndex + 1),
     "",
-    pictographSpan(config, picto.source),
+    pictographSpan(config, relativePath, picto.source),
     "",
     ...bodyLines,
   ].join("\n");
@@ -4779,7 +4785,7 @@ function collectDefinitionDocumentArtifact(
     documentType: "FRD",
     context: buildDocumentContext(title, {
       introduction: mapping.introduction,
-      pictoSpan: pictographSpan(config),
+      pictoSpan: pictographSpan(config, relativePath),
       tags: versionTags(definitionDocumentTypes(mapping)),
       purposeParagraphs: splitParagraphs(rules.FRD.info.purpose),
       effectiveEntries,
@@ -5068,7 +5074,7 @@ function collectSingleKsiDocumentArtifact(
     documentType: "KSI",
     context: buildDocumentContext(title, {
       introduction: mapping.introduction,
-      pictoSpan: pictographSpan(config),
+      pictoSpan: pictographSpan(config, relativePath),
       tags: versionTags(["20x"]),
       isKsiDocument: true,
       sections,
@@ -5137,7 +5143,7 @@ function collectThemeKsiDocumentArtifacts(
         documentType: "KSI",
         context: buildDocumentContext(title, {
           introduction: mapping.introduction,
-          pictoSpan: pictographSpan(config),
+          pictoSpan: pictographSpan(config, relativePath),
           tags: versionTags(["20x"]),
           isKsiDocument: true,
           indicators,
@@ -5680,7 +5686,7 @@ function collectFullControlReferenceArtifacts(
         documentType: "CTL_REFERENCE",
         context: buildDocumentContext(mapping.title, {
           introduction: mapping.introduction,
-          pictoSpan: pictographSpan(config),
+          pictoSpan: pictographSpan(config, indexRelativePath),
           tags: versionTags(["rev5"]),
           isControlDocument: true,
           isFullControlReferenceIndex: true,
@@ -5712,7 +5718,7 @@ function collectFullControlReferenceArtifacts(
           documentType: "CTL_REFERENCE",
           context: buildDocumentContext(title, {
             introduction: mapping.introduction,
-            pictoSpan: pictographSpan(config),
+            pictoSpan: pictographSpan(config, relativePath),
             tags: versionTags(["rev5"]),
             isControlDocument: true,
             isControlFamilyDocument: true,
@@ -5755,7 +5761,7 @@ function collectSingleControlDocumentArtifact(
     documentType: "CTL",
     context: buildDocumentContext(title, {
       introduction: mapping.introduction,
-      pictoSpan: pictographSpan(config),
+      pictoSpan: pictographSpan(config, relativePath),
       tags: versionTags(["rev5"]),
       isControlDocument: true,
       controlCatalog: controlCatalogMetadataViewModel(catalog.metadata),
@@ -5788,7 +5794,7 @@ function collectFamilyControlDocumentArtifacts(
       documentType: "CTL",
       context: buildDocumentContext(title, {
         introduction: mapping.introduction,
-        pictoSpan: pictographSpan(config),
+        pictoSpan: pictographSpan(config, relativePath),
         tags: versionTags(["rev5"]),
         isControlDocument: true,
         isControlFamilyDocument: true,
@@ -5884,7 +5890,7 @@ function collectDeadlineDocumentArtifactsForMapping(
         documentType: "DEADLINES",
         context: buildDocumentContext(title, {
           introduction: mapping.introduction,
-          pictoSpan: pictographSpan(config),
+          pictoSpan: pictographSpan(config, relativePath),
           tags: versionTags([version]),
           isDeadlineDocument: true,
           deadlineTables,
@@ -5942,7 +5948,7 @@ function collectTaggedDocumentSummaryArtifact(
     documentType: "FRR_TAGGED_SUMMARY",
     context: buildDocumentContext(mapping.title, {
       introduction: mapping.introduction,
-      pictoSpan: pictographSpan(config),
+      pictoSpan: pictographSpan(config, relativePath),
       tags: versionTags(taggedDocumentSummaryTypes(mapping)),
       taggedDocumentSummaryRows: rows,
       taggedDocumentSummaryStats: stats,
@@ -6001,7 +6007,7 @@ function collectReferenceIndexDocumentArtifact(
       description: mapping.description,
       purpose: mapping.purpose,
       pictoSource: "machine",
-      pictoSpan: pictographSpan(config),
+      pictoSpan: pictographSpan(config, relativePath),
       referenceIndexRows,
     }),
   };
@@ -6172,7 +6178,7 @@ function collectFrrCollectionDocumentArtifact(
     documentType: "FRR",
     context: buildDocumentContext(mapping.title, {
       introduction: mapping.introduction,
-      pictoSpan: pictographSpan(config),
+      pictoSpan: pictographSpan(config, relativePath),
       tags: versionTags(mappingVersions(mapping)),
       isRequirementsDocument: true,
       sections,
@@ -6283,7 +6289,7 @@ function collectSingleRuleDocumentArtifact(
     documentType: "FRR",
     context: buildDocumentContext(title, {
       introduction: mapping.introduction,
-      pictoSpan: pictographSpan(config),
+      pictoSpan: pictographSpan(config, relativePath),
       tags: versionTags(versions),
       purposeParagraphs,
       tableOfContents: buildSectionTableOfContents(sections),
@@ -6356,7 +6362,7 @@ function collectDocumentRuleDocumentArtifacts(
         documentType: "FRR",
         context: buildDocumentContext(title, {
           introduction: mapping.introduction,
-          pictoSpan: pictographSpan(config),
+          pictoSpan: pictographSpan(config, relativePath),
           tags: versionTags(versions),
           purposeParagraphs: splitParagraphs(document.info.purpose),
           tableOfContents: buildSectionTableOfContents(sections),
@@ -6515,7 +6521,7 @@ function collectRelatedRuleDocumentArtifact(
     documentType: "FRR",
     context: buildDocumentContext(title, {
       introduction: mapping.introduction,
-      pictoSpan: pictographSpan(config),
+      pictoSpan: pictographSpan(config, relativePath),
       tags: versionTags(mappingVersions(mapping)),
       purposeParagraphs: [
         mapping.relatedRulesGroups?.length
@@ -6739,7 +6745,7 @@ function collectTrigramDocumentArtifacts(
       context: buildDocumentContext(mapping.title, {
         description: mapping.description,
         pictoSource: "machine",
-        pictoSpan: pictographSpan(config),
+        pictoSpan: pictographSpan(config, relativePath),
         trigramRows: rows,
         introduction: mapping.introduction,
       }),

@@ -598,3 +598,9 @@ Dates use the reader's local calendar day. More than 60 days ago is gray Neutral
 For tables with several date columns, wrap date header text in `<span data-date-column>…</span>` and mark the default header with `data-date-default` as well. Place a date marker in each dated cell. Row colors follow the date column selected by Tablesort, or the default column when sorting another column or before sorting. Missing dates in the selected column remain uncolored. The script supplies ISO sort values to keep long-form dates and assessment-based grace dates in chronological order.
 
 `project.extra.expanded_navigation_children` lists class index URLs whose nested navigation groups start expanded. The class itself remains collapsible, and explicit `collapsible_navigation_indexes` exceptions keep their existing behavior.
+
+## LLM exports
+
+Zensical 0.1.3 builds `llms.txt` and a Markdown equivalent beside each page’s HTML. Its export-only preprocessing hook checks the page path against `content/`. Generated pages export a link to the agent instructions. The machine icon on the HTML page links to those instructions and shows an explanation on hover or keyboard focus.
+
+Both build and preview assemble `llms-full.txt` from the manual Markdown files in source-path order. The download generator publishes the current version’s minified consolidated JSON at `sources/latest/fedramp-consolidated-rules-min.json`. The Linux CI build installs the hashed dependencies in `requirements.txt`; its regeneration command is recorded at the top of that file.

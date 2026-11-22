@@ -272,7 +272,10 @@ export async function buildSources(config: ToolConfig) {
   function download(name: string, data: unknown, original?: string) {
     const stem = `fedramp-${name}-${version}`;
     files.set(`${stem}.json`, original ?? JSON.stringify(data, null, 2) + "\n");
-    files.set(`${stem}-min.json`, JSON.stringify(data));
+    const minified = JSON.stringify(data);
+    files.set(`${stem}-min.json`, minified);
+    if (name === "consolidated-rules")
+      files.set("fedramp-consolidated-rules-min.json", minified);
     return `[JSON](${stem}.json) | [Minified](${stem}-min.json)`;
   }
   const { default_artifacts, ...metadata } = info;
@@ -282,7 +285,7 @@ export async function buildSources(config: ToolConfig) {
     "  source: machine",
     "---",
     "",
-    pictographSpan(config),
+    pictographSpan(config, `${directory}/index.md`),
     "",
     "# Latest source data",
     "",
@@ -294,6 +297,8 @@ export async function buildSources(config: ToolConfig) {
     "| --- | --- | --- |",
     `| Consolidated rules | ${download("consolidated-rules", rules, raw)} |`,
     `| Definitions | ${download("definitions", { info: metadata, FRD: rules.FRD })} |`,
+    "",
+    "[Latest minified consolidated rules](fedramp-consolidated-rules-min.json)",
     "",
     "## Provider rules by certification type and class",
     "",

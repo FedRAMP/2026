@@ -175,3 +175,22 @@ h3 {
 .md-nav__item--collapsible-section > .md-nav__container > .md-nav__link .md-ellipsis {
     font-weight: 700;
 }
+
+.picto .machine-source {
+    position: relative;
+}
+
+.picto .machine-source:is(:hover, :focus-visible)::after {
+    content: attr(aria-label);
+    position: absolute;
+    z-index: 2;
+    inset-block-start: 100%;
+    inset-inline-start: 0;
+    width: max-content;
+    max-width: min(17rem, 75vw);
+    padding: .35rem .55rem;
+    background: var(--md-default-fg-color);
+    color: var(--md-default-bg-color);
+    font-size: .7rem;
+    line-height: 1.4;
+}

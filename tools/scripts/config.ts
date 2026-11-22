@@ -302,7 +302,14 @@ export function relativeToTools(absolutePath: string): string {
 // fallback behavior when no pyproject.toml is present (it varies across uv
 // versions and broke in CI), so call the venv binary directly instead.
 export function zensicalBinary(): string {
-  return path.join(TOOLS_DIR, ".venv", "bin", "zensical");
+  const binary = path.join(TOOLS_DIR, ".venv", "bin", "zensical");
+  const result = Bun.spawnSync([binary, "--version"]);
+  const version = result.stdout.toString().trim();
+  // Older versions silently discard the llmstxt preprocess setting.
+  if (result.exitCode !== 0 || !Bun.semver.satisfies(version, ">=0.1.3")) {
+    throw new Error("Markdown exports require Zensical 0.1.3 or later. From tools/, run uv pip install -r requirements.in.");
+  }
+  return binary;
 }
 
 export function toPosixPath(filePath: string): string {

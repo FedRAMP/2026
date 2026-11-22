@@ -1,6 +1,7 @@
 import { parse as parseToml } from "smol-toml";
 import { searchableNavigationPages } from "./search-exclusions";
 import { spawn } from "node:child_process";
+import { buildLlmCorpus } from "./build-llms";
 import fs, { watch } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -151,6 +152,7 @@ async function runPipeline(
       }
     }
 
+    await buildLlmCorpus(config);
     if (request.regenerate || searchSignature !== lastSearchSignature) {
       await Bun.$`${process.execPath} ${path.join(import.meta.dir, "build-sources.ts")}`;
       const summary = await buildMarkdown(config);
@@ -577,7 +579,7 @@ async function main(): Promise<void> {
   );
 
   const buildWatcher = watch(path.dirname(BUILD_SCRIPT), (_event, name) => {
-    if (name && [path.basename(BUILD_SCRIPT), "build-sources.ts", "class-content.ts"].includes(name)) {
+    if (name && [path.basename(BUILD_SCRIPT), "build-sources.ts", "build-llms.ts", "class-content.ts"].includes(name)) {
       schedulePipeline("generator change");
     }
   });

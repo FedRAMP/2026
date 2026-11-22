@@ -11,6 +11,7 @@ import {
   assertManualHtml,
 } from "./test-support/source-contract";
 import Handlebars from "handlebars";
+import { parse as parseToml } from "smol-toml";
 import { afterAll, describe, expect, test } from "bun:test";
 import { execFile, spawn } from "node:child_process";
 import {
@@ -194,12 +195,9 @@ function findArtifact(
   return artifact;
 }
 
-function expectedPictograph(config: ToolConfig) {
-  const icon = config.pictographs.source.machine.replace(
-    /\s*}$/,
-    ` title="${config.pictographs.tooltips.machine}" }`,
-  );
-  return `<span class="picto">${icon}</span>`;
+function expectedPictograph(config: ToolConfig, filename: string) {
+  const sources = path.posix.relative(path.posix.dirname(filename), "sources/index.md");
+  return `<span class="picto">[${config.pictographs.source.machine}](${sources}#agents){ .machine-source aria-label="${config.pictographs.tooltips.machine}" }</span>`;
 }
 
 function setRulesSourceStatuses(
@@ -492,13 +490,14 @@ function markdownToHtmlPath(htmlRoot: string, relativePath: string): string {
 }
 
 function markdownPathsInZensicalConfig(source: string): string[] {
-  return Array.from(
-    new Set(
-      Array.from(source.matchAll(/"([^"]+\.md)"/g), (match) => match[1])
-        .filter((relativePath): relativePath is string => Boolean(relativePath))
-        .sort(),
-    ),
-  );
+  const { nav } = parseToml(source).project as { nav: unknown };
+  const paths = new Set<string>();
+  function visit(node: unknown): void {
+    if (typeof node === "string" && node.endsWith(".md")) paths.add(node);
+    if (node && typeof node === "object") Object.values(node).forEach(visit);
+  }
+  visit(nav);
+  return [...paths].sort();
 }
 
 interface ZensicalNavLocation {
@@ -858,7 +857,7 @@ describe("build-markdown", () => {
       expect(
         artifact.context.pictoSpan,
         `${artifact.relativePath} should render only the machine source pictograph`,
-      ).toBe(expectedPictograph(config));
+      ).toBe(expectedPictograph(config, artifact.relativePath));
     }
   });
 
@@ -1957,7 +1956,7 @@ describe("build-markdown", () => {
           "  - Definitions",
           "---",
           "",
-          expectedPictograph(config),
+          expectedPictograph(config, "reference/fedramp-definitions.md"),
           "",
           "# Custom FedRAMP Definitions",
         ].join("\n"),
@@ -2337,7 +2336,7 @@ describe("build pipeline", () => {
     const downloadPage = await readFile(path.join(downloadsDir, "index.html"), "utf8");
     const downloads = (await listRelativeFiles(path.join(srcPath, "sources/latest")))
       .filter((name) => name.endsWith(".json"));
-    expect(downloads).toHaveLength(18);
+    expect(downloads).toHaveLength(19);
     for (const name of downloads) {
       expect(downloadPage).toContain(`href="${name}"`);
       const original = await readFile(path.join(srcPath, "sources/latest", name));
@@ -2350,6 +2349,42 @@ describe("build pipeline", () => {
     expect(manifest.files).toEqual(expectedGeneratedFiles);
 
     const { content } = await sources();
+    const narrativeFiles = [...content.keys()].filter((name) => name.endsWith(".md")).sort();
+    const corpus = await readFile(path.join(htmlPath, "llms-full.txt"), "utf8");
+    const entries = corpus.trimEnd().split(/\n\n---\n\n(?=Source: content\/)/);
+    expect(entries.map((entry) => entry.split("\n", 1)[0])).toEqual(
+      narrativeFiles.map((name) => `Source: content/${name}`),
+    );
+    // The corpus relocates link destinations but preserves the surrounding Markdown.
+    const omitDestinations = (text: string) => text.replace(/\]\(<?[^\s)<>]+>?/g, "](");
+    for (const [i, name] of narrativeFiles.entries()) {
+      const source = content.get(name)!.toString()
+        .replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "")
+        .replace(/<!--[\s\S]*?-->/g, "").trim();
+      const body = entries[i]!.split("\n").slice(4).join("\n");
+      expect(omitDestinations(body), name).toBe(omitDestinations(source));
+    }
+
+    const index = await readFile(path.join(htmlPath, "llms.txt"), "utf8");
+    const site = "https://www.fedramp.gov/2026/";
+    for (const link of ["llms-full.txt", "sources/#agents", "sources/latest/fedramp-consolidated-rules-min.json"])
+      expect(index).toContain(site + link);
+    const pages = (await listRelativeFiles(srcPath)).filter((name) => name.endsWith(".md"));
+    const exportLinks = [...index.matchAll(/^- .*?\]\(<([^>]+)>\)$/gm)].map((match) => match[1]);
+    expect(exportLinks).toHaveLength(pages.length);
+    for (const name of pages) {
+      const output = path.relative(htmlPath, markdownToHtmlPath(htmlPath, name)).replace(/\.html$/, ".md");
+      expect(exportLinks).toContain(site + output);
+      const markdown = await readFile(path.join(htmlPath, output), "utf8");
+      if (content.has(name)) {
+        const title = content.get(name)!.toString().match(/^# (.+)$/m)?.[1];
+        expect(markdown, name).toContain(title!);
+        expect(corpus).toContain(`Source: content/${name}\nTitle: ${title}\n`);
+      } else {
+        expect(markdown.trim(), name).toMatch(/^\[[^\]\n]+\]\(<https:\/\/www\.fedramp\.gov\/2026\/sources\/#agents>\)$/);
+      }
+    }
+    expect(await readFile(path.join(htmlPath, "sources/index.html"), "utf8")).toContain('id="agents"');
     const copies = await readTree(srcPath);
     for (const [filename, source] of content) {
       assertManualCopy(source, copies.get(filename), filename);
@@ -2382,7 +2417,7 @@ describe("build pipeline", () => {
 
     unlinkedMarkdownWarningPaths = unlinkedMarkdownPaths;
 
-    for (const relativePath of markdownPathsInZensicalConfig(zensicalConfig)) {
+    for (const relativePath of linkedMarkdownPaths) {
       await access(path.join(srcPath, relativePath));
       await access(markdownToHtmlPath(htmlPath, relativePath));
     }

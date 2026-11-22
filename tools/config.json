@@ -15,7 +15,7 @@
       "person": ":lucide-person-standing:{ .person }"
     },
     "tooltips": {
-      "machine": "This content is machine-generated from FedRAMP Machine-Readable Rules.",
+      "machine": "Generated from the FedRAMP machine-readable rules. Open the source data and instructions for agents.",
       "person": "This content was written by a human just for this page."
     }
   },

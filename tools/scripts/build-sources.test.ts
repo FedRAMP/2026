@@ -43,10 +43,11 @@ test("each download contains the complete effective source records for its frame
     const read = (name: string) => readFile(path.join(out, name), "utf8");
     const names = await readdir(out);
     const index = await read("index.md");
-    expect(names).toHaveLength(19);
+    expect(names).toHaveLength(20);
+    expect(await read("fedramp-consolidated-rules-min.json")).toBe(await read(`fedramp-consolidated-rules-${version}-min.json`));
     for (const name of names.filter((name) => name.endsWith(".json"))) {
       expect(index).toContain(`](${name})`);
-      if (name.endsWith("-min.json")) {
+      if (name.endsWith("-min.json") && name !== "fedramp-consolidated-rules-min.json") {
         expect(await read(name)).toBe(
           JSON.stringify(
             JSON.parse(await read(name.replace("-min.json", ".json"))),
