@@ -144,6 +144,7 @@ interface InfoSource {
 interface ChangeLogSource {
   date?: string;
   comment?: string;
+  issue?: string;
   prev?: string;
 }
 
@@ -190,6 +191,8 @@ interface VariantSource {
 }
 
 interface NotificationSource {
+  optional?: boolean;
+  note?: string;
   party: string;
   method: "email" | "form" | "update" | "varies" | "web";
   target: string;
@@ -342,6 +345,8 @@ interface TermLinkViewModel {
 }
 
 interface NotificationViewModel {
+  optional: boolean;
+  note?: string;
   party: string;
   methodLabel: string;
   name: string;
@@ -369,11 +374,7 @@ interface RequirementViewModel {
   anchorId: string;
   title: string;
   formerId?: string;
-  changelog: Array<{
-    date: string;
-    comment: string;
-    previousValue?: string;
-  }>;
+  changelog: ReturnType<typeof toChangeLog>;
   statementParagraphs: string[];
   variantSections: VariantViewModel[];
   effectiveDateLines: Array<{ label: string; value: string }>;
@@ -399,11 +400,7 @@ interface DefinitionViewModel {
   anchorId: string;
   term: string;
   formerId?: string;
-  changelog: Array<{
-    date: string;
-    comment: string;
-    previousValue?: string;
-  }>;
+  changelog: ReturnType<typeof toChangeLog>;
   definitionParagraphs: string[];
   noteParagraphs: string[];
   notes: string[];
@@ -2237,6 +2234,7 @@ function toChangeLog(updated: ChangeLogSource[] = []) {
     .map((entry) => ({
       date: entry.date ?? "Undated",
       comment: entry.comment ?? "",
+      issue: entry.issue,
       previousValue: entry.prev,
     }));
 }
@@ -2542,6 +2540,8 @@ function toNotifications(
     const name = targetDetail ? sourceName.replace(/[.!?]+$/, "") : sourceName;
 
     return {
+      optional: notification.optional === true,
+      note: notification.note?.trim(),
       party: notification.party,
       methodLabel: methodLabels[notification.method],
       name,

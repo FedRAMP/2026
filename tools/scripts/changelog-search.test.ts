@@ -37,6 +37,8 @@ for (const partial of ["requirement", "definition"]) {
       const changelog = Array.from({ length: count }, (_, index) => ({
         date: `2026-06-${24 + index}`,
         comment: `Historical change ${index}`,
+        issue:
+          index === 0 ? "https://github.com/example/rules/issues/1" : undefined,
         previousValue: "Obsolete definition text",
       }));
       const engine = Handlebars.create();
@@ -79,6 +81,12 @@ for (const partial of ["requirement", "definition"]) {
         expect(included).not.toContain("Changelog:");
         expect(excluded).toContain("Changelog:");
         for (const entry of changelog) {
+          const suffix = entry.issue
+            ? ` (more details in [this GitHub issue](${entry.issue}))`
+            : "";
+          expect(markdown).toContain(
+            `**${entry.date}:** ${entry.comment}${suffix}\n`,
+          );
           expect(excluded).toContain(entry.date);
           expect(excluded).toContain(entry.comment);
           expect(included).not.toContain(entry.date);

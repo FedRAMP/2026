@@ -10,7 +10,7 @@
     { data-search-exclude }
 
 {{#each changelog}}
-    - **{{date}}:** {{comment}}
+    - **{{date}}:** {{comment}}{{#if issue}} (more details in [this GitHub issue]({{issue}})){{/if}}
         { data-search-exclude }
 {{#if previousValue}}
 

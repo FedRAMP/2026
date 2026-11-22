@@ -12,7 +12,7 @@
 
 {{#each changelog}}
 
-    - **{{date}}:** {{comment}}
+    - **{{date}}:** {{comment}}{{#if issue}} (more details in [this GitHub issue]({{issue}})){{/if}}
     { data-search-exclude }
 
 {{/each}}
@@ -23,7 +23,10 @@
 {{#if notifications.length}}
 !!! warning "This FRR includes a notification requirement!"
 {{#each notifications}}
-    - Notify {{party}} via {{methodLabel}}: {{#if href}}[{{linkLabel}}]({{href}}){{else}}{{name}}{{targetDetail}}{{/if}}.
+    - {{#if optional}}**(optional)** {{/if}}Notify {{party}} via {{methodLabel}}: {{#if href}}[{{linkLabel}}]({{href}}){{else}}{{name}}{{targetDetail}}{{/if}}.
+{{#if note}}
+        - **Note:** {{note}}
+{{/if}}
 {{/each}}
 {{/if}}
 

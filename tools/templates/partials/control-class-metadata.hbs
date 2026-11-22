@@ -13,7 +13,7 @@
 {{#if changelog.length}}
 ??? abstract "FedRAMP metadata history"
 {{#each changelog}}
-    - **{{date}}:** {{comment}}
+    - **{{date}}:** {{comment}}{{#if issue}} (more details in [this GitHub issue]({{issue}})){{/if}}
 {{/each}}
 
 {{/if}}
