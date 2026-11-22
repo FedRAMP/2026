@@ -13,6 +13,10 @@ picto:
 
 Welcome to the FedRAMP Consolidated Rules for 2026. This site brings the rules, definitions, timelines, stakeholder guidance, and source material together so agencies, cloud service providers, independent assessors, advisors, and FedRAMP can work from the same public reference.
 
+!!! tip "This site is designed for direct use by humans who are exploring FedRAMP."
+
+    AI agents and automation services should follow the instructions at [Source Data/AGENTS](sources/index.md#agents) and [llms.txt](llms.txt) to find machine-readable materials optimized for programmatic use.
+
 ---
 
 <div class="grid cards" markdown>

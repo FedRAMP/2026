@@ -1,28 +1,35 @@
 ---
 tags:
   - Guidance
-hide:
-  - toc
 picto:
   source: person
 ---
 
 # Source Data
 
-This website is intended **only** for viewing by humans. It is rendered into HTML using Zensical, a static site generator.
+!!! warning "This site is primarily designed for human use!"
 
-Automation services, including AI agents, **should not use the HTML site.** Instead, such services should process the source data directly.
+    AI agents and automation services should follow the instructions for [AGENTS](#agents) on this page.
 
-## FedRAMP Rules Source Data
+## Background for Humans
 
-All FedRAMP rules are machine-generated from structured JSON. Do not attempt to parse the HTML on this site in order to analyze the rules.
+This site contains narratives that have been written for humans along with a simple set of human-readable rules. It's important for folks to remember that the rules are generated dynamically from machine-readable source and that this site is intended **only** for easy/quick reference at the beginning of your FedRAMP journey - once you start taking any steps to prepare for a FedRAMP Certification, you should work directly from the original machine-readable rules using a GRC engineering approach.
 
-| Source  | Repository | Description |
-| --  | -- | -- |
-| :octicons-mark-github-24: FedRAMP Rules | [https://github.com/FedRAMP/rules](https://github.com/FedRAMP/rules) | Contains all FedRAMP rules in the `fedramp-consolidated-rules.json` file, along with instructions for use. This is the source of truth for structured FedRAMP rules. Agents should reference `AGENTS.md` inside that repository for additional information. |
-| :octicons-mark-github-24: Consolidated Rules as Markdown | [https://github.com/FedRAMP/2026-markdown](https://github.com/FedRAMP/2026-markdown) | Contains this entire website as pure markdown, including human-written narratives and machine-generated rules. This is the source of truth for unstructured FedRAMP documentation. Agents should reference `AGENTS.md` inside that repository for additional information. |
+It is effectively impossible for a human to keep the scope of all applicable FedRAMP rules in mind and to track completeness based on this site. Use the machine-readable rules!
+
+### Latest Versions of Source Data
+
+The best place to start with the machine-readable rules is to grab an appropriate version for your target FedRAMP Certification Type and Class from the [Source Data/Latest Version](latest/index.md) page.
+
+Older versions are available for reference.
+
+### FedRAMP Rules on GitHub
+
+If you want to get more directly involved behind the scenes and monitor development of the rules themselves, they can be found on GitHub in the [FedRAMP/rules](https://github.com/FedRAMP/rules) repository.
 
 ## AGENTS
+
+The information below is intended to help large language models and AI agents understand how to effectively index and leverage the information on this site, including the narrative guidance and the machine-readable consolidated rules.
 
 ### Read the narrative guidance
 
