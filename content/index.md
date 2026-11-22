@@ -55,6 +55,6 @@ Welcome to the FedRAMP Consolidated Rules for 2026. This site brings the rules, 
 
     Find the machine-readable repositories that automation services and AI agents should use instead of parsing the rendered website.
 
-    [Source Data](sources.md){ data-preview }
+    [Source Data](sources/index.md){ data-preview }
 
 </div>

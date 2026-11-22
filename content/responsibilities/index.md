@@ -2,7 +2,6 @@
 tags:
   - FedRAMP
   - Guidance
-icon: material/gavel
 hide:
   - toc
 picto:
@@ -24,11 +23,11 @@ The Consolidated Rules for 2026 reflect that vision, establishing a full new set
 
 !!! tip "Point AI services at the source material for FedRAMP rules"
 
-    The [Source Data](../sources.md) page in the Overview contains links to the raw source data used to
+    The [Source Data](../sources/index.md) page in the Overview contains links to the raw source data used to
     generate the FedRAMP Consolidated Rules for 2026. Each of the repositories that contain source data
     also contain instructions for AI Agents to help them process this information.
 
-    Whenever possible, the original [Source Data](../sources.md) should be explicitly specified with
+    Whenever possible, the original [Source Data](../sources/index.md) should be explicitly specified with
     any AI service to ensure it is primary source of truth.
 
 ---

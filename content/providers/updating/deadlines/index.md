@@ -32,7 +32,7 @@ adjustments to the FedRAMP Rev5 and 20x processes:
 
 Each FedRAMP ruleset includes effective dates for both FedRAMP 20x and FedRAMP Rev5. Understanding
 these dates is critical to informed planning. These dates can be loaded programmatically from
-the underlying [semi-structured machine-readable source](../../../sources.md) for the Consolidated Rules.
+the underlying [semi-structured machine-readable source](../../../sources/index.md) for the Consolidated Rules.
 
 | Critical Milestone | Explanation |
 | -- | -- |

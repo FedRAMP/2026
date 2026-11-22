@@ -9,60 +9,53 @@ nav = [
       { "FedRAMP Definitions" = "definitions.md" },
       { "FedRAMP Trigrams" = "trigrams.md" },
       { "Important Dates" = "timeline.md" },
-    ] },
-    { "Shared Responsibilities" = [
-      { "FedRAMP" = "responsibilities/fedramp.md" },
-      { "Federal Agencies" = "responsibilities/agencies.md" },
-      { "Cloud Service Providers" = "responsibilities/providers.md" },
-      { "Independent Assessors" = "responsibilities/assessors.md" },
-      { "Advisors" = "responsibilities/advisors.md" },
-    ] },
-
-    { "Updates and Sources" = [
       { "Changelog" = "changelog.md" },
-      { "Source Data" = "sources.md" },
-    ] },
-    { "Related FedRAMP Sites" = [
-      { "Legacy Documentation Reference" = "https://fedramp.gov/legacy" },
-      { "Machine-Readable Rules" = "https://github.com/FedRAMP/rules" },
-      { "help.fedramp.gov" = "https://help.fedramp.gov" },
-    ] },
-  ] },
-  { "FedRAMP" = [
-    "responsibilities/index.md",
-    { "Getting Support" = "support.md" },
-    { "Scope of FedRAMP" = "scope.md" },
-    { "FedRAMP Marketplace" = "marketplace.md" },
-    { "FedRAMP's Responsibilities in the Rules" = "responsibilities/rules.md" },
-    { "FedRAMP's Authority" = [
-      { "FedRAMP Authorization Act" = [
-        "authority/law/index.md",
-        { "Definitions" = "authority/law/definitions.md" },
-        { "GSA" = "authority/law/gsa.md" },
-        { "FedRAMP Board" = "authority/law/board.md" },
-        { "Independent Assessment" = "authority/law/assessment.md" },
-        { "Agencies" = "authority/law/agencies.md" },
-        { "OMB" = "authority/law/omb.md" },
-        { "Reports to Congress" = "authority/law/reports.md" },
-        { "FSCAC" = "authority/law/fscac.md" },
-      ] },
-      { "OMB Memorandum M-24-15" = [
-        "authority/m-24-15/index.md",
-        { "Background" = "authority/m-24-15/background.md" },
-        { "Vision" = "authority/m-24-15/vision.md" },
-        { "Scope of FedRAMP" = "authority/m-24-15/scope.md" },
-        { "The FedRAMP Authorization Process" = "authority/m-24-15/process.md" },
-        { "Automation and Efficiency" = "authority/m-24-15/automation.md" },
-        { "Continuous Monitoring" = "authority/m-24-15/monitoring.md" },
-        { "Roles and Responsibilities" = "authority/m-24-15/roles.md" },
-        { "Industry Engagement" = "authority/m-24-15/industry.md" },
-        { "Implementation" = "authority/m-24-15/implementation.md" },
-        { "Rescissions" = "authority/m-24-15/rescissions.md" },
-        { "Policy and Program Implementation Assistance" = "authority/m-24-15/assistance.md" },
+      { "Scope of FedRAMP" = "scope.md" },
+      { "Shared Responsibilities" = [
+        { "FedRAMP" = "responsibilities/fedramp.md" },
+        { "Federal Agencies" = "responsibilities/agencies.md" },
+        { "Cloud Service Providers" = "responsibilities/providers.md" },
+        { "Independent Assessors" = "responsibilities/assessors.md" },
+        { "Advisors" = "responsibilities/advisors.md" },
       ] },
     ] },
-    { "Historical" = [
-      { "Rescinded 2011 Memo" = "authority/rescinded-2011-fedramp-memo.md" },
+    { "FedRAMP Overview" = [
+      "responsibilities/index.md",
+      { "Getting Support" = "support.md" },
+      { "FedRAMP Marketplace" = "marketplace.md" },
+      { "FedRAMP's Responsibilities in the Rules" = "responsibilities/rules.md" },
+
+      { "FedRAMP's Authority" = [
+        { "FedRAMP Authorization Act" = [
+          "authority/law/index.md",
+          { "Definitions" = "authority/law/definitions.md" },
+          { "GSA" = "authority/law/gsa.md" },
+          { "FedRAMP Board" = "authority/law/board.md" },
+          { "Independent Assessment" = "authority/law/assessment.md" },
+          { "Agencies" = "authority/law/agencies.md" },
+          { "OMB" = "authority/law/omb.md" },
+          { "Reports to Congress" = "authority/law/reports.md" },
+          { "FSCAC" = "authority/law/fscac.md" },
+        ] },
+        { "OMB Memorandum M-24-15" = [
+          "authority/m-24-15/index.md",
+          { "Background" = "authority/m-24-15/background.md" },
+          { "Vision" = "authority/m-24-15/vision.md" },
+          { "Scope of FedRAMP" = "authority/m-24-15/scope.md" },
+          { "The FedRAMP Authorization Process" = "authority/m-24-15/process.md" },
+          { "Automation and Efficiency" = "authority/m-24-15/automation.md" },
+          { "Continuous Monitoring" = "authority/m-24-15/monitoring.md" },
+          { "Roles and Responsibilities" = "authority/m-24-15/roles.md" },
+          { "Industry Engagement" = "authority/m-24-15/industry.md" },
+          { "Implementation" = "authority/m-24-15/implementation.md" },
+          { "Rescissions" = "authority/m-24-15/rescissions.md" },
+          { "Policy and Program Implementation Assistance" = "authority/m-24-15/assistance.md" },
+        ] },
+        { "Historical" = [
+          { "Rescinded 2011 Memo" = "authority/rescinded-2011-fedramp-memo.md" },
+        ] },
+      ] },
+
     ] },
   ] },
   { Agencies = [
@@ -123,9 +116,9 @@ nav = [
     { "Updating to 2026 Rules" = [
       "providers/updating/index.md",
       { "What's Changing" = "providers/updating/changes.md" },
-      { "Overall Deadlines" = "providers/updating/deadlines/index.md"},
-        { "Rev5-Specific Deadlines" = "providers/updating/deadlines/rev5.md" },
-        { "20x-Specific Deadlines" = "providers/updating/deadlines/20x.md" },
+      { "Overall Deadlines" = "providers/updating/deadlines/index.md" },
+      { "Rev5-Specific Deadlines" = "providers/updating/deadlines/rev5.md" },
+      { "20x-Specific Deadlines" = "providers/updating/deadlines/20x.md" },
     ] },
     { "20x Rules" = [
       "providers/20x/index.md",
@@ -419,6 +412,10 @@ nav = [
       { "Supply Chain Risk Management" = "reference/controls/supply-chain-risk-management.md" },
     ] },
   ] },
+  { "Source Data" = [
+      "sources/index.md",
+      { "Other" = "sources/other.md" },
+  ] },
   { "--> return to FedRAMP.gov" = "https://fedramp.gov" },
 ]
 
@@ -446,8 +443,12 @@ dark_logo = "assets/fr-only-logo-white.png"
 collapsible_navigation_indexes = ["reference/controls/"]
 # Start nested groups open inside each provider class, while the class stays collapsible.
 expanded_navigation_children = [
-  "providers/20x/a/", "providers/20x/b/", "providers/20x/c/",
-  "providers/rev5/b/", "providers/rev5/c/", "providers/rev5/d/",
+  "providers/20x/a/",
+  "providers/20x/b/",
+  "providers/20x/c/",
+  "providers/rev5/b/",
+  "providers/rev5/c/",
+  "providers/rev5/d/",
 ]
 homepage = "/2026"
 
