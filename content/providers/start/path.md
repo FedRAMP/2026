@@ -50,51 +50,10 @@ You don't really get to choose your Certification Path because it's the result o
 | _Rev5_ | Class C | :lucide-circle-dashed:{ .xl .middle .placeholder } Limited| :lucide-badge-check:{ .xl .middle .stable } Generally Required|
 | _Rev5_ | Class D | :lucide-circle-slash:{ .xl .middle .empty } Unavailable | :lucide-badge-check:{ .xl .middle .stable } Required|
 
+## Limited Program Certification for Rev5
 
-## Temporary Rev5 Program Certification Availability For Class B and C
+FedRAMP is making Program Certification available for Rev5 in extremely limited circumstances in the FedRAMP 20x Phase 4 Rev5 Program Closeout initiative. This initiative is intended to provide a Rev5 option for a very limited subset of cloud services who have heavily invested into FedRAMP Rev5 but were unable to complete their Agency Certification due to circumstances outside their control.
 
-Two extremely limited Rev5 Program Certification pipelines will open in 2026. These pipelines
-will close on June 11, 2027, when FedRAMP stops accepting FedRAMP Rev5 Certification applications.
+This initiative includes strict eligibility requirements, mandatory full CR26 adoption, and a case-by-case application and review. Cloud services must be able to demonstrate that their service is intended to be used by federal agencies directly or inside cloud services used by federal agencies directly.
 
-!!! danger "Program Certifications are limited to one type, either 20x or Rev5."
-
-    FedRAMP will not provide Program Certifications for both 20x and Rev5! Providers must pick one.
-
-
-!!! warning "The effective dates for those seeking to obtain a FedRAMP Certification will still apply!"
-
-    On January 1, 2027, all Consolidated Rules for 2026 requirements become mandatory for any
-    cloud service provider seeking to obtain a FedRAMP Certification. These requirements will apply
-    on that date to any **Ready Conversion** or **Lost Sponsor** applicant that did not apply
-    prior to that date.
-
-### Lost Sponsor/Ready Conversion
-
-As indicated by NTC-0008 there is a limited window for Program Certifications due to **Lost planned or in process sponsorship** during the heavy contract reduction period. This application pipeline is intended for cloud service providers that had begun the legacy FedRAMP authorization process with an agency sponsor (formally or informally) but were unable to complete the process for reasons that were out of their control.
-
-- **Opens:** August 10, 2026
-- **CR26 Grace Period Ends:** February 19, 2027
-- Available for **Class B** or **Class C**
-
-To qualify for this pipeline, a cloud service provider must have met **one** of the following criteria between **January 2025 and March 2026**:
-
-- Was In Process on the FedRAMP Marketplace but lost sponsorship. [Lost Sponsor]
-
-- Completed a full FedRAMP assessment with a Security Assessment Plan and Security Assessment Report (SAP/SAR) under an informal agreement with an agency to initiate In Process once it was complete. [Lost Sponsor]
-
-- Completed a FedRAMP Ready assessment with a Readiness Assessment (RAR) during the above timeframe [Conversion]
-
-- Achieved FedRAMP Ready on the FR Marketplace during the above timeframe [Conversion]
-
-Applicants may submit a fresh version of their legacy FedRAMP Rev5 materials, including a completed assessment (if it was not completed), to qualify for a Class B or Class C Certification (pilot) with an agreement to follow all updated rules for FedRAMP Rev5 by February 19, 2027.
-
-!!! info "FedRAMP must confirm eligibility prior to submission. Please provide qualification evidence along with the required form. FedRAMP will reach out to you directly."
-
-    To confirm eligibility, fill out the "[[For CSPs] Ready Conversion Form](https://help.fedramp.gov/hc/en-us/requests/new?ticket_form_id=52069750514459)".
-
-    To confirm eligibility, fill out the "[[For CSPs] Lost Sponsor Form](https://help.fedramp.gov/hc/en-us/requests/new?ticket_form_id=52061181133979)".
-
-    
-
-
-
+More information about the Rev5 Program Closeout initiative, including deadlines and eligibility criteria, are available on the [FedRAMP 20x Phase 4 micro-site](https://www.fedramp.gov/20x/phase4).

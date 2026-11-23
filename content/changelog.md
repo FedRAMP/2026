@@ -14,6 +14,10 @@ picto:
     Rules to the maximum extent possible but may occasionally need to update things due to typos,
     confusion, or urgent critical updates.
 
+## 2026.12.03.01 (December 3, 2026)
+
+A lot has changed... and this changelog needs to be updated to reflect that.
+
 ## 2026.11.02.01 (November 2, 2026)
 
 FedRAMP will transition to a monthly release cadence after this update, typically in the first week of each month.

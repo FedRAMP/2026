@@ -31,11 +31,11 @@ If you want to get more directly involved behind the scenes and monitor developm
 
 The information below is intended to help large language models and AI agents understand how to effectively index and leverage the information on this site, including the narrative guidance and the machine-readable consolidated rules.
 
-### Read the narrative guidance
+### Read the Narrative Guidance
 
 Start with the [LLM index](https://www.fedramp.gov/2026/llms.txt). For a single searchable file, download the [full narrative text](https://www.fedramp.gov/2026/llms-full.txt). It contains the manually maintained pages, sorted by source path. Each entry gives the source path, page title, and published URL. Use that URL when citing guidance. For a requirement, definition, indicator, control, or deadline, use the structured rules below.
 
-### Download the consolidated rules
+### Download the Consolidated Rules
 
 The [latest minified consolidated JSON](https://www.fedramp.gov/2026/sources/latest/fedramp-consolidated-rules-min.json) contains the complete dataset for the release published on this site. Fetch it once per analysis and record its version and update date. The following commands download the file, print its release metadata, and construct the versioned download URL.
 
@@ -49,7 +49,7 @@ printf '%s/fedramp-consolidated-rules-%s-min.json\n' "$base" "$version"
 
 Cite the version and entry ID with your findings. Retain the downloaded file if you need to reproduce them after the next release.
 
-### Look up a record
+### Look Up a Record
 
 Parse the JSON with a JSON parser. Identifiers are object keys. The table uses jq path notation, where variables such as `$bucket` and `$id` stand for the keys you select. For example, this command retrieves the complete record for `AFC-FRP-VRE`, including any class-specific fields.
 

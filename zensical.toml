@@ -11,6 +11,7 @@ nav = [
       { "Important Dates" = "timeline.md" },
       { "Changelog" = "changelog.md" },
       { "Scope of FedRAMP" = "scope.md" },
+    ] },
       { "Shared Responsibilities" = [
         { "FedRAMP" = "responsibilities/fedramp.md" },
         { "Federal Agencies" = "responsibilities/agencies.md" },
@@ -18,7 +19,6 @@ nav = [
         { "Independent Assessors" = "responsibilities/assessors.md" },
         { "Advisors" = "responsibilities/advisors.md" },
       ] },
-    ] },
     { "FedRAMP Overview" = [
       "responsibilities/index.md",
       { "Getting Support" = "support.md" },

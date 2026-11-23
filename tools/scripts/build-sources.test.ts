@@ -41,19 +41,15 @@ test("each download contains the complete effective source records for its frame
     await buildSources(config);
     const out = path.join(temp, "sources/latest");
     const read = (name: string) => readFile(path.join(out, name), "utf8");
+    const datasets = ["consolidated-rules", "definitions"];
     const names = await readdir(out);
     const index = await read("index.md");
-    expect(names).toHaveLength(20);
-    expect(await read("fedramp-consolidated-rules-min.json")).toBe(await read(`fedramp-consolidated-rules-${version}-min.json`));
     for (const name of names.filter((name) => name.endsWith(".json"))) {
       expect(index).toContain(`](${name})`);
-      if (name.endsWith("-min.json") && name !== "fedramp-consolidated-rules-min.json") {
-        expect(await read(name)).toBe(
-          JSON.stringify(
-            JSON.parse(await read(name.replace("-min.json", ".json"))),
-          ),
-        );
-      }
+    }
+    expect(await read("fedramp-consolidated-rules-min.json")).toBe(await read(`fedramp-consolidated-rules-${version}-min.json`));
+    for (const name of names.filter((name) => name.endsWith(".json") && !name.endsWith("-min.json"))) {
+      expect(await read(name.replace(/\.json$/, "-min.json"))).toBe(JSON.stringify(JSON.parse(await read(name))));
     }
     expect(await read(`fedramp-consolidated-rules-${version}.json`)).toBe(raw);
     expect(
@@ -69,6 +65,7 @@ test("each download contains the complete effective source records for its frame
       );
     for (const type of ["20x", "rev5"] as const) {
       for (const key of type === "20x" ? "abcd" : "bcd") {
+        datasets.push(`providers-${type}-class-${key}-rules`);
         const file: RulesDocument = JSON.parse(
           await read(
             `fedramp-providers-${type}-class-${key}-rules-${version}.json`,
@@ -139,6 +136,11 @@ test("each download contains the complete effective source records for its frame
         }
       }
     }
+    const expectedNames = datasets.flatMap((dataset) => [
+      `fedramp-${dataset}-${version}.json`,
+      `fedramp-${dataset}-${version}-min.json`,
+    ]);
+    expect(names.sort()).toEqual([...expectedNames, "fedramp-consolidated-rules-min.json", "index.md"].sort());
   } finally {
     await rm(temp, { recursive: true, force: true });
   }

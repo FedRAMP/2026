@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { readFile, readdir, unlink } from "node:fs/promises";
 import path from "node:path";
+import { get_encoding } from "tiktoken";
 import {
   buildKsiIndex,
   buildRuleIndex,
@@ -18,6 +19,8 @@ import {
 } from "./config";
 import { writeIfChanged } from "./write-if-changed";
 
+const encodingName = "o200k_base";
+const tokenizer = get_encoding(encodingName);
 const directory = "sources/latest";
 const classes = { "20x": ["a", "b", "c", "d"], rev5: ["b", "c", "d"] };
 const ownedDownload =
@@ -269,14 +272,23 @@ export async function buildSources(config: ToolConfig) {
     config,
   );
   const files = new Map<string, string>();
+  function downloadLink(label: string, filename: string, contents: string) {
+    files.set(filename, contents);
+    const size = (Buffer.byteLength(contents, "utf8") / 1024).toLocaleString(
+      "en-US",
+      {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      },
+    );
+    const tokens = tokenizer.encode_ordinary(contents).length;
+    return `[${label}](${filename}) (${size} KiB, ~${Math.round(tokens / 1000)}k tokens)`;
+  }
   function download(name: string, data: unknown, original?: string) {
     const stem = `fedramp-${name}-${version}`;
-    files.set(`${stem}.json`, original ?? JSON.stringify(data, null, 2) + "\n");
+    const formatted = original ?? JSON.stringify(data, null, 2) + "\n";
     const minified = JSON.stringify(data);
-    files.set(`${stem}-min.json`, minified);
-    if (name === "consolidated-rules")
-      files.set("fedramp-consolidated-rules-min.json", minified);
-    return `[JSON](${stem}.json) | [Minified](${stem}-min.json)`;
+    return `${downloadLink("JSON", `${stem}.json`, formatted)} | ${downloadLink("Minified", `${stem}-min.json`, minified)}`;
   }
   const { default_artifacts, ...metadata } = info;
   const index = [
@@ -287,22 +299,30 @@ export async function buildSources(config: ToolConfig) {
     "",
     pictographSpan(config, `${directory}/index.md`),
     "",
-    "# Latest source data",
+    "# Latest Consolidated Rules for 2026 (Current Version)",
     "",
-    `Version **${info.version}** · Last updated **${info.last_updated}**`,
+    "This page contains the latest Consolidated Rules for 2026 in their native machine-readable format.",
     "",
-    "## Complete rules and definitions",
+    `## Version **${info.version}**`,
+    "",
+    `Last updated **${info.last_updated}**`,
+    "",
+    "## Complete Rules and Definitions",
     "",
     "| Dataset | Formatted | Minified |",
     "| --- | --- | --- |",
-    `| Consolidated rules | ${download("consolidated-rules", rules, raw)} |`,
-    `| Definitions | ${download("definitions", { info: metadata, FRD: rules.FRD })} |`,
+    `| Complete Consolidated Rules | ${download("consolidated-rules", rules, raw)} |`,
+    `| Definitions Only | ${download("definitions", { info: metadata, FRD: rules.FRD })} |`,
     "",
-    "[Latest minified consolidated rules](fedramp-consolidated-rules-min.json)",
+    downloadLink(
+      "Latest minified consolidated rules",
+      "fedramp-consolidated-rules-min.json",
+      JSON.stringify(rules),
+    ),
     "",
-    "## Provider rules by certification type and class",
+    "## Provider Rules by Certification Type and Class",
     "",
-    "Each download includes the process rules that affect providers in that class, regardless of force. The 20x files include key security indicators. The Rev5 files include controls. Definitions are available separately above.",
+    "These JSON files contain machine-generated FedRAMP Rules and Practices for cloud service providers based on certification type and class. Definitions are available separately above.",
     "",
     "| Certification type | Class | Formatted | Minified |",
     "| --- | --- | --- | --- |",
@@ -331,7 +351,7 @@ export async function buildSources(config: ToolConfig) {
       );
     }
   }
-  index.push("", "## Changelog", "", changes, "");
+  index.push("", "## Changes in This Release", "", changes, "");
   files.set("index.md", index.join("\n"));
 
   const output = path.join(resolveToolPath(config.paths.src), directory);
