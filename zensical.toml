@@ -414,7 +414,9 @@ nav = [
   ] },
   { "Source Data" = [
       "sources/index.md",
-      { "Latest Version" = "sources/latest/index.md" },
+      { "Latest Version (CR26.v33)" = [
+        { "CR26.v33" = "sources/latest/index.md" },
+      ] },
   ] },
   { "--> return to FedRAMP.gov" = "https://fedramp.gov" },
 ]
